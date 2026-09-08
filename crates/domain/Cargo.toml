@@ -1,0 +1,11 @@
+[package]
+name = "fleetiq-domain"
+version = "0.1.0"
+description = "Framework-independent FleetIQ domain types and invariants"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
