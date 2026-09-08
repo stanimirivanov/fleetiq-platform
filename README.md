@@ -10,8 +10,9 @@ dependencies.
 
 ## Current scope
 
-The first implementation step establishes the Rust workspace and the core domain
-identifier types. Later increments will add the semantic asset model, protocol
+The current implementation establishes the Rust workspace and the first semantic
+domain types: tenants, configurable asset types, assets, and typed external
+identifiers. Later increments will add relationships, properties, the protocol
 runtime, telemetry processing, APIs, and web application described in
 [`docs/architecture/README.md`](docs/architecture/README.md).
 
