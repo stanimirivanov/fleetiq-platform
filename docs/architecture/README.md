@@ -20,3 +20,18 @@ The principal boundaries are:
 The initial runtime topology and technology choices remain subject to focused
 ADRs and measured prototypes. See the source redesign documents until their
 accepted parts are migrated into this repository.
+
+## Semantic asset foundation
+
+An `Asset` is an industry-neutral physical or logical thing owned by one tenant.
+Its configurable asset type supplies domain meaning; FleetIQ does not compile a
+fixed list such as vehicle, locomotive, motor, or sensor into the core aggregate.
+
+External identifiers consist of a kind, an optional issuing authority, and a
+value. VIN, IMEI, serial number, and operator number can therefore coexist
+without making any one identifier universal. The asset aggregate prevents exact
+duplicates. Cross-asset uniqueness requires tenant-wide repository knowledge and
+will be enforced when persistence is introduced.
+
+Asset relationships, property definitions, device endpoints, and effective-time
+signal bindings are separate concepts planned for subsequent increments.

@@ -4,6 +4,11 @@
 //! adapters must construct these types through their validating APIs rather than
 //! duplicating domain rules.
 
+mod asset;
 mod identifier;
 
-pub use identifier::{AssetId, IdentifierError, TenantId};
+pub use asset::{Asset, AssetError, AssetName, ExternalIdentifier};
+pub use identifier::{
+    AssetId, AssetTypeId, ExternalIdentifierAuthority, ExternalIdentifierKind,
+    ExternalIdentifierValue, IdentifierError, TenantId,
+};

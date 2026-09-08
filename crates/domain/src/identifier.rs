@@ -17,6 +17,35 @@ pub struct TenantId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetId(String);
 
+/// Identifies a configurable asset type.
+///
+/// Asset types give assets their semantic meaning without compiling
+/// industry-specific categories into the domain crate.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct AssetTypeId(String);
+
+/// Identifies the meaning of an identifier assigned outside `FleetIQ`.
+///
+/// Examples include `telecom.imei`, `manufacturer.serial-number`, and an
+/// operator-specific registration scheme.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ExternalIdentifierKind(String);
+
+/// Identifies the organization or system that issued an external identifier.
+///
+/// An authority is optional because some identifier kinds already define a
+/// globally sufficient scope. It is useful for manufacturer and operator
+/// numbering schemes that may otherwise overlap.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ExternalIdentifierAuthority(String);
+
+/// Stores the value assigned to an asset by an external identification scheme.
+///
+/// `FleetIQ` preserves the value exactly after validation. Interpretation and
+/// canonicalization belong to the definition of its identifier kind.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ExternalIdentifierValue(String);
+
 /// Describes why a domain identifier could not be constructed.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum IdentifierError {
@@ -106,6 +135,10 @@ macro_rules! domain_identifier {
 
 domain_identifier!(TenantId);
 domain_identifier!(AssetId);
+domain_identifier!(AssetTypeId);
+domain_identifier!(ExternalIdentifierKind);
+domain_identifier!(ExternalIdentifierAuthority);
+domain_identifier!(ExternalIdentifierValue);
 
 fn validate(value: &str) -> Result<(), IdentifierError> {
     if value.trim().is_empty() {
