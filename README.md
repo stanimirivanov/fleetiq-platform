@@ -10,11 +10,12 @@ dependencies.
 
 ## Current scope
 
-The current implementation establishes the Rust workspace and the first semantic
-domain types: tenants, versioned asset and property definitions, assets, typed
-external identifiers, and effective-dated asset relationships. Later increments
-will add device endpoints, signal bindings, the protocol runtime, telemetry
-processing, APIs, and web application described in
+The current implementation establishes the Rust workspace, semantic definition
+catalogue, and the first asset persistence boundary. Domain types cover tenants,
+versioned definitions, assets, typed external identifiers, and effective-dated
+asset relationships. Later increments will add relationship persistence, device
+endpoints, signal bindings, the protocol runtime, telemetry processing, APIs,
+and the web application described in
 [`docs/architecture/README.md`](docs/architecture/README.md).
 
 ## Prerequisites
@@ -56,6 +57,7 @@ migrations/                Authoritative PostgreSQL metadata schema
 deploy/local/              Disposable local development infrastructure
 docs/architecture/         Accepted architecture boundaries
 docs/adr/                  Architectural decisions and their consequences
+docs/development/          Contributor standards and implementation guidance
 ```
 
 Folders are introduced with working code. Deployable applications and additional

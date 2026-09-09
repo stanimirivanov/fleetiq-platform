@@ -49,7 +49,10 @@ jobs:
           cargo --version
 
       - name: Apply metadata schema for checked queries
-        run: psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --file migrations/0001_metadata_foundation.sql
+        run: |
+          for migration in migrations/*.sql; do
+            psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --file "$migration"
+          done
 
       - name: Check formatting
         run: cargo fmt --all --check
