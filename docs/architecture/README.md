@@ -33,5 +33,16 @@ without making any one identifier universal. The asset aggregate prevents exact
 duplicates. Cross-asset uniqueness requires tenant-wide repository knowledge and
 will be enforced when persistence is introduced.
 
-Asset relationships, property definitions, device endpoints, and effective-time
-signal bindings are separate concepts planned for subsequent increments.
+Asset-type definitions are immutable and versioned. An asset references a
+specific version, preventing a later configuration change from silently changing
+its meaning. Each asset-type version also pins the version of every supported
+property definition.
+
+Property definitions are reusable across asset types and declare a storage-level
+value kind plus an optional canonical unit for numeric values. Calculators can
+therefore target semantic property IDs rather than vendor-specific fields. Unit
+identifiers are configurable so adopting a standard vocabulary does not require
+changing the core domain model.
+
+Asset relationships, device endpoints, and effective-time signal bindings are
+separate concepts planned for subsequent increments.

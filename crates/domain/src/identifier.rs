@@ -24,6 +24,20 @@ pub struct AssetId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetTypeId(String);
 
+/// Identifies the stable semantic meaning of an asset property.
+///
+/// A property definition can be shared by multiple asset types so calculators
+/// can depend on meaning rather than a device vendor's field name.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct PropertyDefinitionId(String);
+
+/// Identifies the canonical unit used by a numeric property definition.
+///
+/// Unit identifiers are data-driven. A later configuration layer may use a
+/// standard vocabulary such as UCUM without coupling this crate to one catalogue.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct UnitId(String);
+
 /// Identifies the meaning of an identifier assigned outside `FleetIQ`.
 ///
 /// Examples include `telecom.imei`, `manufacturer.serial-number`, and an
@@ -136,6 +150,8 @@ macro_rules! domain_identifier {
 domain_identifier!(TenantId);
 domain_identifier!(AssetId);
 domain_identifier!(AssetTypeId);
+domain_identifier!(PropertyDefinitionId);
+domain_identifier!(UnitId);
 domain_identifier!(ExternalIdentifierKind);
 domain_identifier!(ExternalIdentifierAuthority);
 domain_identifier!(ExternalIdentifierValue);

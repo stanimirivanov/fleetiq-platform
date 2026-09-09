@@ -1,7 +1,7 @@
 use std::{error::Error, fmt};
 
 use crate::{
-    AssetId, AssetTypeId, ExternalIdentifierAuthority, ExternalIdentifierKind,
+    AssetId, AssetTypeRef, ExternalIdentifierAuthority, ExternalIdentifierKind,
     ExternalIdentifierValue, TenantId,
 };
 
@@ -103,7 +103,7 @@ impl ExternalIdentifier {
 pub struct Asset {
     tenant_id: TenantId,
     id: AssetId,
-    type_id: AssetTypeId,
+    type_reference: AssetTypeRef,
     name: AssetName,
     external_identifiers: Vec<ExternalIdentifier>,
 }
@@ -113,13 +113,13 @@ impl Asset {
     pub fn new(
         tenant_id: TenantId,
         id: AssetId,
-        asset_type_id: AssetTypeId,
+        type_reference: AssetTypeRef,
         name: AssetName,
     ) -> Self {
         Self {
             tenant_id,
             id,
-            type_id: asset_type_id,
+            type_reference,
             name,
             external_identifiers: Vec::new(),
         }
@@ -136,8 +136,8 @@ impl Asset {
     }
 
     /// Returns the configurable type that gives the asset semantic meaning.
-    pub fn asset_type_id(&self) -> &AssetTypeId {
-        &self.type_id
+    pub fn asset_type(&self) -> &AssetTypeRef {
+        &self.type_reference
     }
 
     /// Returns the current operator-facing name.
@@ -247,12 +247,16 @@ fn validate_name(value: &str) -> Result<(), AssetError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{AssetTypeId, DefinitionVersion};
 
     fn asset() -> Asset {
         Asset::new(
             TenantId::new("tenant-a").expect("valid tenant ID"),
             AssetId::new("asset-1").expect("valid asset ID"),
-            AssetTypeId::new("industrial.machine").expect("valid asset type ID"),
+            AssetTypeRef::new(
+                AssetTypeId::new("industrial.machine").expect("valid asset type ID"),
+                DefinitionVersion::new(1).expect("valid definition version"),
+            ),
             AssetName::new("Primary machine").expect("valid asset name"),
         )
     }
@@ -271,7 +275,8 @@ mod tests {
 
         assert_eq!(asset.tenant_id().as_str(), "tenant-a");
         assert_eq!(asset.id().as_str(), "asset-1");
-        assert_eq!(asset.asset_type_id().as_str(), "industrial.machine");
+        assert_eq!(asset.asset_type().id().as_str(), "industrial.machine");
+        assert_eq!(asset.asset_type().version().get(), 1);
         assert_eq!(asset.name().as_str(), "Primary machine");
         assert!(asset.external_identifiers().is_empty());
     }
