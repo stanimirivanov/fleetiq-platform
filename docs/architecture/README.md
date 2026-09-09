@@ -55,9 +55,11 @@ definitions are immutable and versioned. Each relationship revision records:
 
 This distinction supports delayed information and corrections without silently
 rewriting physical history. The domain interval enforces local ordering. Rules
-that require the broader graph—tenant membership of both endpoints, permitted
-asset types, temporal overlap, cardinality, and containment cycles—belong to the
-application service and repository transaction that can inspect that graph.
+that require the broader graph—permitted asset types, temporal overlap,
+cardinality, and containment cycles—belong to the application service and
+repository transaction that can inspect that graph. PostgreSQL composite foreign
+keys enforce that both endpoints and the exact relationship-type version belong
+to the relationship's tenant.
 
 Device endpoints and effective-time signal bindings are separate concepts
 planned for subsequent increments.
@@ -79,5 +81,13 @@ asset-type, and relationship-type versions. Asset-type definitions persist their
 property references atomically and retain declaration order. Published
 definition versions are append-only: PostgreSQL rejects updates and deletes so a
 semantic change must introduce a new version.
+
+Asset relationships have stable identities with immutable, contiguous recorded
+revisions. Each revision stores directed endpoints, an exact relationship-type
+version, recorded time, and a half-open effective interval. A mutable head
+serializes concurrent appends; deferred constraints verify the complete revision
+sequence and monotonic recorded time at commit. Snapshot queries accept separate
+effective-time and recorded-time cutoffs so corrections do not rewrite what was
+known previously.
 
 See [ADR 0001](../adr/0001-postgresql-sqlx-persistence.md).

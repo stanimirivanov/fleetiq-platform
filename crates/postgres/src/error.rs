@@ -17,6 +17,29 @@ pub enum PostgresRepositoryError {
         /// The original database error.
         source: sqlx::Error,
     },
+    /// A database check or deferred constraint rejected an invalid invariant.
+    InvariantViolation {
+        /// The database constraint that detected the violation, when available.
+        constraint: Option<String>,
+        /// The original database error.
+        source: sqlx::Error,
+    },
+    /// A relationship revision did not immediately follow the persisted head.
+    UnexpectedRevision {
+        /// The next revision required by the repository.
+        expected: u64,
+        /// The revision supplied by the caller.
+        actual: u64,
+    },
+    /// The latest relationship revision already occupies the complete `u64` range.
+    RevisionExhausted,
+    /// Recorded time moved backwards relative to the preceding revision.
+    RecordedTimeRegression {
+        /// The preceding revision's signed Unix timestamp in milliseconds.
+        previous_ms: i64,
+        /// The rejected revision's signed Unix timestamp in milliseconds.
+        actual_ms: i64,
+    },
     /// Persisted data violated a domain invariant during reconstruction.
     CorruptData {
         /// The column or record that could not be reconstructed.
@@ -39,6 +62,26 @@ impl fmt::Display for PostgresRepositoryError {
                 write!(formatter, "database reference is invalid")?;
                 format_constraint(formatter, constraint.as_deref())
             }
+            Self::InvariantViolation { constraint, .. } => {
+                write!(formatter, "database invariant was violated")?;
+                format_constraint(formatter, constraint.as_deref())
+            }
+            Self::UnexpectedRevision { expected, actual } => {
+                write!(
+                    formatter,
+                    "relationship revision {actual} is out of sequence; expected {expected}"
+                )
+            }
+            Self::RevisionExhausted => {
+                formatter.write_str("relationship revision range is exhausted")
+            }
+            Self::RecordedTimeRegression {
+                previous_ms,
+                actual_ms,
+            } => write!(
+                formatter,
+                "relationship recorded time {actual_ms} precedes previous time {previous_ms}"
+            ),
             Self::CorruptData { field, message } => {
                 write!(
                     formatter,
@@ -53,9 +96,14 @@ impl fmt::Display for PostgresRepositoryError {
 impl Error for PostgresRepositoryError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::Conflict { source, .. } | Self::InvalidReference { source, .. } => Some(source),
+            Self::Conflict { source, .. }
+            | Self::InvalidReference { source, .. }
+            | Self::InvariantViolation { source, .. } => Some(source),
             Self::Database(error) => Some(error),
-            Self::CorruptData { .. } => None,
+            Self::CorruptData { .. }
+            | Self::UnexpectedRevision { .. }
+            | Self::RevisionExhausted
+            | Self::RecordedTimeRegression { .. } => None,
         }
     }
 }
@@ -73,6 +121,10 @@ pub(crate) fn classify_database_error(error: sqlx::Error) -> PostgresRepositoryE
             source: error,
         },
         Some("23503") => PostgresRepositoryError::InvalidReference {
+            constraint,
+            source: error,
+        },
+        Some("23514") => PostgresRepositoryError::InvariantViolation {
             constraint,
             source: error,
         },

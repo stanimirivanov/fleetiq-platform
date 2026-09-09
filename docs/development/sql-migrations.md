@@ -34,8 +34,10 @@ the reader to infer business rules from application code.
   data.
 - State deletion behavior explicitly when child rows are owned by an aggregate.
   Use cascading deletion only when the child has no independent lifecycle.
-- Store timestamps that represent instants as `TIMESTAMPTZ`. Choose exact numeric
-  types for values where floating-point rounding would change business meaning.
+- Store timestamps that represent instants as `TIMESTAMPTZ` by default. An
+  explicit domain or wire contract may use an integer epoch representation when
+  the migration documents its unit, range, and conversion boundary. Choose exact
+  numeric types where floating-point rounding would change business meaning.
 - Add indexes for demonstrated query, join, ordering, or foreign-key access
   patterns. Explain indexes whose purpose is not evident from their columns.
 

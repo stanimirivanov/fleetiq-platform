@@ -4,7 +4,9 @@
 //! contracts without exposing database or transport types to domain code.
 
 mod definition_repository;
+mod relationship_repository;
 mod repository;
 
 pub use definition_repository::DefinitionRepository;
+pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQuery};
 pub use repository::AssetRepository;

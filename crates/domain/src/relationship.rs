@@ -181,9 +181,9 @@ impl RelationshipEndpoints {
 /// A recorded revision of a directed relationship between two assets.
 ///
 /// The source and target roles are meaningful according to the referenced
-/// relationship type. Both assets must belong to [`Self::tenant_id`]; enforcing
-/// that rule requires an asset repository and is therefore an application-layer
-/// validation.
+/// relationship type. Both assets must belong to [`Self::tenant_id`]. This local
+/// value cannot validate repository-wide membership; persistence constraints and
+/// graph application services enforce that boundary.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AssetRelationship {
     tenant_id: TenantId,
