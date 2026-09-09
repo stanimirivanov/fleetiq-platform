@@ -24,6 +24,14 @@ pub struct AssetId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetTypeId(String);
 
+/// Identifies a relationship record across its recorded revisions.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct AssetRelationshipId(String);
+
+/// Identifies the stable semantic meaning of a directed asset relationship.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct RelationshipTypeId(String);
+
 /// Identifies the stable semantic meaning of an asset property.
 ///
 /// A property definition can be shared by multiple asset types so calculators
@@ -149,7 +157,9 @@ macro_rules! domain_identifier {
 
 domain_identifier!(TenantId);
 domain_identifier!(AssetId);
+domain_identifier!(AssetRelationshipId);
 domain_identifier!(AssetTypeId);
+domain_identifier!(RelationshipTypeId);
 domain_identifier!(PropertyDefinitionId);
 domain_identifier!(UnitId);
 domain_identifier!(ExternalIdentifierKind);

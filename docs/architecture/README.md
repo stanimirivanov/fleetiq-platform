@@ -44,5 +44,20 @@ therefore target semantic property IDs rather than vendor-specific fields. Unit
 identifiers are configurable so adopting a standard vocabulary does not require
 changing the core domain model.
 
-Asset relationships, device endpoints, and effective-time signal bindings are
-separate concepts planned for subsequent increments.
+Relationships are directed, typed domain facts between assets. Relationship-type
+definitions are immutable and versioned. Each relationship revision records:
+
+- its tenant and stable relationship identity;
+- its recorded revision and the time FleetIQ learned that revision;
+- its source and target asset roles;
+- the exact relationship-type version;
+- a half-open effective interval describing when it applies physically.
+
+This distinction supports delayed information and corrections without silently
+rewriting physical history. The domain interval enforces local ordering. Rules
+that require the broader graph—tenant membership of both endpoints, permitted
+asset types, temporal overlap, cardinality, and containment cycles—belong to the
+application service and repository transaction that can inspect that graph.
+
+Device endpoints and effective-time signal bindings are separate concepts
+planned for subsequent increments.
