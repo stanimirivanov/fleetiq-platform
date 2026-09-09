@@ -1,6 +1,6 @@
 use std::{error::Error, fmt, num::NonZeroU32};
 
-use crate::{AssetTypeId, PropertyDefinitionId, UnitId};
+use crate::{AssetTypeId, PropertyDefinitionId, RelationshipTypeId, UnitId};
 
 const MAX_DEFINITION_NAME_LENGTH: usize = 200;
 
@@ -84,6 +84,30 @@ impl PropertyDefinitionRef {
 
     /// Returns the stable property-definition identity.
     pub fn id(&self) -> &PropertyDefinitionId {
+        &self.id
+    }
+
+    /// Returns the referenced immutable version.
+    pub fn version(&self) -> DefinitionVersion {
+        self.version
+    }
+}
+
+/// References one immutable version of a relationship-type definition.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct RelationshipTypeRef {
+    id: RelationshipTypeId,
+    version: DefinitionVersion,
+}
+
+impl RelationshipTypeRef {
+    /// Constructs a reference to a relationship-type definition.
+    pub fn new(id: RelationshipTypeId, version: DefinitionVersion) -> Self {
+        Self { id, version }
+    }
+
+    /// Returns the stable relationship-type identity.
+    pub fn id(&self) -> &RelationshipTypeId {
         &self.id
     }
 
@@ -352,6 +376,34 @@ impl fmt::Display for AssetTypeDefinitionError {
 
 impl Error for AssetTypeDefinitionError {}
 
+/// Defines the meaning of one immutable directed relationship type.
+///
+/// Endpoint type constraints, cardinality, and graph-shape rules require access
+/// to definitions or relationships beyond this value. They belong to graph
+/// validation rather than this definition aggregate.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RelationshipTypeDefinition {
+    reference: RelationshipTypeRef,
+    name: DefinitionName,
+}
+
+impl RelationshipTypeDefinition {
+    /// Constructs an immutable relationship-type definition.
+    pub fn new(reference: RelationshipTypeRef, name: DefinitionName) -> Self {
+        Self { reference, name }
+    }
+
+    /// Returns the identity and version of this immutable definition.
+    pub fn reference(&self) -> &RelationshipTypeRef {
+        &self.reference
+    }
+
+    /// Returns the operator-facing relationship-type name.
+    pub fn name(&self) -> &DefinitionName {
+        &self.name
+    }
+}
+
 fn validate_name(value: &str) -> Result<(), DefinitionNameError> {
     if value.trim().is_empty() {
         return Err(DefinitionNameError::Empty);
@@ -393,6 +445,13 @@ mod tests {
     fn type_reference(version_number: u32) -> AssetTypeRef {
         AssetTypeRef::new(
             AssetTypeId::new("generic.power-system").expect("valid asset type ID"),
+            version(version_number),
+        )
+    }
+
+    fn relationship_type_reference(version_number: u32) -> RelationshipTypeRef {
+        RelationshipTypeRef::new(
+            RelationshipTypeId::new("physical.contains").expect("valid relationship type ID"),
             version(version_number),
         )
     }
@@ -511,5 +570,17 @@ mod tests {
             DefinitionName::new("Temperature\nreading"),
             Err(DefinitionNameError::ControlCharacter)
         );
+    }
+
+    #[test]
+    fn relationship_type_definitions_are_versioned() {
+        let definition = RelationshipTypeDefinition::new(
+            relationship_type_reference(2),
+            DefinitionName::new("Contains").expect("valid definition name"),
+        );
+
+        assert_eq!(definition.reference().id().as_str(), "physical.contains");
+        assert_eq!(definition.reference().version().get(), 2);
+        assert_eq!(definition.name().as_str(), "Contains");
     }
 }

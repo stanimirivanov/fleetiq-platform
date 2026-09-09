@@ -11,10 +11,10 @@ dependencies.
 ## Current scope
 
 The current implementation establishes the Rust workspace and the first semantic
-domain types: tenants, versioned asset types, reusable property definitions,
-assets, and typed external identifiers. Later increments will add relationships,
-device endpoints, signal bindings, the protocol runtime, telemetry processing,
-APIs, and web application described in
+domain types: tenants, versioned asset and property definitions, assets, typed
+external identifiers, and effective-dated asset relationships. Later increments
+will add device endpoints, signal bindings, the protocol runtime, telemetry
+processing, APIs, and web application described in
 [`docs/architecture/README.md`](docs/architecture/README.md).
 
 ## Prerequisites
