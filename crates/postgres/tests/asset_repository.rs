@@ -38,6 +38,14 @@ fn serial_number(value: &str) -> ExternalIdentifier {
     )
 }
 
+fn imei(value: &str) -> ExternalIdentifier {
+    ExternalIdentifier::new(
+        ExternalIdentifierKind::new("imei").expect("test identifier kind should be valid"),
+        None,
+        ExternalIdentifierValue::new(value).expect("test identifier value should be valid"),
+    )
+}
+
 async fn seed_tenant_and_asset_type(pool: &PgPool, tenant: &str) -> sqlx::Result<()> {
     sqlx::query("INSERT INTO metadata.tenants (tenant_id) VALUES ($1)")
         .bind(tenant)
@@ -61,6 +69,7 @@ async fn asset_round_trip_preserves_domain_values(pool: PgPool) -> Result<(), Bo
     seed_tenant_and_asset_type(&pool, "tenant-a").await?;
     let repository = PostgresAssetRepository::new(pool);
     let mut expected = asset("tenant-a", "asset-1", "Primary machine");
+    expected.add_external_identifier(imei("123456789012345"))?;
     expected.add_external_identifier(serial_number("SN-100"))?;
 
     repository.insert(&expected).await?;

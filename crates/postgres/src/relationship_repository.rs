@@ -23,6 +23,14 @@ impl PostgresRelationshipRepository {
         Self { pool }
     }
 
+    /// Appends one complete relationship revision transactionally.
+    ///
+    /// A new identity is created for revision 1. Existing identities are locked
+    /// before validating and advancing their head, which serializes concurrent
+    /// writers for that relationship while leaving unrelated relationships
+    /// independent. These statements remain separate because the locked head
+    /// must be inspected through domain revision and time invariants before the
+    /// immutable revision can be inserted.
     async fn append_revision(
         &self,
         relationship: &AssetRelationship,
@@ -118,6 +126,7 @@ impl PostgresRelationshipRepository {
         transaction.commit().await.map_err(classify_database_error)
     }
 
+    /// Reads and validates one exact immutable relationship revision.
     async fn find_exact_revision(
         &self,
         tenant_id: &TenantId,
@@ -155,6 +164,12 @@ impl PostgresRelationshipRepository {
             .transpose()
     }
 
+    /// Reconstructs the relationships involving an asset at a bitemporal point.
+    ///
+    /// The query first selects candidate identities that involved the asset by
+    /// the knowledge cutoff. It then selects each identity's latest known
+    /// revision before applying endpoint and half-open effective-time filters.
+    /// This ordering is required because a correction can change an endpoint.
     async fn find_asset_snapshot(
         &self,
         tenant_id: &TenantId,
@@ -244,6 +259,10 @@ impl RelationshipRepository for PostgresRelationshipRepository {
     }
 }
 
+/// Inserts the immutable revision row inside the caller's locked transaction.
+///
+/// The caller owns sequence and recorded-time validation and advances the
+/// stable relationship head before committing the transaction.
 async fn insert_revision_row(
     transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     relationship: &AssetRelationship,
