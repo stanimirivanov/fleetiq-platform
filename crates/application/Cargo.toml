@@ -1,0 +1,14 @@
+[package]
+name = "fleetiq-application"
+version = "0.1.0"
+description = "FleetIQ application ports and use-case orchestration"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-domain = { path = "../domain" }
+
+[lints]
+workspace = true

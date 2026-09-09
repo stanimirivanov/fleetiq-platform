@@ -61,3 +61,17 @@ application service and repository transaction that can inspect that graph.
 
 Device endpoints and effective-time signal bindings are separate concepts
 planned for subsequent increments.
+
+## Metadata persistence
+
+PostgreSQL migrations define the persisted metadata schema. Handwritten domain
+aggregates remain independent of that schema. Application-owned repository ports
+separate use cases from SQLx adapters, whose private row types reconstruct domain
+objects through validated constructors.
+
+Tenant-aware composite primary and foreign keys enforce isolation structurally.
+Assets reference an asset-type definition from the same tenant and exact version.
+External identifier uniqueness is scoped by tenant, identifier kind, optional
+authority, and value. Aggregate writes include identifiers in one transaction.
+
+See [ADR 0001](../adr/0001-postgresql-sqlx-persistence.md).

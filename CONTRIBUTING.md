@@ -45,6 +45,13 @@ infrastructure adapters.
 Use an ADR for choices that affect compatibility, durability, security, data
 meaning, deployment topology, or more than one application.
 
+## Database migrations
+
+Follow the [SQL migration criteria](docs/development/sql-migrations.md). Treat
+migrations as reviewed production code: document their domain intent, enforce
+durable invariants in PostgreSQL, and verify the full migration chain against the
+supported database version.
+
 ## Commits and generated files
 
 Use clear, imperative commit subjects. Keep generated code reproducible and

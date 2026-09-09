@@ -21,6 +21,7 @@ processing, APIs, and web application described in
 
 - Rust 1.98.1. The repository pins the toolchain and required components in
   `rust-toolchain.toml`.
+- Docker with Compose for PostgreSQL-backed development and integration tests.
 
 ## Build and verify
 
@@ -31,13 +32,28 @@ cargo test --workspace --all-features
 cargo doc --workspace --no-deps
 ```
 
-The workspace currently contains no third-party Rust dependencies, so its domain
-foundation can be built and tested without external services.
+Checked SQL compilation and PostgreSQL integration tests require a migrated
+database:
+
+```powershell
+docker compose -f deploy/local/compose.yaml up -d
+$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:5432/fleetiq"
+cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
+sqlx migrate run --source migrations
+cargo test --workspace --all-features
+```
+
+The password is explicitly local-only. Use environment secret management for
+deployed databases.
 
 ## Repository organization
 
 ```text
 crates/domain/             Framework-independent business types and invariants
+crates/application/        Use cases and application-owned infrastructure ports
+crates/postgres/           Private SQLx row mapping and PostgreSQL adapters
+migrations/                Authoritative PostgreSQL metadata schema
+deploy/local/              Disposable local development infrastructure
 docs/architecture/         Accepted architecture boundaries
 docs/adr/                  Architectural decisions and their consequences
 ```

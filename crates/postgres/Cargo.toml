@@ -1,0 +1,19 @@
+[package]
+name = "fleetiq-postgres"
+version = "0.1.0"
+description = "PostgreSQL persistence adapters for FleetIQ"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-application = { path = "../application" }
+fleetiq-domain = { path = "../domain" }
+sqlx.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
+
+[lints]
+workspace = true
