@@ -21,6 +21,7 @@ impl PostgresDefinitionRepository {
         Self { pool }
     }
 
+    /// Inserts one immutable property-definition row.
     async fn insert_property_definition(
         &self,
         tenant_id: &TenantId,
@@ -53,6 +54,7 @@ impl PostgresDefinitionRepository {
         Ok(())
     }
 
+    /// Reads and validates one exact property-definition version.
     async fn find_property_definition(
         &self,
         tenant_id: &TenantId,
@@ -76,63 +78,75 @@ impl PostgresDefinitionRepository {
         row.map(PropertyDefinitionRow::into_domain).transpose()
     }
 
+    /// Inserts an asset-type definition and its ordered properties atomically.
+    ///
+    /// A data-modifying common table expression inserts the definition and
+    /// exposes its key to one set-based property insert. `UNNEST ... WITH
+    /// ORDINALITY` preserves declaration order without issuing one database
+    /// request per property. An empty property array still inserts the parent.
     async fn insert_asset_type_definition(
         &self,
         tenant_id: &TenantId,
         definition: &AssetTypeDefinition,
     ) -> Result<(), PostgresRepositoryError> {
-        let mut transaction = self.pool.begin().await.map_err(classify_database_error)?;
         let tenant_id = tenant_id.as_str();
         let type_id = definition.reference().id().as_str();
         let type_version = i64::from(definition.reference().version().get());
         let display_name = definition.name().as_str();
-        let property_count = i64::try_from(definition.supported_properties().len())
+        let properties = definition.supported_properties();
+        let property_count = i64::try_from(properties.len())
             .map_err(|error| corrupt("asset_type_definitions.property_count", error))?;
+        let property_ids: Vec<_> = properties
+            .iter()
+            .map(|property| property.id().as_str())
+            .collect();
+        let property_versions: Vec<_> = properties
+            .iter()
+            .map(|property| i64::from(property.version().get()))
+            .collect();
 
         sqlx::query!(
             r"
-            INSERT INTO metadata.asset_type_definitions
-                (tenant_id, type_id, version, display_name, property_count)
-            VALUES ($1, $2, $3, $4, $5)
+            WITH inserted_definition AS (
+                INSERT INTO metadata.asset_type_definitions
+                    (tenant_id, type_id, version, display_name, property_count)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING tenant_id, type_id, version
+            )
+            INSERT INTO metadata.asset_type_properties
+                (tenant_id, type_id, type_version, property_id,
+                 property_version, property_ordinal)
+            SELECT
+                inserted_definition.tenant_id,
+                inserted_definition.type_id,
+                inserted_definition.version,
+                property.property_id,
+                property.property_version,
+                property.property_ordinal
+            FROM inserted_definition
+            CROSS JOIN UNNEST($6::text[], $7::bigint[]) WITH ORDINALITY
+                AS property(property_id, property_version, property_ordinal)
             ",
             tenant_id,
             type_id,
             type_version,
             display_name,
-            property_count
+            property_count,
+            &property_ids as &[&str],
+            &property_versions as &[i64]
         )
-        .execute(&mut *transaction)
+        .execute(&self.pool)
         .await
         .map_err(classify_database_error)?;
 
-        for (index, property) in definition.supported_properties().iter().enumerate() {
-            let property_ordinal = i64::try_from(index + 1)
-                .map_err(|error| corrupt("asset_type_properties.property_ordinal", error))?;
-            let property_id = property.id().as_str();
-            let property_version = i64::from(property.version().get());
-
-            sqlx::query!(
-                r"
-                INSERT INTO metadata.asset_type_properties
-                    (tenant_id, type_id, type_version, property_id,
-                     property_version, property_ordinal)
-                VALUES ($1, $2, $3, $4, $5, $6)
-                ",
-                tenant_id,
-                type_id,
-                type_version,
-                property_id,
-                property_version,
-                property_ordinal
-            )
-            .execute(&mut *transaction)
-            .await
-            .map_err(classify_database_error)?;
-        }
-
-        transaction.commit().await.map_err(classify_database_error)
+        Ok(())
     }
 
+    /// Reconstructs an asset-type definition with two intentional reads.
+    ///
+    /// Keeping the parent and ordered property rows separate preserves `SQLx`'s
+    /// compile-time field mapping and clearly distinguishes a missing
+    /// definition from one that declares no properties.
     async fn find_asset_type_definition(
         &self,
         tenant_id: &TenantId,
@@ -179,6 +193,7 @@ impl PostgresDefinitionRepository {
         row.into_domain(properties).map(Some)
     }
 
+    /// Inserts one immutable relationship-type definition row.
     async fn insert_relationship_type_definition(
         &self,
         tenant_id: &TenantId,
@@ -204,6 +219,7 @@ impl PostgresDefinitionRepository {
         Ok(())
     }
 
+    /// Reads and validates one exact relationship-type definition version.
     async fn find_relationship_type_definition(
         &self,
         tenant_id: &TenantId,

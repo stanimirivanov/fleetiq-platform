@@ -20,55 +20,74 @@ impl PostgresAssetRepository {
         Self { pool }
     }
 
+    /// Inserts an asset aggregate in one atomic database statement.
+    ///
+    /// The data-modifying common table expression inserts the asset first and
+    /// feeds its identity into one set-based insert for all external
+    /// identifiers. Parallel arrays are expanded with `UNNEST`, eliminating a
+    /// database round trip per identifier. Empty arrays still insert the asset
+    /// and naturally produce no identifier rows.
     async fn insert_asset(&self, asset: &Asset) -> Result<(), PostgresRepositoryError> {
-        let mut transaction = self.pool.begin().await.map_err(classify_database_error)?;
         let tenant_id = asset.tenant_id().as_str();
         let asset_id = asset.id().as_str();
         let type_id = asset.asset_type().id().as_str();
         let type_version = i64::from(asset.asset_type().version().get());
         let name = asset.name().as_str();
+        let identifiers = asset.external_identifiers();
+        let kinds: Vec<_> = identifiers
+            .iter()
+            .map(|identifier| identifier.kind().as_str())
+            .collect();
+        let authorities: Vec<_> = identifiers
+            .iter()
+            .map(|identifier| identifier.authority().map(AsRef::as_ref))
+            .collect();
+        let values: Vec<_> = identifiers
+            .iter()
+            .map(|identifier| identifier.value().as_str())
+            .collect();
 
         sqlx::query!(
             r"
-            INSERT INTO metadata.assets
-                (tenant_id, asset_id, type_id, type_version, display_name)
-            VALUES ($1, $2, $3, $4, $5)
+            WITH inserted_asset AS (
+                INSERT INTO metadata.assets
+                    (tenant_id, asset_id, type_id, type_version, display_name)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING tenant_id, asset_id
+            )
+            INSERT INTO metadata.asset_external_identifiers
+                (tenant_id, asset_id, identifier_kind, authority, identifier_value)
+            SELECT
+                inserted_asset.tenant_id,
+                inserted_asset.asset_id,
+                identifier.identifier_kind,
+                identifier.authority,
+                identifier.identifier_value
+            FROM inserted_asset
+            CROSS JOIN UNNEST($6::text[], $7::text[], $8::text[])
+                AS identifier(identifier_kind, authority, identifier_value)
             ",
             tenant_id,
             asset_id,
             type_id,
             type_version,
-            name
+            name,
+            &kinds as &[&str],
+            &authorities as &[Option<&str>],
+            &values as &[&str]
         )
-        .execute(&mut *transaction)
+        .execute(&self.pool)
         .await
         .map_err(classify_database_error)?;
 
-        for identifier in asset.external_identifiers() {
-            let kind = identifier.kind().as_str();
-            let authority = identifier.authority().map(AsRef::as_ref);
-            let value = identifier.value().as_str();
-
-            sqlx::query!(
-                r"
-                INSERT INTO metadata.asset_external_identifiers
-                    (tenant_id, asset_id, identifier_kind, authority, identifier_value)
-                VALUES ($1, $2, $3, $4, $5)
-                ",
-                tenant_id,
-                asset_id,
-                kind,
-                authority,
-                value
-            )
-            .execute(&mut *transaction)
-            .await
-            .map_err(classify_database_error)?;
-        }
-
-        transaction.commit().await.map_err(classify_database_error)
+        Ok(())
     }
 
+    /// Reconstructs an asset aggregate with two deliberately separate reads.
+    ///
+    /// Reading the parent first distinguishes an absent asset without decoding
+    /// an aggregated child column. The second query uses the child-table index
+    /// and preserves compile-time column checking for every identifier field.
     async fn find_asset(
         &self,
         tenant_id: &TenantId,

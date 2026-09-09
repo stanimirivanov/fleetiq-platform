@@ -106,6 +106,27 @@ async fn asset_type_round_trip_preserves_property_declaration_order(
 }
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn asset_type_without_properties_is_persisted(pool: PgPool) -> Result<(), Box<dyn Error>> {
+    let tenant = tenant_id("tenant-a");
+    seed_tenant(&pool, &tenant).await?;
+    let repository = PostgresDefinitionRepository::new(pool);
+    let expected = AssetTypeDefinition::new(
+        asset_type_reference(1),
+        DefinitionName::new("Power system").expect("test name should be valid"),
+    );
+
+    repository.insert_asset_type(&tenant, &expected).await?;
+
+    assert_eq!(
+        repository
+            .find_asset_type(&tenant, expected.reference())
+            .await?,
+        Some(expected)
+    );
+    Ok(())
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn missing_property_rolls_back_asset_type_definition(
     pool: PgPool,
 ) -> Result<(), Box<dyn Error>> {

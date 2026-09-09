@@ -52,6 +52,25 @@ migrations as reviewed production code: document their domain intent, enforce
 durable invariants in PostgreSQL, and verify the full migration chain against the
 supported database version.
 
+## PostgreSQL repository queries
+
+- Treat database round trips as an explicit design cost. Batch homogeneous
+  child rows with set-based PostgreSQL operations such as `UNNEST` instead of
+  executing a query inside a loop.
+- Prefer one atomic statement for an aggregate insert when a data-modifying
+  common table expression can insert the parent and feed its key into a batched
+  child insert. Use an explicit transaction when application-side validation or
+  branching must occur between statements.
+- Keep parent and child reads separate when that preserves clear absence
+  semantics, ordinary `query_as!` compile-time field checking, and simple
+  indexed access. Combine reads when measurements and expected cardinality
+  justify the added aggregate-query and decoding complexity.
+- Keep SQLx row types private to the adapter and reconstruct domain values
+  through validated constructors.
+- Document repository methods whose SQL shape is not obvious. Explain batching,
+  transaction boundaries, locking, temporal selection, ordering, and deliberate
+  multi-query decisions so reviewers do not need to infer them from SQL alone.
+
 ## Commits and generated files
 
 Use clear, imperative commit subjects. Keep generated code reproducible and
