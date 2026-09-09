@@ -11,9 +11,9 @@ dependencies.
 ## Current scope
 
 The current implementation establishes the Rust workspace, semantic definition
-catalogue, and the first asset persistence boundary. Domain types cover tenants,
-versioned definitions, assets, typed external identifiers, and effective-dated
-asset relationships. Later increments will add relationship persistence, device
+catalogue, asset persistence, and revisioned relationship persistence. Domain
+types cover tenants, versioned definitions, assets, typed external identifiers,
+and effective-dated asset relationships. Later increments will add device
 endpoints, signal bindings, the protocol runtime, telemetry processing, APIs,
 and the web application described in
 [`docs/architecture/README.md`](docs/architecture/README.md).
