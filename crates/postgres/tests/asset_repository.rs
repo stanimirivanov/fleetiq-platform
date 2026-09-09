@@ -46,8 +46,8 @@ async fn seed_tenant_and_asset_type(pool: &PgPool, tenant: &str) -> sqlx::Result
     sqlx::query(
         r"
         INSERT INTO metadata.asset_type_definitions
-            (tenant_id, type_id, version, display_name)
-        VALUES ($1, 'generic.machine', 1, 'Machine')
+            (tenant_id, type_id, version, display_name, property_count)
+        VALUES ($1, 'generic.machine', 1, 'Machine', 0)
         ",
     )
     .bind(tenant)

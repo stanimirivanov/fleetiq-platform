@@ -30,8 +30,8 @@ fixed list such as vehicle, locomotive, motor, or sensor into the core aggregate
 External identifiers consist of a kind, an optional issuing authority, and a
 value. VIN, IMEI, serial number, and operator number can therefore coexist
 without making any one identifier universal. The asset aggregate prevents exact
-duplicates. Cross-asset uniqueness requires tenant-wide repository knowledge and
-will be enforced when persistence is introduced.
+duplicates. PostgreSQL enforces cross-asset uniqueness within the tenant, kind,
+authority, and value namespace.
 
 Asset-type definitions are immutable and versioned. An asset references a
 specific version, preventing a later configuration change from silently changing
@@ -73,5 +73,11 @@ Tenant-aware composite primary and foreign keys enforce isolation structurally.
 Assets reference an asset-type definition from the same tenant and exact version.
 External identifier uniqueness is scoped by tenant, identifier kind, optional
 authority, and value. Aggregate writes include identifiers in one transaction.
+
+The semantic-definition repository stores and retrieves exact property,
+asset-type, and relationship-type versions. Asset-type definitions persist their
+property references atomically and retain declaration order. Published
+definition versions are append-only: PostgreSQL rejects updates and deletes so a
+semantic change must introduce a new version.
 
 See [ADR 0001](../adr/0001-postgresql-sqlx-persistence.md).
