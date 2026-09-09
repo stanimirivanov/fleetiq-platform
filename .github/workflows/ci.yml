@@ -14,6 +14,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
   RUSTFLAGS: -D warnings
   RUSTDOCFLAGS: -D warnings
 
@@ -23,6 +24,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.23
+        env:
+          POSTGRES_DB: fleetiq
+          POSTGRES_USER: fleetiq
+          POSTGRES_PASSWORD: fleetiq-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fleetiq -d fleetiq"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
     steps:
       - name: Check out source
         uses: actions/checkout@v7.0.1
@@ -31,6 +47,9 @@ jobs:
         run: |
           rustc --version
           cargo --version
+
+      - name: Apply metadata schema for checked queries
+        run: psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --file migrations/0001_metadata_foundation.sql
 
       - name: Check formatting
         run: cargo fmt --all --check
