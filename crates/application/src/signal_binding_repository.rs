@@ -8,7 +8,7 @@ use fleetiq_domain::{
 ///
 /// `effective_at` identifies when the attribution applied in the physical
 /// world. `known_at` is the inclusive cutoff for revisions recorded by
-/// FleetIQ. Callers must choose both values so corrections cannot silently
+/// `FleetIQ`. Callers must choose both values so corrections cannot silently
 /// change the historical view used by replay or analytics.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct SignalBindingSnapshotQuery {
