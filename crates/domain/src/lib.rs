@@ -6,6 +6,7 @@
 
 mod asset;
 mod definition;
+mod device;
 mod identifier;
 mod relationship;
 
@@ -16,10 +17,14 @@ pub use definition::{
     PropertyDefinitionError, PropertyDefinitionRef, PropertyValueKind, RelationshipTypeDefinition,
     RelationshipTypeRef,
 };
+pub use device::{
+    CommunicationDevice, CommunicationDeviceError, DeviceEndpoint, DeviceEndpointName,
+    DeviceEndpointNameError,
+};
 pub use identifier::{
-    AssetId, AssetRelationshipId, AssetTypeId, ExternalIdentifierAuthority, ExternalIdentifierKind,
-    ExternalIdentifierValue, IdentifierError, PropertyDefinitionId, RelationshipTypeId, TenantId,
-    UnitId,
+    AssetId, AssetRelationshipId, AssetTypeId, DeviceEndpointId, DeviceEndpointKindId,
+    ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, IdentifierError,
+    PropertyDefinitionId, RelationshipTypeId, TenantId, UnitId,
 };
 pub use relationship::{
     AssetRelationship, EffectiveInterval, EffectiveIntervalError, RecordRevision,
