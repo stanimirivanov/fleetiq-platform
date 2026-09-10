@@ -27,6 +27,20 @@ An issue or pull request should state:
   multiple implementations or a test seam with meaningful behavior.
 - Keep modules cohesive and APIs small. Do not mirror class-oriented patterns
   mechanically when an enum, function, or newtype is clearer.
+- Treat file length as a review signal rather than a limit. When production code
+  approaches roughly 300 lines, check whether it contains concepts with separate
+  reasons to change, or whether a function has become difficult to verify as one
+  unit.
+- Split a growing feature behind a small private facade. Keep supported imports
+  stable with deliberate re-exports, and organize child modules around domain
+  concepts or persistence responsibilities rather than placing each type in its
+  own file.
+- For persistence adapters, separate commands, queries, and row-to-domain
+  reconstruction when those areas evolve independently. Keep transaction
+  orchestration together and do not introduce a generic repository framework
+  until repeated behavior has stable semantics.
+- Move tests after establishing production boundaries. A separate test file
+  improves navigation but is not by itself an architectural refactor.
 - Document public APIs with purpose, invariants, errors, and examples where an
   example clarifies correct use. Explain reasons and constraints in comments;
   avoid narrating syntax.
