@@ -9,6 +9,7 @@ mod definition;
 mod device;
 mod identifier;
 mod relationship;
+mod signal_binding;
 
 pub use asset::{Asset, AssetError, AssetName, ExternalIdentifier};
 pub use definition::{
@@ -24,9 +25,10 @@ pub use device::{
 pub use identifier::{
     AssetId, AssetRelationshipId, AssetTypeId, DeviceEndpointId, DeviceEndpointKindId,
     ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, IdentifierError,
-    PropertyDefinitionId, RelationshipTypeId, TenantId, UnitId,
+    PropertyDefinitionId, RelationshipTypeId, SignalBindingId, SourceSignalId, TenantId, UnitId,
 };
 pub use relationship::{
     AssetRelationship, EffectiveInterval, EffectiveIntervalError, RecordRevision,
     RecordRevisionError, RecordedRevision, RelationshipEndpoints, UnixTimeMillis,
 };
+pub use signal_binding::{SignalBinding, SignalSource, SignalTarget};

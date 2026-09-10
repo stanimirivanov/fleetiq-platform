@@ -43,6 +43,18 @@ pub struct DeviceEndpointId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct DeviceEndpointKindId(String);
 
+/// Identifies a signal emitted by a protocol or device profile at one endpoint.
+///
+/// Examples can include a normalized vendor parameter name or a stable field
+/// identity from a custom protocol package. Its meaning remains scoped by the
+/// source device endpoint and the decoder/profile contract that produced it.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct SourceSignalId(String);
+
+/// Identifies one signal-to-property attribution across recorded revisions.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct SignalBindingId(String);
+
 /// Identifies the stable semantic meaning of a directed asset relationship.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct RelationshipTypeId(String);
@@ -175,6 +187,8 @@ domain_identifier!(AssetId);
 domain_identifier!(AssetRelationshipId);
 domain_identifier!(DeviceEndpointId);
 domain_identifier!(DeviceEndpointKindId);
+domain_identifier!(SourceSignalId);
+domain_identifier!(SignalBindingId);
 domain_identifier!(AssetTypeId);
 domain_identifier!(RelationshipTypeId);
 domain_identifier!(PropertyDefinitionId);

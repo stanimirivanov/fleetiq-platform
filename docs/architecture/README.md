@@ -74,6 +74,21 @@ Device profiles and the protocol runtime interpret vendor fields, while a later
 effective-time signal-binding increment will assign those source signals to
 semantic asset properties.
 
+A signal binding is a revisioned attribution from a decoded source signal to an
+exact semantic property on a target asset. Its source consists of the device
+asset, one endpoint beneath that device, and a signal ID emitted by a protocol
+package or device profile. Its target consists of the observed asset and an exact
+property-definition version. A half-open effective interval and independent
+recorded revision preserve historical attribution when commissioning information
+arrives late or is corrected.
+
+The domain contract intentionally permits a device to observe its own properties
+as well as properties of other assets. Repository and application boundaries
+must verify tenant membership, endpoint existence, target property support, and
+cross-binding policies. Unit conversion definitions and authority among multiple
+sources require separate explicit contracts before telemetry normalization uses
+the bindings.
+
 ## Metadata persistence
 
 PostgreSQL migrations define the persisted metadata schema. Handwritten domain
