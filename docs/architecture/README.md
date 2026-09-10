@@ -114,6 +114,29 @@ timestamp policy selects event time and quality using operational evidence.
 Durable raw payload storage, event serialization, unit conversion, source
 authority, and semantic observation persistence remain separate contracts.
 
+## Semantic resolution
+
+The `fleetiq-semantics` resolver consumes a decoded observation through focused,
+consumer-owned binding and property-definition read views. Blanket adapters use
+the application repositories, while workers may provide local projections
+without implementing unrelated writes. Callers provide both the effective time
+used for physical attribution and the inclusive knowledge cutoff used for
+historical interpretation. The resolver does not infer event time from device
+and receipt timestamps.
+
+Exactly one effective binding must select the decoded source. Its exact target
+property definition must exist, and the decoded value kind and source unit must
+equal the property's required kind and canonical unit. A successful result
+retains decoded provenance, the semantic target, the binding identity and
+revision, and the bitemporal resolution context.
+
+No binding, competing bindings, missing semantic metadata, and kind or unit
+incompatibility are structured unresolved results. They preserve the decoded
+observation for diagnostics and later retry. Repository failures are operational
+errors. Unit conversion, source authority, timestamp selection, and policy for
+whether uncertain or invalid values update asset state remain later explicit
+increments.
+
 ## Metadata persistence
 
 PostgreSQL migrations define the persisted metadata schema. Handwritten domain
