@@ -61,8 +61,18 @@ repository transaction that can inspect that graph. PostgreSQL composite foreign
 keys enforce that both endpoints and the exact relationship-type version belong
 to the relationship's tenant.
 
-Device endpoints and effective-time signal bindings are separate concepts
-planned for subsequent increments.
+Communication capability is attached to an existing asset rather than modeled as
+a competing device identity. A communication device can expose an ordered set of
+stable endpoints. Each endpoint has an identity scoped by its device, an
+extensible kind, and an operator-facing label. Examples can include onboard
+measurements, a CAN interface, a serial channel, or an identified peripheral;
+the core model does not prescribe a hardware topology.
+
+Endpoints locate a source within a device. They do not contain protocol package
+selection, vendor parameter selectors, or target asset/property attribution.
+Device profiles and the protocol runtime interpret vendor fields, while a later
+effective-time signal-binding increment will assign those source signals to
+semantic asset properties.
 
 ## Metadata persistence
 
@@ -89,5 +99,11 @@ serializes concurrent appends; deferred constraints verify the complete revision
 sequence and monotonic recorded time at commit. Snapshot queries accept separate
 effective-time and recorded-time cutoffs so corrections do not rewrite what was
 known previously.
+
+Communication-device rows reuse an existing asset's tenant and identity.
+Tenant-aware foreign keys prevent capability from being attached across tenant
+boundaries. Endpoint identities are unique within a device and retain declaration
+order during aggregate persistence and reconstruction. Device registration and
+all endpoints are written atomically with one set-based PostgreSQL statement.
 
 See [ADR 0001](../adr/0001-postgresql-sqlx-persistence.md).

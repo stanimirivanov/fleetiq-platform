@@ -28,6 +28,21 @@ pub struct AssetTypeId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AssetRelationshipId(String);
 
+/// Identifies a physical or logical source exposed by one communication device.
+///
+/// Endpoint identity is scoped by the owning device asset. Two devices may use
+/// the same endpoint identifier without referring to the same source.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct DeviceEndpointId(String);
+
+/// Identifies the configurable category of a communication endpoint.
+///
+/// Examples can include an onboard source, a CAN interface, a serial channel,
+/// or an identified peripheral. The vocabulary remains data-driven so the core
+/// domain does not encode one vendor's hardware layout.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct DeviceEndpointKindId(String);
+
 /// Identifies the stable semantic meaning of a directed asset relationship.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct RelationshipTypeId(String);
@@ -158,6 +173,8 @@ macro_rules! domain_identifier {
 domain_identifier!(TenantId);
 domain_identifier!(AssetId);
 domain_identifier!(AssetRelationshipId);
+domain_identifier!(DeviceEndpointId);
+domain_identifier!(DeviceEndpointKindId);
 domain_identifier!(AssetTypeId);
 domain_identifier!(RelationshipTypeId);
 domain_identifier!(PropertyDefinitionId);
