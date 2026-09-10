@@ -276,6 +276,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-telemetry"
+version = "0.1.0"
+dependencies = [
+ "bigdecimal",
+ "fleetiq-domain",
+]
+
+[[package]]
 name = "flume"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

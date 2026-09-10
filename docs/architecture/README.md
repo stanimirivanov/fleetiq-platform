@@ -92,6 +92,28 @@ Cross-binding policies, unit conversion definitions, and authority among
 multiple sources require separate explicit contracts before telemetry
 normalization uses the bindings.
 
+## Decoded observation contract
+
+The `fleetiq-telemetry` crate defines the boundary between protocol decoding and
+semantic attribution. A decoded observation carries a tenant admitted by the
+host, a device/endpoint/signal source, one typed value, an optional numeric unit,
+source quality, timestamp evidence, and exact protocol-package provenance. It
+does not contain a target asset property; temporal signal binding supplies that
+meaning in the next pipeline stage.
+
+The host assigns an accepted-message identity after satisfying its durability
+condition. A decoded observation identity combines that message identity, the
+immutable protocol-package release, and the output's zero-based position. The
+same input and package release can therefore be replayed idempotently, while a
+deliberate reinterpretation through another package release remains a distinct
+fact with visible provenance.
+
+Device-recorded time remains optional and separate from host receipt time. The
+decoder preserves both even when the device clock appears to be ahead; a later
+timestamp policy selects event time and quality using operational evidence.
+Durable raw payload storage, event serialization, unit conversion, source
+authority, and semantic observation persistence remain separate contracts.
+
 ## Metadata persistence
 
 PostgreSQL migrations define the persisted metadata schema. Handwritten domain

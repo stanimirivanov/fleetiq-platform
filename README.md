@@ -13,12 +13,15 @@ dependencies.
 The current implementation establishes the Rust workspace, semantic definition
 catalogue, asset persistence, revisioned relationship persistence,
 communication-device endpoint persistence, and revisioned signal-binding
-persistence. Domain types cover tenants,
-versioned definitions, assets, typed external identifiers, effective-dated asset
-relationships, protocol-neutral device endpoints, and revisioned temporal signal
-bindings. Later increments will add conversion and source-selection policies,
-the protocol runtime, telemetry processing, APIs, and the web application
-described in [`docs/architecture/README.md`](docs/architecture/README.md).
+persistence. The protocol-neutral telemetry contract represents typed decoded
+observations with deterministic replay identity, source metadata, separate
+device and receipt times, quality, units, and decoder provenance. Domain types
+cover tenants, versioned definitions, assets, typed external identifiers,
+effective-dated asset relationships, protocol-neutral device endpoints, and
+revisioned temporal signal bindings. Later increments will add event
+serialization, conversion and source-selection policies, the protocol runtime,
+persistence, APIs, and the web application described in
+[`docs/architecture/README.md`](docs/architecture/README.md).
 
 ## Prerequisites
 
@@ -55,6 +58,7 @@ deployed databases.
 crates/domain/             Framework-independent business types and invariants
 crates/application/        Use cases and application-owned infrastructure ports
 crates/postgres/           Private SQLx row mapping and PostgreSQL adapters
+crates/telemetry/          Protocol-neutral decoded observation contracts
 migrations/                Authoritative PostgreSQL metadata schema
 deploy/local/              Disposable local development infrastructure
 docs/architecture/         Accepted architecture boundaries
