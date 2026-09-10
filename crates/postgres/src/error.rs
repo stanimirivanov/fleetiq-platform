@@ -24,14 +24,14 @@ pub enum PostgresRepositoryError {
         /// The original database error.
         source: sqlx::Error,
     },
-    /// A relationship revision did not immediately follow the persisted head.
+    /// An immutable fact revision did not immediately follow its persisted head.
     UnexpectedRevision {
         /// The next revision required by the repository.
         expected: u64,
         /// The revision supplied by the caller.
         actual: u64,
     },
-    /// The latest relationship revision already occupies the complete `u64` range.
+    /// The latest revision already occupies the complete `u64` range.
     RevisionExhausted,
     /// Recorded time moved backwards relative to the preceding revision.
     RecordedTimeRegression {
@@ -69,18 +69,16 @@ impl fmt::Display for PostgresRepositoryError {
             Self::UnexpectedRevision { expected, actual } => {
                 write!(
                     formatter,
-                    "relationship revision {actual} is out of sequence; expected {expected}"
+                    "revision {actual} is out of sequence; expected {expected}"
                 )
             }
-            Self::RevisionExhausted => {
-                formatter.write_str("relationship revision range is exhausted")
-            }
+            Self::RevisionExhausted => formatter.write_str("revision range is exhausted"),
             Self::RecordedTimeRegression {
                 previous_ms,
                 actual_ms,
             } => write!(
                 formatter,
-                "relationship recorded time {actual_ms} precedes previous time {previous_ms}"
+                "recorded time {actual_ms} precedes previous time {previous_ms}"
             ),
             Self::CorruptData { field, message } => {
                 write!(
