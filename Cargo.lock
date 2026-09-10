@@ -276,6 +276,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-semantics"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-application",
+ "fleetiq-domain",
+ "fleetiq-telemetry",
+ "tokio",
+]
+
+[[package]]
 name = "fleetiq-telemetry"
 version = "0.1.0"
 dependencies = [

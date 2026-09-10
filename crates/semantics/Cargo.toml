@@ -1,0 +1,19 @@
+[package]
+name = "fleetiq-semantics"
+version = "0.1.0"
+description = "Semantic attribution and normalization for FleetIQ telemetry"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-application = { path = "../application" }
+fleetiq-domain = { path = "../domain" }
+fleetiq-telemetry = { path = "../telemetry" }
+
+[dev-dependencies]
+tokio.workspace = true
+
+[lints]
+workspace = true
