@@ -1,0 +1,15 @@
+[package]
+name = "fleetiq-telemetry"
+version = "0.1.0"
+description = "Protocol-neutral telemetry contracts for FleetIQ"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+bigdecimal.workspace = true
+fleetiq-domain = { path = "../domain" }
+
+[lints]
+workspace = true
