@@ -70,9 +70,8 @@ the core model does not prescribe a hardware topology.
 
 Endpoints locate a source within a device. They do not contain protocol package
 selection, vendor parameter selectors, or target asset/property attribution.
-Device profiles and the protocol runtime interpret vendor fields, while a later
-effective-time signal-binding increment will assign those source signals to
-semantic asset properties.
+Device profiles and the protocol runtime interpret vendor fields. Effective-time
+signal bindings assign those decoded source signals to semantic asset properties.
 
 A signal binding is a revisioned attribution from a decoded source signal to an
 exact semantic property on a target asset. Its source consists of the device
@@ -84,10 +83,14 @@ arrives late or is corrected.
 
 The domain contract intentionally permits a device to observe its own properties
 as well as properties of other assets. Repository and application boundaries
-must verify tenant membership, endpoint existence, target property support, and
-cross-binding policies. Unit conversion definitions and authority among multiple
-sources require separate explicit contracts before telemetry normalization uses
-the bindings.
+verify tenant membership, endpoint existence, and target property support.
+PostgreSQL now enforces those reference and compatibility rules and stores
+immutable, contiguous binding revisions. Its bitemporal source lookup selects
+the latest revision known at a recorded-time cutoff and applies that revision's
+source and effective interval, so corrections do not leave stale attribution.
+Cross-binding policies, unit conversion definitions, and authority among
+multiple sources require separate explicit contracts before telemetry
+normalization uses the bindings.
 
 ## Metadata persistence
 
