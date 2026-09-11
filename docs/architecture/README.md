@@ -178,6 +178,30 @@ errors. Unit conversion, source authority, timestamp selection, and policy for
 whether uncertain or invalid values update asset state remain later explicit
 increments.
 
+## Asset-property change contract
+
+The `fleetiq-semantics` crate turns a successfully bound observation into an
+`AssetPropertyChange` only after the caller explicitly selects device-recorded
+or host receipt time as the event-time basis. Selecting device time fails when
+the observation did not carry that evidence. Selecting receipt time remains an
+explicit choice even when device time exists. The contract does not infer clock
+trust, substitute timestamps silently, or discard either original timestamp.
+
+An asset-property change retains the complete bound observation, including
+source and decoder provenance, exact semantic target, binding revision, and
+resolution context. Its deterministic identity combines the decoded observation
+identity, binding identity and revision, and event-time basis. Reinterpreting an
+observation through a corrected binding therefore creates a distinct semantic
+change without changing the underlying decoded fact.
+
+The change is an update candidate for history, latest-state projection, and
+calculators. It does not claim that its value differs from prior state or that
+it should replace current state. Source authority, timestamp trust, value
+quality acceptance, ordering, tie-breaking, freshness, and sparse-update rules
+remain explicit downstream policies.
+
+See [ADR 0006](../adr/0006-asset-property-change-contract.md).
+
 ## Metadata persistence
 
 PostgreSQL migrations define the persisted metadata schema. Handwritten domain
