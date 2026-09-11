@@ -230,6 +230,40 @@ checkpoints, and algorithms remain later contracts.
 
 See [ADR 0007](../adr/0007-calculator-output-contract.md).
 
+## Revisioned snapshots and live updates
+
+The application crate defines transport-independent live delivery contracts
+that can carry any authorized projection payload. A `ProjectionSnapshot`
+contains the complete visible state at one projection-scoped revision. A
+`ProjectionDelta` declares both the revision it requires and the later revision
+that results after its ordered changes are applied. Deltas may coalesce several
+commits, but must always advance the revision.
+
+A consumer starts its cursor at the snapshot revision and accepts a delta only
+when the delta's base equals that cursor. A mismatch leaves the cursor unchanged
+and requires recovery rather than guessing over a gap. The consumer advances
+the cursor only after applying the delta successfully.
+
+Snapshot creation and subscription must share a consistency barrier. An
+implementation may subscribe before reading the snapshot and buffer bounded
+deltas, or replay a durable outbox after the snapshot revision. In either case,
+the first delivered delta must continue from the snapshot cursor so no change
+can fall between the snapshot and live stream.
+
+Bounded delivery never accumulates an unlimited backlog for a slow consumer.
+When required deltas are unavailable, `ResnapshotRequired` directs the consumer
+to discard local projection state and obtain a fresh authorized snapshot.
+Reasons distinguish lag, revision mismatch, authorization change, and projection
+reset. An authorization change stops delivery from the old visibility scope
+before rebuilding the projection.
+
+Revisions provide continuity within one projection and are not globally
+comparable domain revisions. Transport selection, serialization, payload change
+types, queue sizes, resume retention, heartbeat behavior, and authorization
+implementation remain later decisions.
+
+See [ADR 0008](../adr/0008-revisioned-live-projection-contract.md).
+
 ## Metadata persistence
 
 PostgreSQL migrations define the persisted metadata schema. Handwritten domain

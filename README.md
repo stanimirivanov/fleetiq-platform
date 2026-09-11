@@ -25,7 +25,9 @@ incompatible observations for diagnosis and retry. Successfully bound values
 become asset-property change candidates with explicit event-time selection and
 deterministic semantic-interpretation identity. Versioned calculator evaluations
 produce validated semantic property outputs with separate event and evaluation
-times and deterministic replay identity.
+times and deterministic replay identity. Transport-independent live contracts
+define complete projection snapshots, forward-only deltas, cursor continuity,
+and explicit resnapshot recovery.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add
