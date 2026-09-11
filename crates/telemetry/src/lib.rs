@@ -4,9 +4,11 @@
 //! crate contains no socket, broker, database, or plugin-runtime integration,
 //! allowing native and sandboxed decoders to share the same semantic boundary.
 
+mod accepted_message;
 mod decoded_observation;
 mod identifier;
 
+pub use accepted_message::{AcceptedMessage, AcceptedPayload};
 pub use decoded_observation::{
     DecodedMeasurement, DecodedMeasurementError, DecodedObservation, DecodedObservationId,
     DecodedValue, ObservationQuality, ObservationTimes, ProtocolPackageRef,

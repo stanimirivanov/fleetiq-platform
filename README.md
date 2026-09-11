@@ -15,8 +15,10 @@ catalogue, asset persistence, revisioned relationship persistence,
 communication-device endpoint persistence, and revisioned signal-binding
 persistence. The protocol-neutral telemetry contract represents typed decoded
 observations with deterministic replay identity, source metadata, separate
-device and receipt times, quality, units, and decoder provenance. The semantic
-resolver applies bitemporal bindings and exact property definitions while
+device and receipt times, quality, units, and decoder provenance. It also
+represents durably accepted protocol frames with admission identity, pinned
+package provenance, receipt time, and opaque wire bytes. The semantic resolver
+applies bitemporal bindings and exact property definitions while
 retaining unconfigured or incompatible observations for diagnosis and retry.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device

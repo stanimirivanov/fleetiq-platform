@@ -92,6 +92,23 @@ Cross-binding policies, unit conversion definitions, and authority among
 multiple sources require separate explicit contracts before telemetry
 normalization uses the bindings.
 
+## Accepted protocol message contract
+
+The `fleetiq-telemetry` crate represents a complete framed message after the
+ingestion host's durability condition succeeds. The accepted message retains a
+stable identity, admitted tenant and communication-device identity, the
+protocol-package release pinned to the session, host receipt time, and immutable
+wire bytes. It does not assign an endpoint or source signal before decoding; one
+frame may contain records from several endpoint-scoped sources.
+
+The payload remains protocol-owned and may be empty when a custom protocol gives
+that frame meaning. Transport and runtime hosts enforce framing, size, memory,
+and execution limits. Routine Rust debug output reports payload length without
+printing the bytes. The concrete durable log, serialization format, retention,
+and acknowledgement guarantee remain infrastructure decisions.
+
+See [ADR 0004](../adr/0004-accepted-message-contract.md).
+
 ## Decoded observation contract
 
 The `fleetiq-telemetry` crate defines the boundary between protocol decoding and
