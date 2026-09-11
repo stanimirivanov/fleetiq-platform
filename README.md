@@ -24,16 +24,17 @@ fragmented input, separates coalesced frames, and enforces a hard unread-byte
 limit while packages inspect only borrowed bytes. The host also retains bounded,
 opaque, connection-scoped package state and applies whole-state replacements
 atomically. Packages propose size-bounded replies, and the host withholds
-data-acceptance replies until it receives durable-acceptance evidence. The
-semantic resolver applies bitemporal bindings and exact property definitions
-while retaining unconfigured or incompatible observations for diagnosis and
-retry. Successfully bound values become asset-property change candidates with
-explicit event-time selection and deterministic semantic-interpretation
-identity. Versioned calculator evaluations produce validated semantic property
-outputs with separate event and evaluation times and deterministic replay
-identity. Transport-independent live contracts define complete projection
-snapshots, forward-only deltas, cursor continuity, and explicit resnapshot
-recovery.
+data-acceptance replies until it receives durable-acceptance evidence. An
+isolated Wasmtime experiment proves deterministic fuel exhaustion and external
+wall-clock interruption without defining the final package ABI. The semantic
+resolver applies bitemporal bindings and exact property definitions while
+retaining unconfigured or incompatible observations for diagnosis and retry.
+Successfully bound values become asset-property change candidates with explicit
+event-time selection and deterministic semantic-interpretation identity.
+Versioned calculator evaluations produce validated semantic property outputs
+with separate event and evaluation times and deterministic replay identity.
+Transport-independent live contracts define complete projection snapshots,
+forward-only deltas, cursor continuity, and explicit resnapshot recovery.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add
@@ -79,6 +80,7 @@ crates/application/        Use cases and application-owned infrastructure ports
 crates/postgres/           Private SQLx row mapping and PostgreSQL adapters
 crates/protocol-host/      Host-owned protocol framing and runtime policies
 crates/protocol-sdk/       Protocol-package output and host assembly contracts
+crates/protocol-wasm/      Isolated Wasmtime runtime feasibility experiments
 crates/semantics/          Temporal attribution and normalization policies
 crates/telemetry/          Protocol-neutral decoded observation contracts
 migrations/                Authoritative PostgreSQL metadata schema
