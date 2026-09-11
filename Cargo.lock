@@ -254,6 +254,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-analytics"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-domain",
+]
+
+[[package]]
 name = "fleetiq-application"
 version = "0.1.0"
 dependencies = [
@@ -263,6 +270,9 @@ dependencies = [
 [[package]]
 name = "fleetiq-domain"
 version = "0.1.0"
+dependencies = [
+ "bigdecimal",
+]
 
 [[package]]
 name = "fleetiq-postgres"

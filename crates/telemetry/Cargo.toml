@@ -8,8 +8,10 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bigdecimal.workspace = true
 fleetiq-domain = { path = "../domain" }
+
+[dev-dependencies]
+bigdecimal.workspace = true
 
 [lints]
 workspace = true

@@ -8,6 +8,7 @@ mod asset;
 mod definition;
 mod device;
 mod identifier;
+mod property_value;
 mod relationship;
 mod signal_binding;
 
@@ -27,6 +28,7 @@ pub use identifier::{
     ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, IdentifierError,
     PropertyDefinitionId, RelationshipTypeId, SignalBindingId, SourceSignalId, TenantId, UnitId,
 };
+pub use property_value::PropertyValue;
 pub use relationship::{
     AssetRelationship, EffectiveInterval, EffectiveIntervalError, RecordRevision,
     RecordRevisionError, RecordedRevision, RelationshipEndpoints, UnixTimeMillis,

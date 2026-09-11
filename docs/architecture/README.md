@@ -202,6 +202,34 @@ remain explicit downstream policies.
 
 See [ADR 0006](../adr/0006-asset-property-change-contract.md).
 
+## Calculator output contract
+
+The `fleetiq-analytics` crate defines calculator evaluation and output contracts
+without selecting a worker runtime or algorithm. The host creates a logical
+evaluation with tenant identity, a state-scope asset, an exact calculator
+release, event time, evaluation time, and an identity that must remain stable
+when the same configuration and input selection are replayed.
+
+Calculator logic emits `CalculatedProperty` values. Each value identifies its
+target asset and exact property-definition version and must match that
+definition's value kind and canonical unit. A calculator may target an asset
+other than its scope asset so an aggregate or subsystem calculation can publish
+its result where the semantic model declares it.
+
+The host assembles each calculated property with trusted evaluation context and
+a zero-based output index. The resulting identity combines evaluation identity,
+calculator release, and output position. Output order is therefore part of the
+replay contract. An evaluation may validly produce no outputs.
+
+Event time identifies the logical instant or window boundary evaluated;
+evaluation time records when processing occurred. The evaluation ID is the link
+to durable configuration and input evidence rather than copying a potentially
+large observation window into every output. Calculator definitions, input
+declarations, evidence persistence, state, windows, late-data behavior,
+checkpoints, and algorithms remain later contracts.
+
+See [ADR 0007](../adr/0007-calculator-output-contract.md).
+
 ## Metadata persistence
 
 PostgreSQL migrations define the persisted metadata schema. Handwritten domain

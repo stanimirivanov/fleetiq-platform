@@ -1,40 +1,13 @@
 use std::{error::Error, fmt};
 
-use bigdecimal::BigDecimal;
-use fleetiq_domain::{PropertyValueKind, UnitId};
+use fleetiq_domain::{PropertyValue, UnitId};
 
 /// A value decoded from a device message before semantic attribution.
 ///
 /// Values mirror the property kinds understood by the semantic model. Protocol
 /// packages must retain the raw accepted message separately when a payload
 /// cannot be represented by one of these typed values.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum DecodedValue {
-    /// A Boolean value.
-    Boolean(bool),
-    /// A signed whole number.
-    Integer(i64),
-    /// An arbitrary-precision decimal number.
-    Decimal(BigDecimal),
-    /// Protocol-defined text preserved without normalization.
-    Text(String),
-}
-
-impl DecodedValue {
-    /// Returns the storage-level kind of this value.
-    pub const fn kind(&self) -> PropertyValueKind {
-        match self {
-            Self::Boolean(_) => PropertyValueKind::Boolean,
-            Self::Integer(_) => PropertyValueKind::Integer,
-            Self::Decimal(_) => PropertyValueKind::Decimal,
-            Self::Text(_) => PropertyValueKind::Text,
-        }
-    }
-
-    const fn is_numeric(&self) -> bool {
-        matches!(self, Self::Integer(_) | Self::Decimal(_))
-    }
-}
+pub type DecodedValue = PropertyValue;
 
 /// Source-reported confidence in a decoded value.
 ///
