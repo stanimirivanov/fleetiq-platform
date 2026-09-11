@@ -8,6 +8,10 @@ rust-version.workspace = true
 
 [dependencies]
 fleetiq-protocol-sdk = { path = "../protocol-sdk" }
+fleetiq-telemetry = { path = "../telemetry" }
+
+[dev-dependencies]
+fleetiq-domain = { path = "../domain" }
 
 [lints]
 workspace = true

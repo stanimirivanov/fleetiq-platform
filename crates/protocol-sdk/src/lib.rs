@@ -11,6 +11,7 @@
 mod assembly;
 mod decoded_output;
 mod framing;
+mod reply;
 mod session_state;
 
 pub use assembly::{ObservationAssemblyError, assemble_observation, assemble_observations};
@@ -21,4 +22,5 @@ pub use fleetiq_telemetry::{
     ObservationQuality,
 };
 pub use framing::FrameBoundary;
+pub use reply::{ProposedReply, ProposedReplyError, ReplyRelease};
 pub use session_state::SessionStateAction;
