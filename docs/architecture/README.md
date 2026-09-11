@@ -153,6 +153,27 @@ what the host accepts after an invocation.
 
 See [ADR 0010](../adr/0010-bounded-host-controlled-protocol-session-state.md).
 
+## Host-gated protocol replies
+
+Protocol packages propose nonempty opaque reply bytes instead of accessing
+transport sockets. Every proposal states whether it may be released after
+successful processing and host validation or must wait until the triggering
+frame has been durably accepted. The host applies a hard per-reply size limit
+before staging either path.
+
+Processing-gated replies become available to trusted transport code after
+validation. Durability-gated replies remain behind a `DeferredReply` with no
+payload accessor. Releasing one requires an `AcceptedMessage`, produces an
+`OutboundReply`, and records the accepted-message ID as release evidence.
+
+The accepted-message type represents the host's durability contract; its Rust
+constructor cannot verify storage. The future ingestion orchestrator must also
+ensure the accepted message and reply belong to the same input frame. Package
+conformance fixtures must verify that data-acceptance acknowledgements select
+the durability-gated path.
+
+See [ADR 0011](../adr/0011-host-gated-protocol-replies.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol

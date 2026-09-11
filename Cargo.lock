@@ -289,7 +289,9 @@ dependencies = [
 name = "fleetiq-protocol-host"
 version = "0.1.0"
 dependencies = [
+ "fleetiq-domain",
  "fleetiq-protocol-sdk",
+ "fleetiq-telemetry",
 ]
 
 [[package]]
