@@ -17,9 +17,11 @@ persistence. The protocol-neutral telemetry contract represents typed decoded
 observations with deterministic replay identity, source metadata, separate
 device and receipt times, quality, units, and decoder provenance. It also
 represents durably accepted protocol frames with admission identity, pinned
-package provenance, receipt time, and opaque wire bytes. The semantic resolver
-applies bitemporal bindings and exact property definitions while
-retaining unconfigured or incompatible observations for diagnosis and retry.
+package provenance, receipt time, and opaque wire bytes. A protocol SDK gives
+packages a constrained decoded-output type and lets the trusted host add
+admission and replay provenance. The semantic resolver applies bitemporal
+bindings and exact property definitions while retaining unconfigured or
+incompatible observations for diagnosis and retry.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add
@@ -62,6 +64,7 @@ deployed databases.
 crates/domain/             Framework-independent business types and invariants
 crates/application/        Use cases and application-owned infrastructure ports
 crates/postgres/           Private SQLx row mapping and PostgreSQL adapters
+crates/protocol-sdk/       Protocol-package output and host assembly contracts
 crates/semantics/          Temporal attribution and normalization policies
 crates/telemetry/          Protocol-neutral decoded observation contracts
 migrations/                Authoritative PostgreSQL metadata schema
