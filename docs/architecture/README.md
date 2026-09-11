@@ -109,6 +109,28 @@ and acknowledgement guarantee remain infrastructure decisions.
 
 See [ADR 0004](../adr/0004-accepted-message-contract.md).
 
+## Bounded incremental protocol framing
+
+The `fleetiq-protocol-host` crate owns unread transport input for each protocol
+session and enforces a hard byte limit. Protocol packages inspect a borrowed
+view and return only `NeedMoreData` or the nonzero length of the first complete
+frame. The host validates that decision, extracts one frame, and retains any
+coalesced input for the next poll.
+
+This boundary supports length-prefixed binary frames, delimited structured
+messages, and custom framing rules without assuming that transport reads align
+with messages. Appends that exceed the limit fail without changing the buffer.
+Incomplete input, package failures, and invalid reported lengths also preserve
+the unread bytes so a higher-level session policy can decide how to respond.
+
+An extracted `WireFrame` is still pre-admission input. It becomes an
+`AcceptedMessage` only after the host satisfies its durability condition. The
+framing contract does not yet select the runtime, define a stable decoder trait
+or WebAssembly ABI, or specify identification, session state,
+acknowledgements, and commands.
+
+See [ADR 0009](../adr/0009-bounded-incremental-protocol-framing.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol
