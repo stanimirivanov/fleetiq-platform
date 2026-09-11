@@ -109,6 +109,30 @@ and acknowledgement guarantee remain infrastructure decisions.
 
 See [ADR 0004](../adr/0004-accepted-message-contract.md).
 
+## Host-controlled protocol decoding boundary
+
+The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol
+packages and their host. A package emits an ordered sequence of
+`DecodedOutput` values. Each output contains only information that decoding can
+legitimately establish: the endpoint and stable source signal within the
+admitted device, the validated typed measurement, and an optional device
+timestamp.
+
+The trusted host combines each output with its `AcceptedMessage`. This assembly
+adds the tenant and communication-device identity established by admission, the
+host receipt time, the pinned package release, and a zero-based output index.
+Package code therefore cannot attach decoded data to another tenant or device,
+rewrite host time, or claim another package's provenance. Output order is part
+of deterministic replay and must remain stable for the same message and package
+release.
+
+This Rust API defines semantic and conformance behavior shared by native tests
+and future sandboxed packages. It is not a stable plugin ABI. Framing, session
+state, acknowledgements, package manifests, serialization, execution limits,
+and the native or WebAssembly host interface remain later runtime decisions.
+
+See [ADR 0005](../adr/0005-host-controlled-protocol-decoding.md).
+
 ## Decoded observation contract
 
 The `fleetiq-telemetry` crate defines the boundary between protocol decoding and

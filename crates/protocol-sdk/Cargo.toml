@@ -1,0 +1,14 @@
+[package]
+name = "fleetiq-protocol-sdk"
+version = "0.1.0"
+description = "Protocol package output and host assembly contracts for FleetIQ"
+edition.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-domain = { path = "../domain" }
+fleetiq-telemetry = { path = "../telemetry" }
+
+[lints]
+workspace = true
