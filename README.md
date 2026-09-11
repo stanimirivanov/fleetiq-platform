@@ -23,7 +23,9 @@ admission and replay provenance. The semantic resolver applies bitemporal
 bindings and exact property definitions while retaining unconfigured or
 incompatible observations for diagnosis and retry. Successfully bound values
 become asset-property change candidates with explicit event-time selection and
-deterministic semantic-interpretation identity.
+deterministic semantic-interpretation identity. Versioned calculator evaluations
+produce validated semantic property outputs with separate event and evaluation
+times and deterministic replay identity.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add
@@ -64,6 +66,7 @@ deployed databases.
 
 ```text
 crates/domain/             Framework-independent business types and invariants
+crates/analytics/          Calculator output contracts and analytics policies
 crates/application/        Use cases and application-owned infrastructure ports
 crates/postgres/           Private SQLx row mapping and PostgreSQL adapters
 crates/protocol-sdk/       Protocol-package output and host assembly contracts
