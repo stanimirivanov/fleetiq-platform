@@ -21,15 +21,17 @@ package provenance, receipt time, and opaque wire bytes. A protocol SDK gives
 packages a constrained decoded-output type and lets the trusted host add
 admission and replay provenance. A protocol-host framing experiment retains
 fragmented input, separates coalesced frames, and enforces a hard unread-byte
-limit while packages inspect only borrowed bytes. The semantic resolver applies
-bitemporal bindings and exact property definitions while retaining unconfigured
-or incompatible observations for diagnosis and retry. Successfully bound values
-become asset-property change candidates with explicit event-time selection and
-deterministic semantic-interpretation identity. Versioned calculator
-evaluations produce validated semantic property outputs with separate event and
-evaluation times and deterministic replay identity. Transport-independent live
-contracts define complete projection snapshots, forward-only deltas, cursor
-continuity, and explicit resnapshot recovery.
+limit while packages inspect only borrowed bytes. The host also retains bounded,
+opaque, connection-scoped package state and applies whole-state replacements
+atomically. The semantic resolver applies bitemporal bindings and exact property
+definitions while retaining unconfigured or incompatible observations for
+diagnosis and retry. Successfully bound values become asset-property change
+candidates with explicit event-time selection and deterministic semantic-
+interpretation identity. Versioned calculator evaluations produce validated
+semantic property outputs with separate event and evaluation times and
+deterministic replay identity. Transport-independent live contracts define
+complete projection snapshots, forward-only deltas, cursor continuity, and
+explicit resnapshot recovery.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add

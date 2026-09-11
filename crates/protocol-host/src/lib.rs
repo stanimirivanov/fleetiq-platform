@@ -5,5 +5,7 @@
 //! contracts in `fleetiq-protocol-sdk`.
 
 mod framing;
+mod session_state;
 
 pub use framing::{FramePoll, FramePollError, InputBufferError, SessionInputBuffer, WireFrame};
+pub use session_state::{SessionState, SessionStateUpdateError};

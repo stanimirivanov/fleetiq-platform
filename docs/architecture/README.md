@@ -131,6 +131,28 @@ acknowledgements, and commands.
 
 See [ADR 0009](../adr/0009-bounded-incremental-protocol-framing.md).
 
+## Bounded protocol session state
+
+The protocol host owns an opaque state value for each connection session and
+enforces a hard retained-byte limit. A protocol package receives a borrowed view
+of the current value and may keep it or propose a complete replacement. The host
+installs a valid replacement atomically; package failures and oversized
+replacements preserve the previous state.
+
+This state lets custom packages represent handshakes, negotiated options, and
+other multi-frame parsing context without retaining mutable package instances.
+It is ephemeral and is not a durable workflow or replay record. Empty
+replacement bytes explicitly clear it, and routine debug output exposes only
+its length.
+
+Package-controlled state never establishes trusted tenant or communication-
+device identity. Admission context, credentials, and the package release pinned
+to a session remain separate host-owned data. A future isolated runtime must
+also bound guest memory and execution; the retained-state limit only controls
+what the host accepts after an invocation.
+
+See [ADR 0010](../adr/0010-bounded-host-controlled-protocol-session-state.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol
