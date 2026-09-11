@@ -43,7 +43,7 @@ pub struct SignalBindingProvenance {
 }
 
 impl SignalBindingProvenance {
-    pub(super) fn new(binding_id: SignalBindingId, revision: RecordRevision) -> Self {
+    pub(crate) fn new(binding_id: SignalBindingId, revision: RecordRevision) -> Self {
         Self {
             binding_id,
             revision,
@@ -75,7 +75,7 @@ pub struct BoundObservation {
 }
 
 impl BoundObservation {
-    pub(super) fn new(
+    pub(crate) fn new(
         observation: DecodedObservation,
         target: SignalTarget,
         binding: SignalBindingProvenance,

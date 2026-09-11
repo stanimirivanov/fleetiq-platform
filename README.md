@@ -21,7 +21,9 @@ package provenance, receipt time, and opaque wire bytes. A protocol SDK gives
 packages a constrained decoded-output type and lets the trusted host add
 admission and replay provenance. The semantic resolver applies bitemporal
 bindings and exact property definitions while retaining unconfigured or
-incompatible observations for diagnosis and retry.
+incompatible observations for diagnosis and retry. Successfully bound values
+become asset-property change candidates with explicit event-time selection and
+deterministic semantic-interpretation identity.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add
