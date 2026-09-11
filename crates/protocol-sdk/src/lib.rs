@@ -10,6 +10,7 @@
 
 mod assembly;
 mod decoded_output;
+mod framing;
 
 pub use assembly::{ObservationAssemblyError, assemble_observation, assemble_observations};
 pub use decoded_output::DecodedOutput;
@@ -18,3 +19,4 @@ pub use fleetiq_telemetry::{
     AcceptedMessage, DecodedMeasurement, DecodedMeasurementError, DecodedObservation, DecodedValue,
     ObservationQuality,
 };
+pub use framing::FrameBoundary;

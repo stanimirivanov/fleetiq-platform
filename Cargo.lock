@@ -286,6 +286,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-protocol-host"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-protocol-sdk",
+]
+
+[[package]]
 name = "fleetiq-protocol-sdk"
 version = "0.1.0"
 dependencies = [

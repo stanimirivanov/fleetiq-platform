@@ -19,15 +19,17 @@ device and receipt times, quality, units, and decoder provenance. It also
 represents durably accepted protocol frames with admission identity, pinned
 package provenance, receipt time, and opaque wire bytes. A protocol SDK gives
 packages a constrained decoded-output type and lets the trusted host add
-admission and replay provenance. The semantic resolver applies bitemporal
-bindings and exact property definitions while retaining unconfigured or
-incompatible observations for diagnosis and retry. Successfully bound values
+admission and replay provenance. A protocol-host framing experiment retains
+fragmented input, separates coalesced frames, and enforces a hard unread-byte
+limit while packages inspect only borrowed bytes. The semantic resolver applies
+bitemporal bindings and exact property definitions while retaining unconfigured
+or incompatible observations for diagnosis and retry. Successfully bound values
 become asset-property change candidates with explicit event-time selection and
-deterministic semantic-interpretation identity. Versioned calculator evaluations
-produce validated semantic property outputs with separate event and evaluation
-times and deterministic replay identity. Transport-independent live contracts
-define complete projection snapshots, forward-only deltas, cursor continuity,
-and explicit resnapshot recovery.
+deterministic semantic-interpretation identity. Versioned calculator
+evaluations produce validated semantic property outputs with separate event and
+evaluation times and deterministic replay identity. Transport-independent live
+contracts define complete projection snapshots, forward-only deltas, cursor
+continuity, and explicit resnapshot recovery.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add
@@ -71,6 +73,7 @@ crates/domain/             Framework-independent business types and invariants
 crates/analytics/          Calculator output contracts and analytics policies
 crates/application/        Use cases and application-owned infrastructure ports
 crates/postgres/           Private SQLx row mapping and PostgreSQL adapters
+crates/protocol-host/      Host-owned protocol framing and runtime policies
 crates/protocol-sdk/       Protocol-package output and host assembly contracts
 crates/semantics/          Temporal attribution and normalization policies
 crates/telemetry/          Protocol-neutral decoded observation contracts
