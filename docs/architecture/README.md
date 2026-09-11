@@ -174,6 +174,26 @@ the durability-gated path.
 
 See [ADR 0011](../adr/0011-host-gated-protocol-replies.md).
 
+## WebAssembly invocation interruption experiment
+
+The `fleetiq-protocol-wasm` crate proves that the host can stop runaway guest
+code without first defining the protocol package ABI. Its Wasmtime engine
+enables deterministic fuel consumption and host-driven epoch interruption. Each
+probe invocation receives a nonzero fuel allowance and wall-clock allowance in
+a fresh store.
+
+Fuel exhaustion and epoch deadline interruption are reported separately from
+ordinary guest traps and runtime failures. Successful probes report consumed
+fuel. A shared epoch ticker provides the external time signal; deadlines have
+the tick's resolution and may overshoot through operating-system scheduling.
+
+The experiment exposes no WASI or custom host imports. Fuel and epochs interrupt
+WebAssembly instructions but cannot cancel a blocking synchronous host call.
+Memory limits, asynchronous integration, ticker supervision, compiled-module
+caching, and the real protocol component interface remain separate work.
+
+See [ADR 0012](../adr/0012-wasmtime-invocation-interruption.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol
