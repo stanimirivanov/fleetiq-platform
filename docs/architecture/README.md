@@ -189,8 +189,8 @@ the tick's resolution and may overshoot through operating-system scheduling.
 
 The experiment exposes no WASI or custom host imports. Fuel and epochs interrupt
 WebAssembly instructions but cannot cancel a blocking synchronous host call.
-Memory limits, asynchronous integration, ticker supervision, compiled-module
-caching, and the real protocol component interface remain separate work.
+Asynchronous integration, ticker supervision, compiled-module caching, and the
+real protocol component interface remain separate work.
 
 See [ADR 0012](../adr/0012-wasmtime-invocation-interruption.md).
 
@@ -212,6 +212,25 @@ virtual address reservations, and host buffers still require measurement and
 process-level controls.
 
 See [ADR 0013](../adr/0013-wasm-linear-memory-limits.md).
+
+## Bounded WebAssembly module admission
+
+Every compilation requires a `ModuleAdmissionPolicy` with a nonzero maximum raw
+module size. The sandbox checks this limit before Wasmtime parses or compiles the
+input. Oversized input reports the configured and actual byte counts, while
+input exactly at the limit remains eligible for compilation.
+
+Wasmtime validation and compilation failures retain their original error source.
+After compilation, the sandbox also rejects modules that declare host imports,
+because the current runtime exposes no capabilities. This reports a permanent
+compatibility problem during admission rather than waiting for instantiation on
+a device-message path.
+
+The raw-byte cap does not bound compilation time, compiler memory, generated
+native code, or aggregate activation load. Production activation still requires
+isolated workers, bounded concurrency, measurement, and lifecycle policy.
+
+See [ADR 0014](../adr/0014-bounded-wasm-module-admission.md).
 
 ## Host-controlled protocol decoding boundary
 

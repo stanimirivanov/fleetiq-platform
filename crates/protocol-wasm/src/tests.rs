@@ -6,26 +6,32 @@ use std::{
 use wasmtime::Trap;
 
 use super::{
-    CompiledModule, InvocationBudget, InvocationBudgetError, InvocationError, SandboxCreationError,
-    WasmSandbox,
+    CompiledModule, InvocationBudget, InvocationBudgetError, InvocationError, ModuleAdmissionError,
+    ModuleAdmissionPolicy, SandboxCreationError, WasmSandbox,
 };
 
 fn fuel(value: u64) -> NonZeroU64 {
     NonZeroU64::new(value).expect("test fuel is nonzero")
 }
 
-fn memory(value: usize) -> NonZeroUsize {
-    NonZeroUsize::new(value).expect("test memory limit is nonzero")
+fn nonzero_usize(value: usize) -> NonZeroUsize {
+    NonZeroUsize::new(value).expect("test size is nonzero")
 }
 
 fn budget(fuel_value: u64, wall_time: Duration, memory_bytes: usize) -> InvocationBudget {
-    InvocationBudget::new(fuel(fuel_value), wall_time, memory(memory_bytes))
+    InvocationBudget::new(fuel(fuel_value), wall_time, nonzero_usize(memory_bytes))
         .expect("test budget is valid")
 }
 
 fn compile(sandbox: &WasmSandbox, source: &str) -> CompiledModule {
     let wasm = wat::parse_str(source).expect("test WebAssembly text is valid");
-    sandbox.compile(&wasm).expect("test module compiles")
+    sandbox
+        .compile(&wasm, module_policy(wasm.len()))
+        .expect("test module compiles")
+}
+
+fn module_policy(max_module_bytes: usize) -> ModuleAdmissionPolicy {
+    ModuleAdmissionPolicy::new(nonzero_usize(max_module_bytes))
 }
 
 #[test]
@@ -35,9 +41,56 @@ fn rejects_zero_epoch_tick_and_wall_time() {
         Err(SandboxCreationError::ZeroEpochTick)
     ));
     assert_eq!(
-        InvocationBudget::new(fuel(1), Duration::ZERO, memory(65_536)),
+        InvocationBudget::new(fuel(1), Duration::ZERO, nonzero_usize(65_536)),
         Err(InvocationBudgetError::ZeroWallTime)
     );
+}
+
+#[test]
+fn module_larger_than_the_admission_limit_is_rejected_before_compilation() {
+    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let oversized_malformed_bytes = b"not WebAssembly";
+    let limit = oversized_malformed_bytes.len() - 1;
+
+    assert!(matches!(
+        sandbox.compile(oversized_malformed_bytes, module_policy(limit)),
+        Err(ModuleAdmissionError::ModuleTooLarge { limit: error_limit, actual })
+            if error_limit == limit && actual == oversized_malformed_bytes.len()
+    ));
+}
+
+#[test]
+fn module_at_the_admission_limit_is_compiled() {
+    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let wasm = wat::parse_str("(module)").expect("test WebAssembly text is valid");
+    let policy = module_policy(wasm.len());
+
+    sandbox
+        .compile(&wasm, policy)
+        .expect("a module exactly at the byte limit is admitted");
+    assert_eq!(policy.max_module_bytes().get(), wasm.len());
+}
+
+#[test]
+fn malformed_module_reports_the_compilation_failure() {
+    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+
+    assert!(matches!(
+        sandbox.compile(b"not WebAssembly", module_policy(64)),
+        Err(ModuleAdmissionError::Compilation(_))
+    ));
+}
+
+#[test]
+fn module_requesting_host_imports_is_rejected_during_admission() {
+    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let wasm = wat::parse_str(r#"(module (import "host" "clock" (func)))"#)
+        .expect("test WebAssembly text is valid");
+
+    assert!(matches!(
+        sandbox.compile(&wasm, module_policy(wasm.len())),
+        Err(ModuleAdmissionError::HostImportsNotAllowed { count: 1 })
+    ));
 }
 
 #[test]

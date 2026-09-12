@@ -66,6 +66,9 @@ meaning, deployment topology, or more than one application.
   the host.
 - Install explicit fuel, wall-clock, and guest linear-memory limits for every
   WebAssembly invocation. Do not rely on sandboxing alone to bound resource use.
+- Reject a module that exceeds its configured raw-byte limit before passing it
+  to a parser or compiler. Isolate compilation from telemetry-processing
+  capacity and bound activation concurrency separately.
 - Grant no host imports by default. Adding a filesystem, network, clock,
   environment, or other capability requires a focused contract, an ADR, and
   tests for its failure and resource behavior.

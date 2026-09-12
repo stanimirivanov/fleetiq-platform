@@ -11,7 +11,8 @@ use std::{
 use wasmtime::{Config, Engine, Instance, Module, ResourceLimiter, Store};
 
 use crate::{
-    InvocationBudget, InvocationError, SandboxCreationError, error::classify_invocation_error,
+    InvocationBudget, InvocationError, ModuleAdmissionError, ModuleAdmissionPolicy,
+    SandboxCreationError, error::classify_invocation_error,
 };
 
 /// WebAssembly compiled once during package validation or activation.
@@ -79,17 +80,39 @@ impl WasmSandbox {
         })
     }
 
-    /// Compiles validated WebAssembly bytes for later bounded invocations.
+    /// Admits and compiles core WebAssembly bytes for later bounded invocations.
     ///
-    /// Compilation is intentionally outside the per-invocation budget. Package
-    /// validation and activation must bound compilation concurrency and artifact
-    /// size separately.
+    /// The raw-byte limit is checked before Wasmtime parses or compiles the
+    /// module. Compilation remains outside the per-invocation budget and must be
+    /// isolated from message-processing capacity by the future activation flow.
     ///
     /// # Errors
     ///
-    /// Returns the Wasmtime validation or compilation error.
-    pub fn compile(&self, wasm: &[u8]) -> Result<CompiledModule, wasmtime::Error> {
-        Module::new(&self.engine, wasm).map(CompiledModule)
+    /// Returns [`ModuleAdmissionError::ModuleTooLarge`] before compilation when
+    /// the input exceeds policy, [`ModuleAdmissionError::Compilation`] when
+    /// Wasmtime rejects the input, or
+    /// [`ModuleAdmissionError::HostImportsNotAllowed`] when the valid module
+    /// requests capabilities unavailable in this runtime.
+    pub fn compile(
+        &self,
+        wasm: &[u8],
+        policy: ModuleAdmissionPolicy,
+    ) -> Result<CompiledModule, ModuleAdmissionError> {
+        let actual = wasm.len();
+        let limit = policy.max_module_bytes().get();
+        if actual > limit {
+            return Err(ModuleAdmissionError::ModuleTooLarge { limit, actual });
+        }
+
+        let module = Module::new(&self.engine, wasm).map_err(ModuleAdmissionError::Compilation)?;
+        let import_count = module.imports().len();
+        if import_count > 0 {
+            return Err(ModuleAdmissionError::HostImportsNotAllowed {
+                count: import_count,
+            });
+        }
+
+        Ok(CompiledModule(module))
     }
 
     /// Invokes a temporary no-argument probe export under both compute limits.

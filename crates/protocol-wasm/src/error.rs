@@ -35,6 +35,55 @@ impl Error for SandboxCreationError {
     }
 }
 
+/// Failure while admitting and compiling an untrusted WebAssembly module.
+#[derive(Debug)]
+pub enum ModuleAdmissionError {
+    /// The raw module is larger than the host-owned admission limit.
+    ModuleTooLarge {
+        /// Maximum permitted module size in bytes.
+        limit: usize,
+        /// Actual raw module size in bytes.
+        actual: usize,
+    },
+    /// The module requests host imports, but the current runtime exposes none.
+    HostImportsNotAllowed {
+        /// Number of imports declared by the module.
+        count: usize,
+    },
+    /// Wasmtime could not validate or compile the module.
+    Compilation(wasmtime::Error),
+}
+
+impl fmt::Display for ModuleAdmissionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ModuleTooLarge { limit, actual } => write!(
+                formatter,
+                "WebAssembly module contains {actual} bytes, exceeding the {limit}-byte admission limit"
+            ),
+            Self::HostImportsNotAllowed { count } => write!(
+                formatter,
+                "WebAssembly module declares {count} host imports, but this runtime exposes none"
+            ),
+            Self::Compilation(error) => {
+                write!(
+                    formatter,
+                    "failed to validate or compile WebAssembly module: {error}"
+                )
+            }
+        }
+    }
+}
+
+impl Error for ModuleAdmissionError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::ModuleTooLarge { .. } | Self::HostImportsNotAllowed { .. } => None,
+            Self::Compilation(error) => Some(error.as_ref()),
+        }
+    }
+}
+
 /// Failure during a bounded WebAssembly probe invocation.
 #[derive(Debug)]
 pub enum InvocationError {
