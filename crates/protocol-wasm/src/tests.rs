@@ -40,7 +40,7 @@ fn budget(
 fn compile(sandbox: &WasmSandbox, source: &str) -> CompiledModule {
     let wasm = wat::parse_str(source).expect("test WebAssembly text is valid");
     sandbox
-        .compile(&wasm, module_policy(wasm.len()))
+        .compile(&wasm, module_policy(wasm.len()), "run")
         .expect("test module compiles")
 }
 
@@ -72,7 +72,7 @@ fn module_larger_than_the_admission_limit_is_rejected_before_compilation() {
     let limit = oversized_malformed_bytes.len() - 1;
 
     assert!(matches!(
-        sandbox.compile(oversized_malformed_bytes, module_policy(limit)),
+        sandbox.compile(oversized_malformed_bytes, module_policy(limit), "run"),
         Err(ModuleAdmissionError::ModuleTooLarge { limit: error_limit, actual })
             if error_limit == limit && actual == oversized_malformed_bytes.len()
     ));
@@ -81,11 +81,12 @@ fn module_larger_than_the_admission_limit_is_rejected_before_compilation() {
 #[test]
 fn module_at_the_admission_limit_is_compiled() {
     let sandbox = sandbox();
-    let wasm = wat::parse_str("(module)").expect("test WebAssembly text is valid");
+    let wasm = wat::parse_str(r#"(module (func (export "run")))"#)
+        .expect("test WebAssembly text is valid");
     let policy = module_policy(wasm.len());
 
     sandbox
-        .compile(&wasm, policy)
+        .compile(&wasm, policy, "run")
         .expect("a module exactly at the byte limit is admitted");
     assert_eq!(policy.max_module_bytes().get(), wasm.len());
 }
@@ -95,7 +96,7 @@ fn malformed_module_reports_the_compilation_failure() {
     let sandbox = sandbox();
 
     assert!(matches!(
-        sandbox.compile(b"not WebAssembly", module_policy(64)),
+        sandbox.compile(b"not WebAssembly", module_policy(64), "run"),
         Err(ModuleAdmissionError::Compilation(_))
     ));
 }
@@ -107,7 +108,7 @@ fn module_requesting_host_imports_is_rejected_during_admission() {
         .expect("test WebAssembly text is valid");
 
     assert!(matches!(
-        sandbox.compile(&wasm, module_policy(wasm.len())),
+        sandbox.compile(&wasm, module_policy(wasm.len()), "run"),
         Err(ModuleAdmissionError::HostImportsNotAllowed { count: 1 })
     ));
 }
@@ -126,11 +127,59 @@ fn module_with_multiple_tables_is_rejected_during_admission() {
     .expect("test WebAssembly text is valid");
 
     assert!(matches!(
-        sandbox.compile(&wasm, module_policy(wasm.len())),
+        sandbox.compile(&wasm, module_policy(wasm.len()), "run"),
         Err(ModuleAdmissionError::TooManyTables {
             limit: 1,
             actual: 2,
         })
+    ));
+}
+
+#[test]
+fn module_without_the_selected_probe_export_is_rejected_during_admission() {
+    let sandbox = sandbox();
+    let wasm = wat::parse_str(r#"(module (func (export "other")))"#)
+        .expect("test WebAssembly text is valid");
+
+    assert!(matches!(
+        sandbox.compile(&wasm, module_policy(wasm.len()), "run"),
+        Err(ModuleAdmissionError::ProbeExportMissing { export })
+            if export.as_ref() == "run"
+    ));
+}
+
+#[test]
+fn non_function_probe_export_is_rejected_during_admission() {
+    let sandbox = sandbox();
+    let wasm = wat::parse_str(r#"(module (memory (export "run") 1))"#)
+        .expect("test WebAssembly text is valid");
+
+    assert!(matches!(
+        sandbox.compile(&wasm, module_policy(wasm.len()), "run"),
+        Err(ModuleAdmissionError::ProbeExportNotFunction { export })
+            if export.as_ref() == "run"
+    ));
+}
+
+#[test]
+fn incompatible_probe_signature_is_rejected_during_admission() {
+    let sandbox = sandbox();
+    let wasm = wat::parse_str(
+        r#"
+        (module
+            (func (export "run") (param i32) (result i32)
+                local.get 0))
+        "#,
+    )
+    .expect("test WebAssembly text is valid");
+
+    assert!(matches!(
+        sandbox.compile(&wasm, module_policy(wasm.len()), "run"),
+        Err(ModuleAdmissionError::ProbeExportSignatureMismatch {
+            export,
+            parameters: 1,
+            results: 1,
+        }) if export.as_ref() == "run"
     ));
 }
 
@@ -141,7 +190,7 @@ fn finite_guest_completes_and_reports_consumed_fuel() {
     let budget = budget(10_000, Duration::from_secs(1), 65_536, 1);
 
     let report = sandbox
-        .invoke_probe(&module, "run", budget)
+        .invoke_probe(&module, budget)
         .expect("finite guest completes");
 
     assert!(report.fuel_consumed() > 0);
@@ -158,7 +207,7 @@ fn deterministic_fuel_stops_an_infinite_guest() {
     let budget = budget(100, Duration::from_secs(5), 65_536, 1);
 
     assert!(matches!(
-        sandbox.invoke_probe(&module, "run", budget),
+        sandbox.invoke_probe(&module, budget),
         Err(InvocationError::FuelExhausted)
     ));
 }
@@ -173,7 +222,7 @@ fn epoch_deadline_stops_an_infinite_guest_with_abundant_fuel() {
     let budget = budget(u64::MAX, Duration::from_millis(20), 65_536, 1);
 
     assert!(matches!(
-        sandbox.invoke_probe(&module, "run", budget),
+        sandbox.invoke_probe(&module, budget),
         Err(InvocationError::DeadlineExceeded)
     ));
 }
@@ -193,7 +242,7 @@ fn recursive_guest_hits_the_configured_stack_limit() {
 
     assert_eq!(sandbox.max_wasm_stack_bytes().get(), 64 * 1024);
     assert!(matches!(
-        sandbox.invoke_probe(&module, "run", budget),
+        sandbox.invoke_probe(&module, budget),
         Err(InvocationError::StackLimitExceeded {
             configured_limit: 65_536,
         })
@@ -206,7 +255,7 @@ fn ordinary_guest_traps_remain_distinct_from_resource_exhaustion() {
     let module = compile(&sandbox, r#"(module (func (export "run") unreachable))"#);
     let budget = budget(10_000, Duration::from_secs(1), 65_536, 1);
 
-    let Err(InvocationError::Runtime(error)) = sandbox.invoke_probe(&module, "run", budget) else {
+    let Err(InvocationError::Runtime(error)) = sandbox.invoke_probe(&module, budget) else {
         panic!("an ordinary guest trap should remain a runtime failure");
     };
 
@@ -222,11 +271,7 @@ fn initial_linear_memory_cannot_exceed_the_invocation_limit() {
     let module = compile(&sandbox, r#"(module (memory 2) (func (export "run")))"#);
 
     assert!(matches!(
-        sandbox.invoke_probe(
-            &module,
-            "run",
-            budget(10_000, Duration::from_secs(1), 65_536, 1)
-        ),
+        sandbox.invoke_probe(&module, budget(10_000, Duration::from_secs(1), 65_536, 1)),
         Err(InvocationError::LinearMemoryLimitExceeded {
             limit: 65_536,
             attempted: 131_072,
@@ -241,7 +286,7 @@ fn linear_memory_at_the_invocation_limit_is_allowed() {
     let budget = budget(10_000, Duration::from_secs(1), 65_536, 1);
 
     let report = sandbox
-        .invoke_probe(&module, "run", budget)
+        .invoke_probe(&module, budget)
         .expect("one memory page is within the limit");
 
     assert_eq!(budget.max_linear_memory_bytes().get(), 65_536);
@@ -264,11 +309,7 @@ fn runtime_linear_memory_growth_cannot_exceed_the_invocation_limit() {
     );
 
     assert!(matches!(
-        sandbox.invoke_probe(
-            &module,
-            "run",
-            budget(10_000, Duration::from_secs(1), 65_536, 1)
-        ),
+        sandbox.invoke_probe(&module, budget(10_000, Duration::from_secs(1), 65_536, 1)),
         Err(InvocationError::LinearMemoryLimitExceeded {
             limit: 65_536,
             attempted: 131_072,
@@ -285,11 +326,7 @@ fn initial_table_cannot_exceed_the_invocation_limit() {
     );
 
     assert!(matches!(
-        sandbox.invoke_probe(
-            &module,
-            "run",
-            budget(10_000, Duration::from_secs(1), 65_536, 1)
-        ),
+        sandbox.invoke_probe(&module, budget(10_000, Duration::from_secs(1), 65_536, 1)),
         Err(InvocationError::TableElementLimitExceeded {
             limit: 1,
             attempted: 2,
@@ -307,7 +344,7 @@ fn table_at_the_invocation_limit_is_allowed() {
     let budget = budget(10_000, Duration::from_secs(1), 65_536, 1);
 
     let report = sandbox
-        .invoke_probe(&module, "run", budget)
+        .invoke_probe(&module, budget)
         .expect("one table element is within the limit");
 
     assert_eq!(budget.max_table_elements().get(), 1);
@@ -331,11 +368,7 @@ fn runtime_table_growth_cannot_exceed_the_invocation_limit() {
     );
 
     assert!(matches!(
-        sandbox.invoke_probe(
-            &module,
-            "run",
-            budget(10_000, Duration::from_secs(1), 65_536, 1)
-        ),
+        sandbox.invoke_probe(&module, budget(10_000, Duration::from_secs(1), 65_536, 1)),
         Err(InvocationError::TableElementLimitExceeded {
             limit: 1,
             attempted: 2,

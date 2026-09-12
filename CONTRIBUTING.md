@@ -73,6 +73,9 @@ meaning, deployment topology, or more than one application.
 - Grant no host imports by default. Adding a filesystem, network, clock,
   environment, or other capability requires a focused contract, an ADR, and
   tests for its failure and resource behavior.
+- Validate required export names, kinds, and signatures during module admission.
+  Bind the admitted export to the compiled artifact so invocation cannot select
+  a different entry point.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits

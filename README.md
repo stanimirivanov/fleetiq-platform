@@ -31,7 +31,8 @@ an explicit approximate guest stack ceiling, and its per-invocation resource
 policy bounds one guest linear memory and one guest table during initial
 allocation and runtime growth. Raw WebAssembly modules are size-bounded before
 compilation, and modules requesting unavailable host imports or multiple tables
-fail admission.
+fail admission. The host-selected temporary probe must be a no-argument,
+no-result function and is bound to the compiled module during admission.
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
 retry. Successfully bound values become
