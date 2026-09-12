@@ -5,12 +5,14 @@
 //! linear-memory limit. Its temporary no-argument probe export is not the
 //! protocol package ABI.
 
+mod artifact;
 mod budget;
 mod error;
 mod sandbox;
 
+pub use artifact::ModuleAdmissionPolicy;
 pub use budget::{InvocationBudget, InvocationBudgetError};
-pub use error::{InvocationError, SandboxCreationError};
+pub use error::{InvocationError, ModuleAdmissionError, SandboxCreationError};
 pub use sandbox::{CompiledModule, InvocationReport, WasmSandbox};
 
 #[cfg(test)]
