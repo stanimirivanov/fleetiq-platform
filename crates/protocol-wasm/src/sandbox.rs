@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use wasmtime::{Config, Engine, Instance, Module, Store};
+use wasmtime::{Config, Engine, Instance, Module, ResourceLimiter, Store};
 
 use crate::{
     InvocationBudget, InvocationError, SandboxCreationError, error::classify_invocation_error,
@@ -53,6 +53,7 @@ impl WasmSandbox {
         let mut config = Config::new();
         config.consume_fuel(true);
         config.epoch_interruption(true);
+        config.wasm_memory64(false);
         let engine = Engine::new(&config).map_err(SandboxCreationError::Engine)?;
         let stop_ticker = Arc::new(AtomicBool::new(false));
         let ticker_engine = engine.clone();
@@ -100,15 +101,18 @@ impl WasmSandbox {
     ///
     /// Returns [`InvocationError::FuelExhausted`] when deterministic fuel runs
     /// out, [`InvocationError::DeadlineExceeded`] when the epoch deadline traps,
-    /// or [`InvocationError::Runtime`] for another instantiation, export, or guest
-    /// failure.
+    /// [`InvocationError::LinearMemoryLimitExceeded`] when guest allocation
+    /// crosses its limit, or [`InvocationError::Runtime`] for another
+    /// instantiation, export, or guest failure.
     pub fn invoke_probe(
         &self,
         module: &CompiledModule,
         export: &str,
         budget: InvocationBudget,
     ) -> Result<InvocationReport, InvocationError> {
-        let mut store = Store::new(&self.engine, ());
+        let memory_limit = budget.max_linear_memory_bytes().get();
+        let mut store = Store::new(&self.engine, InvocationLimiter::new(memory_limit));
+        store.limiter(|limiter| limiter);
         store
             .set_fuel(budget.fuel().get())
             .map_err(InvocationError::Runtime)?;
@@ -122,6 +126,12 @@ impl WasmSandbox {
         })();
 
         if let Err(error) = result {
+            if let Some(attempted) = store.data().denied_memory_size {
+                return Err(InvocationError::LinearMemoryLimitExceeded {
+                    limit: memory_limit,
+                    attempted,
+                });
+            }
             return Err(classify_invocation_error(error));
         }
 
@@ -134,6 +144,52 @@ impl WasmSandbox {
     fn deadline_ticks(&self, wall_time: Duration) -> u64 {
         let ticks = wall_time.as_nanos().div_ceil(self.epoch_tick.as_nanos());
         u64::try_from(ticks).unwrap_or(u64::MAX).max(1)
+    }
+}
+
+struct InvocationLimiter {
+    max_linear_memory_bytes: usize,
+    denied_memory_size: Option<usize>,
+}
+
+impl InvocationLimiter {
+    const fn new(max_linear_memory_bytes: usize) -> Self {
+        Self {
+            max_linear_memory_bytes,
+            denied_memory_size: None,
+        }
+    }
+}
+
+impl ResourceLimiter for InvocationLimiter {
+    fn memory_growing(
+        &mut self,
+        _current: usize,
+        desired: usize,
+        _maximum: Option<usize>,
+    ) -> Result<bool, wasmtime::Error> {
+        if desired > self.max_linear_memory_bytes {
+            self.denied_memory_size = Some(desired);
+            return Err(wasmtime::Error::msg("guest linear-memory limit exceeded"));
+        }
+        Ok(true)
+    }
+
+    fn table_growing(
+        &mut self,
+        _current: usize,
+        _desired: usize,
+        _maximum: Option<usize>,
+    ) -> Result<bool, wasmtime::Error> {
+        Ok(true)
+    }
+
+    fn memories(&self) -> usize {
+        1
+    }
+
+    fn instances(&self) -> usize {
+        1
     }
 }
 

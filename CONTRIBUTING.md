@@ -59,6 +59,22 @@ infrastructure adapters.
 Use an ADR for choices that affect compatibility, durability, security, data
 meaning, deployment topology, or more than one application.
 
+## Protocol extension runtime
+
+- Treat protocol-package code as untrusted input processing. Keep transport,
+  credentials, admission identity, durable writes, and external side effects in
+  the host.
+- Install explicit fuel, wall-clock, and guest linear-memory limits for every
+  WebAssembly invocation. Do not rely on sandboxing alone to bound resource use.
+- Grant no host imports by default. Adding a filesystem, network, clock,
+  environment, or other capability requires a focused contract, an ADR, and
+  tests for its failure and resource behavior.
+- Test packages with fragmented, coalesced, malformed, nonterminating, and
+  allocation-heavy fixtures before activation.
+- Describe each resource limit precisely. A WebAssembly linear-memory limit is
+  not a bound on compiler memory, native stacks, host buffers, virtual address
+  reservations, or total process memory.
+
 ## Database migrations
 
 Follow the [SQL migration criteria](docs/development/sql-migrations.md). Treat

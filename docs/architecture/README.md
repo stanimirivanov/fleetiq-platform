@@ -194,6 +194,25 @@ caching, and the real protocol component interface remain separate work.
 
 See [ADR 0012](../adr/0012-wasmtime-invocation-interruption.md).
 
+## WebAssembly linear-memory limits
+
+Every WebAssembly probe invocation also receives a nonzero maximum guest
+linear-memory size. A store-owned resource limiter checks initial allocation and
+runtime growth, permits only one linear memory, and turns a policy violation into
+a typed error containing the configured and attempted byte counts.
+
+The current runtime does not enable shared memories and explicitly disables
+memory64. Guest memory grows in 64 KiB pages, so non-page-aligned limits permit
+only the whole pages that fit. A request at the limit succeeds; initial
+allocation or `memory.grow` beyond it traps the invocation.
+
+This policy limits WebAssembly linear memory rather than all memory attributable
+to a package. Compiler allocations, Wasmtime metadata, native stacks, code,
+virtual address reservations, and host buffers still require measurement and
+process-level controls.
+
+See [ADR 0013](../adr/0013-wasm-linear-memory-limits.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol

@@ -26,15 +26,17 @@ opaque, connection-scoped package state and applies whole-state replacements
 atomically. Packages propose size-bounded replies, and the host withholds
 data-acceptance replies until it receives durable-acceptance evidence. An
 isolated Wasmtime experiment proves deterministic fuel exhaustion and external
-wall-clock interruption without defining the final package ABI. The semantic
-resolver applies bitemporal bindings and exact property definitions while
-retaining unconfigured or incompatible observations for diagnosis and retry.
-Successfully bound values become asset-property change candidates with explicit
-event-time selection and deterministic semantic-interpretation identity.
-Versioned calculator evaluations produce validated semantic property outputs
-with separate event and evaluation times and deterministic replay identity.
-Transport-independent live contracts define complete projection snapshots,
-forward-only deltas, cursor continuity, and explicit resnapshot recovery.
+wall-clock interruption without defining the final package ABI. Its
+per-invocation resource policy also bounds one guest linear memory during initial
+allocation and runtime growth. The semantic resolver applies bitemporal bindings
+and exact property definitions while retaining unconfigured or incompatible
+observations for diagnosis and retry. Successfully bound values become
+asset-property change candidates with explicit event-time selection and
+deterministic semantic-interpretation identity. Versioned calculator evaluations
+produce validated semantic property outputs with separate event and evaluation
+times and deterministic replay identity. Transport-independent live contracts
+define complete projection snapshots, forward-only deltas, cursor continuity,
+and explicit resnapshot recovery.
 Domain types cover tenants, versioned definitions, assets, typed external
 identifiers, effective-dated asset relationships, protocol-neutral device
 endpoints, and revisioned temporal signal bindings. Later increments will add

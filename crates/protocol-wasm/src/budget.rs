@@ -1,23 +1,37 @@
-use std::{error::Error, fmt, num::NonZeroU64, time::Duration};
+use std::{
+    error::Error,
+    fmt,
+    num::{NonZeroU64, NonZeroUsize},
+    time::Duration,
+};
 
-/// Host-controlled compute limits for one WebAssembly invocation.
+/// Host-controlled compute and linear-memory limits for one WebAssembly invocation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct InvocationBudget {
     fuel: NonZeroU64,
     wall_time: Duration,
+    max_linear_memory_bytes: NonZeroUsize,
 }
 
 impl InvocationBudget {
-    /// Creates an invocation budget with deterministic fuel and wall-clock limits.
+    /// Creates an invocation budget with compute, time, and linear-memory limits.
     ///
     /// # Errors
     ///
     /// Returns [`InvocationBudgetError::ZeroWallTime`] when `wall_time` is zero.
-    pub fn new(fuel: NonZeroU64, wall_time: Duration) -> Result<Self, InvocationBudgetError> {
+    pub fn new(
+        fuel: NonZeroU64,
+        wall_time: Duration,
+        max_linear_memory_bytes: NonZeroUsize,
+    ) -> Result<Self, InvocationBudgetError> {
         if wall_time.is_zero() {
             return Err(InvocationBudgetError::ZeroWallTime);
         }
-        Ok(Self { fuel, wall_time })
+        Ok(Self {
+            fuel,
+            wall_time,
+            max_linear_memory_bytes,
+        })
     }
 
     /// Returns the maximum Wasmtime fuel available to the invocation.
@@ -28,6 +42,11 @@ impl InvocationBudget {
     /// Returns the maximum requested wall-clock execution time.
     pub const fn wall_time(&self) -> Duration {
         self.wall_time
+    }
+
+    /// Returns the maximum bytes available to the guest's linear memory.
+    pub const fn max_linear_memory_bytes(&self) -> NonZeroUsize {
+        self.max_linear_memory_bytes
     }
 }
 

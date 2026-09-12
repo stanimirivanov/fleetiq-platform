@@ -1,7 +1,7 @@
 [package]
 name = "fleetiq-protocol-wasm"
 version = "0.1.0"
-description = "Wasmtime resource-enforcement experiment for FleetIQ protocol packages"
+description = "Wasmtime compute and memory enforcement experiment for FleetIQ protocol packages"
 edition.workspace = true
 repository.workspace = true
 rust-version.workspace = true

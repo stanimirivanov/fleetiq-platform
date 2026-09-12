@@ -42,6 +42,13 @@ pub enum InvocationError {
     FuelExhausted,
     /// The invocation reached its host-driven epoch deadline.
     DeadlineExceeded,
+    /// Initial allocation or growth exceeded the linear-memory limit.
+    LinearMemoryLimitExceeded {
+        /// Maximum permitted linear-memory size in bytes.
+        limit: usize,
+        /// Linear-memory size requested by the guest in bytes.
+        attempted: usize,
+    },
     /// Wasmtime reported another instantiation, export, or guest failure.
     Runtime(wasmtime::Error),
 }
@@ -53,6 +60,10 @@ impl fmt::Display for InvocationError {
             Self::DeadlineExceeded => {
                 formatter.write_str("WebAssembly invocation exceeded its wall-clock deadline")
             }
+            Self::LinearMemoryLimitExceeded { limit, attempted } => write!(
+                formatter,
+                "WebAssembly requested {attempted} linear-memory bytes, exceeding the {limit}-byte limit"
+            ),
             Self::Runtime(error) => write!(formatter, "WebAssembly invocation failed: {error}"),
         }
     }
@@ -61,7 +72,9 @@ impl fmt::Display for InvocationError {
 impl Error for InvocationError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::FuelExhausted | Self::DeadlineExceeded => None,
+            Self::FuelExhausted
+            | Self::DeadlineExceeded
+            | Self::LinearMemoryLimitExceeded { .. } => None,
             Self::Runtime(error) => Some(error.as_ref()),
         }
     }
