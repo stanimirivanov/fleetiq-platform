@@ -1,5 +1,6 @@
 use std::{
     fmt,
+    num::NonZeroUsize,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -33,22 +34,27 @@ impl fmt::Debug for CompiledModule {
 pub struct WasmSandbox {
     engine: Engine,
     epoch_tick: Duration,
+    max_wasm_stack_bytes: NonZeroUsize,
     stop_ticker: Arc<AtomicBool>,
     ticker: Option<JoinHandle<()>>,
 }
 
 impl WasmSandbox {
-    /// Creates a sandbox and starts its shared epoch ticker.
+    /// Creates a sandbox with an explicit guest stack limit and starts its ticker.
     ///
     /// The tick controls deadline resolution. A shorter tick improves precision
-    /// but wakes the ticker more frequently.
+    /// but wakes the ticker more frequently. The stack limit is approximate and
+    /// applies to WebAssembly execution across every store using this engine.
     ///
     /// # Errors
     ///
     /// Returns [`SandboxCreationError::ZeroEpochTick`] for a zero tick,
     /// [`SandboxCreationError::Engine`] when Wasmtime rejects the configuration,
     /// or [`SandboxCreationError::Ticker`] when the ticker thread cannot start.
-    pub fn new(epoch_tick: Duration) -> Result<Self, SandboxCreationError> {
+    pub fn new(
+        epoch_tick: Duration,
+        max_wasm_stack_bytes: NonZeroUsize,
+    ) -> Result<Self, SandboxCreationError> {
         if epoch_tick.is_zero() {
             return Err(SandboxCreationError::ZeroEpochTick);
         }
@@ -56,6 +62,7 @@ impl WasmSandbox {
         let mut config = Config::new();
         config.consume_fuel(true);
         config.epoch_interruption(true);
+        config.max_wasm_stack(max_wasm_stack_bytes.get());
         config.wasm_memory64(false);
         let engine = Engine::new(&config).map_err(SandboxCreationError::Engine)?;
         let stop_ticker = Arc::new(AtomicBool::new(false));
@@ -77,9 +84,15 @@ impl WasmSandbox {
         Ok(Self {
             engine,
             epoch_tick,
+            max_wasm_stack_bytes,
             stop_ticker,
             ticker: Some(ticker),
         })
+    }
+
+    /// Returns the approximate guest stack limit configured for this sandbox.
+    pub const fn max_wasm_stack_bytes(&self) -> NonZeroUsize {
+        self.max_wasm_stack_bytes
     }
 
     /// Admits and compiles core WebAssembly bytes for later bounded invocations.
@@ -139,8 +152,9 @@ impl WasmSandbox {
     /// [`InvocationError::LinearMemoryLimitExceeded`] when guest allocation
     /// crosses its byte limit, [`InvocationError::TableElementLimitExceeded`]
     /// when guest table allocation crosses its element limit, or
-    /// [`InvocationError::Runtime`] for another instantiation, export, or guest
-    /// failure.
+    /// [`InvocationError::StackLimitExceeded`] when nested guest calls cross the
+    /// sandbox stack limit, or [`InvocationError::Runtime`] for another
+    /// instantiation, export, or guest failure.
     pub fn invoke_probe(
         &self,
         module: &CompiledModule,
@@ -179,7 +193,10 @@ impl WasmSandbox {
                     attempted,
                 });
             }
-            return Err(classify_invocation_error(error));
+            return Err(classify_invocation_error(
+                error,
+                self.max_wasm_stack_bytes.get(),
+            ));
         }
 
         let remaining = store.get_fuel().map_err(InvocationError::Runtime)?;
@@ -257,6 +274,7 @@ impl fmt::Debug for WasmSandbox {
         formatter
             .debug_struct("WasmSandbox")
             .field("epoch_tick", &self.epoch_tick)
+            .field("max_wasm_stack_bytes", &self.max_wasm_stack_bytes)
             .finish_non_exhaustive()
     }
 }

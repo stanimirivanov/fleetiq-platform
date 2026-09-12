@@ -104,6 +104,11 @@ pub enum InvocationError {
     FuelExhausted,
     /// The invocation reached its host-driven epoch deadline.
     DeadlineExceeded,
+    /// Guest calls exceeded the sandbox's approximate WebAssembly stack limit.
+    StackLimitExceeded {
+        /// Approximate WebAssembly stack ceiling configured on the engine.
+        configured_limit: usize,
+    },
     /// Initial allocation or growth exceeded the linear-memory limit.
     LinearMemoryLimitExceeded {
         /// Maximum permitted linear-memory size in bytes.
@@ -129,6 +134,10 @@ impl fmt::Display for InvocationError {
             Self::DeadlineExceeded => {
                 formatter.write_str("WebAssembly invocation exceeded its wall-clock deadline")
             }
+            Self::StackLimitExceeded { configured_limit } => write!(
+                formatter,
+                "WebAssembly invocation exceeded its approximately {configured_limit}-byte guest stack limit"
+            ),
             Self::LinearMemoryLimitExceeded { limit, attempted } => write!(
                 formatter,
                 "WebAssembly requested {attempted} linear-memory bytes, exceeding the {limit}-byte limit"
@@ -147,6 +156,7 @@ impl Error for InvocationError {
         match self {
             Self::FuelExhausted
             | Self::DeadlineExceeded
+            | Self::StackLimitExceeded { .. }
             | Self::LinearMemoryLimitExceeded { .. }
             | Self::TableElementLimitExceeded { .. } => None,
             Self::Runtime(error) => Some(error.as_ref()),
@@ -154,10 +164,16 @@ impl Error for InvocationError {
     }
 }
 
-pub(crate) fn classify_invocation_error(error: wasmtime::Error) -> InvocationError {
+pub(crate) fn classify_invocation_error(
+    error: wasmtime::Error,
+    max_wasm_stack_bytes: usize,
+) -> InvocationError {
     match error.downcast_ref::<Trap>() {
         Some(Trap::OutOfFuel) => InvocationError::FuelExhausted,
         Some(Trap::Interrupt) => InvocationError::DeadlineExceeded,
+        Some(Trap::StackOverflow) => InvocationError::StackLimitExceeded {
+            configured_limit: max_wasm_stack_bytes,
+        },
         _ => InvocationError::Runtime(error),
     }
 }
