@@ -198,6 +198,27 @@ names, versioning, and host orchestration remain separate contracts.
 
 See [ADR 0018](../adr/0018-two-stage-protocol-package-invocation.md).
 
+## Atomic frame-processing validation
+
+The protocol host applies explicit limits to every complete package processing
+result before later ingestion or transport code can observe it. The limits bound
+decoded-output count, reply count, individual reply bytes, and combined reply
+bytes. The connection's `SessionState` retains its independent state-byte
+ceiling.
+
+The host stages ordered replies locally through the existing reply gate and
+applies the proposed state action last. A validation failure drops all local
+outputs, exposes no replies, and preserves the previous state. Success returns
+the ordered decoded outputs and replies classified by their remaining release
+condition. This is an in-memory validation boundary rather than a transaction
+over durable storage and transport.
+
+Decoded-output count does not attempt to estimate Rust heap use. The future
+isolated-runtime adapter must separately limit the serialized result and decode
+variable-length fields under explicit bounds.
+
+See [ADR 0019](../adr/0019-atomic-frame-processing-validation.md).
+
 ## WebAssembly invocation interruption experiment
 
 The `fleetiq-protocol-wasm` crate proves that the host can stop runaway guest
