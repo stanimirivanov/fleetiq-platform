@@ -64,8 +64,9 @@ meaning, deployment topology, or more than one application.
 - Treat protocol-package code as untrusted input processing. Keep transport,
   credentials, admission identity, durable writes, and external side effects in
   the host.
-- Install explicit fuel, wall-clock, and guest linear-memory limits for every
-  WebAssembly invocation. Do not rely on sandboxing alone to bound resource use.
+- Install explicit fuel, wall-clock, guest linear-memory, and table-element
+  limits for every WebAssembly invocation. Do not rely on sandboxing alone to
+  bound resource use.
 - Reject a module that exceeds its configured raw-byte limit before passing it
   to a parser or compiler. Isolate compilation from telemetry-processing
   capacity and bound activation concurrency separately.
@@ -74,8 +75,8 @@ meaning, deployment topology, or more than one application.
   tests for its failure and resource behavior.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
-- Describe each resource limit precisely. A WebAssembly linear-memory limit is
-  not a bound on compiler memory, native stacks, host buffers, virtual address
+- Describe each resource limit precisely. Linear-memory and table-element limits
+  are not bounds on compiler memory, native stacks, host buffers, virtual address
   reservations, or total process memory.
 
 ## Database migrations

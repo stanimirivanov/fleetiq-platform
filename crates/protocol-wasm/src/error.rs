@@ -50,6 +50,13 @@ pub enum ModuleAdmissionError {
         /// Number of imports declared by the module.
         count: usize,
     },
+    /// The module declares more tables than the current runtime supports.
+    TooManyTables {
+        /// Maximum supported number of tables.
+        limit: u32,
+        /// Number of tables declared by the module.
+        actual: u32,
+    },
     /// Wasmtime could not validate or compile the module.
     Compilation(wasmtime::Error),
 }
@@ -65,6 +72,10 @@ impl fmt::Display for ModuleAdmissionError {
                 formatter,
                 "WebAssembly module declares {count} host imports, but this runtime exposes none"
             ),
+            Self::TooManyTables { limit, actual } => write!(
+                formatter,
+                "WebAssembly module declares {actual} tables, exceeding the supported count of {limit}"
+            ),
             Self::Compilation(error) => {
                 write!(
                     formatter,
@@ -78,7 +89,9 @@ impl fmt::Display for ModuleAdmissionError {
 impl Error for ModuleAdmissionError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::ModuleTooLarge { .. } | Self::HostImportsNotAllowed { .. } => None,
+            Self::ModuleTooLarge { .. }
+            | Self::HostImportsNotAllowed { .. }
+            | Self::TooManyTables { .. } => None,
             Self::Compilation(error) => Some(error.as_ref()),
         }
     }
@@ -98,6 +111,13 @@ pub enum InvocationError {
         /// Linear-memory size requested by the guest in bytes.
         attempted: usize,
     },
+    /// Initial allocation or growth exceeded the table-element limit.
+    TableElementLimitExceeded {
+        /// Maximum permitted number of elements in the guest table.
+        limit: usize,
+        /// Number of table elements requested by the guest.
+        attempted: usize,
+    },
     /// Wasmtime reported another instantiation, export, or guest failure.
     Runtime(wasmtime::Error),
 }
@@ -113,6 +133,10 @@ impl fmt::Display for InvocationError {
                 formatter,
                 "WebAssembly requested {attempted} linear-memory bytes, exceeding the {limit}-byte limit"
             ),
+            Self::TableElementLimitExceeded { limit, attempted } => write!(
+                formatter,
+                "WebAssembly requested {attempted} table elements, exceeding the {limit}-element limit"
+            ),
             Self::Runtime(error) => write!(formatter, "WebAssembly invocation failed: {error}"),
         }
     }
@@ -123,7 +147,8 @@ impl Error for InvocationError {
         match self {
             Self::FuelExhausted
             | Self::DeadlineExceeded
-            | Self::LinearMemoryLimitExceeded { .. } => None,
+            | Self::LinearMemoryLimitExceeded { .. }
+            | Self::TableElementLimitExceeded { .. } => None,
             Self::Runtime(error) => Some(error.as_ref()),
         }
     }
