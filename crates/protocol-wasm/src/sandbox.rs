@@ -9,7 +9,9 @@ use std::{
     time::Duration,
 };
 
-use wasmtime::{Config, Engine, Instance, Module, ResourceLimiter, Store};
+use wasmtime::{
+    Config, Engine, ExternType, Instance, Module, ModuleExport, ResourceLimiter, Store,
+};
 
 use crate::{
     InvocationBudget, InvocationError, ModuleAdmissionError, ModuleAdmissionPolicy,
@@ -18,9 +20,12 @@ use crate::{
 
 const MAX_TABLES_PER_MODULE: u32 = 1;
 
-/// WebAssembly compiled once during package validation or activation.
+/// Core WebAssembly module compiled and bound to an admitted probe export.
 #[derive(Clone)]
-pub struct CompiledModule(Module);
+pub struct CompiledModule {
+    module: Module,
+    probe_export: ModuleExport,
+}
 
 impl fmt::Debug for CompiledModule {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -95,7 +100,7 @@ impl WasmSandbox {
         self.max_wasm_stack_bytes
     }
 
-    /// Admits and compiles core WebAssembly bytes for later bounded invocations.
+    /// Admits and compiles a module with its temporary probe entry point.
     ///
     /// The raw-byte limit is checked before Wasmtime parses or compiles the
     /// module. Compilation remains outside the per-invocation budget and must be
@@ -109,11 +114,13 @@ impl WasmSandbox {
     /// [`ModuleAdmissionError::HostImportsNotAllowed`] when the valid module
     /// requests capabilities unavailable in this runtime, or
     /// [`ModuleAdmissionError::TooManyTables`] when it cannot fit the runtime's
-    /// aggregate table-element policy.
+    /// aggregate table-element policy. Missing or incompatible probe exports are
+    /// also rejected before this method returns a [`CompiledModule`].
     pub fn compile(
         &self,
         wasm: &[u8],
         policy: ModuleAdmissionPolicy,
+        probe_export: &str,
     ) -> Result<CompiledModule, ModuleAdmissionError> {
         let actual = wasm.len();
         let limit = policy.max_module_bytes().get();
@@ -137,7 +144,35 @@ impl WasmSandbox {
             });
         }
 
-        Ok(CompiledModule(module))
+        let export_type = module.get_export(probe_export).ok_or_else(|| {
+            ModuleAdmissionError::ProbeExportMissing {
+                export: probe_export.into(),
+            }
+        })?;
+        let ExternType::Func(function_type) = export_type else {
+            return Err(ModuleAdmissionError::ProbeExportNotFunction {
+                export: probe_export.into(),
+            });
+        };
+        let parameters = function_type.params().len();
+        let results = function_type.results().len();
+        if parameters > 0 || results > 0 {
+            return Err(ModuleAdmissionError::ProbeExportSignatureMismatch {
+                export: probe_export.into(),
+                parameters,
+                results,
+            });
+        }
+        let probe_export = module.get_export_index(probe_export).ok_or_else(|| {
+            ModuleAdmissionError::ProbeExportMissing {
+                export: probe_export.into(),
+            }
+        })?;
+
+        Ok(CompiledModule {
+            module,
+            probe_export,
+        })
     }
 
     /// Invokes a temporary no-argument probe export under its resource budget.
@@ -158,7 +193,6 @@ impl WasmSandbox {
     pub fn invoke_probe(
         &self,
         module: &CompiledModule,
-        export: &str,
         budget: InvocationBudget,
     ) -> Result<InvocationReport, InvocationError> {
         let memory_limit = budget.max_linear_memory_bytes().get();
@@ -175,8 +209,12 @@ impl WasmSandbox {
         store.set_epoch_deadline(self.deadline_ticks(budget.wall_time()));
 
         let result = (|| {
-            let instance = Instance::new(&mut store, &module.0, &[])?;
-            let function = instance.get_typed_func::<(), ()>(&mut store, export)?;
+            let instance = Instance::new(&mut store, &module.module, &[])?;
+            let function = instance
+                .get_module_export(&mut store, &module.probe_export)
+                .and_then(wasmtime::Extern::into_func)
+                .ok_or_else(|| wasmtime::Error::msg("admitted probe export is unavailable"))?
+                .typed::<(), ()>(&store)?;
             function.call(&mut store, ())
         })();
 

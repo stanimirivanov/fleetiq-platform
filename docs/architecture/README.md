@@ -257,11 +257,19 @@ because the current runtime exposes no capabilities. This reports a permanent
 compatibility problem during admission rather than waiting for instantiation on
 a device-message path.
 
+Admission also requires a host-selected temporary probe export with the exact
+`() -> ()` function shape. The resulting `CompiledModule` retains Wasmtime's
+module-bound export index, and invocation no longer accepts an independently
+selected name. Missing exports, non-function exports, and incompatible arity are
+reported before the module can reach message processing. This probe remains an
+experiment rather than the stable protocol package ABI.
+
 The raw-byte cap does not bound compilation time, compiler memory, generated
 native code, or aggregate activation load. Production activation still requires
 isolated workers, bounded concurrency, measurement, and lifecycle policy.
 
-See [ADR 0014](../adr/0014-bounded-wasm-module-admission.md).
+See [ADR 0014](../adr/0014-bounded-wasm-module-admission.md) and
+[ADR 0017](../adr/0017-admitted-wasm-probe-export.md).
 
 ## Host-controlled protocol decoding boundary
 

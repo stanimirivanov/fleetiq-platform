@@ -3,7 +3,8 @@
 //! This crate proves that the host can stop runaway WebAssembly with a
 //! deterministic fuel allowance, an external wall-clock deadline, an explicit
 //! guest stack ceiling, and guest memory and table limits. Its temporary
-//! no-argument probe export is not the protocol package ABI.
+//! no-argument probe export is validated and bound during admission, but is not
+//! the protocol package ABI.
 
 mod artifact;
 mod budget;

@@ -57,6 +57,25 @@ pub enum ModuleAdmissionError {
         /// Number of tables declared by the module.
         actual: u32,
     },
+    /// The module does not export the host-selected probe entry point.
+    ProbeExportMissing {
+        /// Host-selected export name.
+        export: Box<str>,
+    },
+    /// The host-selected probe export exists but is not a function.
+    ProbeExportNotFunction {
+        /// Host-selected export name.
+        export: Box<str>,
+    },
+    /// The probe function does not have the temporary no-argument signature.
+    ProbeExportSignatureMismatch {
+        /// Host-selected export name.
+        export: Box<str>,
+        /// Number of parameters declared by the function.
+        parameters: usize,
+        /// Number of results declared by the function.
+        results: usize,
+    },
     /// Wasmtime could not validate or compile the module.
     Compilation(wasmtime::Error),
 }
@@ -76,6 +95,24 @@ impl fmt::Display for ModuleAdmissionError {
                 formatter,
                 "WebAssembly module declares {actual} tables, exceeding the supported count of {limit}"
             ),
+            Self::ProbeExportMissing { export } => {
+                write!(
+                    formatter,
+                    "WebAssembly module does not export probe entry point {export:?}"
+                )
+            }
+            Self::ProbeExportNotFunction { export } => write!(
+                formatter,
+                "WebAssembly probe entry point {export:?} is not a function"
+            ),
+            Self::ProbeExportSignatureMismatch {
+                export,
+                parameters,
+                results,
+            } => write!(
+                formatter,
+                "WebAssembly probe entry point {export:?} has {parameters} parameters and {results} results; expected no parameters or results"
+            ),
             Self::Compilation(error) => {
                 write!(
                     formatter,
@@ -91,7 +128,10 @@ impl Error for ModuleAdmissionError {
         match self {
             Self::ModuleTooLarge { .. }
             | Self::HostImportsNotAllowed { .. }
-            | Self::TooManyTables { .. } => None,
+            | Self::TooManyTables { .. }
+            | Self::ProbeExportMissing { .. }
+            | Self::ProbeExportNotFunction { .. }
+            | Self::ProbeExportSignatureMismatch { .. } => None,
             Self::Compilation(error) => Some(error.as_ref()),
         }
     }
