@@ -174,6 +174,30 @@ the durability-gated path.
 
 See [ADR 0011](../adr/0011-host-gated-protocol-replies.md).
 
+## Two-stage protocol package invocation
+
+Protocol package work has two semantic stages. During framing, a package
+borrows the host's unread transport bytes and current opaque session state but
+can return only a frame-boundary decision. It cannot change state, emit decoded
+values, or propose replies, so repeated inspection of incomplete input has no
+package-requested effects.
+
+After extracting one complete frame, the host lends that frame and the state in
+effect before processing to the package. The package returns one aggregate with
+ordered decoded outputs, one whole-state action, and ordered reply proposals.
+Empty output and reply sequences support handshake, keepalive, and control
+frames. Output order remains part of deterministic observation identity; reply
+order determines transport write order once each proposal's release condition
+is satisfied.
+
+The host validates the complete aggregate before applying any part. Trusted
+tenant, device, package-release, acceptance, and receipt-time provenance never
+enters package-controlled invocation data. These Rust types define semantic and
+conformance behavior; WebAssembly serialization, memory transfer, function
+names, versioning, and host orchestration remain separate contracts.
+
+See [ADR 0018](../adr/0018-two-stage-protocol-package-invocation.md).
+
 ## WebAssembly invocation interruption experiment
 
 The `fleetiq-protocol-wasm` crate proves that the host can stop runaway guest
