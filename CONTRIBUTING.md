@@ -76,6 +76,12 @@ meaning, deployment topology, or more than one application.
 - Validate required export names, kinds, and signatures during module admission.
   Bind the admitted export to the compiled artifact so invocation cannot select
   a different entry point.
+- Keep incremental framing side-effect-free. Return state changes, decoded
+  outputs, and replies together only after processing one complete frame, then
+  validate the whole proposed result before applying any part.
+- Preserve package emission order for decoded outputs and replies. Output order
+  participates in replay identity, and reply order determines transport writes
+  after release conditions are satisfied.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits

@@ -24,8 +24,11 @@ fragmented input, separates coalesced frames, and enforces a hard unread-byte
 limit while packages inspect only borrowed bytes. The host also retains bounded,
 opaque, connection-scoped package state and applies whole-state replacements
 atomically. Packages propose size-bounded replies, and the host withholds
-data-acceptance replies until it receives durable-acceptance evidence. An
-isolated Wasmtime experiment proves deterministic fuel exhaustion and external
+data-acceptance replies until it receives durable-acceptance evidence. The
+protocol SDK composes these capabilities into a two-stage semantic invocation:
+side-effect-free framing followed by complete-frame processing that returns one
+ordered proposal for decoded outputs, session state, and replies. An isolated
+Wasmtime experiment proves deterministic fuel exhaustion and external
 wall-clock interruption without defining the final package ABI. The sandbox has
 an explicit approximate guest stack ceiling, and its per-invocation resource
 policy bounds one guest linear memory and one guest table during initial
