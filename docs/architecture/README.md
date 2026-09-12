@@ -194,6 +194,22 @@ real protocol component interface remain separate work.
 
 See [ADR 0012](../adr/0012-wasmtime-invocation-interruption.md).
 
+## Explicit WebAssembly stack limits
+
+Each `WasmSandbox` requires a nonzero maximum WebAssembly stack size and applies
+it to its Wasmtime engine. All modules and stores using that engine share the
+same approximate stack ceiling. Recursive guest calls that cross it return a
+typed error containing the configured value rather than an undifferentiated
+runtime trap.
+
+This engine setting limits stack consumed while executing WebAssembly. It does
+not reserve native thread stack, guarantee that the calling thread has the
+configured capacity remaining, or prevent future host functions from exhausting
+native stack. Production execution still requires controlled worker stack sizes
+and process-level isolation.
+
+See [ADR 0016](../adr/0016-explicit-wasm-stack-limits.md).
+
 ## WebAssembly linear-memory limits
 
 Every WebAssembly probe invocation also receives a nonzero maximum guest

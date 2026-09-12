@@ -18,6 +18,10 @@ fn nonzero_usize(value: usize) -> NonZeroUsize {
     NonZeroUsize::new(value).expect("test size is nonzero")
 }
 
+fn sandbox() -> WasmSandbox {
+    WasmSandbox::new(Duration::from_millis(5), nonzero_usize(64 * 1024)).expect("sandbox starts")
+}
+
 fn budget(
     fuel_value: u64,
     wall_time: Duration,
@@ -47,7 +51,7 @@ fn module_policy(max_module_bytes: usize) -> ModuleAdmissionPolicy {
 #[test]
 fn rejects_zero_epoch_tick_and_wall_time() {
     assert!(matches!(
-        WasmSandbox::new(Duration::ZERO),
+        WasmSandbox::new(Duration::ZERO, nonzero_usize(64 * 1024)),
         Err(SandboxCreationError::ZeroEpochTick)
     ));
     assert_eq!(
@@ -63,7 +67,7 @@ fn rejects_zero_epoch_tick_and_wall_time() {
 
 #[test]
 fn module_larger_than_the_admission_limit_is_rejected_before_compilation() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let oversized_malformed_bytes = b"not WebAssembly";
     let limit = oversized_malformed_bytes.len() - 1;
 
@@ -76,7 +80,7 @@ fn module_larger_than_the_admission_limit_is_rejected_before_compilation() {
 
 #[test]
 fn module_at_the_admission_limit_is_compiled() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let wasm = wat::parse_str("(module)").expect("test WebAssembly text is valid");
     let policy = module_policy(wasm.len());
 
@@ -88,7 +92,7 @@ fn module_at_the_admission_limit_is_compiled() {
 
 #[test]
 fn malformed_module_reports_the_compilation_failure() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
 
     assert!(matches!(
         sandbox.compile(b"not WebAssembly", module_policy(64)),
@@ -98,7 +102,7 @@ fn malformed_module_reports_the_compilation_failure() {
 
 #[test]
 fn module_requesting_host_imports_is_rejected_during_admission() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let wasm = wat::parse_str(r#"(module (import "host" "clock" (func)))"#)
         .expect("test WebAssembly text is valid");
 
@@ -110,7 +114,7 @@ fn module_requesting_host_imports_is_rejected_during_admission() {
 
 #[test]
 fn module_with_multiple_tables_is_rejected_during_admission() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let wasm = wat::parse_str(
         r#"
         (module
@@ -132,7 +136,7 @@ fn module_with_multiple_tables_is_rejected_during_admission() {
 
 #[test]
 fn finite_guest_completes_and_reports_consumed_fuel() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(&sandbox, r#"(module (func (export "run") nop))"#);
     let budget = budget(10_000, Duration::from_secs(1), 65_536, 1);
 
@@ -146,7 +150,7 @@ fn finite_guest_completes_and_reports_consumed_fuel() {
 
 #[test]
 fn deterministic_fuel_stops_an_infinite_guest() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(
         &sandbox,
         r#"(module (func (export "run") (loop $forever br $forever)))"#,
@@ -161,7 +165,7 @@ fn deterministic_fuel_stops_an_infinite_guest() {
 
 #[test]
 fn epoch_deadline_stops_an_infinite_guest_with_abundant_fuel() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(
         &sandbox,
         r#"(module (func (export "run") (loop $forever br $forever)))"#,
@@ -175,8 +179,30 @@ fn epoch_deadline_stops_an_infinite_guest_with_abundant_fuel() {
 }
 
 #[test]
+fn recursive_guest_hits_the_configured_stack_limit() {
+    let sandbox = sandbox();
+    let module = compile(
+        &sandbox,
+        r#"
+        (module
+            (func $recurse (export "run")
+                call $recurse))
+        "#,
+    );
+    let budget = budget(u64::MAX, Duration::from_secs(5), 65_536, 1);
+
+    assert_eq!(sandbox.max_wasm_stack_bytes().get(), 64 * 1024);
+    assert!(matches!(
+        sandbox.invoke_probe(&module, "run", budget),
+        Err(InvocationError::StackLimitExceeded {
+            configured_limit: 65_536,
+        })
+    ));
+}
+
+#[test]
 fn ordinary_guest_traps_remain_distinct_from_resource_exhaustion() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(&sandbox, r#"(module (func (export "run") unreachable))"#);
     let budget = budget(10_000, Duration::from_secs(1), 65_536, 1);
 
@@ -192,7 +218,7 @@ fn ordinary_guest_traps_remain_distinct_from_resource_exhaustion() {
 
 #[test]
 fn initial_linear_memory_cannot_exceed_the_invocation_limit() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(&sandbox, r#"(module (memory 2) (func (export "run")))"#);
 
     assert!(matches!(
@@ -210,7 +236,7 @@ fn initial_linear_memory_cannot_exceed_the_invocation_limit() {
 
 #[test]
 fn linear_memory_at_the_invocation_limit_is_allowed() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(&sandbox, r#"(module (memory 1) (func (export "run")))"#);
     let budget = budget(10_000, Duration::from_secs(1), 65_536, 1);
 
@@ -224,7 +250,7 @@ fn linear_memory_at_the_invocation_limit_is_allowed() {
 
 #[test]
 fn runtime_linear_memory_growth_cannot_exceed_the_invocation_limit() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(
         &sandbox,
         r#"
@@ -252,7 +278,7 @@ fn runtime_linear_memory_growth_cannot_exceed_the_invocation_limit() {
 
 #[test]
 fn initial_table_cannot_exceed_the_invocation_limit() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(
         &sandbox,
         r#"(module (table 2 funcref) (func (export "run")))"#,
@@ -273,7 +299,7 @@ fn initial_table_cannot_exceed_the_invocation_limit() {
 
 #[test]
 fn table_at_the_invocation_limit_is_allowed() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(
         &sandbox,
         r#"(module (table 1 funcref) (func (export "run")))"#,
@@ -290,7 +316,7 @@ fn table_at_the_invocation_limit_is_allowed() {
 
 #[test]
 fn runtime_table_growth_cannot_exceed_the_invocation_limit() {
-    let sandbox = WasmSandbox::new(Duration::from_millis(5)).expect("sandbox starts");
+    let sandbox = sandbox();
     let module = compile(
         &sandbox,
         r#"
