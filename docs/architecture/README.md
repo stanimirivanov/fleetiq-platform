@@ -316,6 +316,28 @@ isolated workers, bounded concurrency, measurement, and lifecycle policy.
 See [ADR 0014](../adr/0014-bounded-wasm-module-admission.md) and
 [ADR 0017](../adr/0017-admitted-wasm-probe-export.md).
 
+## Bounded opaque WebAssembly payload transfer
+
+The Wasmtime experiment can also bind a host-selected memory, allocator, and
+processing function during module admission. The allocator accepts an opaque
+input length and returns its guest pointer. The processor accepts that pointer
+and length and returns an `i64` containing an unsigned 32-bit output pointer and
+unsigned 32-bit output length.
+
+Input and output have independent host-owned byte ceilings. Input is rejected
+before guest execution when it exceeds its limit. Guest-provided pointer-length
+ranges are widened and validated against current linear memory before every
+host read or write, and output length is checked before host allocation. Safe
+Wasmtime memory APIs perform the copies.
+
+Every call uses a fresh bounded store and instance. Dropping that instance
+reclaims all guest allocation on success and failure, so the experiment does
+not add a guest deallocator that could itself trap after fuel or deadline
+exhaustion. The returned bytes remain opaque: serialization, fixed export names,
+ABI versioning, and package SDK generation require separate decisions.
+
+See [ADR 0020](../adr/0020-bounded-opaque-wasm-transfer.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol

@@ -2,6 +2,27 @@ use std::{error::Error, fmt};
 
 use wasmtime::Trap;
 
+/// Role of one required export in the opaque transfer experiment.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TransferExportRole {
+    /// The guest linear memory used for host reads and writes.
+    Memory,
+    /// The guest function that reserves input bytes.
+    Allocate,
+    /// The guest function that processes input and locates output bytes.
+    Process,
+}
+
+impl fmt::Display for TransferExportRole {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Memory => formatter.write_str("memory"),
+            Self::Allocate => formatter.write_str("allocator"),
+            Self::Process => formatter.write_str("processor"),
+        }
+    }
+}
+
 /// Failure to create a WebAssembly sandbox.
 #[derive(Debug)]
 pub enum SandboxCreationError {
@@ -76,6 +97,29 @@ pub enum ModuleAdmissionError {
         /// Number of results declared by the function.
         results: usize,
     },
+    /// A required opaque-transfer export is absent.
+    TransferExportMissing {
+        /// Semantic role of the required export.
+        role: TransferExportRole,
+        /// Host-selected export name.
+        export: Box<str>,
+    },
+    /// An opaque-transfer export has the wrong external kind.
+    TransferExportKindMismatch {
+        /// Semantic role of the required export.
+        role: TransferExportRole,
+        /// Host-selected export name.
+        export: Box<str>,
+    },
+    /// An opaque-transfer function has an incompatible core Wasm signature.
+    TransferExportSignatureMismatch {
+        /// Semantic role of the required function.
+        role: TransferExportRole,
+        /// Host-selected export name.
+        export: Box<str>,
+        /// Debug representation of the actual function signature.
+        actual: Box<str>,
+    },
     /// Wasmtime could not validate or compile the module.
     Compilation(wasmtime::Error),
 }
@@ -113,6 +157,23 @@ impl fmt::Display for ModuleAdmissionError {
                 formatter,
                 "WebAssembly probe entry point {export:?} has {parameters} parameters and {results} results; expected no parameters or results"
             ),
+            Self::TransferExportMissing { role, export } => write!(
+                formatter,
+                "WebAssembly opaque-transfer {role} export {export:?} is missing"
+            ),
+            Self::TransferExportKindMismatch { role, export } => write!(
+                formatter,
+                "WebAssembly opaque-transfer {role} export {export:?} has an incompatible external kind"
+            ),
+            Self::TransferExportSignatureMismatch {
+                role,
+                export,
+                actual,
+            } => write!(
+                formatter,
+                "WebAssembly opaque-transfer {role} export {export:?} has signature {actual}; expected {}",
+                role.expected_signature()
+            ),
             Self::Compilation(error) => {
                 write!(
                     formatter,
@@ -131,8 +192,21 @@ impl Error for ModuleAdmissionError {
             | Self::TooManyTables { .. }
             | Self::ProbeExportMissing { .. }
             | Self::ProbeExportNotFunction { .. }
-            | Self::ProbeExportSignatureMismatch { .. } => None,
+            | Self::ProbeExportSignatureMismatch { .. }
+            | Self::TransferExportMissing { .. }
+            | Self::TransferExportKindMismatch { .. }
+            | Self::TransferExportSignatureMismatch { .. } => None,
             Self::Compilation(error) => Some(error.as_ref()),
+        }
+    }
+}
+
+impl TransferExportRole {
+    const fn expected_signature(self) -> &'static str {
+        match self {
+            Self::Memory => "one core WebAssembly memory",
+            Self::Allocate => "(i32) -> i32",
+            Self::Process => "(i32, i32) -> i64",
         }
     }
 }
