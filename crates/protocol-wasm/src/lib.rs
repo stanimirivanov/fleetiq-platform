@@ -1,8 +1,9 @@
 //! Wasmtime resource-enforcement experiment for `FleetIQ` protocol packages.
 //!
-//! This crate proves that the host can stop runaway WebAssembly with both a
-//! deterministic fuel allowance and an external wall-clock deadline. Its
-//! temporary no-argument probe export is not the protocol package ABI.
+//! This crate proves that the host can stop runaway WebAssembly with a
+//! deterministic fuel allowance, an external wall-clock deadline, and a guest
+//! linear-memory limit. Its temporary no-argument probe export is not the
+//! protocol package ABI.
 
 mod budget;
 mod error;
