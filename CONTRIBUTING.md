@@ -91,6 +91,12 @@ meaning, deployment topology, or more than one application.
 - Describe each resource limit precisely. Linear-memory and table-element limits
   are not bounds on compiler memory, native stacks, host buffers, virtual address
   reservations, or total process memory.
+- Validate a guest-provided pointer and length as one widened half-open range
+  against current linear memory before every host read or write. Check reported
+  output length before allocating its host buffer.
+- Define how guest allocations are reclaimed on every success and failure path.
+  A fresh per-invocation instance may use store destruction; reused instances
+  require an explicit bounded cleanup and reset contract.
 - Treat Wasmtime's maximum WebAssembly stack as an approximate engine-wide
   guard. It does not reserve native stack for the calling thread or bound stack
   consumed directly by host functions.

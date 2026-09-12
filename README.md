@@ -37,7 +37,10 @@ policy bounds one guest linear memory and one guest table during initial
 allocation and runtime growth. Raw WebAssembly modules are size-bounded before
 compilation, and modules requesting unavailable host imports or multiple tables
 fail admission. The host-selected temporary probe must be a no-argument,
-no-result function and is bound to the compiled module during admission.
+no-result function and is bound to the compiled module during admission. A
+separate transfer experiment binds guest memory, allocation, and processing
+exports and exchanges independently bounded opaque bytes through validated
+pointer-length ranges in a fresh instance.
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
 retry. Successfully bound values become
