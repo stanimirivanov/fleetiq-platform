@@ -27,9 +27,10 @@ atomically. Packages propose size-bounded replies, and the host withholds
 data-acceptance replies until it receives durable-acceptance evidence. An
 isolated Wasmtime experiment proves deterministic fuel exhaustion and external
 wall-clock interruption without defining the final package ABI. Its
-per-invocation resource policy also bounds one guest linear memory during initial
-allocation and runtime growth. Raw WebAssembly modules are size-bounded before
-compilation, and modules requesting unavailable host imports fail admission.
+per-invocation resource policy also bounds one guest linear memory and one guest
+table during initial allocation and runtime growth. Raw WebAssembly modules are
+size-bounded before compilation, and modules requesting unavailable host imports
+or multiple tables fail admission.
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
 retry. Successfully bound values become

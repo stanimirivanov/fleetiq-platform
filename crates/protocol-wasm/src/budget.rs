@@ -5,16 +5,17 @@ use std::{
     time::Duration,
 };
 
-/// Host-controlled compute and linear-memory limits for one WebAssembly invocation.
+/// Host-controlled compute and guest-resource limits for one WebAssembly invocation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct InvocationBudget {
     fuel: NonZeroU64,
     wall_time: Duration,
     max_linear_memory_bytes: NonZeroUsize,
+    max_table_elements: NonZeroUsize,
 }
 
 impl InvocationBudget {
-    /// Creates an invocation budget with compute, time, and linear-memory limits.
+    /// Creates an invocation budget with compute, time, memory, and table limits.
     ///
     /// # Errors
     ///
@@ -23,6 +24,7 @@ impl InvocationBudget {
         fuel: NonZeroU64,
         wall_time: Duration,
         max_linear_memory_bytes: NonZeroUsize,
+        max_table_elements: NonZeroUsize,
     ) -> Result<Self, InvocationBudgetError> {
         if wall_time.is_zero() {
             return Err(InvocationBudgetError::ZeroWallTime);
@@ -31,6 +33,7 @@ impl InvocationBudget {
             fuel,
             wall_time,
             max_linear_memory_bytes,
+            max_table_elements,
         })
     }
 
@@ -47,6 +50,11 @@ impl InvocationBudget {
     /// Returns the maximum bytes available to the guest's linear memory.
     pub const fn max_linear_memory_bytes(&self) -> NonZeroUsize {
         self.max_linear_memory_bytes
+    }
+
+    /// Returns the maximum number of elements available to the guest table.
+    pub const fn max_table_elements(&self) -> NonZeroUsize {
+        self.max_table_elements
     }
 }
 

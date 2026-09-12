@@ -213,6 +213,21 @@ process-level controls.
 
 See [ADR 0013](../adr/0013-wasm-linear-memory-limits.md).
 
+## WebAssembly table resource limits
+
+Each probe invocation also receives a nonzero maximum number of guest table
+elements. The store limiter applies it to initial table allocation and runtime
+growth. Exceeding the limit traps with a typed error containing the configured
+and attempted element counts; a table exactly at the limit remains valid.
+
+The current runtime permits one table, making the element ceiling an aggregate
+invocation limit. Modules declaring more tables fail admission with their actual
+and supported table counts. The store repeats the count restriction as defense
+in depth. This policy limits guest table storage rather than total instance or
+process memory.
+
+See [ADR 0015](../adr/0015-wasm-table-resource-limits.md).
+
 ## Bounded WebAssembly module admission
 
 Every compilation requires a `ModuleAdmissionPolicy` with a nonzero maximum raw

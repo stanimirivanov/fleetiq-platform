@@ -15,6 +15,8 @@ use crate::{
     SandboxCreationError, error::classify_invocation_error,
 };
 
+const MAX_TABLES_PER_MODULE: u32 = 1;
+
 /// WebAssembly compiled once during package validation or activation.
 #[derive(Clone)]
 pub struct CompiledModule(Module);
@@ -92,7 +94,9 @@ impl WasmSandbox {
     /// the input exceeds policy, [`ModuleAdmissionError::Compilation`] when
     /// Wasmtime rejects the input, or
     /// [`ModuleAdmissionError::HostImportsNotAllowed`] when the valid module
-    /// requests capabilities unavailable in this runtime.
+    /// requests capabilities unavailable in this runtime, or
+    /// [`ModuleAdmissionError::TooManyTables`] when it cannot fit the runtime's
+    /// aggregate table-element policy.
     pub fn compile(
         &self,
         wasm: &[u8],
@@ -112,10 +116,18 @@ impl WasmSandbox {
             });
         }
 
+        let table_count = module.resources_required().num_tables;
+        if table_count > MAX_TABLES_PER_MODULE {
+            return Err(ModuleAdmissionError::TooManyTables {
+                limit: MAX_TABLES_PER_MODULE,
+                actual: table_count,
+            });
+        }
+
         Ok(CompiledModule(module))
     }
 
-    /// Invokes a temporary no-argument probe export under both compute limits.
+    /// Invokes a temporary no-argument probe export under its resource budget.
     ///
     /// This export shape exists only to verify runtime interruption. It is not
     /// the stable protocol package ABI.
@@ -125,8 +137,10 @@ impl WasmSandbox {
     /// Returns [`InvocationError::FuelExhausted`] when deterministic fuel runs
     /// out, [`InvocationError::DeadlineExceeded`] when the epoch deadline traps,
     /// [`InvocationError::LinearMemoryLimitExceeded`] when guest allocation
-    /// crosses its limit, or [`InvocationError::Runtime`] for another
-    /// instantiation, export, or guest failure.
+    /// crosses its byte limit, [`InvocationError::TableElementLimitExceeded`]
+    /// when guest table allocation crosses its element limit, or
+    /// [`InvocationError::Runtime`] for another instantiation, export, or guest
+    /// failure.
     pub fn invoke_probe(
         &self,
         module: &CompiledModule,
@@ -134,7 +148,11 @@ impl WasmSandbox {
         budget: InvocationBudget,
     ) -> Result<InvocationReport, InvocationError> {
         let memory_limit = budget.max_linear_memory_bytes().get();
-        let mut store = Store::new(&self.engine, InvocationLimiter::new(memory_limit));
+        let table_element_limit = budget.max_table_elements().get();
+        let mut store = Store::new(
+            &self.engine,
+            InvocationLimiter::new(memory_limit, table_element_limit),
+        );
         store.limiter(|limiter| limiter);
         store
             .set_fuel(budget.fuel().get())
@@ -155,6 +173,12 @@ impl WasmSandbox {
                     attempted,
                 });
             }
+            if let Some(attempted) = store.data().denied_table_elements {
+                return Err(InvocationError::TableElementLimitExceeded {
+                    limit: table_element_limit,
+                    attempted,
+                });
+            }
             return Err(classify_invocation_error(error));
         }
 
@@ -172,14 +196,18 @@ impl WasmSandbox {
 
 struct InvocationLimiter {
     max_linear_memory_bytes: usize,
+    max_table_elements: usize,
     denied_memory_size: Option<usize>,
+    denied_table_elements: Option<usize>,
 }
 
 impl InvocationLimiter {
-    const fn new(max_linear_memory_bytes: usize) -> Self {
+    const fn new(max_linear_memory_bytes: usize, max_table_elements: usize) -> Self {
         Self {
             max_linear_memory_bytes,
+            max_table_elements,
             denied_memory_size: None,
+            denied_table_elements: None,
         }
     }
 }
@@ -201,10 +229,18 @@ impl ResourceLimiter for InvocationLimiter {
     fn table_growing(
         &mut self,
         _current: usize,
-        _desired: usize,
+        desired: usize,
         _maximum: Option<usize>,
     ) -> Result<bool, wasmtime::Error> {
+        if desired > self.max_table_elements {
+            self.denied_table_elements = Some(desired);
+            return Err(wasmtime::Error::msg("guest table-element limit exceeded"));
+        }
         Ok(true)
+    }
+
+    fn tables(&self) -> usize {
+        usize::try_from(MAX_TABLES_PER_MODULE).expect("the table count limit fits usize")
     }
 
     fn memories(&self) -> usize {
