@@ -82,6 +82,10 @@ meaning, deployment topology, or more than one application.
 - Preserve package emission order for decoded outputs and replies. Output order
   participates in replay identity, and reply order determines transport writes
   after release conditions are satisfied.
+- Bound both the number of package-proposed effects and their applicable byte
+  totals. A per-item limit does not prevent excessive aggregate allocation.
+- Stage fallible package effects in local host-owned values before changing
+  session state. Do not expose partial results when a later validation can fail.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits

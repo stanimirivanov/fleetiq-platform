@@ -27,7 +27,9 @@ atomically. Packages propose size-bounded replies, and the host withholds
 data-acceptance replies until it receives durable-acceptance evidence. The
 protocol SDK composes these capabilities into a two-stage semantic invocation:
 side-effect-free framing followed by complete-frame processing that returns one
-ordered proposal for decoded outputs, session state, and replies. An isolated
+ordered proposal for decoded outputs, session state, and replies. The protocol
+host validates this proposal atomically with explicit output-count, reply-count,
+individual-reply, aggregate-reply, and session-state limits. An isolated
 Wasmtime experiment proves deterministic fuel exhaustion and external
 wall-clock interruption without defining the final package ABI. The sandbox has
 an explicit approximate guest stack ceiling, and its per-invocation resource
