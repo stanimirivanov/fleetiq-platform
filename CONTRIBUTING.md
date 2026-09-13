@@ -104,6 +104,10 @@ meaning, deployment topology, or more than one application.
   component boundary. Use explicit package versions, document every field's
   meaning and ownership, and generate bindings during normal compilation so
   incompatible interface edits fail the build.
+- Treat values lifted through WIT as untrusted transport data. Convert them
+  through semantic constructors, identify collection failures by stable
+  zero-based position, and keep package-controlled values out of routine error
+  and debug output.
 
 ## Database migrations
 

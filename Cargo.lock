@@ -579,6 +579,8 @@ dependencies = [
 name = "fleetiq-protocol-wasm"
 version = "0.1.0"
 dependencies = [
+ "fleetiq-domain",
+ "fleetiq-protocol-sdk",
  "wasmtime",
  "wat",
 ]

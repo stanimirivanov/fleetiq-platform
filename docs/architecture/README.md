@@ -365,7 +365,17 @@ normal build. The component's embedded world type will be checked at admission
 in a later increment. This contract selects the Component Model canonical ABI;
 the earlier core-module byte-transfer path remains a resource-safety experiment.
 
-See [ADR 0022](../adr/0022-versioned-protocol-package-component-contract.md).
+The component adapter copies borrowed framing and processing inputs into the
+owned values required for canonical ABI lowering. In the return direction, it
+converts generated WIT values through the existing SDK and domain constructors.
+Zero frame lengths, malformed endpoint/signal/unit identifiers, invalid decimal
+text, incompatible value/unit pairs, and empty replies fail conversion. Failures
+identify the decoded-output or reply position while omitting the rejected value.
+Collection order, timestamps, quality, state action, and reply release conditions
+are preserved for the existing host gates.
+
+See [ADR 0022](../adr/0022-versioned-protocol-package-component-contract.md) and
+[ADR 0023](../adr/0023-validate-lifted-component-values.md).
 
 ## Host-controlled protocol decoding boundary
 
