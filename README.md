@@ -42,7 +42,10 @@ separate transfer experiment binds guest memory, allocation, and processing
 exports and exchanges independently bounded opaque bytes through validated
 pointer-length ranges in a fresh instance. The first versioned WIT world defines
 language-neutral framing and processing operations over the WebAssembly
-Component Model and is compile-checked through generated Wasmtime bindings.
+Component Model and is compile-checked through generated Wasmtime bindings. A
+host adapter copies semantic inputs into component-owned values and validates
+lifted frame decisions and processing results through the existing SDK domain
+constructors without retaining rejected package values in errors.
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
 retry. Successfully bound values become
