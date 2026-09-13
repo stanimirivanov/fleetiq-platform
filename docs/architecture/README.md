@@ -88,6 +88,8 @@ PostgreSQL now enforces those reference and compatibility rules and stores
 immutable, contiguous binding revisions. Its bitemporal source lookup selects
 the latest revision known at a recorded-time cutoff and applies that revision's
 source and effective interval, so corrections do not leave stale attribution.
+Concurrent binding appends lock the mutable identity before reading its current
+immutable revision in a new `READ COMMITTED` statement.
 Cross-binding policies, unit conversion definitions, and authority among
 multiple sources require separate explicit contracts before telemetry
 normalization uses the bindings.
@@ -517,7 +519,9 @@ version, recorded time, and a half-open effective interval. A mutable head
 serializes concurrent appends; deferred constraints verify the complete revision
 sequence and monotonic recorded time at commit. Snapshot queries accept separate
 effective-time and recorded-time cutoffs so corrections do not rewrite what was
-known previously.
+known previously. The repository locks only the mutable head before reading its
+dependent immutable revision in a new `READ COMMITTED` statement, preventing a
+pre-lock-wait join snapshot from producing stale concurrency decisions.
 
 Communication-device rows reuse an existing asset's tenant and identity.
 Tenant-aware foreign keys prevent capability from being attached across tenant
@@ -525,4 +529,5 @@ boundaries. Endpoint identities are unique within a device and retain declaratio
 order during aggregate persistence and reconstruction. Device registration and
 all endpoints are written atomically with one set-based PostgreSQL statement.
 
-See [ADR 0001](../adr/0001-postgresql-sqlx-persistence.md).
+See [ADR 0001](../adr/0001-postgresql-sqlx-persistence.md) and
+[ADR 0021](../adr/0021-lock-revision-head-before-dependent-read.md).

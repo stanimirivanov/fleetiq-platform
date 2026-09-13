@@ -126,6 +126,10 @@ supported database version.
 - Document repository methods whose SQL shape is not obvious. Explain batching,
   transaction boundaries, locking, temporal selection, ordering, and deliberate
   multi-query decisions so reviewers do not need to infer them from SQL alone.
+- At PostgreSQL `READ COMMITTED`, do not join dependent rows into a locking query
+  when the locked row may change which dependent row is current. Lock the stable
+  identity first, then read its dependent row in a new statement with a fresh
+  snapshot.
 
 ## Commits and generated files
 
