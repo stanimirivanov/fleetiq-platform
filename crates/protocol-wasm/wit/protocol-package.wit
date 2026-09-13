@@ -1,0 +1,95 @@
+/// Versioned interface between the FleetIQ host and an isolated protocol package.
+package fleetiq:protocol-package@0.1.0;
+
+/// Device-protocol framing and frame-processing operations.
+interface runtime {
+    /// Opaque bytes owned by the host for one package invocation.
+    ///
+    /// `payload` is either all unread transport bytes during framing or exactly
+    /// one complete frame during processing. `session-state` is the complete
+    /// package-owned state value in effect before the invocation.
+    record invocation-input {
+        payload: list<u8>,
+        session-state: list<u8>,
+    }
+
+    /// A package's decision about the first frame in unread transport input.
+    variant frame-boundary {
+        /// The current input does not yet contain a complete frame.
+        need-more-data,
+        /// The nonzero byte length of the first complete frame.
+        frame(u32),
+    }
+
+    /// A typed value decoded from a device frame before semantic attribution.
+    variant decoded-value {
+        boolean(bool),
+        integer(s64),
+        /// Base-ten decimal text without unit information.
+        decimal(string),
+        text(string),
+    }
+
+    /// Protocol or device evidence about the decoded value's reliability.
+    enum observation-quality {
+        good,
+        uncertain,
+        invalid,
+    }
+
+    /// One device-scoped fact emitted in deterministic package order.
+    record decoded-output {
+        endpoint-id: string,
+        signal-id: string,
+        value: decoded-value,
+        source-unit: option<string>,
+        device-recorded-at-ms: option<s64>,
+        quality: observation-quality,
+    }
+
+    /// Complete proposed change to host-controlled connection-session state.
+    variant session-state-action {
+        /// Preserve the previous state bytes exactly.
+        keep,
+        /// Atomically replace the state, including with an empty byte list.
+        replace(list<u8>),
+    }
+
+    /// Host condition that must be met before sending a proposed reply.
+    enum reply-release {
+        after-processing,
+        after-durable-acceptance,
+    }
+
+    /// Opaque, nonempty transport reply proposed by a package.
+    record proposed-reply {
+        bytes: list<u8>,
+        release: reply-release,
+    }
+
+    /// Every effect proposed for one complete frame.
+    record frame-processing-output {
+        decoded-outputs: list<decoded-output>,
+        session-state: session-state-action,
+        replies: list<proposed-reply>,
+    }
+
+    /// Package-level rejection of input that does not conform to its protocol.
+    ///
+    /// The stable code supports host metrics and policy without exposing an
+    /// unbounded package-controlled diagnostic string in routine operations.
+    record package-error {
+        code: u32,
+    }
+
+    /// Locate the first complete frame without proposing observable effects.
+    locate-frame: func(input: invocation-input) -> result<frame-boundary, package-error>;
+
+    /// Decode one complete frame and propose all effects atomically.
+    process-frame: func(input: invocation-input) -> result<frame-processing-output, package-error>;
+}
+
+/// Component world implemented by every FleetIQ protocol package.
+world protocol-package {
+    export runtime;
+}

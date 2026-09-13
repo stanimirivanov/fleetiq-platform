@@ -100,6 +100,10 @@ meaning, deployment topology, or more than one application.
 - Treat Wasmtime's maximum WebAssembly stack as an approximate engine-wide
   guard. It does not reserve native stack for the calling thread or bound stack
   consumed directly by host functions.
+- Keep the checked-in WIT document authoritative for the protocol-package
+  component boundary. Use explicit package versions, document every field's
+  meaning and ownership, and generate bindings during normal compilation so
+  incompatible interface edits fail the build.
 
 ## Database migrations
 

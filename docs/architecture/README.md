@@ -340,6 +340,33 @@ ABI versioning, and package SDK generation require separate decisions.
 
 See [ADR 0020](../adr/0020-bounded-opaque-wasm-transfer.md).
 
+## Versioned protocol-package component contract
+
+The first protocol-package compatibility boundary is the WIT package
+`fleetiq:protocol-package@0.1.0`. A package implements one exported interface
+with side-effect-free `locate-frame` and atomic `process-frame` operations. Both
+receive host-owned payload and opaque session-state bytes. Framing returns only
+a need-more-data decision or a frame length. Processing returns ordered decoded
+outputs, one complete state action, and ordered reply proposals.
+
+The interface represents arbitrary-precision decimal values as base-ten text;
+the host adapter must parse and validate that text before constructing semantic
+SDK values. It also revalidates nonzero frame lengths, identifiers, units,
+timestamps, nonempty replies, collection counts, and byte totals. WIT types
+describe transport shape and do not replace host policy or domain constructors.
+
+Package errors contain a package-defined numeric code. This gives metrics and
+session policy a bounded stable value while diagnostics and package-specific
+meaning remain package-release metadata. Traps and host resource failures remain
+separate runtime errors.
+
+Wasmtime generates typed host bindings from the checked-in WIT source during a
+normal build. The component's embedded world type will be checked at admission
+in a later increment. This contract selects the Component Model canonical ABI;
+the earlier core-module byte-transfer path remains a resource-safety experiment.
+
+See [ADR 0022](../adr/0022-versioned-protocol-package-component-contract.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol

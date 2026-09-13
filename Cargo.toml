@@ -21,7 +21,7 @@ rust-version = "1.98.1"
 bigdecimal = { version = "0.4.0", default-features = false }
 sqlx = { version = "0.9.0", default-features = false, features = ["bigdecimal", "macros", "migrate", "postgres", "runtime-tokio"] }
 tokio = { version = "~1.51", default-features = false, features = ["macros", "rt-multi-thread"] }
-wasmtime = { version = "48.0.2", default-features = false, features = ["anyhow", "cranelift", "runtime", "std"] }
+wasmtime = { version = "48.0.2", default-features = false, features = ["anyhow", "component-model", "cranelift", "runtime", "std"] }
 
 [workspace.lints.rust]
 missing_docs = "deny"
