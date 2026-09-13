@@ -5,7 +5,10 @@
 //! guest stack ceiling, and guest memory and table limits. Its temporary
 //! no-argument probe export is validated and bound during admission. A second
 //! experiment transfers bounded opaque bytes through fully validated guest
-//! memory ranges. Neither path is the stable protocol package ABI.
+//! memory ranges. A versioned WIT world now defines the typed protocol-package
+//! component boundary; component admission and invocation remain later work.
+
+mod component_abi;
 
 mod artifact;
 mod budget;
@@ -22,6 +25,10 @@ pub use sandbox::{InvocationReport, WasmSandbox};
 pub use transfer::{
     CompiledTransferModule, GuestMemoryRegion, OpaqueTransferError, OpaqueTransferLimits,
     OpaqueTransferOutput, TransferExportNames,
+};
+
+pub use component_abi::{
+    PROTOCOL_PACKAGE_ABI_VERSION, PROTOCOL_PACKAGE_WIT, PROTOCOL_PACKAGE_WORLD,
 };
 
 #[cfg(test)]
