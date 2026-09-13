@@ -17,6 +17,8 @@ use crate::{
 };
 
 const MAX_TABLES_PER_MODULE: u32 = 1;
+// A componentized WIT guest contains its package module and a canonical ABI adapter.
+const MAX_INSTANCES_PER_INVOCATION: usize = 2;
 
 /// Host runtime configured for fuel consumption and epoch interruption.
 pub struct WasmSandbox {
@@ -234,7 +236,7 @@ impl ResourceLimiter for InvocationLimiter {
     }
 
     fn instances(&self) -> usize {
-        1
+        MAX_INSTANCES_PER_INVOCATION
     }
 }
 
@@ -257,7 +259,7 @@ impl Drop for WasmSandbox {
     }
 }
 
-/// Resource usage reported after a successful probe invocation.
+/// Resource usage reported after a completed bounded invocation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct InvocationReport {
     fuel_consumed: u64,

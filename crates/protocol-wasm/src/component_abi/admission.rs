@@ -38,7 +38,7 @@ impl ComponentAdmissionPolicy {
 /// interface type checking on the message path.
 #[derive(Clone)]
 pub struct CompiledProtocolComponent {
-    _bindings: ProtocolPackagePre<InvocationLimiter>,
+    pub(super) bindings: ProtocolPackagePre<InvocationLimiter>,
 }
 
 impl WasmSandbox {
@@ -86,9 +86,7 @@ impl WasmSandbox {
         let bindings = ProtocolPackagePre::new(instance)
             .map_err(ComponentAdmissionError::InterfaceMismatch)?;
 
-        Ok(CompiledProtocolComponent {
-            _bindings: bindings,
-        })
+        Ok(CompiledProtocolComponent { bindings })
     }
 }
 

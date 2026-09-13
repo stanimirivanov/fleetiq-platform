@@ -48,7 +48,10 @@ lifted frame decisions and processing results through the existing SDK domain
 constructors without retaining rejected package values in errors. Component
 admission applies a raw-byte ceiling before compilation, rejects host imports,
 checks the exact embedded WIT world, and retains typed pre-instantiation
-bindings for later execution.
+bindings. Each typed framing or processing call uses a fresh bounded store and
+component instance, separates package rejection from runtime failure, and returns
+only output validated through the semantic SDK.
+
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
 retry. Successfully bound values become
