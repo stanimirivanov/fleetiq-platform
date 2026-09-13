@@ -2,8 +2,11 @@
 
 mod admission;
 mod conversion;
+mod invocation;
 
 pub use admission::{CompiledProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy};
+pub use conversion::ComponentOutputError;
+pub use invocation::{ProtocolComponentInvocationError, ProtocolComponentOutput};
 
 /// Semantic version of the protocol-package WIT package implemented here.
 ///

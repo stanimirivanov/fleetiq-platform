@@ -361,8 +361,9 @@ meaning remain package-release metadata. Traps and host resource failures remain
 separate runtime errors.
 
 Wasmtime generates typed host bindings from the checked-in WIT source during a
-normal build. The component's embedded world type will be checked at admission
-in a later increment. This contract selects the Component Model canonical ABI;
+normal build. The component's embedded world type is checked during admission
+against the exact generated host bindings. This contract selects the Component
+Model canonical ABI;
 the earlier core-module byte-transfer path remains a resource-safety experiment.
 
 The component adapter copies borrowed framing and processing inputs into the
@@ -382,13 +383,24 @@ bindings and stores them in an opaque compiled artifact, moving interface type
 checking and export-index discovery away from device-message processing.
 
 Compilation is not covered by invocation fuel or epoch deadlines. Activation
-must eventually isolate compilation capacity and bound concurrent work. Typed
-pre-instantiation does not execute component start functions or prove that later
-instantiation and calls will succeed under resource policy.
+must eventually isolate compilation capacity and bound concurrent work.
+
+Typed pre-instantiation does not execute component start functions. Each framing
+or processing operation therefore creates a fresh bounded store and component
+instance, and its invocation budget covers instantiation and execution. The
+component package and canonical ABI adapter require an allowance of two core
+instances while memory and table growth retain their independent ceilings.
+
+Package rejections keep their stable code and resource report, semantic
+conversion failures identify the violated SDK invariant, and Wasmtime failures
+use the shared resource-aware invocation classification. Successful processing
+output remains a proposal; applying host policy and committing its effects are
+separate work.
 
 See [ADR 0022](../adr/0022-versioned-protocol-package-component-contract.md) and
 [ADR 0023](../adr/0023-validate-lifted-component-values.md), and
-[ADR 0024](../adr/0024-admit-exact-protocol-components.md).
+[ADR 0024](../adr/0024-admit-exact-protocol-components.md), and
+[ADR 0025](../adr/0025-invoke-protocol-components-in-fresh-bounded-instances.md).
 
 ## Host-controlled protocol decoding boundary
 
