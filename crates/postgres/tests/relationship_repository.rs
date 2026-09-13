@@ -347,7 +347,11 @@ async fn concurrent_appends_are_serialized_per_relationship(
     );
     let results = [first_result, second_result];
 
-    assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+    assert_eq!(
+        results.iter().filter(|result| result.is_ok()).count(),
+        1,
+        "concurrent append results: {results:?}"
+    );
     assert_eq!(
         results
             .iter()
@@ -359,7 +363,8 @@ async fn concurrent_appends_are_serialized_per_relationship(
                 })
             ))
             .count(),
-        1
+        1,
+        "concurrent append results: {results:?}"
     );
     Ok(())
 }

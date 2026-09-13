@@ -11,9 +11,9 @@ impl PostgresRelationshipRepository {
     /// A new identity is created for revision 1. Existing identities are locked
     /// before validating and advancing their head, which serializes concurrent
     /// writers for that relationship while leaving unrelated relationships
-    /// independent. These statements remain separate because the locked head
-    /// must be inspected through domain revision and time invariants before the
-    /// immutable revision can be inserted.
+    /// independent. Head locking and revision lookup use separate statements so
+    /// a writer that waited for the lock reads the winner's revision through a
+    /// fresh `READ COMMITTED` snapshot.
     pub(super) async fn append_revision(
         &self,
         relationship: &AssetRelationship,
@@ -48,18 +48,17 @@ impl PostgresRelationshipRepository {
                 });
             }
         } else {
+            // Lock only the mutable identity row. Joining the immutable
+            // revision here could combine a post-wait identity with revision
+            // data from the statement snapshot created before that wait.
             let head = sqlx::query_as!(
                 RelationshipHeadRow,
                 r"
-                SELECT identity.latest_revision, revision.recorded_at_ms
+                SELECT identity.latest_revision
                 FROM metadata.asset_relationships AS identity
-                JOIN metadata.asset_relationship_revisions AS revision
-                  ON revision.tenant_id = identity.tenant_id
-                 AND revision.relationship_id = identity.relationship_id
-                 AND revision.revision = identity.latest_revision
                 WHERE identity.tenant_id = $1
                   AND identity.relationship_id = $2
-                FOR UPDATE OF identity
+                FOR UPDATE
                 ",
                 tenant_id,
                 relationship_id
@@ -80,9 +79,28 @@ impl PostgresRelationshipRepository {
                     actual: revision_number,
                 });
             }
-            if relationship.recorded_at().get() < head.recorded_at_ms {
+
+            // Start a new statement after acquiring the identity lock so a
+            // concurrent winner's committed revision is visible.
+            let recorded_at_ms = sqlx::query_scalar!(
+                r"
+                SELECT recorded_at_ms
+                FROM metadata.asset_relationship_revisions
+                WHERE tenant_id = $1
+                  AND relationship_id = $2
+                  AND revision = $3
+                ",
+                tenant_id,
+                relationship_id,
+                head.latest_revision
+            )
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(classify_database_error)?;
+
+            if relationship.recorded_at().get() < recorded_at_ms {
                 return Err(PostgresRepositoryError::RecordedTimeRegression {
-                    previous_ms: head.recorded_at_ms,
+                    previous_ms: recorded_at_ms,
                     actual_ms: relationship.recorded_at().get(),
                 });
             }
@@ -152,5 +170,4 @@ async fn insert_revision_row(
 #[derive(Debug)]
 struct RelationshipHeadRow {
     latest_revision: BigDecimal,
-    recorded_at_ms: i64,
 }

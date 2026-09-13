@@ -45,18 +45,18 @@ impl PostgresSignalBindingRepository {
                 });
             }
         } else {
+            // Lock only the mutable identity row. A joined revision row would
+            // use the snapshot taken before a concurrent lock wait and could
+            // disappear during PostgreSQL's row recheck after the winner
+            // advances `latest_revision`.
             let head = sqlx::query_as!(
                 SignalBindingHeadRow,
                 r"
-                SELECT identity.latest_revision, revision.recorded_at_ms
+                SELECT identity.latest_revision
                 FROM metadata.signal_bindings AS identity
-                JOIN metadata.signal_binding_revisions AS revision
-                  ON revision.tenant_id = identity.tenant_id
-                 AND revision.binding_id = identity.binding_id
-                 AND revision.revision = identity.latest_revision
                 WHERE identity.tenant_id = $1
                   AND identity.binding_id = $2
-                FOR UPDATE OF identity
+                FOR UPDATE
                 ",
                 tenant_id,
                 binding_id
@@ -76,9 +76,29 @@ impl PostgresSignalBindingRepository {
                     actual: revision_number,
                 });
             }
-            if binding.recorded_at().get() < head.recorded_at_ms {
+
+            // This separate statement starts after the identity lock is held,
+            // so READ COMMITTED supplies a fresh snapshot containing the
+            // winning concurrent revision identified by the locked head.
+            let recorded_at_ms = sqlx::query_scalar!(
+                r"
+                SELECT recorded_at_ms
+                FROM metadata.signal_binding_revisions
+                WHERE tenant_id = $1
+                  AND binding_id = $2
+                  AND revision = $3
+                ",
+                tenant_id,
+                binding_id,
+                head.latest_revision
+            )
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(classify_database_error)?;
+
+            if binding.recorded_at().get() < recorded_at_ms {
                 return Err(PostgresRepositoryError::RecordedTimeRegression {
-                    previous_ms: head.recorded_at_ms,
+                    previous_ms: recorded_at_ms,
                     actual_ms: binding.recorded_at().get(),
                 });
             }
@@ -149,5 +169,4 @@ async fn insert_revision_row(
 #[derive(Debug)]
 struct SignalBindingHeadRow {
     latest_revision: BigDecimal,
-    recorded_at_ms: i64,
 }
