@@ -45,7 +45,10 @@ language-neutral framing and processing operations over the WebAssembly
 Component Model and is compile-checked through generated Wasmtime bindings. A
 host adapter copies semantic inputs into component-owned values and validates
 lifted frame decisions and processing results through the existing SDK domain
-constructors without retaining rejected package values in errors.
+constructors without retaining rejected package values in errors. Component
+admission applies a raw-byte ceiling before compilation, rejects host imports,
+checks the exact embedded WIT world, and retains typed pre-instantiation
+bindings for later execution.
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
 retry. Successfully bound values become

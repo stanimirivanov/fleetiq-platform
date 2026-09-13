@@ -108,6 +108,10 @@ meaning, deployment topology, or more than one application.
   through semantic constructors, identify collection failures by stable
   zero-based position, and keep package-controlled values out of routine error
   and debug output.
+- Admit components against generated bindings for the exact supported WIT world
+  before activation. Apply artifact limits before parsing or compilation,
+  reject undeclared host capabilities, and retain typed pre-instantiation
+  bindings so message handling does not repeat compatibility discovery.
 
 ## Database migrations
 

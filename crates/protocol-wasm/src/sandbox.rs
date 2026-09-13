@@ -83,6 +83,10 @@ impl WasmSandbox {
         self.max_wasm_stack_bytes
     }
 
+    pub(crate) const fn engine(&self) -> &Engine {
+        &self.engine
+    }
+
     pub(crate) fn admit_module(
         &self,
         wasm: &[u8],

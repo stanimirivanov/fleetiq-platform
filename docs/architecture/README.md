@@ -374,8 +374,21 @@ identify the decoded-output or reply position while omitting the rejected value.
 Collection order, timestamps, quality, state action, and reply release conditions
 are preserved for the existing host gates.
 
+Component admission uses an independent nonzero raw-byte policy and rejects
+oversized input before Wasmtime parsing or compilation. A valid Component Model
+binary must declare no host imports and must implement the exact WIT world used
+to generate the host bindings. Admission creates typed pre-instantiation
+bindings and stores them in an opaque compiled artifact, moving interface type
+checking and export-index discovery away from device-message processing.
+
+Compilation is not covered by invocation fuel or epoch deadlines. Activation
+must eventually isolate compilation capacity and bound concurrent work. Typed
+pre-instantiation does not execute component start functions or prove that later
+instantiation and calls will succeed under resource policy.
+
 See [ADR 0022](../adr/0022-versioned-protocol-package-component-contract.md) and
-[ADR 0023](../adr/0023-validate-lifted-component-values.md).
+[ADR 0023](../adr/0023-validate-lifted-component-values.md), and
+[ADR 0024](../adr/0024-admit-exact-protocol-components.md).
 
 ## Host-controlled protocol decoding boundary
 

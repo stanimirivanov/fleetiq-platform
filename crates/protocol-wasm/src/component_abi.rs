@@ -1,6 +1,9 @@
 //! Compile-time bindings for the versioned protocol-package component contract.
 
+mod admission;
 mod conversion;
+
+pub use admission::{CompiledProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy};
 
 /// Semantic version of the protocol-package WIT package implemented here.
 ///
