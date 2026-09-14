@@ -70,6 +70,17 @@ impl PendingAcceptedMessage {
         &self.payload
     }
 
+    /// Returns whether an accepted value contains this candidate's exact
+    /// immutable identity, provenance, time, and payload.
+    pub fn has_same_content_as(&self, accepted: &AcceptedMessage) -> bool {
+        self.id == *accepted.id()
+            && self.tenant_id == *accepted.tenant_id()
+            && self.device_asset_id == *accepted.device_asset_id()
+            && self.protocol_package == *accepted.protocol_package()
+            && self.received_at == accepted.received_at()
+            && self.payload == *accepted.payload()
+    }
+
     /// Constructs the accepted value after an implementation establishes its
     /// documented durability condition.
     pub fn into_accepted_message(self) -> AcceptedMessage {
@@ -173,6 +184,7 @@ mod tests {
         assert_eq!(pending.protocol_package().id().as_str(), "vendor.protocol");
         assert_eq!(pending.received_at(), UnixTimeMillis::new(1_000));
         assert_eq!(pending.payload().as_bytes(), b"private-wire-frame");
+        assert!(pending.has_same_content_as(&pending.clone().into_accepted_message()));
         assert!(!format!("{pending:?}").contains("private-wire-frame"));
     }
 

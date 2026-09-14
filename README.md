@@ -66,7 +66,11 @@ retains exact wire bytes and trusted device, package, and receipt-time
 provenance for that durability boundary. Its application-port adapter performs
 first append in one statement and uses a fresh-snapshot primary-key read only
 after conflict, returning an exact retry separately from an immutable-content
-identity collision.
+identity collision. Application orchestration binds each processed frame to its
+trusted acceptance context, exposes processing-gated replies immediately, and
+withholds decoded outputs and durability-gated replies until append succeeds.
+Durable completion assembles trusted observations and releases deferred replies
+with accepted-message evidence while retaining all pending work on failure.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and

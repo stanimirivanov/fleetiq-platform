@@ -90,6 +90,10 @@ meaning, deployment topology, or more than one application.
 - Assign durable-message identities before append. Retry ambiguous failures with
   the exact same candidate, treat an identical existing value as success, and
   reject identity reuse when any immutable content differs.
+- Bind the exact processed frame, decoded outputs, and deferred replies into one
+  pending acceptance value before asynchronous storage. Expose only replies
+  already eligible after processing; assemble observations and release deferred
+  replies only against matching durable acceptance evidence.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits

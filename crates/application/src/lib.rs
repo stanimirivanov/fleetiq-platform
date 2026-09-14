@@ -6,6 +6,7 @@
 mod accepted_message_log;
 mod definition_repository;
 mod device_repository;
+mod frame_acceptance;
 mod live;
 mod relationship_repository;
 mod repository;
@@ -16,6 +17,10 @@ pub use accepted_message_log::{
 };
 pub use definition_repository::DefinitionRepository;
 pub use device_repository::DeviceRepository;
+pub use frame_acceptance::{
+    DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,
+    PreparedFrameAcceptance,
+};
 pub use live::{
     LiveMessage, ProjectionDelta, ProjectionDeltaError, ProjectionRevision, ProjectionSnapshot,
     ResnapshotReason, ResnapshotRequired, RevisionCursor, RevisionCursorError,
