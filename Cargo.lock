@@ -555,6 +555,7 @@ dependencies = [
  "bigdecimal",
  "fleetiq-application",
  "fleetiq-domain",
+ "fleetiq-telemetry",
  "sqlx",
  "tokio",
 ]

@@ -141,6 +141,12 @@ For an idempotent append-only fact, use a stable tenant-scoped key, compare ever
 immutable field before treating a conflict as an exact retry, and reject row
 mutation in storage. Do not infer idempotency from key equality alone.
 
+When `INSERT ... ON CONFLICT DO NOTHING` waits for a concurrent writer, do the
+fallback read in a new `READ COMMITTED` statement. A fallback `SELECT` inside the
+same data-modifying common table expression can retain an older snapshot and
+miss the row that caused the conflict. Do not force visibility through a no-op
+update on an immutable table.
+
 ## PostgreSQL repository queries
 
 - Treat database round trips as an explicit design cost. Batch homogeneous

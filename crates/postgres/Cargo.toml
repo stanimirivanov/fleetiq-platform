@@ -11,6 +11,7 @@ rust-version.workspace = true
 bigdecimal.workspace = true
 fleetiq-application = { path = "../application" }
 fleetiq-domain = { path = "../domain" }
+fleetiq-telemetry = { path = "../telemetry" }
 sqlx.workspace = true
 
 [dev-dependencies]

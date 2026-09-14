@@ -3,6 +3,7 @@
 //! Database row types remain private to this crate. Public operations accept and
 //! return validated domain values through application-owned repository ports.
 
+mod accepted_message_log;
 mod asset_repository;
 mod definition_repository;
 mod device_repository;
@@ -10,6 +11,7 @@ mod error;
 mod relationship_repository;
 mod signal_binding_repository;
 
+pub use accepted_message_log::{PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError};
 pub use asset_repository::PostgresAssetRepository;
 pub use definition_repository::PostgresDefinitionRepository;
 pub use device_repository::PostgresDeviceRepository;
