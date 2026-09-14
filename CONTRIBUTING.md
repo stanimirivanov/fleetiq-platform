@@ -120,6 +120,9 @@ meaning, deployment topology, or more than one application.
 - Compose component processing with the trusted host gate using an extracted
   `WireFrame` and the same host-owned `SessionState` used for invocation. Do not
   expose the intermediate package proposal to downstream application code.
+- Compose component framing with `SessionInputBuffer`. Invoke against its current
+  unread bytes while holding exclusive buffer access, and let the host validate
+  and remove at most one prefix after a successful package decision.
 
 ## Database migrations
 

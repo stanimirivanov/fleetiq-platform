@@ -402,6 +402,14 @@ See [ADR 0022](../adr/0022-versioned-protocol-package-component-contract.md) and
 [ADR 0024](../adr/0024-admit-exact-protocol-components.md), and
 [ADR 0025](../adr/0025-invoke-protocol-components-in-fresh-bounded-instances.md).
 
+The WebAssembly adapter also composes `locate-frame` with the bounded
+`SessionInputBuffer`. It supplies current unread bytes and current session state
+to a fresh component invocation, then lets the host validate and remove at most
+one frame prefix. Need-more-data and all failures preserve unread input; valid
+coalesced input remains available for subsequent polls.
+
+See [ADR 0027](../adr/0027-poll-component-framing-through-host-input-buffer.md).
+
 The WebAssembly adapter composes successful component processing with the
 trusted `FrameProcessingGate`. The integrated operation accepts an extracted
 `WireFrame` and the mutable host-owned `SessionState`, constructs the component

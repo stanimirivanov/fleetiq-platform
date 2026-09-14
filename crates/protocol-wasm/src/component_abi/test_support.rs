@@ -16,6 +16,9 @@ use crate::{
 #[derive(Clone, Copy)]
 pub(super) enum Fixture {
     StatefulFrame,
+    NeedMoreData,
+    StateLengthFrame,
+    OversizedFrame,
     PackageRejection,
     ZeroLengthFrame,
     ReplaceState,
@@ -124,22 +127,11 @@ fn locate_body(fixture: Fixture) -> &'static str {
             i32.const 0
         "
         }
+        Fixture::NeedMoreData | Fixture::ReplaceState => "i32.const 0",
+        Fixture::StateLengthFrame => FRAME_FROM_STATE_LENGTH,
+        Fixture::OversizedFrame => FOUR_BYTE_FRAME,
         Fixture::PackageRejection => package_rejection_body(),
-        Fixture::ZeroLengthFrame => {
-            r"
-            i32.const 0
-            i32.const 0
-            i32.store
-            i32.const 4
-            i32.const 1
-            i32.store
-            i32.const 8
-            i32.const 0
-            i32.store
-            i32.const 0
-        "
-        }
-        Fixture::ReplaceState => "i32.const 0",
+        Fixture::ZeroLengthFrame => ZERO_BYTE_FRAME,
         Fixture::Infinite => "(loop $spin br $spin) unreachable",
         Fixture::Trap => "unreachable",
     }
@@ -169,6 +161,45 @@ fn process_body(fixture: Fixture) -> &'static str {
         _ => "i32.const 0",
     }
 }
+
+const FRAME_FROM_STATE_LENGTH: &str = r"
+    i32.const 0
+    i32.const 0
+    i32.store
+    i32.const 4
+    i32.const 1
+    i32.store
+    i32.const 8
+    local.get 3
+    i32.store
+    i32.const 0
+";
+
+const FOUR_BYTE_FRAME: &str = r"
+    i32.const 0
+    i32.const 0
+    i32.store
+    i32.const 4
+    i32.const 1
+    i32.store
+    i32.const 8
+    i32.const 4
+    i32.store
+    i32.const 0
+";
+
+const ZERO_BYTE_FRAME: &str = r"
+    i32.const 0
+    i32.const 0
+    i32.store
+    i32.const 4
+    i32.const 1
+    i32.store
+    i32.const 8
+    i32.const 0
+    i32.store
+    i32.const 0
+";
 
 const fn package_rejection_body() -> &'static str {
     r"

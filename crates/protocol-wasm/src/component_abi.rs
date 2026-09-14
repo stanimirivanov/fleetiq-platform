@@ -2,12 +2,14 @@
 
 mod admission;
 mod conversion;
+mod framing;
 mod invocation;
 mod processing;
 
 pub use admission::{CompiledProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy};
 pub use conversion::ComponentOutputError;
-pub use invocation::{ProtocolComponentInvocationError, ProtocolComponentOutput};
+pub use framing::{ProtocolFramePoll, ProtocolFramePollError};
+pub use invocation::ProtocolComponentInvocationError;
 pub use processing::{ProcessedProtocolFrame, ProtocolFrameProcessingError};
 
 /// Semantic version of the protocol-package WIT package implemented here.
