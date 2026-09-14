@@ -9,6 +9,7 @@ rust-version.workspace = true
 
 [dependencies]
 fleetiq-domain = { path = "../domain" }
+fleetiq-telemetry = { path = "../telemetry" }
 
 [lints]
 workspace = true
