@@ -30,8 +30,10 @@ pub use transfer::{
 pub use component_abi::{
     CompiledProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy,
     ComponentOutputError, PROTOCOL_PACKAGE_ABI_VERSION, PROTOCOL_PACKAGE_WIT,
-    PROTOCOL_PACKAGE_WORLD, ProcessedProtocolFrame, ProtocolComponentInvocationError,
-    ProtocolFramePoll, ProtocolFramePollError, ProtocolFrameProcessingError,
+    PROTOCOL_PACKAGE_WORLD, ProcessedProtocolFrame, ProcessedProtocolSessionTurn,
+    ProtocolComponentInvocationError, ProtocolFramePoll, ProtocolFramePollError,
+    ProtocolFrameProcessingError, ProtocolSessionTurn, ProtocolSessionTurnBudgets,
+    ProtocolSessionTurnError,
 };
 
 #[cfg(test)]

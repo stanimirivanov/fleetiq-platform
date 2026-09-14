@@ -123,6 +123,9 @@ meaning, deployment topology, or more than one application.
 - Compose component framing with `SessionInputBuffer`. Invoke against its current
   unread bytes while holding exclusive buffer access, and let the host validate
   and remove at most one prefix after a successful package decision.
+- Give each protocol session turn separate framing and processing budgets. Once
+  framing extracts a prefix, return that exact `WireFrame` on processing failure
+  instead of silently discarding or automatically reinserting it.
 
 ## Database migrations
 

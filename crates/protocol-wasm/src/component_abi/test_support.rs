@@ -18,7 +18,9 @@ pub(super) enum Fixture {
     StatefulFrame,
     NeedMoreData,
     StateLengthFrame,
+    StateLengthFrameAndReplaceState,
     OversizedFrame,
+    FrameThenReject,
     PackageRejection,
     ZeroLengthFrame,
     ReplaceState,
@@ -128,8 +130,10 @@ fn locate_body(fixture: Fixture) -> &'static str {
         "
         }
         Fixture::NeedMoreData | Fixture::ReplaceState => "i32.const 0",
-        Fixture::StateLengthFrame => FRAME_FROM_STATE_LENGTH,
-        Fixture::OversizedFrame => FOUR_BYTE_FRAME,
+        Fixture::StateLengthFrame | Fixture::StateLengthFrameAndReplaceState => {
+            FRAME_FROM_STATE_LENGTH
+        }
+        Fixture::OversizedFrame | Fixture::FrameThenReject => FOUR_BYTE_FRAME,
         Fixture::PackageRejection => package_rejection_body(),
         Fixture::ZeroLengthFrame => ZERO_BYTE_FRAME,
         Fixture::Infinite => "(loop $spin br $spin) unreachable",
@@ -139,8 +143,8 @@ fn locate_body(fixture: Fixture) -> &'static str {
 
 fn process_body(fixture: Fixture) -> &'static str {
     match fixture {
-        Fixture::PackageRejection => package_rejection_body(),
-        Fixture::ReplaceState => {
+        Fixture::PackageRejection | Fixture::FrameThenReject => package_rejection_body(),
+        Fixture::ReplaceState | Fixture::StateLengthFrameAndReplaceState => {
             r"
             i32.const 12
             i32.const 1

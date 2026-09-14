@@ -7,3 +7,7 @@
 .vscode/
 .DS_Store
 Thumbs.db
+
+# JVM crash artifacts can be emitted into the working directory by IDE helpers.
+hs_err_pid*.log
+replay_pid*.log
