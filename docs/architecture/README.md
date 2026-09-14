@@ -124,9 +124,20 @@ Row-level updates and deletes are rejected; future retention and partition
 lifecycle require an explicit forward migration. The append-only application
 port does not yet justify secondary replay indexes.
 
+The PostgreSQL adapter attempts `INSERT ... ON CONFLICT DO NOTHING` first. A
+conflict triggers a second primary-key read with a fresh `READ COMMITTED`
+snapshot, avoiding the visibility gap that a single data-modifying common table
+expression can have after waiting for a concurrent uncommitted winner. Because
+accepted rows cannot change or disappear, no explicit transaction is required
+between those statements. The adapter reconstructs the stored domain value and
+returns an idempotent result only when every immutable field matches; otherwise
+it reports a typed identity collision without exposing payload bytes.
+
 See [ADR 0004](../adr/0004-accepted-message-contract.md) and
 [ADR 0029](../adr/0029-append-accepted-messages-idempotently.md), and
-[ADR 0030](../adr/0030-store-accepted-messages-as-immutable-ingestion-facts.md).
+[ADR 0030](../adr/0030-store-accepted-messages-as-immutable-ingestion-facts.md),
+and
+[ADR 0031](../adr/0031-resolve-accepted-message-appends-with-a-fresh-snapshot.md).
 
 ## Bounded incremental protocol framing
 

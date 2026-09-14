@@ -63,7 +63,10 @@ port that turns complete pending frames into durable facts, supports exact
 idempotent retries, and rejects identity reuse with different immutable content.
 PostgreSQL provides the tenant-scoped, append-only accepted-message schema that
 retains exact wire bytes and trusted device, package, and receipt-time
-provenance for that durability boundary.
+provenance for that durability boundary. Its application-port adapter performs
+first append in one statement and uses a fresh-snapshot primary-key read only
+after conflict, returning an exact retry separately from an immutable-content
+identity collision.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
