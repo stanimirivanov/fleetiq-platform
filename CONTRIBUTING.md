@@ -94,6 +94,10 @@ meaning, deployment topology, or more than one application.
   pending acceptance value before asynchronous storage. Expose only replies
   already eligible after processing; assemble observations and release deferred
   replies only against matching durable acceptance evidence.
+- Persist decoded output as one message-level result marker plus its complete
+  ordered observation collection. Treat an empty collection as successful
+  decoding, append the marker and children atomically, and resolve exact retries
+  without creating duplicate observations or hiding identity collisions.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits

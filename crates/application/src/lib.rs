@@ -4,6 +4,7 @@
 //! contracts without exposing database or transport types to domain code.
 
 mod accepted_message_log;
+mod decoded_observation_log;
 mod definition_repository;
 mod device_repository;
 mod frame_acceptance;
@@ -14,6 +15,10 @@ mod signal_binding_repository;
 
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
+};
+pub use decoded_observation_log::{
+    DecodedObservationAppendOutcome, DecodedObservationBatch, DecodedObservationBatchError,
+    DecodedObservationLog,
 };
 pub use definition_repository::DefinitionRepository;
 pub use device_repository::DeviceRepository;
