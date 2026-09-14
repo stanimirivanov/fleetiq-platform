@@ -33,5 +33,5 @@ pub type PostgresRelationshipRepositoryError = PostgresRepositoryError;
 /// Error returned by PostgreSQL signal-binding repository operations.
 pub type PostgresSignalBindingRepositoryError = PostgresRepositoryError;
 
-/// Product metadata migrations embedded for deployment and isolated tests.
+/// Product database migrations embedded for deployment and isolated tests.
 pub static MIGRATOR: Migrator = sqlx::migrate!("../../migrations");

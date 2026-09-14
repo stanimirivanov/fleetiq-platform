@@ -137,6 +137,10 @@ migrations as reviewed production code: document their domain intent, enforce
 durable invariants in PostgreSQL, and verify the full migration chain against the
 supported database version.
 
+For an idempotent append-only fact, use a stable tenant-scoped key, compare every
+immutable field before treating a conflict as an exact retry, and reject row
+mutation in storage. Do not infer idempotency from key equality alone.
+
 ## PostgreSQL repository queries
 
 - Treat database round trips as an explicit design cost. Batch homogeneous

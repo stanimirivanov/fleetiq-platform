@@ -61,6 +61,9 @@ separate, and returns an extracted frame to the caller if its subsequent
 processing fails. The application layer defines an append-only accepted-message
 port that turns complete pending frames into durable facts, supports exact
 idempotent retries, and rejects identity reuse with different immutable content.
+PostgreSQL provides the tenant-scoped, append-only accepted-message schema that
+retains exact wire bytes and trusted device, package, and receipt-time
+provenance for that durability boundary.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
@@ -119,7 +122,7 @@ crates/protocol-sdk/       Protocol-package output and host assembly contracts
 crates/protocol-wasm/      Isolated Wasmtime runtime feasibility experiments
 crates/semantics/          Temporal attribution and normalization policies
 crates/telemetry/          Protocol-neutral decoded observation contracts
-migrations/                Authoritative PostgreSQL metadata schema
+migrations/                Authoritative PostgreSQL product schemas
 deploy/local/              Disposable local development infrastructure
 docs/architecture/         Accepted architecture boundaries
 docs/adr/                  Architectural decisions and their consequences
