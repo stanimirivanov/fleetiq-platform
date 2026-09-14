@@ -133,11 +133,24 @@ between those statements. The adapter reconstructs the stored domain value and
 returns an idempotent result only when every immutable field matches; otherwise
 it reports a typed identity collision without exposing payload bytes.
 
+The application acceptance flow binds trusted frame context, the exact
+`WireFrame`, decoded outputs, and staged replies before asynchronous durability.
+Processing-gated replies remain separately available after host validation.
+Decoded outputs and durability-gated replies stay opaque behind one
+`PendingFrameAcceptance`; an append error returns that complete value for exact
+retry. After append, the application verifies that the returned message matches
+the candidate, assembles observations with trusted provenance, and releases
+deferred replies with accepted-message evidence. No effect is released against
+a mismatched log result, and routine diagnostics expose counts rather than
+payload or decoded values.
+
 See [ADR 0004](../adr/0004-accepted-message-contract.md) and
 [ADR 0029](../adr/0029-append-accepted-messages-idempotently.md), and
 [ADR 0030](../adr/0030-store-accepted-messages-as-immutable-ingestion-facts.md),
 and
-[ADR 0031](../adr/0031-resolve-accepted-message-appends-with-a-fresh-snapshot.md).
+[ADR 0031](../adr/0031-resolve-accepted-message-appends-with-a-fresh-snapshot.md),
+and
+[ADR 0032](../adr/0032-gate-processed-frame-effects-on-durable-acceptance.md).
 
 ## Bounded incremental protocol framing
 
