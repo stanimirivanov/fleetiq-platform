@@ -7,6 +7,7 @@ use crate::{
     ComponentOutputError, InvocationError,
     component_abi::test_support::{Fixture, budget, compiled},
 };
+
 #[test]
 fn framing_returns_a_validated_value_and_resource_report() {
     let (sandbox, component) = compiled(Fixture::StatefulFrame);
@@ -19,13 +20,14 @@ fn framing_returns_a_validated_value_and_resource_report() {
         )
         .unwrap();
 
+    let (value, report) = result.into_parts();
     assert_eq!(
-        result.value(),
+        &value,
         &FrameBoundary::Frame {
             length: NonZeroUsize::new(1).unwrap(),
         }
     );
-    assert!(result.report().fuel_consumed() > 0);
+    assert!(report.fuel_consumed() > 0);
 }
 
 #[test]
@@ -39,9 +41,11 @@ fn every_invocation_uses_fresh_guest_state() {
         .invoke_protocol_framing(&component, budget(), FramingInput::new(&[], &[]))
         .unwrap();
 
-    assert_eq!(first.value(), second.value());
+    let (first, _) = first.into_parts();
+    let (second, _) = second.into_parts();
+    assert_eq!(first, second);
     assert_eq!(
-        second.value(),
+        &second,
         &FrameBoundary::Frame {
             length: NonZeroUsize::new(1).unwrap(),
         }

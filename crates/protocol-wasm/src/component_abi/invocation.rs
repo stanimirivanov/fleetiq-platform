@@ -14,24 +14,14 @@ use crate::{InvocationBudget, InvocationError, InvocationReport, WasmSandbox};
 
 /// A semantically validated component value and its resource-usage report.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ProtocolComponentOutput<T> {
+pub(super) struct ProtocolComponentOutput<T> {
     value: T,
     report: InvocationReport,
 }
 
 impl<T> ProtocolComponentOutput<T> {
-    /// Returns the validated value produced by the protocol package.
-    pub const fn value(&self) -> &T {
-        &self.value
-    }
-
-    /// Returns resource usage for component instantiation and execution.
-    pub const fn report(&self) -> InvocationReport {
-        self.report
-    }
-
     /// Consumes the result into its semantic value and resource report.
-    pub fn into_parts(self) -> (T, InvocationReport) {
+    pub(super) fn into_parts(self) -> (T, InvocationReport) {
         (self.value, self.report)
     }
 }
@@ -106,7 +96,7 @@ impl WasmSandbox {
     /// returns a frame decision that violates SDK invariants, or
     /// [`ProtocolComponentInvocationError::Invocation`] when instantiation,
     /// execution, or resource enforcement fails.
-    pub fn invoke_protocol_framing(
+    pub(super) fn invoke_protocol_framing(
         &self,
         component: &CompiledProtocolComponent,
         budget: InvocationBudget,
@@ -147,7 +137,7 @@ impl WasmSandbox {
     /// violates SDK invariants, or
     /// [`ProtocolComponentInvocationError::Invocation`] when instantiation,
     /// execution, or resource enforcement fails.
-    pub(crate) fn invoke_protocol_processing(
+    pub(super) fn invoke_protocol_processing(
         &self,
         component: &CompiledProtocolComponent,
         budget: InvocationBudget,

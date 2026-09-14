@@ -53,7 +53,9 @@ component instance, separates package rejection from runtime failure, and return
 only output validated through the semantic SDK. Complete-frame processing then
 applies that output through the trusted host gate using the same session-state
 object supplied to the component, preserving prior state when invocation or
-host validation fails.
+host validation fails. Component framing likewise operates on the bounded host
+input buffer, extracts at most one validated frame, and preserves unread bytes
+on incomplete input or failure.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
