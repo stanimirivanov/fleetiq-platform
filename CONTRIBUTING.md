@@ -10,6 +10,7 @@ An issue or pull request should state:
 - the problem and resulting behavior;
 - boundaries and deliberate exclusions;
 - architecture decisions or contract changes;
+- the target GitHub milestone, named `MNN - Outcome` with numbering from `M01`;
 - verification evidence and remaining limitations.
 
 ## Rust conventions
@@ -116,6 +117,9 @@ meaning, deployment topology, or more than one application.
   Carry package continuity through explicit session-state bytes, distinguish typed
   package rejection from runtime failure, and validate lifted values before they
   reach host processing gates.
+- Compose component processing with the trusted host gate using an extracted
+  `WireFrame` and the same host-owned `SessionState` used for invocation. Do not
+  expose the intermediate package proposal to downstream application code.
 
 ## Database migrations
 

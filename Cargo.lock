@@ -580,6 +580,7 @@ name = "fleetiq-protocol-wasm"
 version = "0.1.0"
 dependencies = [
  "fleetiq-domain",
+ "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
  "wasmtime",
  "wat",

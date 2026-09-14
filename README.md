@@ -50,7 +50,10 @@ admission applies a raw-byte ceiling before compilation, rejects host imports,
 checks the exact embedded WIT world, and retains typed pre-instantiation
 bindings. Each typed framing or processing call uses a fresh bounded store and
 component instance, separates package rejection from runtime failure, and returns
-only output validated through the semantic SDK.
+only output validated through the semantic SDK. Complete-frame processing then
+applies that output through the trusted host gate using the same session-state
+object supplied to the component, preserving prior state when invocation or
+host validation fails.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
