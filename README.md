@@ -58,7 +58,9 @@ input buffer, extracts at most one validated frame, and preserves unread bytes
 on incomplete input or failure. A bounded session-turn operation composes these
 stages for at most one frame, keeps their invocation budgets and reports
 separate, and returns an extracted frame to the caller if its subsequent
-processing fails.
+processing fails. The application layer defines an append-only accepted-message
+port that turns complete pending frames into durable facts, supports exact
+idempotent retries, and rejects identity reuse with different immutable content.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and

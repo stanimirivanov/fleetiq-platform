@@ -106,10 +106,18 @@ frame may contain records from several endpoint-scoped sources.
 The payload remains protocol-owned and may be empty when a custom protocol gives
 that frame meaning. Transport and runtime hosts enforce framing, size, memory,
 and execution limits. Routine Rust debug output reports payload length without
-printing the bytes. The concrete durable log, serialization format, retention,
-and acknowledgement guarantee remain infrastructure decisions.
+printing the bytes.
 
-See [ADR 0004](../adr/0004-accepted-message-contract.md).
+The application layer represents the pre-durability value as
+`PendingAcceptedMessage` and owns the `AcceptedMessageLog` port. A stable message
+identity is assigned before append so a caller can retry an ambiguous failure
+with the same candidate. A first append and an identical already-present value
+both return the durably accepted message; reusing the identity with different
+immutable content is an error. Concrete storage, serialization, retention, and
+the precise durability acknowledgement remain adapter decisions.
+
+See [ADR 0004](../adr/0004-accepted-message-contract.md) and
+[ADR 0029](../adr/0029-append-accepted-messages-idempotently.md).
 
 ## Bounded incremental protocol framing
 

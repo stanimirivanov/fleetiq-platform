@@ -87,6 +87,9 @@ meaning, deployment topology, or more than one application.
   totals. A per-item limit does not prevent excessive aggregate allocation.
 - Stage fallible package effects in local host-owned values before changing
   session state. Do not expose partial results when a later validation can fail.
+- Assign durable-message identities before append. Retry ambiguous failures with
+  the exact same candidate, treat an identical existing value as success, and
+  reject identity reuse when any immutable content differs.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits
