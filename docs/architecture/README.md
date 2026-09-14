@@ -116,8 +116,17 @@ both return the durably accepted message; reusing the identity with different
 immutable content is an error. Concrete storage, serialization, retention, and
 the precise durability acknowledgement remain adapter decisions.
 
+PostgreSQL stores accepted messages in a separate `ingestion` schema as
+tenant-scoped, immutable rows. The composite message identity and device foreign
+key retain structural tenant isolation. Exact package provenance, signed
+Unix-millisecond receipt time, and opaque `BYTEA` wire content support replay.
+Row-level updates and deletes are rejected; future retention and partition
+lifecycle require an explicit forward migration. The append-only application
+port does not yet justify secondary replay indexes.
+
 See [ADR 0004](../adr/0004-accepted-message-contract.md) and
-[ADR 0029](../adr/0029-append-accepted-messages-idempotently.md).
+[ADR 0029](../adr/0029-append-accepted-messages-idempotently.md), and
+[ADR 0030](../adr/0030-store-accepted-messages-as-immutable-ingestion-facts.md).
 
 ## Bounded incremental protocol framing
 
