@@ -421,6 +421,18 @@ report; durability and transport release remain later pipeline stages.
 
 See [ADR 0026](../adr/0026-apply-component-output-through-host-processing-gate.md).
 
+The component adapter exposes one bounded session turn that composes these two
+host-controlled boundaries. Framing and processing retain independent budgets
+and resource reports. Incomplete input ends the turn without processing. A
+complete frame is processed immediately against the same session state used for
+framing, and a successful turn retains the wire frame for later durable
+acceptance. If processing fails, the prefix remains consumed from the input
+buffer but ownership of the exact frame moves into the error so session policy
+can retain, retry, or quarantine it explicitly. Each turn handles at most one
+frame, leaving scheduling of coalesced input to the caller.
+
+See [ADR 0028](../adr/0028-run-one-bounded-component-session-turn.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol

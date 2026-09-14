@@ -5,12 +5,17 @@ mod conversion;
 mod framing;
 mod invocation;
 mod processing;
+mod session_turn;
 
 pub use admission::{CompiledProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy};
 pub use conversion::ComponentOutputError;
 pub use framing::{ProtocolFramePoll, ProtocolFramePollError};
 pub use invocation::ProtocolComponentInvocationError;
 pub use processing::{ProcessedProtocolFrame, ProtocolFrameProcessingError};
+pub use session_turn::{
+    ProcessedProtocolSessionTurn, ProtocolSessionTurn, ProtocolSessionTurnBudgets,
+    ProtocolSessionTurnError,
+};
 
 /// Semantic version of the protocol-package WIT package implemented here.
 ///

@@ -55,7 +55,10 @@ applies that output through the trusted host gate using the same session-state
 object supplied to the component, preserving prior state when invocation or
 host validation fails. Component framing likewise operates on the bounded host
 input buffer, extracts at most one validated frame, and preserves unread bytes
-on incomplete input or failure.
+on incomplete input or failure. A bounded session-turn operation composes these
+stages for at most one frame, keeps their invocation budgets and reports
+separate, and returns an extracted frame to the caller if its subsequent
+processing fails.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
