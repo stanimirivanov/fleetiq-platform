@@ -8,6 +8,7 @@ rust-version.workspace = true
 
 [dependencies]
 fleetiq-domain = { path = "../domain" }
+fleetiq-protocol-host = { path = "../protocol-host" }
 fleetiq-protocol-sdk = { path = "../protocol-sdk" }
 wasmtime.workspace = true
 

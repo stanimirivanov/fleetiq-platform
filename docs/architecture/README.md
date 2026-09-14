@@ -402,6 +402,17 @@ See [ADR 0022](../adr/0022-versioned-protocol-package-component-contract.md) and
 [ADR 0024](../adr/0024-admit-exact-protocol-components.md), and
 [ADR 0025](../adr/0025-invoke-protocol-components-in-fresh-bounded-instances.md).
 
+The WebAssembly adapter composes successful component processing with the
+trusted `FrameProcessingGate`. The integrated operation accepts an extracted
+`WireFrame` and the mutable host-owned `SessionState`, constructs the component
+input from that same state object, and exposes output only after the complete
+proposal passes host limits. Package rejection, component failure, and host
+validation failure preserve the previous session state. Successful results
+contain accepted decoded outputs, staged replies, and the invocation resource
+report; durability and transport release remain later pipeline stages.
+
+See [ADR 0026](../adr/0026-apply-component-output-through-host-processing-gate.md).
+
 ## Host-controlled protocol decoding boundary
 
 The `fleetiq-protocol-sdk` crate is the first shared boundary between protocol

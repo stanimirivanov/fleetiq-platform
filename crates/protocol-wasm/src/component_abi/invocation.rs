@@ -147,7 +147,7 @@ impl WasmSandbox {
     /// violates SDK invariants, or
     /// [`ProtocolComponentInvocationError::Invocation`] when instantiation,
     /// execution, or resource enforcement fails.
-    pub fn invoke_protocol_processing(
+    pub(crate) fn invoke_protocol_processing(
         &self,
         component: &CompiledProtocolComponent,
         budget: InvocationBudget,
