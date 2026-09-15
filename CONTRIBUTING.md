@@ -90,6 +90,10 @@ meaning, deployment topology, or more than one application.
 - Assign durable-message identities before append. Retry ambiguous failures with
   the exact same candidate, treat an identical existing value as success, and
   reject identity reuse when any immutable content differs.
+- When persisting data derived from an accepted message, establish the parent
+  fact with an exact-content `INSERT ... SELECT` or equivalent check. A matching
+  foreign-key identity alone does not prove that caller-held device, receipt
+  time, or payload evidence matches the durable message.
 - Bind the exact processed frame, decoded outputs, and deferred replies into one
   pending acceptance value before asynchronous storage. Expose only replies
   already eligible after processing; assemble observations and release deferred

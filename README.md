@@ -77,7 +77,10 @@ also records successful decoding that produces no observations, so absence of
 rows cannot be confused with unfinished work. PostgreSQL represents that unit
 with an append-only result marker and ordered typed observation rows, linked to
 the accepted message's exact protocol-package release through tenant-safe
-composite keys.
+composite keys. The PostgreSQL adapter appends the marker and all observations
+in one transaction, batches child rows with `UNNEST`, and distinguishes first
+append, exact retry, mismatched acceptance evidence, and decoded-result identity
+collision under concurrent writers.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
