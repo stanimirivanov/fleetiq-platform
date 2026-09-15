@@ -9,6 +9,7 @@ mod definition_repository;
 mod device_repository;
 mod frame_acceptance;
 mod live;
+mod observation_persistence;
 mod relationship_repository;
 mod repository;
 mod signal_binding_repository;
@@ -30,6 +31,10 @@ pub use live::{
     LiveMessage, ProjectionDelta, ProjectionDeltaError, ProjectionRevision, ProjectionSnapshot,
     ResnapshotReason, ResnapshotRequired, RevisionCursor, RevisionCursorError,
     RevisionOverflowError,
+};
+pub use observation_persistence::{
+    DurablyPersistedFrame, ObservationPersistenceError, ObservationPersistencePreparationError,
+    PendingObservationPersistence,
 };
 pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQuery};
 pub use repository::AssetRepository;

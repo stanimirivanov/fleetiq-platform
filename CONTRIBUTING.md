@@ -102,6 +102,11 @@ meaning, deployment topology, or more than one application.
   ordered observation collection. Treat an empty collection as successful
   decoding, append the marker and children atomically, and resolve exact retries
   without creating duplicate observations or hiding identity collisions.
+- Preserve ownership across asynchronous durability transitions. Return the
+  exact pending unit on failure, retain each completed append disposition, and
+  expose decoded values for downstream work only after their batch is durable.
+  Do not strengthen an already satisfied reply-release condition merely because
+  a later persistence stage is pending.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits
