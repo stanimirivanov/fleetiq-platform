@@ -4,7 +4,7 @@ use fleetiq_telemetry::{ProtocolPackageId, ProtocolPackageRef, ProtocolPackageVe
 use wit_component::{ComponentEncoder, StringEncoding, dummy_module, embed_component_metadata};
 use wit_parser::{ManglingAndAbi, Resolve};
 
-use super::{ComponentAdmissionError, ComponentAdmissionPolicy, ProtocolArtifactDigest};
+use super::{ComponentAdmissionError, ComponentAdmissionPolicy, artifact_digest_of};
 use crate::{PROTOCOL_PACKAGE_WIT, WasmSandbox};
 
 const IMPORTING_WIT: &str = r"
@@ -66,13 +66,13 @@ fn admission_digest_identifies_exact_artifact_bytes() {
 
 #[test]
 fn artifact_digest_has_canonical_sha_256_encoding() {
-    let digest = ProtocolArtifactDigest::of(b"abc");
+    let digest = artifact_digest_of(b"abc");
 
     assert_eq!(
         digest.to_string(),
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
     );
-    assert_ne!(digest, ProtocolArtifactDigest::of(b"abd"));
+    assert_ne!(digest, artifact_digest_of(b"abd"));
 }
 
 #[test]

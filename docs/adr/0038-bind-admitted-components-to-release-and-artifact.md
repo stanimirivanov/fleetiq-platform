@@ -4,6 +4,11 @@
 
 Accepted, 15 September 2026.
 
+Digest ownership and reconstruction are amended by
+[ADR 0039](0039-define-immutable-protocol-package-release-catalogue.md). The digest
+value can be reconstructed from stored SHA-256 bytes; runtime admission evidence
+still requires the opaque admitted component created from actual artifact bytes.
+
 ## Context
 
 Component admission proves that bytes fit the configured size, request no host

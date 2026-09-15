@@ -52,7 +52,10 @@ bindings together with the immutable package release and host-computed SHA-256
 artifact digest. Processing results preserve that execution identity. Each
 typed framing or processing call uses a fresh bounded store and
 component instance, separates package rejection from runtime failure, and returns
-only output validated through the semantic SDK. Complete-frame processing then
+only output validated through the semantic SDK. The application defines a
+tenant-scoped append-only package-release catalogue contract: an immutable key
+names one artifact digest and nonzero raw byte length, while registration remains
+separate from runtime admission and activation. Complete-frame processing then
 applies that output through the trusted host gate using the same session-state
 object supplied to the component, preserving prior state when invocation or
 host validation fails. Component framing likewise operates on the bounded host

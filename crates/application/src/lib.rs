@@ -10,6 +10,7 @@ mod device_repository;
 mod frame_acceptance;
 mod live;
 mod observation_persistence;
+mod protocol_package_catalog;
 mod relationship_repository;
 mod repository;
 mod signal_binding_repository;
@@ -35,6 +36,9 @@ pub use live::{
 pub use observation_persistence::{
     DurablyPersistedFrame, ObservationPersistenceError, ObservationPersistencePreparationError,
     PendingObservationPersistence,
+};
+pub use protocol_package_catalog::{
+    ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
 pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQuery};
 pub use repository::AssetRepository;

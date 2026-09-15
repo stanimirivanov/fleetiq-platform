@@ -429,6 +429,13 @@ Successful processing results and session turns retain both identities so
 acceptance provenance can be derived from the code that actually ran. See
 [ADR 0038](../adr/0038-bind-admitted-components-to-release-and-artifact.md).
 
+The application catalogue identifies an immutable release by tenant, package ID,
+and package version. Each key names one SHA-256 artifact digest and nonzero raw
+byte length. Registration is append-only and exact retries are idempotent;
+changing either content field under an existing key is an identity collision.
+Catalogue presence grants no admission or activation authority. See
+[ADR 0039](../adr/0039-define-immutable-protocol-package-release-catalogue.md).
+
 Compilation is not covered by invocation fuel or epoch deadlines. Activation
 must eventually isolate compilation capacity and bound concurrent work.
 
