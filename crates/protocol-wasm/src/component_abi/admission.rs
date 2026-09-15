@@ -2,6 +2,7 @@
 
 use std::{error::Error, fmt, num::NonZeroUsize};
 
+pub use fleetiq_telemetry::ProtocolArtifactDigest;
 use fleetiq_telemetry::ProtocolPackageRef;
 use sha2::{Digest, Sha256};
 use wasmtime::component::{Component, Linker};
@@ -33,34 +34,8 @@ impl ComponentAdmissionPolicy {
     }
 }
 
-/// SHA-256 identity of the exact admitted component bytes.
-#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct ProtocolArtifactDigest([u8; 32]);
-
-impl ProtocolArtifactDigest {
-    fn of(bytes: &[u8]) -> Self {
-        Self(Sha256::digest(bytes).into())
-    }
-
-    /// Returns the binary SHA-256 digest.
-    pub const fn as_bytes(&self) -> &[u8; 32] {
-        &self.0
-    }
-}
-
-impl fmt::Display for ProtocolArtifactDigest {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for byte in self.0 {
-            write!(formatter, "{byte:02x}")?;
-        }
-        Ok(())
-    }
-}
-
-impl fmt::Debug for ProtocolArtifactDigest {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "ProtocolArtifactDigest({self})")
-    }
+fn artifact_digest_of(bytes: &[u8]) -> ProtocolArtifactDigest {
+    ProtocolArtifactDigest::from_sha256(Sha256::digest(bytes).into())
 }
 
 /// Admitted component bound to an immutable package release and artifact.
@@ -137,7 +112,7 @@ impl WasmSandbox {
 
         Ok(AdmittedProtocolComponent {
             package,
-            artifact_digest: ProtocolArtifactDigest::of(wasm),
+            artifact_digest: artifact_digest_of(wasm),
             bindings,
         })
     }

@@ -141,6 +141,10 @@ meaning, deployment topology, or more than one application.
   host-computed cryptographic digest of the exact artifact bytes. Preserve both
   through processing results so later acceptance provenance cannot name
   anonymous or substituted code.
+- Treat protocol package releases as tenant-scoped immutable catalogue records.
+  Compare artifact digest and byte length on registration retry, reject content
+  replacement under an existing release key, and keep registration separate
+  from runtime admission and activation permission.
 - Invoke each protocol component operation in a fresh bounded store and instance.
   Carry package continuity through explicit session-state bytes, distinguish typed
   package rejection from runtime failure, and validate lifted values before they
