@@ -5,6 +5,7 @@
 
 mod accepted_message_log;
 mod asset_repository;
+mod decoded_observation_log;
 mod definition_repository;
 mod device_repository;
 mod error;
@@ -13,6 +14,9 @@ mod signal_binding_repository;
 
 pub use accepted_message_log::{PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError};
 pub use asset_repository::PostgresAssetRepository;
+pub use decoded_observation_log::{
+    PostgresDecodedObservationLog, PostgresDecodedObservationLogError,
+};
 pub use definition_repository::PostgresDefinitionRepository;
 pub use device_repository::PostgresDeviceRepository;
 pub use error::PostgresRepositoryError;
