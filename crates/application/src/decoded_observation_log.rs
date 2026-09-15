@@ -26,6 +26,27 @@ impl DecodedObservationBatch {
         message: AcceptedMessage,
         observations: Vec<DecodedObservation>,
     ) -> Result<Self, DecodedObservationBatchError> {
+        Self::validate(&message, &observations)?;
+
+        Ok(Self {
+            message,
+            observations,
+        })
+    }
+
+    /// Validates trusted provenance and output order without taking ownership.
+    ///
+    /// This supports transitions that must retain an earlier pipeline value if
+    /// an internal invariant is violated before constructing the batch.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`DecodedObservationBatchError`] at the first output whose
+    /// position or trusted message provenance differs from `message`.
+    pub(crate) fn validate(
+        message: &AcceptedMessage,
+        observations: &[DecodedObservation],
+    ) -> Result<(), DecodedObservationBatchError> {
         for (index, observation) in observations.iter().enumerate() {
             let expected_output_index = u32::try_from(index)
                 .map_err(|_| DecodedObservationBatchError::OutputCountExceedsIdentityRange)?;
@@ -53,10 +74,20 @@ impl DecodedObservationBatch {
             }
         }
 
-        Ok(Self {
+        Ok(())
+    }
+
+    // Only application transitions that have just validated these borrowed
+    // parts may use this constructor. Moving ownership must not repeat copying
+    // the wire payload or the complete observation collection.
+    pub(crate) fn from_validated_parts(
+        message: AcceptedMessage,
+        observations: Vec<DecodedObservation>,
+    ) -> Self {
+        Self {
             message,
             observations,
-        })
+        }
     }
 
     /// Returns the durably accepted raw message decoded by this batch.

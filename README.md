@@ -80,7 +80,11 @@ the accepted message's exact protocol-package release through tenant-safe
 composite keys. The PostgreSQL adapter appends the marker and all observations
 in one transaction, batches child rows with `UNNEST`, and distinguishes first
 append, exact retry, mismatched acceptance evidence, and decoded-result identity
-collision under concurrent writers.
+collision under concurrent writers. Application orchestration moves accepted
+frame effects into a pending observation-persistence value, withholds decoded
+values until the complete result is durable, and returns all pending work after
+append failure for exact retry. Replies already released by raw-message
+durability remain eligible independently of decoded-result storage.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and

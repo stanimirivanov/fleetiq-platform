@@ -520,6 +520,38 @@ timestamp policy selects event time and quality using operational evidence.
 Durable raw payload storage, event serialization, unit conversion, source
 authority, and semantic observation persistence remain separate contracts.
 
+Decoded persistence uses one `DecodedObservationBatch` for the accepted
+message's complete ordered output. Construction validates tenant, admitted
+device, receipt time, message, package release, and contiguous output identity.
+An empty batch represents successful decoding with no telemetry.
+
+PostgreSQL stores an immutable result marker and typed child observations.
+The marker references the accepted message's exact package release, and the
+adapter appends marker and children atomically with a batched `UNNEST` insert.
+An exact-content `INSERT ... SELECT` checks durable accepted-message evidence
+without a preflight round trip. Conflicts use later `READ COMMITTED` statements
+to reconstruct the complete immutable winner and distinguish exact retry from
+identity collision.
+
+`DurablyAcceptedFrame::prepare_observation_persistence` moves accepted-frame
+effects into `PendingObservationPersistence` without copying payloads or
+observations. The pending value exposes accepted-message evidence, observation
+count, and already released replies, but not decoded values. Its `persist`
+operation appends the complete batch through `DecodedObservationLog`. Failure
+returns the exact pending value; success returns `DurablyPersistedFrame` with
+the raw-message append disposition, decoded-result append disposition, complete
+durable batch, and released replies. Empty results cross the same boundary.
+
+Raw-message acceptance and decoded-result persistence remain separate durable
+steps. Observation append retries do not re-run protocol processing or raw
+append. Replies authorized by raw-message acceptance remain eligible while
+observation storage is pending; transport writes are a separate explicit effect.
+
+See [ADR 0033](../adr/0033-append-decoded-message-results-atomically.md),
+[ADR 0034](../adr/0034-store-decoded-message-results-as-atomic-facts.md),
+[ADR 0035](../adr/0035-resolve-decoded-result-appends-as-complete-batches.md), and
+[ADR 0036](../adr/0036-persist-accepted-frame-observations-as-a-retryable-unit.md).
+
 ## Semantic resolution
 
 The `fleetiq-semantics` resolver consumes a decoded observation through focused,
