@@ -74,7 +74,10 @@ with accepted-message evidence while retaining all pending work on failure. An
 application-owned decoded-observation log contract treats one accepted
 message's complete ordered output as an atomic, idempotent persistence unit. It
 also records successful decoding that produces no observations, so absence of
-rows cannot be confused with unfinished work.
+rows cannot be confused with unfinished work. PostgreSQL represents that unit
+with an append-only result marker and ordered typed observation rows, linked to
+the accepted message's exact protocol-package release through tenant-safe
+composite keys.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
