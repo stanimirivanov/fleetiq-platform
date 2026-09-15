@@ -70,7 +70,11 @@ identity collision. Application orchestration binds each processed frame to its
 trusted acceptance context, exposes processing-gated replies immediately, and
 withholds decoded outputs and durability-gated replies until append succeeds.
 Durable completion assembles trusted observations and releases deferred replies
-with accepted-message evidence while retaining all pending work on failure.
+with accepted-message evidence while retaining all pending work on failure. An
+application-owned decoded-observation log contract treats one accepted
+message's complete ordered output as an atomic, idempotent persistence unit. It
+also records successful decoding that produces no observations, so absence of
+rows cannot be confused with unfinished work.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and
