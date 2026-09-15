@@ -552,6 +552,13 @@ See [ADR 0033](../adr/0033-append-decoded-message-results-atomically.md),
 [ADR 0035](../adr/0035-resolve-decoded-result-appends-as-complete-batches.md), and
 [ADR 0036](../adr/0036-persist-accepted-frame-observations-as-a-retryable-unit.md).
 
+PostgreSQL-backed recovery tests compose host framing and validation with both
+application durability transitions and concrete logs. A test decorator rejects
+before storage or discards a successful response after the real adapter commits.
+Retrying the returned pending value proves the expected disposition and leaves
+exactly one copy of each ingestion fact. See
+[ADR 0037](../adr/0037-verify-ingestion-recovery-at-durability-boundaries.md).
+
 ## Semantic resolution
 
 The `fleetiq-semantics` resolver consumes a decoded observation through focused,

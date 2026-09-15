@@ -84,7 +84,10 @@ collision under concurrent writers. Application orchestration moves accepted
 frame effects into a pending observation-persistence value, withholds decoded
 values until the complete result is durable, and returns all pending work after
 append failure for exact retry. Replies already released by raw-message
-durability remain eligible independently of decoded-result storage.
+durability remain eligible independently of decoded-result storage. A composed
+PostgreSQL recovery harness suppresses successful append responses at both
+durability stages and proves exact retries without duplicate ingestion facts,
+including zero-output decoding and repeated processed-frame delivery.
 
 The semantic resolver applies bitemporal bindings and exact property definitions
 while retaining unconfigured or incompatible observations for diagnosis and

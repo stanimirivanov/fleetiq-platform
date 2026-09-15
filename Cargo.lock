@@ -558,6 +558,8 @@ dependencies = [
  "bigdecimal",
  "fleetiq-application",
  "fleetiq-domain",
+ "fleetiq-protocol-host",
+ "fleetiq-protocol-sdk",
  "fleetiq-telemetry",
  "sqlx",
  "tokio",

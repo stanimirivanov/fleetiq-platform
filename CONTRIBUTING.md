@@ -107,6 +107,10 @@ meaning, deployment topology, or more than one application.
   expose decoded values for downstream work only after their batch is durable.
   Do not strengthen an already satisfied reply-release condition merely because
   a later persistence stage is pending.
+- Exercise multi-stage durability contracts with response-loss tests. Suppress a
+  successful adapter response after commit, retry the exact owned value through
+  the real adapter, and assert its disposition and durable row counts. Keep this
+  distinct from deployment-shaped process, network, or power-loss tests.
 - Test packages with fragmented, coalesced, malformed, nonterminating, and
   allocation-heavy fixtures before activation.
 - Describe each resource limit precisely. Linear-memory and table-element limits
