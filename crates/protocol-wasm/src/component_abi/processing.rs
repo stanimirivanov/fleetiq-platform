@@ -7,18 +7,31 @@ use fleetiq_protocol_host::{
     SessionState, WireFrame,
 };
 use fleetiq_protocol_sdk::FrameProcessingInput;
+use fleetiq_telemetry::ProtocolPackageRef;
 
-use super::{CompiledProtocolComponent, ProtocolComponentInvocationError};
+use super::{AdmittedProtocolComponent, ProtocolArtifactDigest, ProtocolComponentInvocationError};
 use crate::{InvocationBudget, InvocationReport, WasmSandbox};
 
 /// Host-validated effects and resource usage from one processed wire frame.
 #[derive(Clone, Eq, PartialEq)]
 pub struct ProcessedProtocolFrame {
+    package: ProtocolPackageRef,
+    artifact_digest: ProtocolArtifactDigest,
     output: AppliedFrameProcessingOutput,
     report: InvocationReport,
 }
 
 impl ProcessedProtocolFrame {
+    /// Returns the immutable package release that produced this result.
+    pub const fn package(&self) -> &ProtocolPackageRef {
+        &self.package
+    }
+
+    /// Returns the digest of the exact component artifact that was invoked.
+    pub const fn artifact_digest(&self) -> ProtocolArtifactDigest {
+        self.artifact_digest
+    }
+
     /// Returns the decoded outputs and replies accepted by the host gate.
     pub const fn output(&self) -> &AppliedFrameProcessingOutput {
         &self.output
@@ -29,9 +42,16 @@ impl ProcessedProtocolFrame {
         self.report
     }
 
-    /// Consumes the result into its accepted effects and invocation report.
-    pub fn into_parts(self) -> (AppliedFrameProcessingOutput, InvocationReport) {
-        (self.output, self.report)
+    /// Consumes the result into its execution identity, effects, and report.
+    pub fn into_parts(
+        self,
+    ) -> (
+        ProtocolPackageRef,
+        ProtocolArtifactDigest,
+        AppliedFrameProcessingOutput,
+        InvocationReport,
+    ) {
+        (self.package, self.artifact_digest, self.output, self.report)
     }
 }
 
@@ -39,6 +59,8 @@ impl fmt::Debug for ProcessedProtocolFrame {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("ProcessedProtocolFrame")
+            .field("package", &self.package)
+            .field("artifact_digest", &self.artifact_digest)
             .field("output", &self.output)
             .field("report", &self.report)
             .finish_non_exhaustive()
@@ -103,7 +125,7 @@ impl WasmSandbox {
     /// proposal violates a host processing limit.
     pub fn process_component_frame(
         &self,
-        component: &CompiledProtocolComponent,
+        component: &AdmittedProtocolComponent,
         budget: InvocationBudget,
         gate: &FrameProcessingGate,
         session_state: &mut SessionState,
@@ -121,7 +143,12 @@ impl WasmSandbox {
             .apply(session_state, proposed)
             .map_err(|source| ProtocolFrameProcessingError::Validation { source, report })?;
 
-        Ok(ProcessedProtocolFrame { output, report })
+        Ok(ProcessedProtocolFrame {
+            package: component.package().clone(),
+            artifact_digest: component.artifact_digest(),
+            output,
+            report,
+        })
     }
 }
 

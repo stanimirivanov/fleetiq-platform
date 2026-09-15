@@ -137,6 +137,10 @@ meaning, deployment topology, or more than one application.
   before activation. Apply artifact limits before parsing or compilation,
   reject undeclared host capabilities, and retain typed pre-instantiation
   bindings so message handling does not repeat compatibility discovery.
+- Bind every admitted component to its immutable package release and a
+  host-computed cryptographic digest of the exact artifact bytes. Preserve both
+  through processing results so later acceptance provenance cannot name
+  anonymous or substituted code.
 - Invoke each protocol component operation in a fresh bounded store and instance.
   Carry package continuity through explicit session-state bytes, distinguish typed
   package rejection from runtime failure, and validate lifted values before they

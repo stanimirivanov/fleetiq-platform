@@ -1,6 +1,6 @@
 # ADR 0028: Run one bounded protocol component session turn
 
-- Status: accepted
+- Status: accepted; component and turn identity amended by [ADR 0038](0038-bind-admitted-components-to-release-and-artifact.md)
 - Date: 2026-09-14
 
 ## Context

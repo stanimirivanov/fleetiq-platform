@@ -7,7 +7,10 @@ mod invocation;
 mod processing;
 mod session_turn;
 
-pub use admission::{CompiledProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy};
+pub use admission::{
+    AdmittedProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy,
+    ProtocolArtifactDigest,
+};
 pub use conversion::ComponentOutputError;
 pub use framing::{ProtocolFramePoll, ProtocolFramePollError};
 pub use invocation::ProtocolComponentInvocationError;

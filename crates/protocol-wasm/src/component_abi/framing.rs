@@ -5,7 +5,7 @@ use std::{convert::Infallible, error::Error, fmt};
 use fleetiq_protocol_host::{FramePoll, FramePollError, SessionInputBuffer, SessionState};
 use fleetiq_protocol_sdk::FramingInput;
 
-use super::{CompiledProtocolComponent, ProtocolComponentInvocationError};
+use super::{AdmittedProtocolComponent, ProtocolComponentInvocationError};
 use crate::{InvocationBudget, InvocationReport, WasmSandbox};
 
 /// One host framing decision and its component resource usage.
@@ -93,7 +93,7 @@ impl WasmSandbox {
     /// when the component reports more bytes than were available to it.
     pub fn poll_component_frame(
         &self,
-        component: &CompiledProtocolComponent,
+        component: &AdmittedProtocolComponent,
         budget: InvocationBudget,
         session_state: &SessionState,
         input: &mut SessionInputBuffer,

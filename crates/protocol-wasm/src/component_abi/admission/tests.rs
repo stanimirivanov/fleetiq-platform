@@ -1,9 +1,10 @@
 use std::{num::NonZeroUsize, time::Duration};
 
+use fleetiq_telemetry::{ProtocolPackageId, ProtocolPackageRef, ProtocolPackageVersion};
 use wit_component::{ComponentEncoder, StringEncoding, dummy_module, embed_component_metadata};
 use wit_parser::{ManglingAndAbi, Resolve};
 
-use super::{ComponentAdmissionError, ComponentAdmissionPolicy};
+use super::{ComponentAdmissionError, ComponentAdmissionPolicy, ProtocolArtifactDigest};
 use crate::{PROTOCOL_PACKAGE_WIT, WasmSandbox};
 
 const IMPORTING_WIT: &str = r"
@@ -36,10 +37,42 @@ fn exact_protocol_world_is_compiled_and_bound_during_admission() {
     let sandbox = sandbox();
 
     let compiled = sandbox
-        .compile_protocol_component(&component, policy(component.len()))
+        .admit_protocol_component(package(), &component, policy(component.len()))
         .expect("the generated fixture implements the exact protocol world");
 
-    assert_eq!(format!("{compiled:?}"), "CompiledProtocolComponent { .. }");
+    assert_eq!(compiled.package(), &package());
+    assert_eq!(compiled.artifact_digest().as_bytes().len(), 32);
+    let debug = format!("{compiled:?}");
+    assert!(debug.contains("fixture.protocol"));
+    assert!(debug.contains(&compiled.artifact_digest().to_string()));
+}
+
+#[test]
+fn admission_digest_identifies_exact_artifact_bytes() {
+    let first_bytes = component_from_wit(PROTOCOL_PACKAGE_WIT, "protocol-package");
+    let second_bytes = component_from_wit(PROTOCOL_PACKAGE_WIT, "protocol-package");
+    let sandbox = sandbox();
+    let first = sandbox
+        .admit_protocol_component(package(), &first_bytes, policy(first_bytes.len()))
+        .unwrap();
+    let second = sandbox
+        .admit_protocol_component(package(), &second_bytes, policy(second_bytes.len()))
+        .unwrap();
+
+    assert_eq!(first.artifact_digest(), second.artifact_digest());
+    assert_eq!(first.artifact_digest().to_string().len(), 64);
+    assert_eq!(first.package(), second.package());
+}
+
+#[test]
+fn artifact_digest_has_canonical_sha_256_encoding() {
+    let digest = ProtocolArtifactDigest::of(b"abc");
+
+    assert_eq!(
+        digest.to_string(),
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+    );
+    assert_ne!(digest, ProtocolArtifactDigest::of(b"abd"));
 }
 
 #[test]
@@ -48,7 +81,7 @@ fn component_at_the_raw_byte_limit_is_accepted() {
 
     assert!(
         sandbox()
-            .compile_protocol_component(&component, policy(component.len()))
+            .admit_protocol_component(package(), &component, policy(component.len()))
             .is_ok()
     );
 }
@@ -59,7 +92,7 @@ fn oversized_component_is_rejected_before_compilation() {
     let limit = component.len() - 1;
 
     let error = sandbox()
-        .compile_protocol_component(&component, policy(limit))
+        .admit_protocol_component(package(), &component, policy(limit))
         .unwrap_err();
 
     assert!(matches!(
@@ -72,7 +105,7 @@ fn oversized_component_is_rejected_before_compilation() {
 #[test]
 fn malformed_component_reports_compilation_failure() {
     let error = sandbox()
-        .compile_protocol_component(&[0x00, 0x61], policy(2))
+        .admit_protocol_component(package(), &[0x00, 0x61], policy(2))
         .unwrap_err();
 
     assert!(matches!(error, ComponentAdmissionError::Compilation(_)));
@@ -83,7 +116,7 @@ fn component_requesting_host_imports_is_rejected() {
     let component = component_from_wit(IMPORTING_WIT, "importing-package");
 
     let error = sandbox()
-        .compile_protocol_component(&component, policy(component.len()))
+        .admit_protocol_component(package(), &component, policy(component.len()))
         .unwrap_err();
 
     assert!(matches!(
@@ -97,7 +130,7 @@ fn incompatible_protocol_interface_is_rejected_during_admission() {
     let component = component_from_wit(INCOMPATIBLE_WIT, "protocol-package");
 
     let error = sandbox()
-        .compile_protocol_component(&component, policy(component.len()))
+        .admit_protocol_component(package(), &component, policy(component.len()))
         .unwrap_err();
 
     assert!(matches!(
@@ -113,6 +146,13 @@ fn sandbox() -> WasmSandbox {
 
 fn policy(max_component_bytes: usize) -> ComponentAdmissionPolicy {
     ComponentAdmissionPolicy::new(nonzero(max_component_bytes))
+}
+
+fn package() -> ProtocolPackageRef {
+    ProtocolPackageRef::new(
+        ProtocolPackageId::new("fixture.protocol").unwrap(),
+        ProtocolPackageVersion::new("2026.09.1").unwrap(),
+    )
 }
 
 fn nonzero(value: usize) -> NonZeroUsize {

@@ -1,6 +1,6 @@
 # ADR 0024: Admit and pre-bind exact protocol components
 
-- Status: accepted
+- Status: accepted; public artifact identity amended by [ADR 0038](0038-bind-admitted-components-to-release-and-artifact.md)
 - Date: 2026-09-13
 
 ## Context

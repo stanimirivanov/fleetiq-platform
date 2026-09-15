@@ -6,7 +6,7 @@
 //! no-argument probe export is validated and bound during admission. A second
 //! experiment transfers bounded opaque bytes through fully validated guest
 //! memory ranges. A versioned WIT world now defines the typed protocol-package
-//! component boundary, admission, and bounded typed invocation.
+//! component boundary, identity-bound admission, and bounded typed invocation.
 
 mod component_abi;
 
@@ -28,12 +28,12 @@ pub use transfer::{
 };
 
 pub use component_abi::{
-    CompiledProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy,
+    AdmittedProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy,
     ComponentOutputError, PROTOCOL_PACKAGE_ABI_VERSION, PROTOCOL_PACKAGE_WIT,
     PROTOCOL_PACKAGE_WORLD, ProcessedProtocolFrame, ProcessedProtocolSessionTurn,
-    ProtocolComponentInvocationError, ProtocolFramePoll, ProtocolFramePollError,
-    ProtocolFrameProcessingError, ProtocolSessionTurn, ProtocolSessionTurnBudgets,
-    ProtocolSessionTurnError,
+    ProtocolArtifactDigest, ProtocolComponentInvocationError, ProtocolFramePoll,
+    ProtocolFramePollError, ProtocolFrameProcessingError, ProtocolSessionTurn,
+    ProtocolSessionTurnBudgets, ProtocolSessionTurnError,
 };
 
 #[cfg(test)]

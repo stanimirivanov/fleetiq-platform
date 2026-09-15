@@ -7,7 +7,7 @@ use fleetiq_protocol_sdk::{
 };
 
 use super::{
-    CompiledProtocolComponent, bindings::exports::fleetiq::protocol_package::runtime as wit,
+    AdmittedProtocolComponent, bindings::exports::fleetiq::protocol_package::runtime as wit,
     conversion::ComponentOutputError,
 };
 use crate::{InvocationBudget, InvocationError, InvocationReport, WasmSandbox};
@@ -98,7 +98,7 @@ impl WasmSandbox {
     /// execution, or resource enforcement fails.
     pub(super) fn invoke_protocol_framing(
         &self,
-        component: &CompiledProtocolComponent,
+        component: &AdmittedProtocolComponent,
         budget: InvocationBudget,
         input: FramingInput<'_>,
     ) -> Result<ProtocolComponentOutput<FrameBoundary>, ProtocolComponentInvocationError> {
@@ -139,7 +139,7 @@ impl WasmSandbox {
     /// execution, or resource enforcement fails.
     pub(super) fn invoke_protocol_processing(
         &self,
-        component: &CompiledProtocolComponent,
+        component: &AdmittedProtocolComponent,
         budget: InvocationBudget,
         input: FrameProcessingInput<'_>,
     ) -> Result<ProtocolComponentOutput<FrameProcessingOutput>, ProtocolComponentInvocationError>

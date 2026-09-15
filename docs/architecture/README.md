@@ -422,6 +422,12 @@ binary must declare no host imports and must implement the exact WIT world used
 to generate the host bindings. Admission creates typed pre-instantiation
 bindings and stores them in an opaque compiled artifact, moving interface type
 checking and export-index discovery away from device-message processing.
+The admitted value also binds the immutable `ProtocolPackageRef` and a
+host-computed SHA-256 digest of the exact component bytes to those bindings.
+Public framing and processing operations accept only that admitted value.
+Successful processing results and session turns retain both identities so
+acceptance provenance can be derived from the code that actually ran. See
+[ADR 0038](../adr/0038-bind-admitted-components-to-release-and-artifact.md).
 
 Compilation is not covered by invocation fuel or epoch deadlines. Activation
 must eventually isolate compilation capacity and bound concurrent work.
