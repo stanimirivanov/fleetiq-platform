@@ -436,6 +436,16 @@ changing either content field under an existing key is an identity collision.
 Catalogue presence grants no admission or activation authority. See
 [ADR 0039](../adr/0039-define-immutable-protocol-package-release-catalogue.md).
 
+PostgreSQL persists catalogue entries in `metadata.protocol_package_releases`.
+The tenant, package ID, and version form the primary key. SHA-256 remains a
+32-byte `BYTEA`; artifact length uses integral `NUMERIC` with explicit bounds so
+the complete unsigned 64-bit application range is preserved. A tenant foreign
+key prevents orphaned or cross-tenant entries, and mutation triggers keep each
+release append-only. Existing accepted messages deliberately gain no catalogue
+foreign key in this migration because package activation and historical data
+migration are not yet defined. See
+[ADR 0040](../adr/0040-store-immutable-protocol-package-releases.md).
+
 Compilation is not covered by invocation fuel or epoch deadlines. Activation
 must eventually isolate compilation capacity and bound concurrent work.
 
