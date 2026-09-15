@@ -6,8 +6,12 @@ use fleetiq_protocol_host::{
     AppliedFrameProcessingOutput, FramePoll, FrameProcessingGate, SessionInputBuffer, SessionState,
     WireFrame,
 };
+use fleetiq_telemetry::ProtocolPackageRef;
 
-use super::{CompiledProtocolComponent, ProtocolFramePollError, ProtocolFrameProcessingError};
+use super::{
+    AdmittedProtocolComponent, ProtocolArtifactDigest, ProtocolFramePollError,
+    ProtocolFrameProcessingError,
+};
 use crate::{InvocationBudget, InvocationReport, WasmSandbox};
 
 /// Independent resource budgets for the two component invocations in one turn.
@@ -64,6 +68,8 @@ impl ProtocolSessionTurn {
 /// One extracted frame and the host-validated result of processing it.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProcessedProtocolSessionTurn {
+    package: ProtocolPackageRef,
+    artifact_digest: ProtocolArtifactDigest,
     frame: WireFrame,
     output: AppliedFrameProcessingOutput,
     framing_report: InvocationReport,
@@ -71,6 +77,16 @@ pub struct ProcessedProtocolSessionTurn {
 }
 
 impl ProcessedProtocolSessionTurn {
+    /// Returns the immutable package release that framed and processed the input.
+    pub const fn package(&self) -> &ProtocolPackageRef {
+        &self.package
+    }
+
+    /// Returns the digest of the exact component artifact used for the turn.
+    pub const fn artifact_digest(&self) -> ProtocolArtifactDigest {
+        self.artifact_digest
+    }
+
     /// Returns the exact wire frame removed from the session input buffer.
     pub const fn frame(&self) -> &WireFrame {
         &self.frame
@@ -91,17 +107,21 @@ impl ProcessedProtocolSessionTurn {
         self.processing_report
     }
 
-    /// Consumes the turn into its frame, accepted effects, and resource reports.
+    /// Consumes the turn into its frame, execution identity, effects, and reports.
     pub fn into_parts(
         self,
     ) -> (
         WireFrame,
+        ProtocolPackageRef,
+        ProtocolArtifactDigest,
         AppliedFrameProcessingOutput,
         InvocationReport,
         InvocationReport,
     ) {
         (
             self.frame,
+            self.package,
+            self.artifact_digest,
             self.output,
             self.framing_report,
             self.processing_report,
@@ -171,7 +191,7 @@ impl WasmSandbox {
     /// state and do not expose partial component effects.
     pub fn run_component_session_turn(
         &self,
-        component: &CompiledProtocolComponent,
+        component: &AdmittedProtocolComponent,
         budgets: ProtocolSessionTurnBudgets,
         gate: &FrameProcessingGate,
         session_state: &mut SessionState,
@@ -193,10 +213,12 @@ impl WasmSandbox {
                 frame: frame.clone(),
                 framing_report,
             })?;
-        let (output, processing_report) = processed.into_parts();
+        let (package, artifact_digest, output, processing_report) = processed.into_parts();
 
         Ok(ProtocolSessionTurn::Processed(
             ProcessedProtocolSessionTurn {
+                package,
+                artifact_digest,
                 frame,
                 output,
                 framing_report,

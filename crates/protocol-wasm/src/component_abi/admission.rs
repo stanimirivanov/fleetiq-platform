@@ -2,6 +2,8 @@
 
 use std::{error::Error, fmt, num::NonZeroUsize};
 
+use fleetiq_telemetry::ProtocolPackageRef;
+use sha2::{Digest, Sha256};
 use wasmtime::component::{Component, Linker};
 
 use super::bindings::ProtocolPackagePre;
@@ -31,24 +33,70 @@ impl ComponentAdmissionPolicy {
     }
 }
 
-/// Compiled component whose imports and protocol-package exports were bound.
+/// SHA-256 identity of the exact admitted component bytes.
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ProtocolArtifactDigest([u8; 32]);
+
+impl ProtocolArtifactDigest {
+    fn of(bytes: &[u8]) -> Self {
+        Self(Sha256::digest(bytes).into())
+    }
+
+    /// Returns the binary SHA-256 digest.
+    pub const fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+impl fmt::Display for ProtocolArtifactDigest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for byte in self.0 {
+            write!(formatter, "{byte:02x}")?;
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Debug for ProtocolArtifactDigest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "ProtocolArtifactDigest({self})")
+    }
+}
+
+/// Admitted component bound to an immutable package release and artifact.
 ///
-/// Construction is restricted to [`WasmSandbox::compile_protocol_component`],
-/// so later invocation code does not repeat string-based export discovery or
-/// interface type checking on the message path.
+/// Construction is restricted to [`WasmSandbox::admit_protocol_component`]. The
+/// release identity and host-computed artifact digest travel with the typed
+/// pre-instantiation bindings so invocation cannot select anonymous code.
 #[derive(Clone)]
-pub struct CompiledProtocolComponent {
+pub struct AdmittedProtocolComponent {
+    package: ProtocolPackageRef,
+    artifact_digest: ProtocolArtifactDigest,
     pub(super) bindings: ProtocolPackagePre<InvocationLimiter>,
+}
+
+impl AdmittedProtocolComponent {
+    /// Returns the immutable package release assigned before admission.
+    pub const fn package(&self) -> &ProtocolPackageRef {
+        &self.package
+    }
+
+    /// Returns the host-computed digest of the admitted component bytes.
+    pub const fn artifact_digest(&self) -> ProtocolArtifactDigest {
+        self.artifact_digest
+    }
 }
 
 impl WasmSandbox {
     /// Admits, compiles, and binds one version-compatible protocol component.
     ///
-    /// Admission checks the raw byte limit before parsing, compiles a Component
-    /// Model binary with the sandbox engine, rejects every host import, and
-    /// creates typed pre-instantiation bindings for the exact WIT world compiled
-    /// into this host. Compilation remains outside per-invocation fuel and epoch
-    /// budgets and must eventually run on bounded activation capacity.
+    /// Admission binds the caller-supplied immutable package release and a
+    /// host-computed SHA-256 digest to the exact artifact. It checks the raw byte
+    /// limit before parsing, compiles a Component Model binary with the sandbox
+    /// engine, rejects every host import, and creates typed pre-instantiation
+    /// bindings for the exact WIT world compiled into this host. Compilation
+    /// remains outside per-invocation fuel and epoch budgets and must eventually
+    /// run on bounded activation capacity.
     ///
     /// # Errors
     ///
@@ -59,11 +107,12 @@ impl WasmSandbox {
     /// requests host capabilities, or
     /// [`ComponentAdmissionError::InterfaceMismatch`] when its exports do not
     /// implement the configured protocol-package WIT world.
-    pub fn compile_protocol_component(
+    pub fn admit_protocol_component(
         &self,
+        package: ProtocolPackageRef,
         wasm: &[u8],
         policy: ComponentAdmissionPolicy,
-    ) -> Result<CompiledProtocolComponent, ComponentAdmissionError> {
+    ) -> Result<AdmittedProtocolComponent, ComponentAdmissionError> {
         let actual = wasm.len();
         let limit = policy.max_component_bytes().get();
         if actual > limit {
@@ -86,14 +135,20 @@ impl WasmSandbox {
         let bindings = ProtocolPackagePre::new(instance)
             .map_err(ComponentAdmissionError::InterfaceMismatch)?;
 
-        Ok(CompiledProtocolComponent { bindings })
+        Ok(AdmittedProtocolComponent {
+            package,
+            artifact_digest: ProtocolArtifactDigest::of(wasm),
+            bindings,
+        })
     }
 }
 
-impl fmt::Debug for CompiledProtocolComponent {
+impl fmt::Debug for AdmittedProtocolComponent {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
-            .debug_struct("CompiledProtocolComponent")
+            .debug_struct("AdmittedProtocolComponent")
+            .field("package", &self.package)
+            .field("artifact_digest", &self.artifact_digest)
             .finish_non_exhaustive()
     }
 }

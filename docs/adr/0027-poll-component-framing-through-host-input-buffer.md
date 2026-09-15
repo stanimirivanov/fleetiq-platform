@@ -1,6 +1,6 @@
 # ADR 0027: Poll component framing through the host input buffer
 
-- Status: accepted
+- Status: accepted; component identity amended by [ADR 0038](0038-bind-admitted-components-to-release-and-artifact.md)
 - Date: 2026-09-14
 
 ## Context

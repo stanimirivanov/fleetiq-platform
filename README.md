@@ -48,7 +48,9 @@ lifted frame decisions and processing results through the existing SDK domain
 constructors without retaining rejected package values in errors. Component
 admission applies a raw-byte ceiling before compilation, rejects host imports,
 checks the exact embedded WIT world, and retains typed pre-instantiation
-bindings. Each typed framing or processing call uses a fresh bounded store and
+bindings together with the immutable package release and host-computed SHA-256
+artifact digest. Processing results preserve that execution identity. Each
+typed framing or processing call uses a fresh bounded store and
 component instance, separates package rejection from runtime failure, and returns
 only output validated through the semantic SDK. Complete-frame processing then
 applies that output through the trusted host gate using the same session-state

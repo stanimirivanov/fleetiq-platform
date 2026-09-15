@@ -1,6 +1,6 @@
 # ADR 0026: Apply component output through the host processing gate
 
-- Status: accepted
+- Status: accepted; component and result identity amended by [ADR 0038](0038-bind-admitted-components-to-release-and-artifact.md)
 - Date: 2026-09-14
 
 ## Context

@@ -27,6 +27,8 @@ fn one_turn_frames_and_processes_one_prefix_against_the_same_state() {
         panic!("the state length should identify a complete frame");
     };
     assert_eq!(processed.frame().as_bytes(), b"abc");
+    assert_eq!(processed.package(), component.package());
+    assert_eq!(processed.artifact_digest(), component.artifact_digest());
     assert!(processed.output().decoded_outputs().is_empty());
     assert!(processed.framing_report().fuel_consumed() > 0);
     assert!(processed.processing_report().fuel_consumed() > 0);
@@ -35,8 +37,11 @@ fn one_turn_frames_and_processes_one_prefix_against_the_same_state() {
     let debug = format!("{processed:?}");
     assert!(!debug.contains("abc"));
 
-    let (frame, output, framing_report, processing_report) = processed.into_parts();
+    let (frame, package, digest, output, framing_report, processing_report) =
+        processed.into_parts();
     assert_eq!(frame.as_bytes(), b"abc");
+    assert_eq!(&package, component.package());
+    assert_eq!(digest, component.artifact_digest());
     assert!(output.staged_replies().is_empty());
     assert!(framing_report.fuel_consumed() > 0);
     assert!(processing_report.fuel_consumed() > 0);

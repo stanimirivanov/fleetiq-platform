@@ -9,7 +9,7 @@ use wit_component::{ComponentEncoder, StringEncoding, embed_component_metadata};
 use wit_parser::Resolve;
 
 use crate::{
-    CompiledProtocolComponent, ComponentAdmissionPolicy, InvocationBudget, PROTOCOL_PACKAGE_WIT,
+    AdmittedProtocolComponent, ComponentAdmissionPolicy, InvocationBudget, PROTOCOL_PACKAGE_WIT,
     WasmSandbox,
 };
 
@@ -28,14 +28,21 @@ pub(super) enum Fixture {
     Trap,
 }
 
-pub(super) fn compiled(fixture: Fixture) -> (WasmSandbox, CompiledProtocolComponent) {
+pub(super) fn compiled(fixture: Fixture) -> (WasmSandbox, AdmittedProtocolComponent) {
     let bytes = component(fixture);
     let sandbox = sandbox();
     let policy = ComponentAdmissionPolicy::new(nonzero_usize(bytes.len()));
     let component = sandbox
-        .compile_protocol_component(&bytes, policy)
+        .admit_protocol_component(package(), &bytes, policy)
         .expect("fixture implements the protocol-package world");
     (sandbox, component)
+}
+
+fn package() -> fleetiq_telemetry::ProtocolPackageRef {
+    fleetiq_telemetry::ProtocolPackageRef::new(
+        fleetiq_telemetry::ProtocolPackageId::new("fixture.protocol").unwrap(),
+        fleetiq_telemetry::ProtocolPackageVersion::new("1").unwrap(),
+    )
 }
 
 pub(super) fn budget() -> InvocationBudget {
