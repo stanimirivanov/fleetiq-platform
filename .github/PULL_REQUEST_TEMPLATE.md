@@ -1,0 +1,37 @@
+## Issue and milestone
+
+- Closes #
+- Milestone: MNN - Outcome
+
+## Problem and resulting behavior
+
+## Scope and exclusions
+
+## Design and compatibility decisions
+
+- ADRs:
+- Assumptions:
+- Known limitations:
+
+## Verification
+
+| Command or check | Result | Evidence or reason not run |
+|:--|:--|:--|
+| `cargo fmt --all --check` | | |
+| `cargo clippy --workspace --all-targets --all-features -- -D warnings` | | |
+| `cargo test --workspace --all-features --locked` | | |
+| `cargo doc --workspace --no-deps --locked` | | |
+
+## Migration, rollout, and rollback
+
+## Security and operations
+
+## Review checklist
+
+- [ ] One coherent capability; unrelated changes are excluded.
+- [ ] Public and persisted contracts have a compatibility plan.
+- [ ] Success and relevant invalid and failure paths are verified.
+- [ ] Tenant, concurrency, idempotency, retry, and resource risks are covered.
+- [ ] Documentation and ADRs are current.
+- [ ] Migrations pass empty-database and supported-upgrade checks when relevant.
+- [ ] No secrets, customer data, generated noise, or hidden skipped checks.
