@@ -1,5 +1,16 @@
 # SQL migration criteria
 
+## TL;DR
+
+- Migrations are the source of truth for persisted FleetIQ models and become
+  immutable after reaching `main`.
+- Keep each migration focused, tenant-safe, forward-compatible, and explicit
+  about domain invariants, ownership, mutability, and operational risk.
+- Document schemas for reviewers and database operators, not only for SQL
+  experts.
+- Verify the full chain on PostgreSQL 18.6 and compile SQLx checked queries
+  against the resulting schema.
+
 PostgreSQL migrations are the source of truth for FleetIQ's persisted metadata
 model. Every migration must be understandable and reviewable without requiring
 the reader to infer business rules from application code.

@@ -1,0 +1,77 @@
+# Semantic asset graph
+
+## TL;DR
+
+FleetIQ models customer equipment as typed assets connected by revisioned,
+effective-dated relationships. Communication devices expose endpoints; temporal
+signal bindings attribute decoded source signals to exact properties on any
+tenant-owned asset. Industry-specific concepts remain configuration rather than
+core assumptions.
+
+## Definitions and assets
+
+Asset-type, property, and relationship-type definitions are immutable and
+versioned. An asset pins one asset-type version, and that version pins each
+supported property-definition version. Configuration changes therefore cannot
+silently reinterpret existing assets or history.
+
+An asset has a FleetIQ identity. External identifiers add typed namespaces such
+as IMEI, serial number, fleet number, or a future rail identifier. Their kind,
+optional issuing authority, and value are unique within a tenant-defined
+namespace. No identifier is universal.
+
+## Relationships and time
+
+Relationships are directed, typed edges between assets. Each revision records
+the stable relationship identity, source and target assets, exact relationship
+type version, recorded revision and time, and half-open effective interval.
+
+Effective time says when a fact applies in the physical world. Recorded time
+says when FleetIQ learned the revision. Keeping both supports late data and
+corrections without destructive history edits. Graph-wide rules such as role
+compatibility, cardinality, overlapping intervals, and containment cycles
+belong in an application operation with repository access.
+
+## Devices and endpoints
+
+A communication device is an asset with an ordered set of stable endpoints.
+An endpoint identifies a source boundary such as an onboard measurement group,
+CAN channel, serial channel, or peripheral. Endpoint kinds remain extensible.
+
+Endpoints do not select protocol packages and do not assign business meaning.
+Package activation interprets vendor traffic. Signal bindings perform semantic
+attribution after decoding.
+
+## Signal bindings
+
+A binding connects:
+
+```text
+(device asset, endpoint, source signal)
+    -> (observed asset, exact property-definition version)
+```
+
+Bindings are revisioned and effective-dated. Resolution selects the latest
+revision known at a recorded-time cutoff and then evaluates its effective
+interval at the observation's chosen event time. A device can observe itself or
+another asset, including a component attached through the graph.
+
+Successful resolution preserves binding provenance and produces an asset
+property change candidate. Missing, ambiguous, or type-incompatible
+configuration remains an explicit unresolved outcome so operators can diagnose
+and retry after configuration changes.
+
+## Persistence invariants
+
+PostgreSQL composite keys prevent cross-tenant references. Foreign keys pin
+exact definition versions and device endpoints. Append operations serialize on
+stable identities where revision order matters, then read dependent current
+state in a fresh `READ COMMITTED` statement when PostgreSQL snapshot semantics
+require it.
+
+The database enforces durable identity and reference invariants. Application
+services enforce rules that require graph traversal, temporal comparison across
+aggregates, or business authorization.
+
+See [ADR 0003](../adr/0003-explicit-semantic-resolution.md) and the metadata
+migrations for the detailed accepted contracts.
