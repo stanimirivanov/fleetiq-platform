@@ -1,0 +1,153 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH candidate_bindings AS (\n                SELECT DISTINCT binding_id\n                FROM metadata.signal_binding_revisions\n                WHERE tenant_id = $1\n                  AND source_device_asset_id = $2\n                  AND source_endpoint_id = $3\n                  AND source_signal_id = $4\n                  AND recorded_at_ms <= $6\n            ),\n            known_bindings AS (\n                SELECT revision.*\n                FROM candidate_bindings AS candidate\n                CROSS JOIN LATERAL (\n                    SELECT stored_revision.*\n                    FROM metadata.signal_binding_revisions AS stored_revision\n                    WHERE stored_revision.tenant_id = $1\n                      AND stored_revision.binding_id = candidate.binding_id\n                      AND stored_revision.recorded_at_ms <= $6\n                    ORDER BY stored_revision.revision DESC\n                    LIMIT 1\n                ) AS revision\n            )\n            SELECT binding_id, revision, recorded_at_ms,\n                   source_device_asset_id, source_endpoint_id, source_signal_id,\n                   target_asset_id, target_property_id, target_property_version,\n                   effective_start_ms, effective_end_ms\n            FROM known_bindings\n            WHERE source_device_asset_id = $2\n              AND source_endpoint_id = $3\n              AND source_signal_id = $4\n              AND effective_start_ms <= $5\n              AND (effective_end_ms IS NULL OR $5 < effective_end_ms)\n            ORDER BY binding_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "binding_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "binding_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "revision",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "source_device_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "source_device_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "source_endpoint_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "source_endpoint_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "source_signal_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "source_signal_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "target_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "target_property_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "target_property_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_version"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "effective_start_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "effective_start_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "effective_end_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "effective_end_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "e28783546494a104b3bf85a27105007cc7d9044e4efbaa872345db83f339a785"
+}

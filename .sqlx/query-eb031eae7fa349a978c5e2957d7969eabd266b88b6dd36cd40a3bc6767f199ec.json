@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH inserted_asset AS (\n                INSERT INTO metadata.assets\n                    (tenant_id, asset_id, type_id, type_version, display_name)\n                VALUES ($1, $2, $3, $4, $5)\n                RETURNING tenant_id, asset_id\n            )\n            INSERT INTO metadata.asset_external_identifiers\n                (tenant_id, asset_id, identifier_kind, authority, identifier_value)\n            SELECT\n                inserted_asset.tenant_id,\n                inserted_asset.asset_id,\n                identifier.identifier_kind,\n                identifier.authority,\n                identifier.identifier_value\n            FROM inserted_asset\n            CROSS JOIN UNNEST($6::text[], $7::text[], $8::text[])\n                AS identifier(identifier_kind, authority, identifier_value)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "eb031eae7fa349a978c5e2957d7969eabd266b88b6dd36cd40a3bc6767f199ec"
+}

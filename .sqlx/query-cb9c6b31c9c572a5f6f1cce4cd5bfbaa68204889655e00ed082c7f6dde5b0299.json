@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT result.observation_count,\n                   (message.device_asset_id = $5\n                    AND message.received_at_ms = $6\n                    AND message.payload = $7) AS \"message_matches!\"\n            FROM ingestion.decoded_message_results AS result\n            JOIN ingestion.accepted_messages AS message\n              USING (tenant_id, message_id, protocol_package_id,\n                     protocol_package_version)\n            WHERE result.tenant_id = $1\n              AND result.message_id = $2\n              AND result.protocol_package_id = $3\n              AND result.protocol_package_version = $4\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "observation_count",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_message_results",
+            "name": "observation_count"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "message_matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "cb9c6b31c9c572a5f6f1cce4cd5bfbaa68204889655e00ed082c7f6dde5b0299"
+}

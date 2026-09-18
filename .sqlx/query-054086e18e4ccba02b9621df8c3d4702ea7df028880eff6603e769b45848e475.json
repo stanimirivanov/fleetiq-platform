@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE metadata.asset_relationships\n                SET latest_revision = $3\n                WHERE tenant_id = $1 AND relationship_id = $2\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "054086e18e4ccba02b9621df8c3d4702ea7df028880eff6603e769b45848e475"
+}

@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH inserted_device AS (\n                INSERT INTO metadata.communication_devices\n                    (tenant_id, device_asset_id)\n                VALUES ($1, $2)\n                RETURNING tenant_id, device_asset_id\n            )\n            INSERT INTO metadata.device_endpoints\n                (tenant_id, device_asset_id, endpoint_id, endpoint_kind_id,\n                 display_name, endpoint_ordinal)\n            SELECT\n                inserted_device.tenant_id,\n                inserted_device.device_asset_id,\n                endpoint.endpoint_id,\n                endpoint.endpoint_kind_id,\n                endpoint.display_name,\n                endpoint.endpoint_ordinal\n            FROM inserted_device\n            CROSS JOIN UNNEST($3::text[], $4::text[], $5::text[]) WITH ORDINALITY\n                AS endpoint(endpoint_id, endpoint_kind_id, display_name, endpoint_ordinal)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8f43169701aaf760af353dad2ecea1dbfd22484cabc243f3b64884445eb75637"
+}

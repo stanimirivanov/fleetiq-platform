@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT tenant_id, message_id, device_asset_id, protocol_package_id,\n                   protocol_package_version, received_at_ms, payload\n            FROM ingestion.accepted_messages\n            WHERE tenant_id = $1 AND message_id = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "message_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "device_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "device_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "protocol_package_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "protocol_package_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "received_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "received_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "payload",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "payload"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "aa8bcd881a072456377d13673ebe8f87b57cc3f1adb9ca077872495c55108406"
+}

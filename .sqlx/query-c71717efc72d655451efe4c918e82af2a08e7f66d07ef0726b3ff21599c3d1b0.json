@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT recorded_at_ms\n                FROM metadata.asset_relationship_revisions\n                WHERE tenant_id = $1\n                  AND relationship_id = $2\n                  AND revision = $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.asset_relationship_revisions",
+            "name": "recorded_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c71717efc72d655451efe4c918e82af2a08e7f66d07ef0726b3ff21599c3d1b0"
+}

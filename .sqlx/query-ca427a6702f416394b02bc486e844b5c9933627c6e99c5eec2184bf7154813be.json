@@ -1,0 +1,151 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT output_index, endpoint_id, signal_id, device_recorded_at_ms,\n                   value_kind, value_boolean, value_integer, value_decimal,\n                   value_text, source_unit, quality\n            FROM ingestion.decoded_observations\n            WHERE tenant_id = $1\n              AND message_id = $2\n              AND protocol_package_id = $3\n              AND protocol_package_version = $4\n            ORDER BY output_index\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "output_index",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "output_index"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "endpoint_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "endpoint_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "signal_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "signal_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "device_recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "device_recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "value_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "value_boolean",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_boolean"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "value_integer",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_integer"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "value_decimal",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_decimal"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "value_text",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_text"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "source_unit",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "source_unit"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "quality",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "quality"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "ca427a6702f416394b02bc486e844b5c9933627c6e99c5eec2184bf7154813be"
+}

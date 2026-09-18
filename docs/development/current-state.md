@@ -10,9 +10,10 @@
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and live projection contracts exist;
   their production workers and stores do not.
+- The complete development stack runs through Compose on isolated loopback
+  ports; production deployment remains a later milestone.
 - Business APIs, authentication, device transport listeners, operator UI,
-  archival storage, observability, and production deployment remain future
-  milestones.
+  archival storage, and observability remain future milestones.
 
 ## Semantic metadata foundation
 
@@ -100,16 +101,25 @@ dashboard exists yet.
 
 The workspace is Rust 2024 on Rust 1.98.1. PostgreSQL 18.6 stores metadata and
 ingestion facts under checked SQL migrations. SQLx macros validate queries
-against a migrated database. The local Compose deployment runs only PostgreSQL.
+against a migrated database. Committed offline query descriptions permit
+database-independent image builds while online checks remain authoritative.
 
 The `fleetiq-server` binary validates environment configuration, applies the
 embedded migration chain, exposes liveness and PostgreSQL-backed readiness
 probes, and shuts down gracefully after `Ctrl+C`. It is an operable development
-composition root, not a production deployment.
+composition root, not a production deployment. Unix deployments also handle
+`SIGTERM`, which is the normal container stop signal.
+
+The local Compose deployment builds that binary in a multi-stage image, waits
+for PostgreSQL readiness, publishes both services only on loopback, and runs the
+backend as a non-root user with a read-only filesystem and dropped Linux
+capabilities. It is disposable development infrastructure rather than a
+production manifest.
 
 There is no business API, authentication provider, message broker, object
-archive, cache, deployment manifest, or service-level objective. Do not
-describe library contracts or local database defaults as production behavior.
+archive, cache, production deployment manifest, or service-level objective. Do
+not describe library contracts or local database defaults as production
+behavior.
 
 ## Deliberate limitations
 

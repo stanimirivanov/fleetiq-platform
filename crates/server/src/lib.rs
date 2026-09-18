@@ -20,8 +20,9 @@ use tokio::net::TcpListener;
 ///
 /// Startup establishes the PostgreSQL pool and applies the complete embedded
 /// migration chain before binding the listener. The server therefore never
-/// advertises readiness against an older schema. Receiving `Ctrl+C` initiates
-/// Axum's graceful shutdown and then closes the connection pool.
+/// advertises readiness against an older schema. Receiving `Ctrl+C`, or
+/// `SIGTERM` on Unix, initiates Axum's graceful shutdown and then closes the
+/// connection pool.
 ///
 /// # Errors
 ///
@@ -49,8 +50,36 @@ fn application_router(pool: PgPool) -> Router {
 }
 
 async fn shutdown_signal() {
-    if let Err(error) = tokio::signal::ctrl_c().await {
-        eprintln!("failed to install or receive the shutdown signal: {error}");
+    let interrupt = async {
+        if let Err(error) = tokio::signal::ctrl_c().await {
+            eprintln!("failed to install or receive the interrupt signal: {error}");
+            std::future::pending::<()>().await;
+        }
+    };
+
+    #[cfg(unix)]
+    {
+        let terminate = async {
+            match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+                Ok(mut signal) => {
+                    signal.recv().await;
+                }
+                Err(error) => {
+                    eprintln!("failed to install the termination signal: {error}");
+                    std::future::pending::<()>().await;
+                }
+            }
+        };
+
+        tokio::select! {
+            () = interrupt => {},
+            () = terminate => {},
+        }
+    }
+
+    #[cfg(not(unix))]
+    {
+        interrupt.await;
     }
 }
 

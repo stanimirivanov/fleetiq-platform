@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT identity.latest_revision\n                FROM metadata.asset_relationships AS identity\n                WHERE identity.tenant_id = $1\n                  AND identity.relationship_id = $2\n                FOR UPDATE\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "latest_revision",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "metadata.asset_relationships",
+            "name": "latest_revision"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "89286e9360718083d94e41cdef0f94130c18348d5c4bd3ac111a330899fa9ab9"
+}
