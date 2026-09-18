@@ -9,7 +9,9 @@ services:
       POSTGRES_USER: fleetiq
       POSTGRES_PASSWORD: fleetiq-local-only
     ports:
-      - "5432:5432"
+      # Bind only on the local interface and avoid taking PostgreSQL's default
+      # host port. Override this value when 55432 is unavailable.
+      - "127.0.0.1:${FLEETIQ_POSTGRES_PORT:-55432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fleetiq -d fleetiq"]
       interval: 2s
