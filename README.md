@@ -45,8 +45,9 @@ Requirements:
 Start the local database and configure checked SQL queries:
 
 ```powershell
+$env:FLEETIQ_POSTGRES_PORT = "55432"
 docker compose -f deploy/local/compose.yaml up -d
-$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:5432/fleetiq"
+$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
 ```
@@ -60,7 +61,10 @@ cargo test --workspace --all-features --locked
 cargo doc --workspace --no-deps --locked
 ```
 
-The checked-in database password is for disposable local development only.
+Port `55432` is the FleetIQ local default. Set `FLEETIQ_POSTGRES_PORT` to another
+free host port before starting Compose when necessary. The container continues
+to use port `5432`. The checked-in database password is for disposable local
+development only.
 
 ## Repository map
 

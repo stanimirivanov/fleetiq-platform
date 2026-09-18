@@ -11,8 +11,9 @@ migration rules in their dedicated guides.
 From the repository root:
 
 ```powershell
+$env:FLEETIQ_POSTGRES_PORT = "55432"
 docker compose -f deploy/local/compose.yaml up -d
-$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:5432/fleetiq"
+$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
 ```
@@ -20,6 +21,17 @@ sqlx migrate run --source migrations
 Rust 1.98.1, `rustfmt`, and Clippy are selected by `rust-toolchain.toml`.
 PostgreSQL 18.6 is the supported development and CI version. The local database
 is disposable; do not reuse its credentials outside local development.
+
+Compose publishes PostgreSQL on `127.0.0.1:55432` by default while the
+container continues to listen on `5432`. Choose another free host port before
+starting the project when required:
+
+```powershell
+$env:FLEETIQ_POSTGRES_PORT = "55433"
+```
+
+Use the same value in `DATABASE_URL`. Changing the host port does not modify the
+database volume or container-side configuration.
 
 ## Quality gate
 
