@@ -60,9 +60,11 @@ The Wasmtime integration implements:
 - fresh bounded stores and component instances for each invocation.
 
 Admitted components retain their immutable package release and host-computed
-SHA-256 artifact digest. Catalogue registration is implemented separately from
-admission. Activation policy, artifact storage, compilation isolation, package
-distribution, and author tooling remain planned.
+SHA-256 artifact digest. PostgreSQL catalogue registration is implemented
+separately from admission, including exact retry, immutable-content collision,
+tenant-scoped lookup, and the complete unsigned artifact-size range. Activation
+policy, artifact storage, compilation isolation, package distribution, and
+author tooling remain planned.
 
 ## Durable ingestion
 
