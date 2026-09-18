@@ -29,10 +29,11 @@ flowchart TB
 
 The current repository composes its backend foundation into one executable
 process. An application authorization boundary separates authenticated actors,
-selected tenants, and per-action policy decisions, but identity integration and
-the policy adapter remain planned. Business APIs, device transports, production
-deployment, archival storage, and the web application arrive in later
-milestones.
+selected tenants, and per-action policy decisions. PostgreSQL persists internal
+actors and exact grants and evaluates current policy without a cache; identity-
+provider integration remains planned. Business APIs, device transports,
+production deployment, archival storage, and the web application arrive in
+later milestones.
 
 ## Capability flow
 
@@ -127,6 +128,7 @@ the policy and adapter crates. See
 | Assets, external identifiers, device endpoints | Metadata | Validated aggregate state |
 | Relationships and signal bindings | Metadata history | Append-only revisions with effective intervals |
 | Protocol package releases | Package catalogue | Immutable tenant-scoped releases |
+| Internal actors and tenant action grants | Identity and authorization | Stable actors; mutable exact grants |
 | Accepted wire messages | Ingestion log | Append-only, idempotent facts |
 | Decoded observation batches | Ingestion log | Atomic append-only results |
 | Asset property changes | Telemetry history, planned | Append-only semantic facts |
@@ -161,6 +163,7 @@ current-system map; do not copy chronological decision history into it.
 
 - [ADR index](../adr/README.md)
 - [Per-action tenant authorization decision](../adr/0042-establish-per-action-tenant-authorization-boundary.md)
+- [Persisted tenant action grant decision](../adr/0043-persist-exact-tenant-action-grants.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
