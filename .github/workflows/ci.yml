@@ -22,7 +22,7 @@ jobs:
   rust:
     name: Rust quality gate
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     services:
       postgres:
@@ -48,6 +48,11 @@ jobs:
           rustc --version
           cargo --version
 
+      - name: Install pinned SQLx CLI
+        run: >-
+          cargo install sqlx-cli --version 0.9.0 --locked --debug
+          --no-default-features --features rustls,postgres
+
       - name: Apply metadata schema for checked queries
         run: |
           for migration in migrations/*.sql; do
@@ -57,6 +62,9 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all --check
 
+      - name: Check SQLx offline query metadata
+        run: cargo sqlx prepare --check --workspace -- --all-targets --all-features
+
       - name: Lint
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
@@ -65,3 +73,34 @@ jobs:
 
       - name: Check documentation
         run: cargo doc --workspace --no-deps --locked
+
+  local-compose:
+    name: Local Compose smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+
+      - name: Build and start the local stack
+        run: docker compose -f deploy/local/compose.yaml up --build --wait
+
+      - name: Verify the backend health surface
+        run: |
+          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:58080/health/live
+          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:58080/health/ready
+
+      - name: Verify backend isolation and graceful shutdown
+        run: |
+          server_id="$(docker compose -f deploy/local/compose.yaml ps --quiet server)"
+          test "$(docker inspect --format '{{.Config.User}}' "$server_id")" = "10001:10001"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$server_id")" = "true"
+          test "$(docker inspect --format '{{json .HostConfig.CapDrop}}' "$server_id")" = '["ALL"]'
+          test "$(docker inspect --format '{{json .HostConfig.SecurityOpt}}' "$server_id")" = '["no-new-privileges:true"]'
+          docker compose -f deploy/local/compose.yaml stop server
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$server_id")" = "0"
+
+      - name: Stop the local stack
+        if: always()
+        run: docker compose -f deploy/local/compose.yaml down --volumes

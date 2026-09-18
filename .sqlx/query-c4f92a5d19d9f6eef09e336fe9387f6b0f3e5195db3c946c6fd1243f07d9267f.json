@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO metadata.relationship_type_definitions\n                (tenant_id, relationship_type_id, version, display_name)\n            VALUES ($1, $2, $3, $4)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c4f92a5d19d9f6eef09e336fe9387f6b0f3e5195db3c946c6fd1243f07d9267f"
+}

@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT recorded_at_ms\n                FROM metadata.signal_binding_revisions\n                WHERE tenant_id = $1\n                  AND binding_id = $2\n                  AND revision = $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "recorded_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1effa040b2dc1b6e540a760ebe58ece3b8107abe8467d3bfd0838942606576d5"
+}

@@ -42,11 +42,19 @@ Requirements:
 - Rust 1.98.1, pinned by [`rust-toolchain.toml`](rust-toolchain.toml);
 - Docker with Compose.
 
-Start the local database and configure checked SQL queries:
+Start the complete local stack:
 
 ```powershell
 $env:FLEETIQ_POSTGRES_PORT = "55432"
-docker compose -f deploy/local/compose.yaml up -d
+$env:FLEETIQ_HTTP_PORT = "58080"
+docker compose -f deploy/local/compose.yaml up --build --wait
+Invoke-WebRequest http://127.0.0.1:$env:FLEETIQ_HTTP_PORT/health/ready
+```
+
+For Rust development, start only PostgreSQL and configure checked SQL queries:
+
+```powershell
+docker compose -f deploy/local/compose.yaml up -d postgres
 $env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
@@ -62,10 +70,10 @@ cargo test --workspace --all-features --locked
 cargo doc --workspace --no-deps --locked
 ```
 
-Port `55432` is the FleetIQ local default. Set `FLEETIQ_POSTGRES_PORT` to another
-free host port before starting Compose when necessary. The container continues
-to use port `5432`. The checked-in database password is for disposable local
-development only.
+Ports `55432` and `58080` are the FleetIQ local PostgreSQL and HTTP defaults.
+Set `FLEETIQ_POSTGRES_PORT` or `FLEETIQ_HTTP_PORT` to free host ports before
+starting Compose when necessary. Container-side ports remain `5432` and `8080`.
+The checked-in database password is for disposable local development only.
 
 ## Repository map
 
@@ -83,6 +91,7 @@ development only.
 | [`crates/server`](crates/server) | Backend composition root, process configuration, and HTTP health surface |
 | [`migrations`](migrations) | Authoritative PostgreSQL schema history |
 | [`deploy/local`](deploy/local) | Disposable local infrastructure |
+| [`Dockerfile`](Dockerfile) | Multi-stage backend container image |
 | [`docs`](docs/README.md) | Product, architecture, development, roadmap, and decisions |
 
 Folders are introduced with working behavior. Deployable applications and new

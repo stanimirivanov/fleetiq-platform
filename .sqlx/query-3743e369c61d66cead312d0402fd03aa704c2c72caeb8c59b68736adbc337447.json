@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT identifier_kind, authority, identifier_value\n            FROM metadata.asset_external_identifiers\n            WHERE tenant_id = $1 AND asset_id = $2\n            ORDER BY identifier_kind, authority NULLS FIRST, identifier_value\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "identifier_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.asset_external_identifiers",
+            "name": "identifier_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "authority",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.asset_external_identifiers",
+            "name": "authority"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "identifier_value",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.asset_external_identifiers",
+            "name": "identifier_value"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "3743e369c61d66cead312d0402fd03aa704c2c72caeb8c59b68736adbc337447"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO metadata.signal_bindings\n                (tenant_id, binding_id, latest_revision)\n            VALUES ($1, $2, $3)\n            ON CONFLICT (tenant_id, binding_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3a0ce6e5e880408c2fa7f67fdb0adb6ab04f75ec403095c2fa0aecb06550069a"
+}

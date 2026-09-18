@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO metadata.asset_relationships\n                (tenant_id, relationship_id, latest_revision)\n            VALUES ($1, $2, $3)\n            ON CONFLICT (tenant_id, relationship_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "089422ebb9a28252bb873762db954d48480e8e9a56f87ee83ec22f340a053d70"
+}

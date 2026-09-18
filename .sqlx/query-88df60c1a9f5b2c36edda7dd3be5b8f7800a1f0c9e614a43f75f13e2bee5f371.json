@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO metadata.signal_binding_revisions\n            (tenant_id, binding_id, revision, recorded_at_ms,\n             source_device_asset_id, source_endpoint_id, source_signal_id,\n             target_asset_id, target_property_id, target_property_version,\n             effective_start_ms, effective_end_ms)\n        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric",
+        "Int8",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "88df60c1a9f5b2c36edda7dd3be5b8f7800a1f0c9e614a43f75f13e2bee5f371"
+}

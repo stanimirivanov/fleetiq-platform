@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE metadata.signal_bindings\n                SET latest_revision = $3\n                WHERE tenant_id = $1 AND binding_id = $2\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "52058077c023cf8aa07a700e5dc91e5b1f7a41aa34f5874ed4980abecb4b7347"
+}

@@ -132,6 +132,7 @@ database, run:
 
 ```powershell
 cargo fmt --all --check
+cargo sqlx prepare --check --workspace -- --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features --locked
 cargo doc --workspace --no-deps --locked
@@ -140,6 +141,11 @@ cargo doc --workspace --no-deps --locked
 CI applies the full migration chain before compiling SQLx queries. A skipped
 database-backed test is not passing evidence. Narrow crate or test commands are
 useful during development but do not replace the applicable workspace gate.
+
+Regenerate `.sqlx` with the same workspace, target, and feature arguments after
+changing a migration or checked query. The committed descriptions let image
+builders compile without database access; online CI checking remains the
+authority for schema compatibility.
 
 If a required check cannot run, report the exact check as **not run**, the
 blocking condition, checks that did run, and the residual risk. Never weaken a

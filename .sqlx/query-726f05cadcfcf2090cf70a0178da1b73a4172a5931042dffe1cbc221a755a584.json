@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH inserted_definition AS (\n                INSERT INTO metadata.asset_type_definitions\n                    (tenant_id, type_id, version, display_name, property_count)\n                VALUES ($1, $2, $3, $4, $5)\n                RETURNING tenant_id, type_id, version\n            )\n            INSERT INTO metadata.asset_type_properties\n                (tenant_id, type_id, type_version, property_id,\n                 property_version, property_ordinal)\n            SELECT\n                inserted_definition.tenant_id,\n                inserted_definition.type_id,\n                inserted_definition.version,\n                property.property_id,\n                property.property_version,\n                property.property_ordinal\n            FROM inserted_definition\n            CROSS JOIN UNNEST($6::text[], $7::bigint[]) WITH ORDINALITY\n                AS property(property_id, property_version, property_ordinal)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Int8",
+        "TextArray",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "726f05cadcfcf2090cf70a0178da1b73a4172a5931042dffe1cbc221a755a584"
+}

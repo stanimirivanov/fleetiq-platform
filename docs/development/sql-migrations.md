@@ -10,6 +10,8 @@
   experts.
 - Verify the full chain on PostgreSQL 18.6 and compile SQLx checked queries
   against the resulting schema.
+- Regenerate and commit `.sqlx` offline query descriptions whenever a migration
+  or checked query changes.
 
 PostgreSQL migrations are the source of truth for FleetIQ's persisted metadata
 model. Every migration must be understandable and reviewable without requiring
@@ -78,6 +80,9 @@ the reader to infer business rules from application code.
 - Apply the complete migration chain to an empty database running the supported
   PostgreSQL version.
 - Compile all SQLx checked queries against the migrated schema.
+- Run `cargo sqlx prepare --check --workspace -- --all-targets --all-features`
+  against that schema. The committed metadata must describe the same queries
+  used by database-independent container builds.
 - Add integration tests for constraints, transactions, tenant isolation, and
   row-to-domain mapping introduced or changed by the migration.
 - Run formatting, strict Clippy, the full test suite, and documentation checks

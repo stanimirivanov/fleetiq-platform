@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ingestion.decoded_observations\n                (tenant_id, message_id, protocol_package_id,\n                 protocol_package_version, output_index, endpoint_id, signal_id,\n                 device_recorded_at_ms, value_kind, value_boolean, value_integer,\n                 value_decimal, value_text, source_unit, quality)\n            SELECT $1, $2, $3, $4, observation.*\n            FROM UNNEST(\n                $5::bigint[], $6::text[], $7::text[], $8::bigint[],\n                $9::text[], $10::boolean[], $11::bigint[], $12::numeric[],\n                $13::text[], $14::text[], $15::text[]\n            ) AS observation(\n                output_index, endpoint_id, signal_id, device_recorded_at_ms,\n                value_kind, value_boolean, value_integer, value_decimal,\n                value_text, source_unit, quality\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8Array",
+        "TextArray",
+        "TextArray",
+        "Int8Array",
+        "TextArray",
+        "BoolArray",
+        "Int8Array",
+        "NumericArray",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "30eb3ed8c5a6689c5371763bbce5df3e8e52004edc6185c32810214b5bf94fba"
+}

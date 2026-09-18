@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT property_id, property_version\n            FROM metadata.asset_type_properties\n            WHERE tenant_id = $1 AND type_id = $2 AND type_version = $3\n            ORDER BY property_ordinal\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "property_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.asset_type_properties",
+            "name": "property_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "property_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.asset_type_properties",
+            "name": "property_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "8985b388749932a49a6c386e5e44ebcb1c682330770693e8ef22da8ee0ddc4a3"
+}
