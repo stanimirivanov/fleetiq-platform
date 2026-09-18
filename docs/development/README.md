@@ -16,6 +16,8 @@ docker compose -f deploy/local/compose.yaml up -d
 $env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
+$env:FLEETIQ_BIND_ADDRESS = "127.0.0.1:8080"
+cargo run -p fleetiq-server
 ```
 
 Rust 1.98.1, `rustfmt`, and Clippy are selected by `rust-toolchain.toml`.
@@ -32,6 +34,12 @@ $env:FLEETIQ_POSTGRES_PORT = "55433"
 
 Use the same value in `DATABASE_URL`. Changing the host port does not modify the
 database volume or container-side configuration.
+
+The server requires `DATABASE_URL`, applies the embedded migration chain before
+binding its listener, and defaults `FLEETIQ_BIND_ADDRESS` to
+`127.0.0.1:8080`. Explicitly running migrations remains useful for SQLx
+compilation and database inspection; applying them again at server startup is
+safe and idempotent.
 
 ## Quality gate
 

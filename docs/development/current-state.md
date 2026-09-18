@@ -2,16 +2,17 @@
 
 ## TL;DR
 
-- The repository implements a Rust domain and persistence foundation, not a
-  deployable FleetIQ product.
+- The repository includes the first runnable backend composition root, but no
+  product or administrative API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and live projection contracts exist;
   their production workers and stores do not.
-- APIs, authentication, transport listeners, operator UI, archival storage,
-  observability, and deployment remain future milestones.
+- Business APIs, authentication, device transport listeners, operator UI,
+  archival storage, observability, and production deployment remain future
+  milestones.
 
 ## Semantic metadata foundation
 
@@ -101,10 +102,14 @@ The workspace is Rust 2024 on Rust 1.98.1. PostgreSQL 18.6 stores metadata and
 ingestion facts under checked SQL migrations. SQLx macros validate queries
 against a migrated database. The local Compose deployment runs only PostgreSQL.
 
-There is no production binary, public API, authentication provider, message
-broker, object archive, cache, deployment manifest, or service-level objective.
-Do not describe library contracts or local database defaults as production
-behavior.
+The `fleetiq-server` binary validates environment configuration, applies the
+embedded migration chain, exposes liveness and PostgreSQL-backed readiness
+probes, and shuts down gracefully after `Ctrl+C`. It is an operable development
+composition root, not a production deployment.
+
+There is no business API, authentication provider, message broker, object
+archive, cache, deployment manifest, or service-level objective. Do not
+describe library contracts or local database defaults as production behavior.
 
 ## Deliberate limitations
 

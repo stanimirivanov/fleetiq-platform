@@ -38,6 +38,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0022–0028](0022-versioned-protocol-package-component-contract.md) | Versioned WIT component admission and bounded session invocation |
 | [0029–0037](0029-append-accepted-messages-idempotently.md) | Idempotent raw and decoded ingestion durability and recovery |
 | [0038–0040](0038-bind-admitted-components-to-release-and-artifact.md) | Protocol artifact identity and immutable release catalogue |
+| [0041](0041-establish-single-backend-composition-root.md) | Backend composition root, runtime, and health surface |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

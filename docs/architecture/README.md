@@ -27,9 +27,10 @@ flowchart TB
     FleetIQ -.-> Archive
 ```
 
-The current repository is a backend foundation rather than a deployable
-product. Runtime topology, public APIs, identity integration, archival storage,
-and the web application arrive in later milestones.
+The current repository composes its backend foundation into one executable
+process. Business APIs, identity integration, device transports, production
+deployment, archival storage, and the web application arrive in later
+milestones.
 
 ## Capability flow
 
@@ -92,11 +93,14 @@ known. See [semantic asset graph](semantic-asset-graph.md).
 
 ```mermaid
 flowchart TB
+    Server[Server composition root]
     Adapters[Adapters: PostgreSQL, Wasmtime, transports, HTTP]
     Application[Application: use cases and ports]
     Policies[Policies: semantics, analytics, protocol host]
     Domain[Domain and telemetry contracts]
 
+    Server --> Adapters
+    Server --> Application
     Adapters --> Application
     Adapters --> Policies
     Application --> Policies
@@ -107,6 +111,11 @@ flowchart TB
 Dependencies point toward stable policy and domain meaning. Infrastructure
 implements consumer-owned ports. SQL rows, WIT values, wire payloads, and API
 documents do not become domain values until validated.
+
+The first deployment topology is one modular backend process. It owns startup,
+configuration, migration, HTTP routing, health, and shutdown while composing
+the policy and adapter crates. See
+[ADR 0041](../adr/0041-establish-single-backend-composition-root.md).
 
 ## Data ownership and stores
 
