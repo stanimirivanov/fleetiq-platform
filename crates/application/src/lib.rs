@@ -4,6 +4,7 @@
 //! contracts without exposing database or transport types to domain code.
 
 mod accepted_message_log;
+mod authorization;
 mod decoded_observation_log;
 mod definition_repository;
 mod device_repository;
@@ -17,6 +18,10 @@ mod signal_binding_repository;
 
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
+};
+pub use authorization::{
+    AccessDecision, AuthorizedTenantAction, TenantAccessPolicy, TenantAccessRequest, TenantAction,
+    TenantAuthorizationError, TenantAuthorizationService,
 };
 pub use decoded_observation_log::{
     DecodedObservationAppendOutcome, DecodedObservationBatch, DecodedObservationBatchError,
