@@ -3,8 +3,8 @@
 ## TL;DR
 
 - The repository includes the first runnable backend composition root and a
-  provider-neutral tenant authorization boundary, but no product or
-  administrative API.
+  provider-neutral, PostgreSQL-backed tenant authorization boundary, but no
+  product or administrative API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -13,7 +13,7 @@
   their production workers and stores do not.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
-- Business APIs, identity-provider integration, authorization persistence,
+- Business APIs, identity-provider integration, authorization administration,
   device transport listeners, operator UI, archival storage, and observability
   remain future milestones.
 
@@ -124,19 +124,25 @@ The domain defines a stable internal actor identity that does not encode an
 identity provider. The application authorization service evaluates an explicit
 actor, tenant, and action tuple through a consumer-owned policy port. Only an
 allow decision produces typed, exact-operation authorization evidence; missing
-grants and policy failures fail closed. Tests cover tenant and action isolation
-and distinguish ordinary denial from policy unavailability.
+grants and policy failures fail closed.
 
-No actor store, external-identity mapping, membership or role model, policy
-adapter, authentication middleware, protected route, or authorization audit log
-exists yet. The boundary defines how those later slices must enter protected
+PostgreSQL persists internal actor existence and exact tenant action grants. Its
+policy adapter performs one complete-tuple existence query for each operation,
+so a deleted grant affects the next decision without cache delay. Constraints
+require valid existing actors and tenants, reject unknown actions, and prevent
+duplicate grants. Integration tests cover actor, tenant, and action isolation,
+revocation, vocabulary alignment, and durable constraints.
+
+No external-identity mapping, membership or role model, grant administration,
+authentication middleware, protected route, or authorization audit log exists
+yet. The boundary defines how those later slices must enter protected
 application behavior without treating a caller-supplied tenant identifier as a
 grant.
 
-There is no business API, authentication provider, authorization policy
-adapter, message broker, object archive, cache, production deployment manifest,
-or service-level objective. Do not describe library contracts or local
-database defaults as production behavior.
+There is no business API, authentication provider, authorization administration
+API, message broker, object archive, cache, production deployment manifest, or
+service-level objective. Do not describe library contracts or local database
+defaults as production behavior.
 
 ## Deliberate limitations
 

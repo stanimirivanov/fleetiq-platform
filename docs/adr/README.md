@@ -40,6 +40,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0038–0040](0038-bind-admitted-components-to-release-and-artifact.md) | Protocol artifact identity and immutable release catalogue |
 | [0041](0041-establish-single-backend-composition-root.md) | Backend composition root, runtime, and health surface |
 | [0042](0042-establish-per-action-tenant-authorization-boundary.md) | Provider-neutral actor identity and per-action tenant authorization |
+| [0043](0043-persist-exact-tenant-action-grants.md) | PostgreSQL actors, exact tenant action grants, and policy evaluation |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
