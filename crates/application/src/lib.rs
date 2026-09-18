@@ -15,6 +15,7 @@ mod protocol_package_catalog;
 mod relationship_repository;
 mod repository;
 mod signal_binding_repository;
+mod tenant_access_administration;
 
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
@@ -48,3 +49,8 @@ pub use protocol_package_catalog::{
 pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQuery};
 pub use repository::AssetRepository;
 pub use signal_binding_repository::{SignalBindingRepository, SignalBindingSnapshotQuery};
+pub use tenant_access_administration::{
+    TenantAccessAdministration, TenantAccessAdministrationError,
+    TenantAccessAdministrationRepository, TenantAccessChange, TenantAccessChangeEffect,
+    TenantAccessChangeKind, TenantAccessChangeOutcome, TenantAccessChangeRequest,
+};

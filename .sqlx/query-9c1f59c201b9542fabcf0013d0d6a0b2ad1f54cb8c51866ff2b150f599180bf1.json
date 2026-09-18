@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO identity.tenant_action_grants\n                        (tenant_id, actor_id, action)\n                    VALUES ($1, $2, $3)\n                    ON CONFLICT DO NOTHING\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9c1f59c201b9542fabcf0013d0d6a0b2ad1f54cb8c51866ff2b150f599180bf1"
+}

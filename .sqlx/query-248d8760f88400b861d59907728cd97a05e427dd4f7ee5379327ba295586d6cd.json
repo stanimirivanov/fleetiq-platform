@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT administrator_actor_id, target_actor_id, action, change_kind,\n                   recorded_at_ms, state_changed\n            FROM identity.tenant_access_changes\n            WHERE tenant_id = $1 AND change_id = $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "administrator_actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_access_changes",
+            "name": "administrator_actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "target_actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_access_changes",
+            "name": "target_actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "action",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_access_changes",
+            "name": "action"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "change_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_access_changes",
+            "name": "change_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_access_changes",
+            "name": "recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "state_changed",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_access_changes",
+            "name": "state_changed"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "248d8760f88400b861d59907728cd97a05e427dd4f7ee5379327ba295586d6cd"
+}

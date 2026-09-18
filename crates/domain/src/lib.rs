@@ -26,7 +26,8 @@ pub use device::{
 pub use identifier::{
     ActorId, AssetId, AssetRelationshipId, AssetTypeId, DeviceEndpointId, DeviceEndpointKindId,
     ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, IdentifierError,
-    PropertyDefinitionId, RelationshipTypeId, SignalBindingId, SourceSignalId, TenantId, UnitId,
+    PropertyDefinitionId, RelationshipTypeId, SignalBindingId, SourceSignalId,
+    TenantAccessChangeId, TenantId, UnitId,
 };
 pub use property_value::PropertyValue;
 pub use relationship::{

@@ -41,6 +41,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0041](0041-establish-single-backend-composition-root.md) | Backend composition root, runtime, and health surface |
 | [0042](0042-establish-per-action-tenant-authorization-boundary.md) | Provider-neutral actor identity and per-action tenant authorization |
 | [0043](0043-persist-exact-tenant-action-grants.md) | PostgreSQL actors, exact tenant action grants, and policy evaluation |
+| [0044](0044-administer-tenant-grants-with-atomic-audit.md) | Authorized idempotent grant administration with atomic immutable audit |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
