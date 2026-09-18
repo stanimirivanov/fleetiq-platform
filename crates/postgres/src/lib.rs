@@ -9,6 +9,7 @@ mod decoded_observation_log;
 mod definition_repository;
 mod device_repository;
 mod error;
+mod protocol_package_catalog;
 mod relationship_repository;
 mod signal_binding_repository;
 
@@ -20,6 +21,9 @@ pub use decoded_observation_log::{
 pub use definition_repository::PostgresDefinitionRepository;
 pub use device_repository::PostgresDeviceRepository;
 pub use error::PostgresRepositoryError;
+pub use protocol_package_catalog::{
+    PostgresProtocolPackageCatalog, PostgresProtocolPackageCatalogError,
+};
 pub use relationship_repository::PostgresRelationshipRepository;
 pub use signal_binding_repository::PostgresSignalBindingRepository;
 use sqlx::migrate::Migrator;
