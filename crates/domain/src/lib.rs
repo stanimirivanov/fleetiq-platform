@@ -24,7 +24,7 @@ pub use device::{
     DeviceEndpointNameError,
 };
 pub use identifier::{
-    AssetId, AssetRelationshipId, AssetTypeId, DeviceEndpointId, DeviceEndpointKindId,
+    ActorId, AssetId, AssetRelationshipId, AssetTypeId, DeviceEndpointId, DeviceEndpointKindId,
     ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, IdentifierError,
     PropertyDefinitionId, RelationshipTypeId, SignalBindingId, SourceSignalId, TenantId, UnitId,
 };

@@ -28,7 +28,9 @@ flowchart TB
 ```
 
 The current repository composes its backend foundation into one executable
-process. Business APIs, identity integration, device transports, production
+process. An application authorization boundary separates authenticated actors,
+selected tenants, and per-action policy decisions, but identity integration and
+the policy adapter remain planned. Business APIs, device transports, production
 deployment, archival storage, and the web application arrive in later
 milestones.
 
@@ -143,6 +145,9 @@ volume, recovery, and cost requirements that justify them.
   durable writes, replies, and external side effects.
 - Tenant identifiers carried by callers are routing context, not proof of
   authorization.
+- Authentication establishes a stable internal actor identity; protected
+  tenant operations require a fresh allow decision for the exact actor, tenant,
+  and application action. Policy absence or failure denies access.
 - Routine errors and logs exclude raw payloads, secrets, and customer asset
   data.
 - Device commands require a separate authenticated, authorized, auditable, and
@@ -155,6 +160,7 @@ runtime topology, or foundational technology. Keep this document as the
 current-system map; do not copy chronological decision history into it.
 
 - [ADR index](../adr/README.md)
+- [Per-action tenant authorization decision](../adr/0042-establish-per-action-tenant-authorization-boundary.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
