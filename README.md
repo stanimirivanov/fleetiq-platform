@@ -50,6 +50,7 @@ docker compose -f deploy/local/compose.yaml up -d
 $env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
+cargo run -p fleetiq-server
 ```
 
 Run the repository quality gate:
@@ -79,6 +80,7 @@ development only.
 | [`crates/analytics`](crates/analytics) | Calculator identities and output contracts |
 | [`crates/application`](crates/application) | Use cases and consumer-owned infrastructure ports |
 | [`crates/postgres`](crates/postgres) | SQLx persistence adapters and private row mappings |
+| [`crates/server`](crates/server) | Backend composition root, process configuration, and HTTP health surface |
 | [`migrations`](migrations) | Authoritative PostgreSQL schema history |
 | [`deploy/local`](deploy/local) | Disposable local infrastructure |
 | [`docs`](docs/README.md) | Product, architecture, development, roadmap, and decisions |

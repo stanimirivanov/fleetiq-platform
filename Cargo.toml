@@ -8,6 +8,7 @@ members = [
     "crates/protocol-sdk",
     "crates/protocol-wasm",
     "crates/semantics",
+    "crates/server",
     "crates/telemetry",
 ]
 resolver = "3"
@@ -18,10 +19,12 @@ repository = "https://github.com/stanimirivanov/fleetiq-platform"
 rust-version = "1.98.1"
 
 [workspace.dependencies]
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
 bigdecimal = { version = "0.4.0", default-features = false }
 sqlx = { version = "0.9.0", default-features = false, features = ["bigdecimal", "macros", "migrate", "postgres", "runtime-tokio"] }
 sha2 = { version = "0.10.9", default-features = false }
-tokio = { version = "~1.51", default-features = false, features = ["macros", "rt-multi-thread"] }
+tokio = { version = "~1.51", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal"] }
+tower = { version = "0.5.2", default-features = false, features = ["util"] }
 wasmtime = { version = "48.0.2", default-features = false, features = ["anyhow", "component-model", "cranelift", "runtime", "std"] }
 
 [workspace.lints.rust]
