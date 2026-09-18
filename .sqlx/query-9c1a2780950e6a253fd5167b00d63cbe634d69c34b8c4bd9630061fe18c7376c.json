@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    DELETE FROM identity.tenant_action_grants\n                    WHERE tenant_id = $1 AND actor_id = $2 AND action = $3\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9c1a2780950e6a253fd5167b00d63cbe634d69c34b8c4bd9630061fe18c7376c"
+}

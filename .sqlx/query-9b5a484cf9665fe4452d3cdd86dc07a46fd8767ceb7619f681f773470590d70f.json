@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT tenant_id\n            FROM metadata.tenants\n            WHERE tenant_id = $1\n            FOR UPDATE\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.tenants",
+            "name": "tenant_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9b5a484cf9665fe4452d3cdd86dc07a46fd8767ceb7619f681f773470590d70f"
+}

@@ -11,6 +11,14 @@ const MAX_IDENTIFIER_LENGTH: usize = 128;
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ActorId(String);
 
+/// Identifies one idempotent tenant access administration command.
+///
+/// The identifier is scoped by tenant in persistence. Retrying the same command
+/// with the same identifier and content resolves to its existing audit record;
+/// reusing it for different content is an identity collision.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TenantAccessChangeId(String);
+
 /// Identifies the tenant that owns domain data.
 ///
 /// Tenant identity is explicit so application and persistence boundaries cannot
@@ -193,6 +201,7 @@ macro_rules! domain_identifier {
 
 domain_identifier!(TenantId);
 domain_identifier!(ActorId);
+domain_identifier!(TenantAccessChangeId);
 domain_identifier!(AssetId);
 domain_identifier!(AssetRelationshipId);
 domain_identifier!(DeviceEndpointId);

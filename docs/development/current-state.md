@@ -13,9 +13,9 @@
   their production workers and stores do not.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
-- Business APIs, identity-provider integration, authorization administration,
-  device transport listeners, operator UI, archival storage, and observability
-  remain future milestones.
+- Business APIs, identity-provider integration, authorization administration
+  APIs, device transport listeners, operator UI, archival storage, and
+  observability remain future milestones.
 
 ## Semantic metadata foundation
 
@@ -133,11 +133,19 @@ require valid existing actors and tenants, reject unknown actions, and prevent
 duplicate grants. Integration tests cover actor, tenant, and action isolation,
 revocation, vocabulary alignment, and durable constraints.
 
-No external-identity mapping, membership or role model, grant administration,
-authentication middleware, protected route, or authorization audit log exists
-yet. The boundary defines how those later slices must enter protected
-application behavior without treating a caller-supplied tenant identifier as a
-grant.
+The application can grant or revoke an exact tenant action only with consumed
+`ManageAccess` authorization evidence. Tenant and administrator identity come
+from that evidence. Each host-identified command atomically changes current
+grant state and appends immutable audit evidence containing its actors, action,
+operation, recorded time, and state effect. Exact retries return the original
+effect, different-content identity reuse is rejected, and concurrent commands
+are serialized per tenant.
+
+No external-identity mapping, membership or role model, actor provisioning,
+administration transport, authentication middleware, protected route, or audit
+query API exists yet. The boundary defines how those later slices must enter
+protected application behavior without treating a caller-supplied tenant
+identifier as a grant.
 
 There is no business API, authentication provider, authorization administration
 API, message broker, object archive, cache, production deployment manifest, or

@@ -129,6 +129,7 @@ the policy and adapter crates. See
 | Relationships and signal bindings | Metadata history | Append-only revisions with effective intervals |
 | Protocol package releases | Package catalogue | Immutable tenant-scoped releases |
 | Internal actors and tenant action grants | Identity and authorization | Stable actors; mutable exact grants |
+| Tenant access change audit | Identity and authorization | Append-only idempotent administration facts |
 | Accepted wire messages | Ingestion log | Append-only, idempotent facts |
 | Decoded observation batches | Ingestion log | Atomic append-only results |
 | Asset property changes | Telemetry history, planned | Append-only semantic facts |
@@ -164,6 +165,7 @@ current-system map; do not copy chronological decision history into it.
 - [ADR index](../adr/README.md)
 - [Per-action tenant authorization decision](../adr/0042-establish-per-action-tenant-authorization-boundary.md)
 - [Persisted tenant action grant decision](../adr/0043-persist-exact-tenant-action-grants.md)
+- [Audited tenant grant administration decision](../adr/0044-administer-tenant-grants-with-atomic-audit.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
