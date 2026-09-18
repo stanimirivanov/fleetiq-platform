@@ -3,8 +3,9 @@
 ## TL;DR
 
 - The repository includes the first runnable backend composition root and a
-  provider-neutral, PostgreSQL-backed tenant authorization boundary, but no
-  product or administrative API.
+  provider-neutral, PostgreSQL-backed tenant authorization boundary. Asset
+  registration and lookup now consume exact authorization evidence, but there
+  is no product or administrative API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -140,6 +141,13 @@ grant state and appends immutable audit evidence containing its actors, action,
 operation, recorded time, and state effect. Exact retries return the original
 effect, different-content identity reuse is rejected, and concurrent commands
 are serialized per tenant.
+
+The asset application service is the first protected metadata use case. Asset
+registration consumes exact `ManageMetadata` evidence and rejects aggregates
+owned by another tenant before persistence. Asset lookup consumes exact
+`ReadMetadata` evidence and derives repository tenant scope from that evidence,
+so callers cannot independently select a tenant for the read. Neither action
+implies the other.
 
 No external-identity mapping, membership or role model, actor provisioning,
 administration transport, authentication middleware, protected route, or audit
