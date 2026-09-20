@@ -136,6 +136,14 @@ new statement for conflict resolution when fresh visibility is required. Lock a
 stable revision identity before reading dependent current state when the lock
 can change which dependent row is current.
 
+When several unique constraints cover the same immutable identity, a targeted
+`ON CONFLICT` clause handles only its selected arbiter and can expose another
+constraint during concurrent identical inserts. Use unqualified `ON CONFLICT DO
+NOTHING` only when every suppressible uniqueness conflict can be resolved by
+the same fresh-snapshot identity read and complete-content comparison. Keep a
+targeted arbiter when another unique constraint represents a distinct conflict
+that callers must observe.
+
 Document repository methods whose batching, transaction, locking, temporal
 selection, ordering, or deliberate multi-query shape is not obvious.
 

@@ -1,6 +1,6 @@
 # ADR 0031: Resolve accepted-message appends with a fresh snapshot
 
-- Status: accepted
+- Status: superseded by [ADR 0045](0045-handle-all-accepted-message-unique-arbiters.md)
 - Date: 2026-09-14
 
 ## Context

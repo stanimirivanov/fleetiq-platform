@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ingestion.accepted_messages\n                (tenant_id, message_id, device_asset_id, protocol_package_id,\n                 protocol_package_version, received_at_ms, payload)\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            ON CONFLICT DO NOTHING\n            RETURNING TRUE AS \"inserted!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "inserted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "12a8d89e57fe764a1bf82afb98f84a17791314ed1729d34d16e2eb2f953f9353"
+}
