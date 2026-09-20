@@ -8,6 +8,7 @@ mod asset_service;
 mod authorization;
 mod decoded_observation_log;
 mod definition_repository;
+mod definition_service;
 mod device_repository;
 mod frame_acceptance;
 mod live;
@@ -31,6 +32,7 @@ pub use decoded_observation_log::{
     DecodedObservationLog,
 };
 pub use definition_repository::DefinitionRepository;
+pub use definition_service::{DefinitionApplicationError, DefinitionApplicationService};
 pub use device_repository::DeviceRepository;
 pub use frame_acceptance::{
     DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,
