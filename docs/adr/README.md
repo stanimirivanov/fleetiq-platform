@@ -42,6 +42,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0042](0042-establish-per-action-tenant-authorization-boundary.md) | Provider-neutral actor identity and per-action tenant authorization |
 | [0043](0043-persist-exact-tenant-action-grants.md) | PostgreSQL actors, exact tenant action grants, and policy evaluation |
 | [0044](0044-administer-tenant-grants-with-atomic-audit.md) | Authorized idempotent grant administration with atomic immutable audit |
+| [0045](0045-handle-all-accepted-message-unique-arbiters.md) | Accepted-message idempotency across every unique arbiter |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

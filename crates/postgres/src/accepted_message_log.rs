@@ -26,12 +26,15 @@ impl PostgresAcceptedMessageLog {
 
     /// Appends a candidate or resolves an exact idempotent retry.
     ///
-    /// The insert is the durability boundary. On primary-key conflict, a second
-    /// statement reads the immutable winner with a fresh `READ COMMITTED`
-    /// snapshot. Combining the insert and fallback read in one data-modifying
-    /// common table expression could return no row after waiting for a
-    /// concurrent uncommitted insert because its original snapshot cannot see
-    /// the newly committed winner.
+    /// The insert is the durability boundary. On any uniqueness conflict, a
+    /// second statement reads the immutable winner with a fresh `READ COMMITTED`
+    /// snapshot. The unqualified conflict clause is deliberate: the table has
+    /// both its primary key and a wider decoder-reference unique constraint,
+    /// and concurrent identical inserts may encounter either one first.
+    /// Combining the insert and fallback read in one data-modifying common
+    /// table expression could return no row after waiting for a concurrent
+    /// uncommitted insert because its original snapshot cannot see the newly
+    /// committed winner.
     async fn append_message(
         &self,
         candidate: &PendingAcceptedMessage,
@@ -42,7 +45,7 @@ impl PostgresAcceptedMessageLog {
                 (tenant_id, message_id, device_asset_id, protocol_package_id,
                  protocol_package_version, received_at_ms, payload)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (tenant_id, message_id) DO NOTHING
+            ON CONFLICT DO NOTHING
             RETURNING TRUE AS "inserted!"
             "#,
             candidate.tenant_id().as_str(),
