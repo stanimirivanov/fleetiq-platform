@@ -15,6 +15,7 @@ mod live;
 mod observation_persistence;
 mod protocol_package_catalog;
 mod relationship_repository;
+mod relationship_service;
 mod repository;
 mod signal_binding_repository;
 mod tenant_access_administration;
@@ -51,6 +52,7 @@ pub use protocol_package_catalog::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
 pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQuery};
+pub use relationship_service::{RelationshipApplicationError, RelationshipApplicationService};
 pub use repository::AssetRepository;
 pub use signal_binding_repository::{SignalBindingRepository, SignalBindingSnapshotQuery};
 pub use tenant_access_administration::{
