@@ -14,6 +14,7 @@ mod protocol_package_catalog;
 mod relationship_repository;
 mod signal_binding_repository;
 mod tenant_access_administration;
+mod tenant_access_audit;
 mod tenant_access_policy;
 
 pub use accepted_message_log::{PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError};
@@ -35,6 +36,9 @@ pub use signal_binding_repository::PostgresSignalBindingRepository;
 use sqlx::migrate::Migrator;
 pub use tenant_access_administration::{
     PostgresTenantAccessAdministration, PostgresTenantAccessAdministrationError,
+};
+pub use tenant_access_audit::{
+    PostgresTenantAccessAuditRepository, PostgresTenantAccessAuditRepositoryError,
 };
 pub use tenant_access_policy::{PostgresTenantAccessPolicy, PostgresTenantAccessPolicyError};
 

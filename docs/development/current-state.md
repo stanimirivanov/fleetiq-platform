@@ -148,7 +148,9 @@ from that evidence. Each host-identified command atomically changes current
 grant state and appends immutable audit evidence containing its actors, action,
 operation, recorded time, and state effect. Exact retries return the original
 effect, different-content identity reuse is rejected, and concurrent commands
-are serialized per tenant.
+are serialized per tenant. The same exact authorization protects bounded,
+newest-first audit queries. Stable keyset cursors use recorded time and change
+identity, and repository tenant scope comes only from authorization evidence.
 
 Protected metadata application services now cover assets, immutable semantic
 definitions, revisioned relationships, communication devices, and revisioned
@@ -163,9 +165,9 @@ implies the other.
 
 No external-identity administration, membership or role model, actor
 provisioning, administration transport, authentication middleware, protected
-route, or audit query API exists yet. The boundary defines how those later
-slices must enter protected application behavior without treating a
-caller-supplied tenant identifier as a grant.
+route, or audit HTTP API exists yet. The boundary defines how those later slices
+must enter protected application behavior without treating a caller-supplied
+tenant identifier as a grant.
 
 There is no business API, authentication provider, authorization administration
 API, message broker, object archive, cache, production deployment manifest, or

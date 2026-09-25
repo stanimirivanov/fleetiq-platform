@@ -22,6 +22,7 @@ mod repository;
 mod signal_binding_repository;
 mod signal_binding_service;
 mod tenant_access_administration;
+mod tenant_access_audit;
 
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
@@ -65,4 +66,9 @@ pub use tenant_access_administration::{
     TenantAccessAdministration, TenantAccessAdministrationError,
     TenantAccessAdministrationRepository, TenantAccessChange, TenantAccessChangeEffect,
     TenantAccessChangeKind, TenantAccessChangeOutcome, TenantAccessChangeRequest,
+};
+pub use tenant_access_audit::{
+    TenantAccessAudit, TenantAccessAuditCursor, TenantAccessAuditEntry, TenantAccessAuditError,
+    TenantAccessAuditPage, TenantAccessAuditPageSize, TenantAccessAuditPageSizeError,
+    TenantAccessAuditQuery, TenantAccessAuditRepository,
 };
