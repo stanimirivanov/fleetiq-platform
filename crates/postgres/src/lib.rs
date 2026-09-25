@@ -4,6 +4,7 @@
 //! return validated domain values through application-owned repository ports.
 
 mod accepted_message_log;
+mod actor_identity_resolver;
 mod asset_repository;
 mod decoded_observation_log;
 mod definition_repository;
@@ -16,6 +17,9 @@ mod tenant_access_administration;
 mod tenant_access_policy;
 
 pub use accepted_message_log::{PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError};
+pub use actor_identity_resolver::{
+    PostgresActorIdentityResolver, PostgresActorIdentityResolverError,
+};
 pub use asset_repository::PostgresAssetRepository;
 pub use decoded_observation_log::{
     PostgresDecodedObservationLog, PostgresDecodedObservationLogError,

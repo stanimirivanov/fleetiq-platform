@@ -3,7 +3,8 @@
 ## TL;DR
 
 - The repository includes the first runnable backend composition root and a
-  provider-neutral, PostgreSQL-backed tenant authorization boundary. Asset,
+  provider-neutral, PostgreSQL-backed identity and tenant authorization
+  boundary. Asset,
   semantic-definition, relationship, communication-device, and signal-binding
   operations now consume exact authorization evidence, but there is no product
   or administrative API.
@@ -135,6 +136,12 @@ require valid existing actors and tenants, reject unknown actions, and prevent
 duplicate grants. Integration tests cover actor, tenant, and action isolation,
 revocation, vocabulary alignment, and durable constraints.
 
+External identities use an exact trusted-authority and opaque-subject key that
+resolves to one stable internal actor. Subjects remain case-sensitive and are
+never normalized. One actor may have multiple mappings, but mapping existence
+grants no tenant action. Credential validation and mapping administration are
+not implemented.
+
 The application can grant or revoke an exact tenant action only with consumed
 `ManageAccess` authorization evidence. Tenant and administrator identity come
 from that evidence. Each host-identified command atomically changes current
@@ -154,11 +161,11 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-No external-identity mapping, membership or role model, actor provisioning,
-administration transport, authentication middleware, protected route, or audit
-query API exists yet. The boundary defines how those later slices must enter
-protected application behavior without treating a caller-supplied tenant
-identifier as a grant.
+No external-identity administration, membership or role model, actor
+provisioning, administration transport, authentication middleware, protected
+route, or audit query API exists yet. The boundary defines how those later
+slices must enter protected application behavior without treating a
+caller-supplied tenant identifier as a grant.
 
 There is no business API, authentication provider, authorization administration
 API, message broker, object archive, cache, production deployment manifest, or
