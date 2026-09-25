@@ -4,6 +4,7 @@
 //! contracts without exposing database or transport types to domain code.
 
 mod accepted_message_log;
+mod actor_identity_resolver;
 mod asset_service;
 mod authorization;
 mod decoded_observation_log;
@@ -25,6 +26,7 @@ mod tenant_access_administration;
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
 };
+pub use actor_identity_resolver::ActorIdentityResolver;
 pub use asset_service::{AssetApplicationError, AssetApplicationService};
 pub use authorization::{
     AccessDecision, AuthorizedTenantAction, TenantAccessPolicy, TenantAccessRequest, TenantAction,

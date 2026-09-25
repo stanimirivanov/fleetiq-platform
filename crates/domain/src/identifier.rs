@@ -11,6 +11,15 @@ const MAX_IDENTIFIER_LENGTH: usize = 128;
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ActorId(String);
 
+/// Identifies one trusted external authentication authority configuration.
+///
+/// This is a stable `FleetIQ` configuration identity, such as `workforce-oidc`,
+/// rather than a display name or an unvalidated token issuer supplied by a
+/// caller. The authentication adapter determines which authority successfully
+/// authenticated the external subject.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct IdentityAuthorityId(String);
+
 /// Identifies one idempotent tenant access administration command.
 ///
 /// The identifier is scoped by tenant in persistence. Retrying the same command
@@ -201,6 +210,7 @@ macro_rules! domain_identifier {
 
 domain_identifier!(TenantId);
 domain_identifier!(ActorId);
+domain_identifier!(IdentityAuthorityId);
 domain_identifier!(TenantAccessChangeId);
 domain_identifier!(AssetId);
 domain_identifier!(AssetRelationshipId);
