@@ -19,6 +19,7 @@ mod relationship_repository;
 mod relationship_service;
 mod repository;
 mod signal_binding_repository;
+mod signal_binding_service;
 mod tenant_access_administration;
 
 pub use accepted_message_log::{
@@ -57,6 +58,7 @@ pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQu
 pub use relationship_service::{RelationshipApplicationError, RelationshipApplicationService};
 pub use repository::AssetRepository;
 pub use signal_binding_repository::{SignalBindingRepository, SignalBindingSnapshotQuery};
+pub use signal_binding_service::{SignalBindingApplicationError, SignalBindingApplicationService};
 pub use tenant_access_administration::{
     TenantAccessAdministration, TenantAccessAdministrationError,
     TenantAccessAdministrationRepository, TenantAccessChange, TenantAccessChangeEffect,
