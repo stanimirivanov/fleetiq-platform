@@ -10,6 +10,7 @@ mod decoded_observation_log;
 mod definition_repository;
 mod definition_service;
 mod device_repository;
+mod device_service;
 mod frame_acceptance;
 mod live;
 mod observation_persistence;
@@ -35,6 +36,7 @@ pub use decoded_observation_log::{
 pub use definition_repository::DefinitionRepository;
 pub use definition_service::{DefinitionApplicationError, DefinitionApplicationService};
 pub use device_repository::DeviceRepository;
+pub use device_service::{DeviceApplicationError, DeviceApplicationService};
 pub use frame_acceptance::{
     DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,
     PreparedFrameAcceptance,
