@@ -4,9 +4,9 @@
 
 - The repository includes the first runnable backend composition root and a
   provider-neutral, PostgreSQL-backed tenant authorization boundary. Asset,
-  semantic-definition, relationship, and communication-device operations now
-  consume exact authorization evidence, but there is no product or
-  administrative API.
+  semantic-definition, relationship, communication-device, and signal-binding
+  operations now consume exact authorization evidence, but there is no product
+  or administrative API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -144,14 +144,15 @@ effect, different-content identity reuse is rejected, and concurrent commands
 are serialized per tenant.
 
 Protected metadata application services now cover assets, immutable semantic
-definitions, revisioned relationships, and communication devices. Asset and
-device registration and relationship revision append consume exact
-`ManageMetadata` evidence and reject aggregates owned by another tenant before
-persistence. Definition publication derives its tenant from the same evidence
-because definitions do not carry tenant identity. Asset, definition,
-relationship, graph-snapshot, and device lookup consume exact `ReadMetadata`
-evidence and derive repository tenant scope from that evidence, so callers
-cannot independently select a tenant. Neither action implies the other.
+definitions, revisioned relationships, communication devices, and revisioned
+signal bindings. Asset and device registration plus relationship and binding
+revision append consume exact `ManageMetadata` evidence and reject aggregates
+owned by another tenant before persistence. Definition publication derives its
+tenant from the same evidence because definitions do not carry tenant identity.
+Asset, definition, relationship, graph-snapshot, device, and binding lookup
+consume exact `ReadMetadata` evidence and derive repository tenant scope from
+that evidence, so callers cannot independently select a tenant. Neither action
+implies the other.
 
 No external-identity mapping, membership or role model, actor provisioning,
 administration transport, authentication middleware, protected route, or audit
