@@ -16,6 +16,7 @@ mod device_service;
 mod frame_acceptance;
 mod live;
 mod observation_persistence;
+mod platform_authorization;
 mod protocol_package_catalog;
 mod relationship_repository;
 mod relationship_service;
@@ -58,6 +59,10 @@ pub use live::{
 pub use observation_persistence::{
     DurablyPersistedFrame, ObservationPersistenceError, ObservationPersistencePreparationError,
     PendingObservationPersistence,
+};
+pub use platform_authorization::{
+    AuthorizedPlatformAction, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
+    PlatformAuthorizationError, PlatformAuthorizationService,
 };
 pub use protocol_package_catalog::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,

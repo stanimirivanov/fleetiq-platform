@@ -18,6 +18,8 @@
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
   `/api/v1`; protected business resources are not exposed yet.
+- Exact platform authorization for tenant provisioning is distinct from
+  tenant-scoped access, but the provisioning command is not implemented yet.
 - Business APIs, identity-provider integration, authorization administration
   APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
@@ -139,6 +141,13 @@ so a deleted grant affects the next decision without cache delay. Constraints
 require valid existing actors and tenants, reject unknown actions, and prevent
 duplicate grants. Integration tests cover actor, tenant, and action isolation,
 revocation, vocabulary alignment, and durable constraints.
+
+Tenant provisioning uses a separate platform authorization scope because no
+tenant exists before provisioning succeeds. PostgreSQL persists the exact
+`(actor_id, tenant.provision)` grant, and current-state policy evaluation makes
+revocation effective on the next decision. Platform grants and tenant grants
+do not imply one another. Tenant provisioning, platform grant administration,
+its immutable audit, and initial operator bootstrap remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
