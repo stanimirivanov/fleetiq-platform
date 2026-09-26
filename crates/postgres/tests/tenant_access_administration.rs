@@ -14,6 +14,8 @@ use fleetiq_postgres::{
 };
 use sqlx::PgPool;
 
+mod support;
+
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn grant_revoke_and_exact_retry_are_atomic_and_audited(
     pool: PgPool,
@@ -98,7 +100,11 @@ async fn non_administrative_authorization_cannot_mutate_or_audit(
     seed_grant(&pool, "actor-admin", "metadata.read").await?;
     let read_authorization =
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
-            .authorize(access_request("actor-admin", TenantAction::ReadMetadata))
+            .authorize(
+                support::authenticated_actor("actor-admin").await,
+                TenantId::new("tenant-a")?,
+                TenantAction::ReadMetadata,
+            )
             .await?;
     let administration =
         TenantAccessAdministration::new(PostgresTenantAccessAdministration::new(pool.clone()));
@@ -264,19 +270,12 @@ async fn manage_access(
 ) -> Result<fleetiq_application::AuthorizedTenantAction, Box<dyn Error>> {
     Ok(
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
-            .authorize(access_request("actor-admin", TenantAction::ManageAccess))
+            .authorize(
+                support::authenticated_actor("actor-admin").await,
+                TenantId::new("tenant-a")?,
+                TenantAction::ManageAccess,
+            )
             .await?,
-    )
-}
-
-fn access_request(
-    actor_id: &str,
-    action: TenantAction,
-) -> fleetiq_application::TenantAccessRequest {
-    fleetiq_application::TenantAccessRequest::new(
-        ActorId::new(actor_id).expect("test actor ID is valid"),
-        TenantId::new("tenant-a").expect("test tenant ID is valid"),
-        action,
     )
 }
 

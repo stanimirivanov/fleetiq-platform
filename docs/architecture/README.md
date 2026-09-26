@@ -167,6 +167,7 @@ current-system map; do not copy chronological decision history into it.
 - [Persisted tenant action grant decision](../adr/0043-persist-exact-tenant-action-grants.md)
 - [Audited tenant grant administration decision](../adr/0044-administer-tenant-grants-with-atomic-audit.md)
 - [External identity mapping decision](../adr/0046-map-external-identities-to-internal-actors.md)
+- [Authenticated authorization input decision](../adr/0047-require-authenticated-actor-evidence-for-authorization.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)

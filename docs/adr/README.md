@@ -44,6 +44,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0044](0044-administer-tenant-grants-with-atomic-audit.md) | Authorized idempotent grant administration with atomic immutable audit |
 | [0045](0045-handle-all-accepted-message-unique-arbiters.md) | Accepted-message idempotency across every unique arbiter |
 | [0046](0046-map-external-identities-to-internal-actors.md) | Exact external identity mapping to stable internal actors |
+| [0047](0047-require-authenticated-actor-evidence-for-authorization.md) | Authenticated actor evidence required by tenant authorization |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

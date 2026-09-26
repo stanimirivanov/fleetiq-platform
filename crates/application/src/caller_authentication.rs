@@ -42,6 +42,11 @@ pub struct AuthenticatedActor {
 }
 
 impl AuthenticatedActor {
+    #[cfg(test)]
+    pub(crate) const fn from_trusted_actor_id(actor_id: ActorId) -> Self {
+        Self { actor_id }
+    }
+
     /// Returns the stable internal actor identity.
     pub const fn actor_id(&self) -> &ActorId {
         &self.actor_id

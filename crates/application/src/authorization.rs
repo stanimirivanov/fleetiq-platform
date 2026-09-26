@@ -2,6 +2,8 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, TenantId};
 
+use crate::AuthenticatedActor;
+
 /// Identifies the protected tenant operation for an authorization decision.
 ///
 /// The initial actions form a small application-level vocabulary. Transport
@@ -32,8 +34,7 @@ pub struct TenantAccessRequest {
 }
 
 impl TenantAccessRequest {
-    /// Creates an authorization request from explicit actor, tenant, and action.
-    pub const fn new(actor_id: ActorId, tenant_id: TenantId, action: TenantAction) -> Self {
+    const fn new(actor_id: ActorId, tenant_id: TenantId, action: TenantAction) -> Self {
         Self {
             actor_id,
             tenant_id,
@@ -134,7 +135,7 @@ impl<P> TenantAuthorizationService<P>
 where
     P: TenantAccessPolicy,
 {
-    /// Authorizes one exact actor, tenant, and action tuple.
+    /// Authorizes one authenticated actor for an exact tenant and action.
     ///
     /// Call this for every protected operation. Both explicit policy denial and
     /// policy evaluation failure prevent creation of authorization evidence.
@@ -146,8 +147,11 @@ where
     /// evaluated.
     pub async fn authorize(
         &self,
-        request: TenantAccessRequest,
+        actor: AuthenticatedActor,
+        tenant_id: TenantId,
+        action: TenantAction,
     ) -> Result<AuthorizedTenantAction, TenantAuthorizationError<P::Error>> {
+        let request = TenantAccessRequest::new(actor.into_actor_id(), tenant_id, action);
         match self.policy.evaluate(&request).await {
             Ok(AccessDecision::Allow) => Ok(AuthorizedTenantAction { request }),
             Ok(AccessDecision::Deny) => Err(TenantAuthorizationError::Denied),
@@ -243,7 +247,11 @@ mod tests {
         });
 
         let authorization = service
-            .authorize(granted)
+            .authorize(
+                authenticated_actor("actor-a"),
+                TenantId::new("tenant-a").expect("tenant ID should be valid"),
+                TenantAction::ManageMetadata,
+            )
             .await
             .expect("exact request should be authorized");
 
@@ -259,7 +267,11 @@ mod tests {
         });
 
         let error = service
-            .authorize(request("actor-a", "tenant-b", TenantAction::ReadMetadata))
+            .authorize(
+                authenticated_actor("actor-a"),
+                TenantId::new("tenant-b").expect("tenant ID should be valid"),
+                TenantAction::ReadMetadata,
+            )
             .await
             .expect_err("tenant selection must not imply authorization");
 
@@ -273,7 +285,11 @@ mod tests {
         });
 
         let error = service
-            .authorize(request("actor-b", "tenant-a", TenantAction::ReadMetadata))
+            .authorize(
+                authenticated_actor("actor-b"),
+                TenantId::new("tenant-a").expect("tenant ID should be valid"),
+                TenantAction::ReadMetadata,
+            )
             .await
             .expect_err("one actor's grant must not authorize another actor");
 
@@ -287,7 +303,11 @@ mod tests {
         });
 
         let error = service
-            .authorize(request("actor-a", "tenant-a", TenantAction::ManageMetadata))
+            .authorize(
+                authenticated_actor("actor-a"),
+                TenantId::new("tenant-a").expect("tenant ID should be valid"),
+                TenantAction::ManageMetadata,
+            )
             .await
             .expect_err("one action grant must not imply another");
 
@@ -299,7 +319,11 @@ mod tests {
         let service = TenantAuthorizationService::new(FailingPolicy);
 
         let error = service
-            .authorize(request("actor-a", "tenant-a", TenantAction::ReadMetadata))
+            .authorize(
+                authenticated_actor("actor-a"),
+                TenantId::new("tenant-a").expect("tenant ID should be valid"),
+                TenantAction::ReadMetadata,
+            )
             .await
             .expect_err("policy failure must not authorize access");
 
@@ -315,6 +339,12 @@ mod tests {
             ActorId::new(actor).expect("actor ID should be valid"),
             TenantId::new(tenant).expect("tenant ID should be valid"),
             action,
+        )
+    }
+
+    fn authenticated_actor(actor: &str) -> AuthenticatedActor {
+        AuthenticatedActor::from_trusted_actor_id(
+            ActorId::new(actor).expect("actor ID should be valid"),
         )
     }
 }

@@ -143,7 +143,9 @@ grants no tenant action. A provider-neutral application service now requires a
 credential-specific authenticator to validate credentials before resolving the
 external identity and producing typed authenticated-actor evidence. Rejected
 credentials never reach identity resolution, and valid but unregistered
-principals fail closed.
+principals fail closed. Tenant authorization consumes that evidence and builds
+its policy request internally, so a bare or caller-supplied actor identifier
+cannot enter the public authorization API.
 
 The application can grant or revoke an exact tenant action only with consumed
 `ManageAccess` authorization evidence. Tenant and administrator identity come

@@ -9,7 +9,7 @@ use std::{
 use fleetiq_domain::{ActorId, TenantId};
 
 use crate::{
-    AccessDecision, TenantAccessPolicy, TenantAccessRequest, TenantAction,
+    AccessDecision, AuthenticatedActor, TenantAccessPolicy, TenantAccessRequest, TenantAction,
     TenantAuthorizationService,
 };
 
@@ -177,11 +177,13 @@ fn query() -> TenantAccessAuditQuery {
 
 async fn authorization(tenant: &str, action: TenantAction) -> crate::AuthorizedTenantAction {
     TenantAuthorizationService::new(AllowAllPolicy)
-        .authorize(TenantAccessRequest::new(
-            ActorId::new("actor-admin").expect("valid actor ID"),
+        .authorize(
+            AuthenticatedActor::from_trusted_actor_id(
+                ActorId::new("actor-admin").expect("valid actor ID"),
+            ),
             TenantId::new(tenant).expect("valid tenant ID"),
             action,
-        ))
+        )
         .await
         .expect("test policy should authorize request")
 }

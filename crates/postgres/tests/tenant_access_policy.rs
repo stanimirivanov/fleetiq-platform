@@ -2,13 +2,12 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    AccessDecision, TenantAccessPolicy, TenantAccessRequest, TenantAction,
-    TenantAuthorizationError, TenantAuthorizationService,
-};
-use fleetiq_domain::{ActorId, TenantId};
+use fleetiq_application::{TenantAction, TenantAuthorizationError, TenantAuthorizationService};
+use fleetiq_domain::TenantId;
 use fleetiq_postgres::PostgresTenantAccessPolicy;
 use sqlx::PgPool;
+
+mod support;
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn exact_grant_authorizes_only_its_tuple_and_revocation_is_immediate(
@@ -23,19 +22,31 @@ async fn exact_grant_authorizes_only_its_tuple_and_revocation_is_immediate(
     let policy = PostgresTenantAccessPolicy::new(pool.clone());
     let service = TenantAuthorizationService::new(policy.clone());
     let authorization = service
-        .authorize(request("actor-a", "tenant-a", TenantAction::ReadMetadata))
+        .authorize(
+            support::authenticated_actor("actor-a").await,
+            tenant_id("tenant-a"),
+            TenantAction::ReadMetadata,
+        )
         .await?;
 
     assert_eq!(authorization.actor_id().as_str(), "actor-a");
     assert_eq!(authorization.tenant_id().as_str(), "tenant-a");
     assert_eq!(authorization.action(), TenantAction::ReadMetadata);
 
-    for denied in [
-        request("actor-b", "tenant-a", TenantAction::ReadMetadata),
-        request("actor-a", "tenant-b", TenantAction::ReadMetadata),
-        request("actor-a", "tenant-a", TenantAction::ManageMetadata),
+    for (actor, tenant, action) in [
+        ("actor-b", "tenant-a", TenantAction::ReadMetadata),
+        ("actor-a", "tenant-b", TenantAction::ReadMetadata),
+        ("actor-a", "tenant-a", TenantAction::ManageMetadata),
     ] {
-        assert_eq!(policy.evaluate(&denied).await?, AccessDecision::Deny);
+        let error = service
+            .authorize(
+                support::authenticated_actor(actor).await,
+                tenant_id(tenant),
+                action,
+            )
+            .await
+            .expect_err("an unmatched tuple must be denied");
+        assert!(matches!(error, TenantAuthorizationError::Denied));
     }
 
     sqlx::query(
@@ -49,7 +60,11 @@ async fn exact_grant_authorizes_only_its_tuple_and_revocation_is_immediate(
     .await?;
 
     let error = service
-        .authorize(request("actor-a", "tenant-a", TenantAction::ReadMetadata))
+        .authorize(
+            support::authenticated_actor("actor-a").await,
+            tenant_id("tenant-a"),
+            TenantAction::ReadMetadata,
+        )
         .await
         .expect_err("a deleted grant must stop authorizing the next operation");
     assert!(matches!(error, TenantAuthorizationError::Denied));
@@ -67,18 +82,20 @@ async fn every_application_action_matches_the_persisted_vocabulary(
         seed_grant(&pool, "tenant-a", "actor-a", action).await?;
     }
 
-    let policy = PostgresTenantAccessPolicy::new(pool);
+    let service = TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool));
     for action in [
         TenantAction::ReadMetadata,
         TenantAction::ManageMetadata,
         TenantAction::ManageAccess,
     ] {
-        assert_eq!(
-            policy
-                .evaluate(&request("actor-a", "tenant-a", action))
-                .await?,
-            AccessDecision::Allow
-        );
+        let authorization = service
+            .authorize(
+                support::authenticated_actor("actor-a").await,
+                tenant_id("tenant-a"),
+                action,
+            )
+            .await?;
+        assert_eq!(authorization.action(), action);
     }
     Ok(())
 }
@@ -154,12 +171,8 @@ async fn seed_grant(
     Ok(())
 }
 
-fn request(actor: &str, tenant: &str, action: TenantAction) -> TenantAccessRequest {
-    TenantAccessRequest::new(
-        ActorId::new(actor).expect("test actor ID is valid"),
-        TenantId::new(tenant).expect("test tenant ID is valid"),
-        action,
-    )
+fn tenant_id(value: &str) -> TenantId {
+    TenantId::new(value).expect("test tenant ID is valid")
 }
 
 fn assert_constraint(error: &sqlx::Error, expected: &str) {

@@ -12,8 +12,8 @@ use fleetiq_domain::{
 };
 
 use crate::{
-    AccessDecision, AuthorizedTenantAction, DeviceRepository, TenantAccessPolicy,
-    TenantAccessRequest, TenantAction, TenantAuthorizationService,
+    AccessDecision, AuthenticatedActor, AuthorizedTenantAction, DeviceRepository,
+    TenantAccessPolicy, TenantAccessRequest, TenantAction, TenantAuthorizationService,
 };
 
 use super::{DeviceApplicationError, DeviceApplicationService};
@@ -229,11 +229,13 @@ async fn read_authorization(tenant: &str) -> AuthorizedTenantAction {
 
 async fn authorization(tenant: &str, action: TenantAction) -> AuthorizedTenantAction {
     TenantAuthorizationService::new(AllowAllPolicy)
-        .authorize(TenantAccessRequest::new(
-            ActorId::new("actor-a").expect("valid actor ID"),
+        .authorize(
+            AuthenticatedActor::from_trusted_actor_id(
+                ActorId::new("actor-a").expect("valid actor ID"),
+            ),
             tenant_id(tenant),
             action,
-        ))
+        )
         .await
         .expect("test policy should authorize request")
 }
