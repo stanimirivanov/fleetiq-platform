@@ -17,6 +17,7 @@ mod frame_acceptance;
 mod live;
 mod observation_persistence;
 mod platform_authorization;
+mod platform_bootstrap;
 mod protocol_package_catalog;
 mod relationship_repository;
 mod relationship_service;
@@ -64,6 +65,10 @@ pub use observation_persistence::{
 pub use platform_authorization::{
     AuthorizedPlatformAction, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
     PlatformAuthorizationError, PlatformAuthorizationService,
+};
+pub use platform_bootstrap::{
+    PlatformBootstrapError, PlatformBootstrapOutcome, PlatformBootstrapRepository,
+    PlatformBootstrapRequest, PlatformBootstrapService,
 };
 pub use protocol_package_catalog::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,

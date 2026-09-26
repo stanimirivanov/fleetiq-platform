@@ -48,6 +48,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0048](0048-establish-versioned-http-api-boundary.md) | Versioned HTTP discovery and bounded problem details |
 | [0049](0049-separate-platform-from-tenant-authorization.md) | Exact platform authorization distinct from tenant access |
 | [0050](0050-provision-tenants-atomically-with-initial-access.md) | Atomic tenant, initial access, and immutable provisioning audit |
+| [0051](0051-bootstrap-the-first-platform-operator-once.md) | One-time atomic establishment of the first platform operator |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT actor_id, authority_id, subject\n                FROM identity.platform_bootstrap\n                WHERE singleton = TRUE\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.platform_bootstrap",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "authority_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.platform_bootstrap",
+            "name": "authority_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "subject",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.platform_bootstrap",
+            "name": "subject"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "eb8e0c076f3851272636200a11fd617825dd049399365703ff4d367f8b8dfd5f"
+}
