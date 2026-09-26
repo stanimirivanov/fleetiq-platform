@@ -11,6 +11,7 @@ mod definition_repository;
 mod device_repository;
 mod error;
 mod platform_access_policy;
+mod platform_bootstrap;
 mod protocol_package_catalog;
 mod relationship_repository;
 mod signal_binding_repository;
@@ -31,6 +32,7 @@ pub use definition_repository::PostgresDefinitionRepository;
 pub use device_repository::PostgresDeviceRepository;
 pub use error::PostgresRepositoryError;
 pub use platform_access_policy::{PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError};
+pub use platform_bootstrap::{PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
 pub use protocol_package_catalog::{
     PostgresProtocolPackageCatalog, PostgresProtocolPackageCatalogError,
 };

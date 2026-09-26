@@ -21,6 +21,8 @@
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
+- A one-time atomic bootstrap establishes the first platform operator, exact
+  external identity, tenant-provisioning grant, and immutable root audit fact.
 - Business APIs, identity-provider integration, authorization administration
   APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
@@ -156,8 +158,16 @@ actor `metadata.read`, `metadata.manage`, and `access.manage`. Host-assigned
 provisioning identity and tenant identity are both unique arbiters. Exact
 retries return the durable outcome; changed content is a collision; concurrent
 exact commands have one winner; and any failed reference rolls back every row.
-Platform grant administration, actor provisioning, tenant lifecycle, and
-initial operator bootstrap remain planned.
+The initial platform operator can be established once through a separate
+unauthorized bootstrap boundary. One transaction claims an immutable singleton
+record, creates the actor and exact external-identity mapping, and grants only
+`tenant.provision`. Exact actor and identity retries resolve safely, including
+under concurrency; another bootstrap identity is rejected; and dependent-write
+failure rolls back the claim. No HTTP, CLI, or deployment-job adapter invokes
+this capability yet.
+
+Platform grant administration, general actor provisioning, and tenant lifecycle
+remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
@@ -191,7 +201,7 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-No concrete authentication provider, external-identity administration,
+No concrete authentication provider, bootstrap transport, external-identity administration,
 membership or role model, actor provisioning, administration transport,
 authentication middleware, protected route, or audit HTTP API exists yet. The
 boundary defines how those later slices must enter protected application
