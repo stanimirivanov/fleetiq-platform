@@ -9,6 +9,8 @@ rust-version.workspace = true
 
 [dependencies]
 axum.workspace = true
+fleetiq-application = { path = "../application" }
+fleetiq-domain = { path = "../domain" }
 fleetiq-postgres = { path = "../postgres" }
 serde.workspace = true
 sqlx.workspace = true

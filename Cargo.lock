@@ -666,6 +666,8 @@ name = "fleetiq-server"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "fleetiq-application",
+ "fleetiq-domain",
  "fleetiq-postgres",
  "serde",
  "sqlx",

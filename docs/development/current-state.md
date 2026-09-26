@@ -22,7 +22,8 @@
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
 - A one-time atomic bootstrap establishes the first platform operator, exact
-  external identity, tenant-provisioning grant, and immutable root audit fact.
+  external identity, tenant-provisioning grant, and immutable root audit fact;
+  an explicit one-shot process command invokes it without opening an HTTP route.
 - Business APIs, identity-provider integration, authorization administration
   APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
@@ -163,8 +164,10 @@ unauthorized bootstrap boundary. One transaction claims an immutable singleton
 record, creates the actor and exact external-identity mapping, and grants only
 `tenant.provision`. Exact actor and identity retries resolve safely, including
 under concurrency; another bootstrap identity is rejected; and dependent-write
-failure rolls back the claim. No HTTP, CLI, or deployment-job adapter invokes
-this capability yet.
+failure rolls back the claim. The `bootstrap-platform-operator` process command
+validates dedicated environment values, applies migrations, invokes this
+capability without binding an HTTP listener, prints only its disposition, and
+exits. No HTTP or deployment-job adapter invokes bootstrap.
 
 Platform grant administration, general actor provisioning, and tenant lifecycle
 remain planned.
@@ -201,7 +204,7 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-No concrete authentication provider, bootstrap transport, external-identity administration,
+No concrete authentication provider, external-identity administration,
 membership or role model, actor provisioning, administration transport,
 authentication middleware, protected route, or audit HTTP API exists yet. The
 boundary defines how those later slices must enter protected application

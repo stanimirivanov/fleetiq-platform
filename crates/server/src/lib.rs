@@ -4,6 +4,8 @@
 //! transport binding, and graceful shutdown. Business routes will be composed
 //! here as independently authorized application capabilities are implemented.
 
+mod bootstrap;
+mod command;
 mod config;
 mod health;
 mod http_api;
@@ -11,6 +13,11 @@ mod http_api;
 use std::{error::Error, fmt, io};
 
 use axum::Router;
+pub use bootstrap::{
+    PlatformBootstrapCommandError, PlatformBootstrapConfig, PlatformBootstrapConfigError,
+    bootstrap_platform_operator,
+};
+pub use command::{ProcessCommand, ProcessCommandError};
 pub use config::{ServerConfig, ServerConfigError};
 use fleetiq_postgres::MIGRATOR;
 pub use health::health_router;

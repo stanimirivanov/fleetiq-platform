@@ -172,6 +172,7 @@ current-system map; do not copy chronological decision history into it.
 - [Platform authorization scope decision](../adr/0049-separate-platform-from-tenant-authorization.md)
 - [Atomic tenant provisioning decision](../adr/0050-provision-tenants-atomically-with-initial-access.md)
 - [One-time platform bootstrap decision](../adr/0051-bootstrap-the-first-platform-operator-once.md)
+- [Explicit bootstrap command decision](../adr/0052-invoke-bootstrap-through-an-explicit-process-command.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
