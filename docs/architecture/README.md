@@ -170,6 +170,7 @@ current-system map; do not copy chronological decision history into it.
 - [Authenticated authorization input decision](../adr/0047-require-authenticated-actor-evidence-for-authorization.md)
 - [Versioned HTTP API boundary decision](../adr/0048-establish-versioned-http-api-boundary.md)
 - [Platform authorization scope decision](../adr/0049-separate-platform-from-tenant-authorization.md)
+- [Atomic tenant provisioning decision](../adr/0050-provision-tenants-atomically-with-initial-access.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)

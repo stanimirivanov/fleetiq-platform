@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO identity.tenant_action_grants (tenant_id, actor_id, action)\n            VALUES\n                ($1, $2, 'metadata.read'),\n                ($1, $2, 'metadata.manage'),\n                ($1, $2, 'access.manage')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5b727ea1dd76d70430027a1dc055ba4feba9bc473fac56dba23a6d0da3395006"
+}

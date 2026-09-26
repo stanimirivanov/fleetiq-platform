@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO identity.tenant_provisionings\n                (provisioning_id, tenant_id, provisioner_actor_id,\n                 initial_administrator_actor_id, recorded_at_ms)\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f09aeddbd4054261c4edf2d8901eead54c6f551dc5aa5a2c6862b518c4c7345c"
+}
