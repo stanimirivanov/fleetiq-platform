@@ -139,8 +139,11 @@ revocation, vocabulary alignment, and durable constraints.
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
 never normalized. One actor may have multiple mappings, but mapping existence
-grants no tenant action. Credential validation and mapping administration are
-not implemented.
+grants no tenant action. A provider-neutral application service now requires a
+credential-specific authenticator to validate credentials before resolving the
+external identity and producing typed authenticated-actor evidence. Rejected
+credentials never reach identity resolution, and valid but unregistered
+principals fail closed.
 
 The application can grant or revoke an exact tenant action only with consumed
 `ManageAccess` authorization evidence. Tenant and administrator identity come
@@ -163,11 +166,11 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-No external-identity administration, membership or role model, actor
-provisioning, administration transport, authentication middleware, protected
-route, or audit HTTP API exists yet. The boundary defines how those later slices
-must enter protected application behavior without treating a caller-supplied
-tenant identifier as a grant.
+No concrete authentication provider, external-identity administration,
+membership or role model, actor provisioning, administration transport,
+authentication middleware, protected route, or audit HTTP API exists yet. The
+boundary defines how those later slices must enter protected application
+behavior without treating caller-supplied actor or tenant identifiers as proof.
 
 There is no business API, authentication provider, authorization administration
 API, message broker, object archive, cache, production deployment manifest, or

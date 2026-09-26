@@ -7,6 +7,7 @@ mod accepted_message_log;
 mod actor_identity_resolver;
 mod asset_service;
 mod authorization;
+mod caller_authentication;
 mod decoded_observation_log;
 mod definition_repository;
 mod definition_service;
@@ -32,6 +33,10 @@ pub use asset_service::{AssetApplicationError, AssetApplicationService};
 pub use authorization::{
     AccessDecision, AuthorizedTenantAction, TenantAccessPolicy, TenantAccessRequest, TenantAction,
     TenantAuthorizationError, TenantAuthorizationService,
+};
+pub use caller_authentication::{
+    AuthenticatedActor, CallerAuthenticationError, CallerAuthenticationService,
+    ExternalIdentityAuthenticator,
 };
 pub use decoded_observation_log::{
     DecodedObservationAppendOutcome, DecodedObservationBatch, DecodedObservationBatchError,
