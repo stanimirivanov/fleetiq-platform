@@ -47,6 +47,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0047](0047-require-authenticated-actor-evidence-for-authorization.md) | Authenticated actor evidence required by tenant authorization |
 | [0048](0048-establish-versioned-http-api-boundary.md) | Versioned HTTP discovery and bounded problem details |
 | [0049](0049-separate-platform-from-tenant-authorization.md) | Exact platform authorization distinct from tenant access |
+| [0050](0050-provision-tenants-atomically-with-initial-access.md) | Atomic tenant, initial access, and immutable provisioning audit |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

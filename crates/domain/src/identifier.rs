@@ -28,6 +28,14 @@ pub struct IdentityAuthorityId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TenantAccessChangeId(String);
 
+/// Identifies one idempotent tenant provisioning command.
+///
+/// The identity is platform-scoped. An exact retry returns the original
+/// durable outcome, while reuse for another tenant or administrator is a
+/// collision.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TenantProvisioningId(String);
+
 /// Identifies the tenant that owns domain data.
 ///
 /// Tenant identity is explicit so application and persistence boundaries cannot
@@ -212,6 +220,7 @@ domain_identifier!(TenantId);
 domain_identifier!(ActorId);
 domain_identifier!(IdentityAuthorityId);
 domain_identifier!(TenantAccessChangeId);
+domain_identifier!(TenantProvisioningId);
 domain_identifier!(AssetId);
 domain_identifier!(AssetRelationshipId);
 domain_identifier!(DeviceEndpointId);

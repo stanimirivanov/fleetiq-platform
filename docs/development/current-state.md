@@ -18,8 +18,9 @@
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
   `/api/v1`; protected business resources are not exposed yet.
-- Exact platform authorization for tenant provisioning is distinct from
-  tenant-scoped access, but the provisioning command is not implemented yet.
+- Exact platform authorization is distinct from tenant-scoped access, and an
+  authorized command provisions a tenant, its initial access, and immutable
+  audit evidence atomically.
 - Business APIs, identity-provider integration, authorization administration
   APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
@@ -146,8 +147,17 @@ Tenant provisioning uses a separate platform authorization scope because no
 tenant exists before provisioning succeeds. PostgreSQL persists the exact
 `(actor_id, tenant.provision)` grant, and current-state policy evaluation makes
 revocation effective on the next decision. Platform grants and tenant grants
-do not imply one another. Tenant provisioning, platform grant administration,
-its immutable audit, and initial operator bootstrap remain planned.
+do not imply one another.
+
+The provisioning service consumes exact platform evidence and derives the
+provisioner identity from it. One transaction records immutable provisioning
+evidence, creates the tenant, and grants the existing initial-administrator
+actor `metadata.read`, `metadata.manage`, and `access.manage`. Host-assigned
+provisioning identity and tenant identity are both unique arbiters. Exact
+retries return the durable outcome; changed content is a collision; concurrent
+exact commands have one winner; and any failed reference rolls back every row.
+Platform grant administration, actor provisioning, tenant lifecycle, and
+initial operator bootstrap remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
