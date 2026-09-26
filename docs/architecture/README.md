@@ -169,6 +169,7 @@ current-system map; do not copy chronological decision history into it.
 - [External identity mapping decision](../adr/0046-map-external-identities-to-internal-actors.md)
 - [Authenticated authorization input decision](../adr/0047-require-authenticated-actor-evidence-for-authorization.md)
 - [Versioned HTTP API boundary decision](../adr/0048-establish-versioned-http-api-boundary.md)
+- [Platform authorization scope decision](../adr/0049-separate-platform-from-tenant-authorization.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
