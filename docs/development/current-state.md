@@ -16,6 +16,8 @@
   their production workers and stores do not.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
+- The HTTP surface exposes version discovery and bounded problem details under
+  `/api/v1`; protected business resources are not exposed yet.
 - Business APIs, identity-provider integration, authorization administration
   APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
@@ -111,9 +113,11 @@ database-independent image builds while online checks remain authoritative.
 
 The `fleetiq-server` binary validates environment configuration, applies the
 embedded migration chain, exposes liveness and PostgreSQL-backed readiness
-probes, and shuts down gracefully after `Ctrl+C`. It is an operable development
-composition root, not a production deployment. Unix deployments also handle
-`SIGTERM`, which is the normal container stop signal.
+probes, identifies the version 1 HTTP contract, returns bounded problem details
+for unknown API resources and unsupported methods, and shuts down gracefully
+after `Ctrl+C`. It is an operable development composition root, not a production
+deployment. Unix deployments also handle `SIGTERM`, which is the normal
+container stop signal.
 
 The local Compose deployment builds that binary in a multi-stage image, waits
 for PostgreSQL readiness, publishes both services only on loopback, and runs the
@@ -174,10 +178,11 @@ authentication middleware, protected route, or audit HTTP API exists yet. The
 boundary defines how those later slices must enter protected application
 behavior without treating caller-supplied actor or tenant identifiers as proof.
 
-There is no business API, authentication provider, authorization administration
-API, message broker, object archive, cache, production deployment manifest, or
-service-level objective. Do not describe library contracts or local database
-defaults as production behavior.
+There is no protected business resource API, authentication provider,
+authorization administration API, message broker, object archive, cache,
+production deployment manifest, or service-level objective. Do not describe
+the version-discovery resource, library contracts, or local database defaults
+as production product behavior.
 
 ## Deliberate limitations
 

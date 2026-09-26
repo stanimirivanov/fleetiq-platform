@@ -45,6 +45,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0045](0045-handle-all-accepted-message-unique-arbiters.md) | Accepted-message idempotency across every unique arbiter |
 | [0046](0046-map-external-identities-to-internal-actors.md) | Exact external identity mapping to stable internal actors |
 | [0047](0047-require-authenticated-actor-evidence-for-authorization.md) | Authenticated actor evidence required by tenant authorization |
+| [0048](0048-establish-versioned-http-api-boundary.md) | Versioned HTTP discovery and bounded problem details |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

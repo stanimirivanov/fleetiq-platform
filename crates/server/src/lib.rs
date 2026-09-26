@@ -6,6 +6,7 @@
 
 mod config;
 mod health;
+mod http_api;
 
 use std::{error::Error, fmt, io};
 
@@ -13,6 +14,7 @@ use axum::Router;
 pub use config::{ServerConfig, ServerConfigError};
 use fleetiq_postgres::MIGRATOR;
 pub use health::health_router;
+pub use http_api::api_router;
 use sqlx::{PgPool, postgres::PgPoolOptions};
 use tokio::net::TcpListener;
 
@@ -46,7 +48,7 @@ pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
 }
 
 fn application_router(pool: PgPool) -> Router {
-    Router::new().merge(health_router(pool))
+    Router::new().merge(health_router(pool)).merge(api_router())
 }
 
 async fn shutdown_signal() {
