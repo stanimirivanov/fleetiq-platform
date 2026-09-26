@@ -36,6 +36,13 @@ rules, and ADRs for durable decisions. Rust API detail belongs in rustdoc.
 - [Security policy](../SECURITY.md) — private reporting and security-sensitive
   change expectations.
 
+## Operations
+
+- [Operations index](operations/README.md) — explicit installation and runtime
+  procedures.
+- [Platform bootstrap](operations/platform-bootstrap.md) — establish the first
+  platform operator through the one-shot process command.
+
 Crate-level API overviews live in each crate's `lib.rs` module documentation.
 Add a crate README only when the crate gains independent setup, configuration,
 operation, publication, or an external contributor workflow.
