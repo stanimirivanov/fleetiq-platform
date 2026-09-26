@@ -6,9 +6,11 @@ use fleetiq_application::{
     TenantAccessAudit, TenantAccessAuditPageSize, TenantAccessAuditQuery, TenantAccessChangeEffect,
     TenantAccessChangeKind, TenantAction, TenantAuthorizationService,
 };
-use fleetiq_domain::{ActorId, TenantId};
+use fleetiq_domain::TenantId;
 use fleetiq_postgres::{PostgresTenantAccessAuditRepository, PostgresTenantAccessPolicy};
 use sqlx::PgPool;
+
+mod support;
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn pages_are_deterministic_newest_first_and_tenant_scoped(
@@ -90,11 +92,11 @@ async fn manage_access(
 ) -> Result<fleetiq_application::AuthorizedTenantAction, Box<dyn Error>> {
     Ok(
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
-            .authorize(fleetiq_application::TenantAccessRequest::new(
-                ActorId::new("admin-a")?,
+            .authorize(
+                support::authenticated_actor("admin-a").await,
                 TenantId::new("tenant-a")?,
                 TenantAction::ManageAccess,
-            ))
+            )
             .await?,
     )
 }
