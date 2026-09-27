@@ -101,7 +101,9 @@ impl PlatformBootstrapRepository for PostgresPlatformBootstrap {
         sqlx::query!(
             r#"
             INSERT INTO identity.platform_action_grants (actor_id, action)
-            VALUES ($1, 'tenant.provision')
+            VALUES
+                ($1, 'identity.manage'),
+                ($1, 'tenant.provision')
             "#,
             request.actor_id().as_str(),
         )

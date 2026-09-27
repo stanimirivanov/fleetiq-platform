@@ -11,6 +11,8 @@ use crate::{AccessDecision, AuthenticatedActor};
 /// action requires exhaustive review by every policy adapter.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PlatformAction {
+    /// Create internal actors and bind their initial external identity.
+    ManageIdentity,
     /// Create a tenant and establish its initial administration state.
     ProvisionTenant,
 }
@@ -161,6 +163,7 @@ mod tests {
 
     struct ExactPolicy {
         actor_id: ActorId,
+        action: PlatformAction,
     }
 
     impl PlatformAccessPolicy for ExactPolicy {
@@ -171,9 +174,7 @@ mod tests {
             request: &'a PlatformAccessRequest,
         ) -> impl Future<Output = Result<AccessDecision, Self::Error>> + Send + 'a {
             ready(Ok(
-                if request.actor_id() == &self.actor_id
-                    && request.action() == PlatformAction::ProvisionTenant
-                {
+                if request.actor_id() == &self.actor_id && request.action() == self.action {
                     AccessDecision::Allow
                 } else {
                     AccessDecision::Deny
@@ -210,6 +211,7 @@ mod tests {
     async fn exact_grant_produces_matching_platform_evidence() {
         let service = PlatformAuthorizationService::new(ExactPolicy {
             actor_id: actor_id("actor-a"),
+            action: PlatformAction::ProvisionTenant,
         });
 
         let authorization = service
@@ -228,6 +230,7 @@ mod tests {
     async fn grant_for_one_actor_does_not_authorize_another_actor() {
         let service = PlatformAuthorizationService::new(ExactPolicy {
             actor_id: actor_id("actor-a"),
+            action: PlatformAction::ProvisionTenant,
         });
 
         let error = service

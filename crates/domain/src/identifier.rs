@@ -11,6 +11,14 @@ const MAX_IDENTIFIER_LENGTH: usize = 128;
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ActorId(String);
 
+/// Identifies one idempotent actor provisioning command.
+///
+/// The identity is platform-scoped. Exact retries resolve to the original
+/// durable operation, while reuse for another actor or external identity is a
+/// collision.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ActorProvisioningId(String);
+
 /// Identifies one trusted external authentication authority configuration.
 ///
 /// This is a stable `FleetIQ` configuration identity, such as `workforce-oidc`,
@@ -218,6 +226,7 @@ macro_rules! domain_identifier {
 
 domain_identifier!(TenantId);
 domain_identifier!(ActorId);
+domain_identifier!(ActorProvisioningId);
 domain_identifier!(IdentityAuthorityId);
 domain_identifier!(TenantAccessChangeId);
 domain_identifier!(TenantProvisioningId);

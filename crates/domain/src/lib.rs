@@ -25,10 +25,11 @@ pub use device::{
     DeviceEndpointNameError,
 };
 pub use identifier::{
-    ActorId, AssetId, AssetRelationshipId, AssetTypeId, DeviceEndpointId, DeviceEndpointKindId,
-    ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, IdentifierError,
-    IdentityAuthorityId, PropertyDefinitionId, RelationshipTypeId, SignalBindingId, SourceSignalId,
-    TenantAccessChangeId, TenantId, TenantProvisioningId, UnitId,
+    ActorId, ActorProvisioningId, AssetId, AssetRelationshipId, AssetTypeId, DeviceEndpointId,
+    DeviceEndpointKindId, ExternalIdentifierAuthority, ExternalIdentifierKind,
+    ExternalIdentifierValue, IdentifierError, IdentityAuthorityId, PropertyDefinitionId,
+    RelationshipTypeId, SignalBindingId, SourceSignalId, TenantAccessChangeId, TenantId,
+    TenantProvisioningId, UnitId,
 };
 pub use identity::{ExternalIdentity, ExternalIdentitySubject, ExternalIdentitySubjectError};
 pub use property_value::PropertyValue;

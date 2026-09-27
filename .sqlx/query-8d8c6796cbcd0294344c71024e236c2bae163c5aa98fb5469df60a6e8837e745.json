@@ -1,0 +1,91 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT provisioning_id, actor_id, authority_id, subject,\n                       provisioner_actor_id, recorded_at_ms\n                FROM identity.actor_provisionings\n                WHERE provisioning_id = $1\n                   OR actor_id = $2\n                   OR (authority_id = $3 AND subject = $4)\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "provisioning_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_provisionings",
+            "name": "provisioning_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_provisionings",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "authority_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_provisionings",
+            "name": "authority_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "subject",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_provisionings",
+            "name": "subject"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "provisioner_actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_provisionings",
+            "name": "provisioner_actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_provisionings",
+            "name": "recorded_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8d8c6796cbcd0294344c71024e236c2bae163c5aa98fb5469df60a6e8837e745"
+}
