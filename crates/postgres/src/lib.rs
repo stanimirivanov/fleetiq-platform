@@ -11,6 +11,7 @@ mod decoded_observation_log;
 mod definition_repository;
 mod device_repository;
 mod error;
+mod platform_access_administration;
 mod platform_access_policy;
 mod platform_bootstrap;
 mod protocol_package_catalog;
@@ -33,6 +34,9 @@ pub use decoded_observation_log::{
 pub use definition_repository::PostgresDefinitionRepository;
 pub use device_repository::PostgresDeviceRepository;
 pub use error::PostgresRepositoryError;
+pub use platform_access_administration::{
+    PostgresPlatformAccessAdministration, PostgresPlatformAccessAdministrationError,
+};
 pub use platform_access_policy::{PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError};
 pub use platform_bootstrap::{PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
 pub use protocol_package_catalog::{

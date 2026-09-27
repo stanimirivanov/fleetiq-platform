@@ -11,6 +11,8 @@ use crate::{AccessDecision, AuthenticatedActor};
 /// action requires exhaustive review by every policy adapter.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PlatformAction {
+    /// Grant or revoke exact platform actions with immutable audit evidence.
+    ManagePlatformAccess,
     /// Create internal actors and bind their initial external identity.
     ManageIdentity,
     /// Create a tenant and establish its initial administration state.

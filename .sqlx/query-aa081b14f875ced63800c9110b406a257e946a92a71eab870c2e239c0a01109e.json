@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                DELETE FROM identity.platform_action_grants\n                WHERE actor_id = $1 AND action = $2\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "aa081b14f875ced63800c9110b406a257e946a92a71eab870c2e239c0a01109e"
+}

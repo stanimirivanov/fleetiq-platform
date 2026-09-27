@@ -60,6 +60,7 @@ impl PlatformAccessPolicy for PostgresPlatformAccessPolicy {
 
 const fn action_name(action: PlatformAction) -> &'static str {
     match action {
+        PlatformAction::ManagePlatformAccess => "platform.access.manage",
         PlatformAction::ManageIdentity => "identity.manage",
         PlatformAction::ProvisionTenant => "tenant.provision",
     }

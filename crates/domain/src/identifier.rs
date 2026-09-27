@@ -19,6 +19,13 @@ pub struct ActorId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ActorProvisioningId(String);
 
+/// Identifies one idempotent platform access administration command.
+///
+/// The identity is platform-scoped. Exact retries resolve to the original
+/// durable operation, while reuse for different command content is a collision.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct PlatformAccessChangeId(String);
+
 /// Identifies one trusted external authentication authority configuration.
 ///
 /// This is a stable `FleetIQ` configuration identity, such as `workforce-oidc`,
@@ -227,6 +234,7 @@ macro_rules! domain_identifier {
 domain_identifier!(TenantId);
 domain_identifier!(ActorId);
 domain_identifier!(ActorProvisioningId);
+domain_identifier!(PlatformAccessChangeId);
 domain_identifier!(IdentityAuthorityId);
 domain_identifier!(TenantAccessChangeId);
 domain_identifier!(TenantProvisioningId);
