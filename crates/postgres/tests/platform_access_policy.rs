@@ -32,6 +32,15 @@ async fn exact_grant_authorizes_only_its_actor_and_revocation_is_immediate(
 
     let error = service
         .authorize(
+            support::authenticated_actor("actor-a").await,
+            PlatformAction::ManageIdentity,
+        )
+        .await
+        .expect_err("one platform action must not imply another");
+    assert!(matches!(error, PlatformAuthorizationError::Denied));
+
+    let error = service
+        .authorize(
             support::authenticated_actor("actor-b").await,
             PlatformAction::ProvisionTenant,
         )
@@ -67,7 +76,8 @@ async fn grants_require_existing_actors_exact_actions_and_unique_tuples(
         .expect_err("a platform grant must reference an existing actor");
     assert_constraint(&missing_actor, "fk_platform_action_grants_actor");
 
-    let unknown_action = seed_grant(&pool, "actor-a", "identity.manage")
+    seed_grant(&pool, "actor-a", "identity.manage").await?;
+    let unknown_action = seed_grant(&pool, "actor-a", "identity.delete")
         .await
         .expect_err("a platform grant must use the closed action vocabulary");
     assert_constraint(&unknown_action, "ck_platform_action_grants_action");

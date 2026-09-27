@@ -132,8 +132,10 @@ where
         authorization: AuthorizedPlatformAction,
         request: TenantProvisioningRequest,
     ) -> Result<TenantProvisioningOutcome, TenantProvisioningError<R::Error>> {
-        match authorization.action() {
-            PlatformAction::ProvisionTenant => {}
+        if authorization.action() != PlatformAction::ProvisionTenant {
+            return Err(TenantProvisioningError::WrongAction {
+                actual: authorization.action(),
+            });
         }
 
         let command = TenantProvisioningCommand {
@@ -154,6 +156,11 @@ where
 /// Failure to apply an authorized tenant provisioning command.
 #[derive(Debug)]
 pub enum TenantProvisioningError<E> {
+    /// Authorization evidence permits another platform operation.
+    WrongAction {
+        /// Action carried by the rejected evidence.
+        actual: PlatformAction,
+    },
     /// The atomic persistence operation failed.
     Repository(E),
 }
@@ -161,6 +168,10 @@ pub enum TenantProvisioningError<E> {
 impl<E> fmt::Display for TenantProvisioningError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::WrongAction { actual } => write!(
+                formatter,
+                "tenant provisioning requires ProvisionTenant authorization, got {actual:?}"
+            ),
             Self::Repository(_) => {
                 formatter.write_str("tenant provisioning could not be persisted")
             }
@@ -174,6 +185,7 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
+            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }
@@ -235,7 +247,10 @@ mod tests {
         let service = TenantProvisioningService::new(repository);
 
         let outcome = service
-            .provision(authorization("operator-a").await, request())
+            .provision(
+                authorization("operator-a", PlatformAction::ProvisionTenant).await,
+                request(),
+            )
             .await
             .expect("recording repository should provision");
 
@@ -252,11 +267,37 @@ mod tests {
         );
     }
 
-    async fn authorization(actor: &str) -> AuthorizedPlatformAction {
+    #[tokio::test]
+    async fn rejects_identity_management_evidence_before_persistence() {
+        let repository = RecordingRepository::default();
+        let recorded = repository.commands.clone();
+        let error = TenantProvisioningService::new(repository)
+            .provision(
+                authorization("operator-a", PlatformAction::ManageIdentity).await,
+                request(),
+            )
+            .await
+            .expect_err("identity management evidence must not provision a tenant");
+
+        assert!(matches!(
+            error,
+            TenantProvisioningError::WrongAction {
+                actual: PlatformAction::ManageIdentity
+            }
+        ));
+        assert!(
+            recorded
+                .lock()
+                .expect("recording lock should remain available")
+                .is_empty()
+        );
+    }
+
+    async fn authorization(actor: &str, action: PlatformAction) -> AuthorizedPlatformAction {
         PlatformAuthorizationService::new(AllowPolicy)
             .authorize(
                 AuthenticatedActor::from_trusted_actor_id(actor_id(actor)),
-                PlatformAction::ProvisionTenant,
+                action,
             )
             .await
             .expect("test policy should authorize provisioning")

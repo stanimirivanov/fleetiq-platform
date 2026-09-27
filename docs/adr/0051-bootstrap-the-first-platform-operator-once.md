@@ -4,7 +4,7 @@
 
 Accepted, 26 September 2026.
 
-Supersedes: none. Superseded by: none.
+Supersedes: none. Superseded by: ADR 0053 for the initial platform grant set.
 
 ## Context
 

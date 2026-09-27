@@ -50,6 +50,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0050](0050-provision-tenants-atomically-with-initial-access.md) | Atomic tenant, initial access, and immutable provisioning audit |
 | [0051](0051-bootstrap-the-first-platform-operator-once.md) | One-time atomic establishment of the first platform operator |
 | [0052](0052-invoke-bootstrap-through-an-explicit-process-command.md) | Explicit one-shot process command for controlled platform bootstrap |
+| [0053](0053-provision-actors-atomically-with-initial-identity.md) | Authorized atomic actor provisioning with an initial external identity |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

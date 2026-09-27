@@ -5,6 +5,7 @@
 
 mod accepted_message_log;
 mod actor_identity_resolver;
+mod actor_provisioning;
 mod asset_repository;
 mod decoded_observation_log;
 mod definition_repository;
@@ -24,6 +25,7 @@ pub use accepted_message_log::{PostgresAcceptedMessageLog, PostgresAcceptedMessa
 pub use actor_identity_resolver::{
     PostgresActorIdentityResolver, PostgresActorIdentityResolverError,
 };
+pub use actor_provisioning::{PostgresActorProvisioning, PostgresActorProvisioningError};
 pub use asset_repository::PostgresAssetRepository;
 pub use decoded_observation_log::{
     PostgresDecodedObservationLog, PostgresDecodedObservationLogError,

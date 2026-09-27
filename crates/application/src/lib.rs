@@ -5,6 +5,7 @@
 
 mod accepted_message_log;
 mod actor_identity_resolver;
+mod actor_provisioning;
 mod asset_service;
 mod authorization;
 mod caller_authentication;
@@ -32,6 +33,10 @@ pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
 };
 pub use actor_identity_resolver::ActorIdentityResolver;
+pub use actor_provisioning::{
+    ActorProvisioningCommand, ActorProvisioningError, ActorProvisioningOutcome,
+    ActorProvisioningRepository, ActorProvisioningRequest, ActorProvisioningService,
+};
 pub use asset_service::{AssetApplicationError, AssetApplicationService};
 pub use authorization::{
     AccessDecision, AuthorizedTenantAction, TenantAccessPolicy, TenantAccessRequest, TenantAction,
