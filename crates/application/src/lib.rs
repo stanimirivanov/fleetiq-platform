@@ -14,6 +14,7 @@ mod definition_repository;
 mod definition_service;
 mod device_repository;
 mod device_service;
+mod external_identity_administration;
 mod frame_acceptance;
 mod live;
 mod observation_persistence;
@@ -56,6 +57,11 @@ pub use definition_repository::DefinitionRepository;
 pub use definition_service::{DefinitionApplicationError, DefinitionApplicationService};
 pub use device_repository::DeviceRepository;
 pub use device_service::{DeviceApplicationError, DeviceApplicationService};
+pub use external_identity_administration::{
+    ExternalIdentityAdministration, ExternalIdentityAdministrationError,
+    ExternalIdentityAdministrationRepository, ExternalIdentityChange, ExternalIdentityChangeEffect,
+    ExternalIdentityChangeKind, ExternalIdentityChangeOutcome, ExternalIdentityChangeRequest,
+};
 pub use frame_acceptance::{
     DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,
     PreparedFrameAcceptance,

@@ -195,8 +195,7 @@ newest-first audit queries. Stable keyset cursors use recorded time and the
 platform-scoped change identity, including deterministic ordering when several
 commands share one timestamp.
 
-Additional external-identity lifecycle, actor deprovisioning, and tenant
-lifecycle remain planned.
+Actor deprovisioning and tenant lifecycle remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
@@ -208,6 +207,17 @@ credentials never reach identity resolution, and valid but unregistered
 principals fail closed. Tenant authorization consumes that evidence and builds
 its policy request internally, so a bare or caller-supplied actor identifier
 cannot enter the public authorization API.
+
+Identity administration consumes exact `identity.manage` evidence and derives
+the administrator from it. Attach and detach commands serialize globally,
+mutate the exact current mapping, and append immutable audit evidence in one
+transaction. Exact retries preserve their original effect, changed-content
+identity reuse is rejected, and an external identity already assigned to
+another actor is never rebound implicitly. Detach cannot remove an actor's
+final external identity. Deferred insertion assertions still require bootstrap
+and actor-provisioning evidence to create the exact initial mapping, while that
+historical evidence no longer permanently pins a mapping after an authorized
+replacement.
 
 The application can grant or revoke an exact tenant action only with consumed
 `ManageAccess` authorization evidence. Tenant and administrator identity come
@@ -230,8 +240,8 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-No concrete authentication provider, external-identity lifecycle
-administration, membership or role model, actor-provisioning or platform-access
+No concrete authentication provider, membership or role model,
+actor-provisioning, identity-administration, or platform-access
 administration transport, authentication middleware, protected route, or audit
 HTTP API exists yet. The boundary defines how those later slices must enter
 protected application behavior without treating caller-supplied actor or tenant
