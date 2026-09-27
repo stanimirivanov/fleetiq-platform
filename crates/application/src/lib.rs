@@ -15,6 +15,7 @@ mod definition_service;
 mod device_repository;
 mod device_service;
 mod external_identity_administration;
+mod external_identity_audit;
 mod frame_acceptance;
 mod live;
 mod observation_persistence;
@@ -61,6 +62,12 @@ pub use external_identity_administration::{
     ExternalIdentityAdministration, ExternalIdentityAdministrationError,
     ExternalIdentityAdministrationRepository, ExternalIdentityChange, ExternalIdentityChangeEffect,
     ExternalIdentityChangeKind, ExternalIdentityChangeOutcome, ExternalIdentityChangeRequest,
+};
+pub use external_identity_audit::{
+    ExternalIdentityAudit, ExternalIdentityAuditCursor, ExternalIdentityAuditEntry,
+    ExternalIdentityAuditError, ExternalIdentityAuditPage, ExternalIdentityAuditPageSize,
+    ExternalIdentityAuditPageSizeError, ExternalIdentityAuditQuery,
+    ExternalIdentityAuditRepository,
 };
 pub use frame_acceptance::{
     DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,

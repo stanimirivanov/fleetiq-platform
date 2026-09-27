@@ -180,6 +180,7 @@ current-system map; do not copy chronological decision history into it.
 - [Audited platform grant administration decision](../adr/0054-administer-platform-grants-with-atomic-audit.md)
 - [Platform access audit query decision](../adr/0055-query-platform-access-audit-with-keyset-pages.md)
 - [Audited external-identity administration decision](../adr/0056-administer-external-identities-with-atomic-audit.md)
+- [External-identity audit query decision](../adr/0057-query-external-identity-audit-with-keyset-pages.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)

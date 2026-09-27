@@ -219,6 +219,12 @@ and actor-provisioning evidence to create the exact initial mapping, while that
 historical evidence no longer permanently pins a mapping after an authorized
 replacement.
 
+The same exact identity-management authorization protects bounded, newest-first
+queries over immutable external-identity change evidence. Stable keyset cursors
+use recorded time and the platform-scoped change identity. Authorized results
+retain the exact authority and opaque subject, while routine Rust debug output
+redacts the subject.
+
 The application can grant or revoke an exact tenant action only with consumed
 `ManageAccess` authorization evidence. Tenant and administrator identity come
 from that evidence. Each host-identified command atomically changes current
