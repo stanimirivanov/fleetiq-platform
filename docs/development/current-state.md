@@ -190,8 +190,13 @@ Revocation affects the next policy decision. The final
 `platform.access.manage` grant cannot be revoked, preventing administrative
 lockout while allowing authority to move after explicit delegation.
 
-Platform access audit queries, additional external-identity lifecycle, actor
-deprovisioning, and tenant lifecycle remain planned.
+The same exact platform administration authorization protects bounded,
+newest-first audit queries. Stable keyset cursors use recorded time and the
+platform-scoped change identity, including deterministic ordering when several
+commands share one timestamp.
+
+Additional external-identity lifecycle, actor deprovisioning, and tenant
+lifecycle remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are

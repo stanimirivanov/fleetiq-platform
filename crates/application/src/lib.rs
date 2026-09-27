@@ -18,6 +18,7 @@ mod frame_acceptance;
 mod live;
 mod observation_persistence;
 mod platform_access_administration;
+mod platform_access_audit;
 mod platform_authorization;
 mod platform_bootstrap;
 mod protocol_package_catalog;
@@ -72,6 +73,11 @@ pub use platform_access_administration::{
     PlatformAccessAdministration, PlatformAccessAdministrationError,
     PlatformAccessAdministrationRepository, PlatformAccessChange, PlatformAccessChangeEffect,
     PlatformAccessChangeKind, PlatformAccessChangeOutcome, PlatformAccessChangeRequest,
+};
+pub use platform_access_audit::{
+    PlatformAccessAudit, PlatformAccessAuditCursor, PlatformAccessAuditEntry,
+    PlatformAccessAuditError, PlatformAccessAuditPage, PlatformAccessAuditPageSize,
+    PlatformAccessAuditPageSizeError, PlatformAccessAuditQuery, PlatformAccessAuditRepository,
 };
 pub use platform_authorization::{
     AuthorizedPlatformAction, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,

@@ -12,6 +12,7 @@ mod definition_repository;
 mod device_repository;
 mod error;
 mod platform_access_administration;
+mod platform_access_audit;
 mod platform_access_policy;
 mod platform_bootstrap;
 mod protocol_package_catalog;
@@ -36,6 +37,9 @@ pub use device_repository::PostgresDeviceRepository;
 pub use error::PostgresRepositoryError;
 pub use platform_access_administration::{
     PostgresPlatformAccessAdministration, PostgresPlatformAccessAdministrationError,
+};
+pub use platform_access_audit::{
+    PostgresPlatformAccessAuditRepository, PostgresPlatformAccessAuditRepositoryError,
 };
 pub use platform_access_policy::{PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError};
 pub use platform_bootstrap::{PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
