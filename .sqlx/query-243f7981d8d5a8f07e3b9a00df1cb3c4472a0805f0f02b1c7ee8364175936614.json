@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO identity.actor_lifecycle_changes\n                (change_id, administrator_actor_id, target_actor_id,\n                 change_kind, recorded_at_ms, state_changed)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "243f7981d8d5a8f07e3b9a00df1cb3c4472a0805f0f02b1c7ee8364175936614"
+}

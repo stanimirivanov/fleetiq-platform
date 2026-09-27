@@ -27,9 +27,13 @@ impl ActorIdentityResolver for PostgresActorIdentityResolver {
     async fn resolve(&self, identity: &ExternalIdentity) -> Result<Option<ActorId>, Self::Error> {
         let actor_id = sqlx::query_scalar!(
             r#"
-            SELECT actor_id
-            FROM identity.external_actor_identities
-            WHERE authority_id = $1 AND subject = $2
+            SELECT external_identity.actor_id
+            FROM identity.external_actor_identities AS external_identity
+            INNER JOIN identity.actors AS actor
+                ON actor.actor_id = external_identity.actor_id
+            WHERE external_identity.authority_id = $1
+              AND external_identity.subject = $2
+              AND actor.is_active
             "#,
             identity.authority_id().as_str(),
             identity.subject().as_str(),

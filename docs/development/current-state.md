@@ -195,7 +195,15 @@ newest-first audit queries. Stable keyset cursors use recorded time and the
 platform-scoped change identity, including deterministic ordering when several
 commands share one timestamp.
 
-Actor deprovisioning and tenant lifecycle remain planned.
+Actor lifecycle administration consumes exact `identity.manage` evidence and
+atomically activates or deactivates a stable actor with immutable audit
+evidence. Deactivation retains external identities, grants, and historical
+references while making new exact identity resolution and current tenant or
+platform policy evaluation fail closed. Activation restores those retained
+paths. Global serialization preserves exact retry behavior and prevents
+deactivation of the final active identity administrator or platform-access
+administrator. Previously issued typed authorization evidence is not recalled.
+Actor lifecycle audit queries and tenant lifecycle remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
@@ -246,11 +254,10 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-No concrete authentication provider, membership or role model,
-actor-provisioning, identity-administration, or platform-access
-administration transport, authentication middleware, protected route, or audit
-HTTP API exists yet. The boundary defines how those later slices must enter
-protected application behavior without treating caller-supplied actor or tenant
+No concrete authentication provider, membership or role model, administration
+transport, authentication middleware, protected route, or audit HTTP API
+exists yet. The boundary defines how those later slices must enter protected
+application behavior without treating caller-supplied actor or tenant
 identifiers as proof.
 
 There is no protected business resource API, authentication provider,

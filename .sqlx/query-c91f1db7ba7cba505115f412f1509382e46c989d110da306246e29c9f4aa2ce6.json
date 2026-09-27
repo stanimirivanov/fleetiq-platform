@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            EXISTS (\n                SELECT 1 FROM identity.platform_action_grants\n                WHERE actor_id = $1 AND action = 'identity.manage'\n            ) AS \"target_manages_identity!\",\n            (\n                SELECT COUNT(*) FROM identity.platform_action_grants AS grant_state\n                INNER JOIN identity.actors AS actor_state\n                    ON actor_state.actor_id = grant_state.actor_id\n                WHERE grant_state.action = 'identity.manage'\n                  AND actor_state.is_active\n            ) AS \"active_identity_managers!\",\n            EXISTS (\n                SELECT 1 FROM identity.platform_action_grants\n                WHERE actor_id = $1 AND action = 'platform.access.manage'\n            ) AS \"target_manages_platform_access!\",\n            (\n                SELECT COUNT(*) FROM identity.platform_action_grants AS grant_state\n                INNER JOIN identity.actors AS actor_state\n                    ON actor_state.actor_id = grant_state.actor_id\n                WHERE grant_state.action = 'platform.access.manage'\n                  AND actor_state.is_active\n            ) AS \"active_platform_access_managers!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "target_manages_identity!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "active_identity_managers!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "target_manages_platform_access!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "active_platform_access_managers!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c91f1db7ba7cba505115f412f1509382e46c989d110da306246e29c9f4aa2ce6"
+}

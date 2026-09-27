@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT external_identity.actor_id\n            FROM identity.external_actor_identities AS external_identity\n            INNER JOIN identity.actors AS actor\n                ON actor.actor_id = external_identity.actor_id\n            WHERE external_identity.authority_id = $1\n              AND external_identity.subject = $2\n              AND actor.is_active\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.external_actor_identities",
+            "name": "actor_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "426bda03703835b3289c2d4ef4d22123cb1c928f64cb2daba3e60f04c53dd40e"
+}
