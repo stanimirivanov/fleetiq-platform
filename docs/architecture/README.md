@@ -177,6 +177,7 @@ current-system map; do not copy chronological decision history into it.
 - [Explicit bootstrap command decision](../adr/0052-invoke-bootstrap-through-an-explicit-process-command.md)
 - [Atomic actor provisioning decision](../adr/0053-provision-actors-atomically-with-initial-identity.md)
 - [Audited platform grant administration decision](../adr/0054-administer-platform-grants-with-atomic-audit.md)
+- [Platform access audit query decision](../adr/0055-query-platform-access-audit-with-keyset-pages.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
