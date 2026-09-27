@@ -130,6 +130,7 @@ the policy and adapter crates. See
 | Protocol package releases | Package catalogue | Immutable tenant-scoped releases |
 | Internal actors and platform or tenant action grants | Identity and authorization | Stable actors; mutable exact grants |
 | Actor provisioning evidence | Identity and authorization | Append-only idempotent administration facts |
+| External identity mappings and change audit | Identity and authorization | Mutable exact mappings; append-only administration facts |
 | Platform access change audit | Identity and authorization | Append-only idempotent administration facts |
 | Tenant access change audit | Identity and authorization | Append-only idempotent administration facts |
 | Accepted wire messages | Ingestion log | Append-only, idempotent facts |
@@ -178,6 +179,7 @@ current-system map; do not copy chronological decision history into it.
 - [Atomic actor provisioning decision](../adr/0053-provision-actors-atomically-with-initial-identity.md)
 - [Audited platform grant administration decision](../adr/0054-administer-platform-grants-with-atomic-audit.md)
 - [Platform access audit query decision](../adr/0055-query-platform-access-audit-with-keyset-pages.md)
+- [Audited external-identity administration decision](../adr/0056-administer-external-identities-with-atomic-audit.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)

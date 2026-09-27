@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO identity.external_identity_changes\n                (change_id, administrator_actor_id, target_actor_id,\n                 authority_id, subject, change_kind, recorded_at_ms,\n                 state_changed)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "16a1aaa5d62b93115bd00ca2ae5b9e3f81bd1196cb922c835bcb3bbb0b326466"
+}

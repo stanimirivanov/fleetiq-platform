@@ -19,6 +19,13 @@ pub struct ActorId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct ActorProvisioningId(String);
 
+/// Identifies one idempotent external-identity administration command.
+///
+/// The identity is platform-scoped. Exact retries resolve to the original
+/// durable operation, while reuse for different command content is a collision.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct ExternalIdentityChangeId(String);
+
 /// Identifies one idempotent platform access administration command.
 ///
 /// The identity is platform-scoped. Exact retries resolve to the original
@@ -234,6 +241,7 @@ macro_rules! domain_identifier {
 domain_identifier!(TenantId);
 domain_identifier!(ActorId);
 domain_identifier!(ActorProvisioningId);
+domain_identifier!(ExternalIdentityChangeId);
 domain_identifier!(PlatformAccessChangeId);
 domain_identifier!(IdentityAuthorityId);
 domain_identifier!(TenantAccessChangeId);

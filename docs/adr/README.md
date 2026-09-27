@@ -53,6 +53,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0053](0053-provision-actors-atomically-with-initial-identity.md) | Authorized atomic actor provisioning with an initial external identity |
 | [0054](0054-administer-platform-grants-with-atomic-audit.md) | Authorized idempotent platform grant administration with atomic immutable audit |
 | [0055](0055-query-platform-access-audit-with-keyset-pages.md) | Authorized bounded platform access audit queries with stable keyset pagination |
+| [0056](0056-administer-external-identities-with-atomic-audit.md) | Authorized external-identity lifecycle with atomic immutable audit |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

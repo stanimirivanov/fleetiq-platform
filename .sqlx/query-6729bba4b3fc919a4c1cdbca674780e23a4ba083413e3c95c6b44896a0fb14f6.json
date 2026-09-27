@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE FROM identity.external_actor_identities\n        WHERE authority_id = $1 AND subject = $2 AND actor_id = $3\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6729bba4b3fc919a4c1cdbca674780e23a4ba083413e3c95c6b44896a0fb14f6"
+}

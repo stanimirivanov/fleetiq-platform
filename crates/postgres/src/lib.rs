@@ -11,6 +11,7 @@ mod decoded_observation_log;
 mod definition_repository;
 mod device_repository;
 mod error;
+mod external_identity_administration;
 mod platform_access_administration;
 mod platform_access_audit;
 mod platform_access_policy;
@@ -35,6 +36,9 @@ pub use decoded_observation_log::{
 pub use definition_repository::PostgresDefinitionRepository;
 pub use device_repository::PostgresDeviceRepository;
 pub use error::PostgresRepositoryError;
+pub use external_identity_administration::{
+    PostgresExternalIdentityAdministration, PostgresExternalIdentityAdministrationError,
+};
 pub use platform_access_administration::{
     PostgresPlatformAccessAdministration, PostgresPlatformAccessAdministrationError,
 };
