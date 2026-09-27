@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT EXISTS (\n                SELECT 1\n                FROM identity.platform_action_grants AS grant_state\n                INNER JOIN identity.actors AS actor_state\n                    ON actor_state.actor_id = grant_state.actor_id\n                WHERE grant_state.actor_id = $1\n                  AND grant_state.action = $2\n                  AND actor_state.is_active\n            ) AS \"allowed!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "allowed!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "239d7da4e90d8e63d4987d00b3adb31ed367e435dd3da8aa55c350d963564f65"
+}

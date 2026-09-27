@@ -5,6 +5,7 @@
 
 mod accepted_message_log;
 mod actor_identity_resolver;
+mod actor_lifecycle_administration;
 mod actor_provisioning;
 mod asset_service;
 mod authorization;
@@ -37,6 +38,11 @@ pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
 };
 pub use actor_identity_resolver::ActorIdentityResolver;
+pub use actor_lifecycle_administration::{
+    ActorLifecycleAdministration, ActorLifecycleAdministrationError,
+    ActorLifecycleAdministrationRepository, ActorLifecycleChange, ActorLifecycleChangeEffect,
+    ActorLifecycleChangeKind, ActorLifecycleChangeOutcome, ActorLifecycleChangeRequest,
+};
 pub use actor_provisioning::{
     ActorProvisioningCommand, ActorProvisioningError, ActorProvisioningOutcome,
     ActorProvisioningRepository, ActorProvisioningRequest, ActorProvisioningService,

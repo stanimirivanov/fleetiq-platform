@@ -38,9 +38,12 @@ impl PlatformAccessPolicy for PostgresPlatformAccessPolicy {
             r#"
             SELECT EXISTS (
                 SELECT 1
-                FROM identity.platform_action_grants
-                WHERE actor_id = $1
-                  AND action = $2
+                FROM identity.platform_action_grants AS grant_state
+                INNER JOIN identity.actors AS actor_state
+                    ON actor_state.actor_id = grant_state.actor_id
+                WHERE grant_state.actor_id = $1
+                  AND grant_state.action = $2
+                  AND actor_state.is_active
             ) AS "allowed!"
             "#,
             request.actor_id().as_str(),

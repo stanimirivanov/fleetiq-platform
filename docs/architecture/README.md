@@ -128,8 +128,9 @@ the policy and adapter crates. See
 | Assets, external identifiers, device endpoints | Metadata | Validated aggregate state |
 | Relationships and signal bindings | Metadata history | Append-only revisions with effective intervals |
 | Protocol package releases | Package catalogue | Immutable tenant-scoped releases |
-| Internal actors and platform or tenant action grants | Identity and authorization | Stable actors; mutable exact grants |
+| Internal actors and platform or tenant action grants | Identity and authorization | Stable actors with reversible activation; mutable exact grants |
 | Actor provisioning evidence | Identity and authorization | Append-only idempotent administration facts |
+| Actor lifecycle change audit | Identity and authorization | Append-only idempotent administration facts |
 | External identity mappings and change audit | Identity and authorization | Mutable exact mappings; append-only administration facts |
 | Platform access change audit | Identity and authorization | Append-only idempotent administration facts |
 | Tenant access change audit | Identity and authorization | Append-only idempotent administration facts |
@@ -181,6 +182,7 @@ current-system map; do not copy chronological decision history into it.
 - [Platform access audit query decision](../adr/0055-query-platform-access-audit-with-keyset-pages.md)
 - [Audited external-identity administration decision](../adr/0056-administer-external-identities-with-atomic-audit.md)
 - [External-identity audit query decision](../adr/0057-query-external-identity-audit-with-keyset-pages.md)
+- [Actor lifecycle administration decision](../adr/0058-administer-actor-lifecycle-with-atomic-audit.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
