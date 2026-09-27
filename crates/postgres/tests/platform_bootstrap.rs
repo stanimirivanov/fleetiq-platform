@@ -62,9 +62,18 @@ async fn establishes_a_resolvable_operator_grant_and_immutable_evidence(
         initial_request.actor_id()
     );
 
+    let access_authorization =
+        PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
+            .authorize(
+                support::authenticated_actor("operator-a").await,
+                PlatformAction::ManagePlatformAccess,
+            )
+            .await?;
+    assert_eq!(access_authorization.actor_id(), initial_request.actor_id());
+
     assert_eq!(actor_count(&pool).await?, 1);
     assert_eq!(external_identity_count(&pool).await?, 1);
-    assert_eq!(platform_grant_count(&pool).await?, 2);
+    assert_eq!(platform_grant_count(&pool).await?, 3);
     assert_eq!(bootstrap_count(&pool).await?, 1);
 
     let audit = sqlx::query!(
@@ -93,7 +102,7 @@ async fn establishes_a_resolvable_operator_grant_and_immutable_evidence(
             .await?,
         PlatformBootstrapOutcome::AlreadyBootstrapped
     );
-    assert_eq!(platform_grant_count(&pool).await?, 1);
+    assert_eq!(platform_grant_count(&pool).await?, 2);
     Ok(())
 }
 
@@ -121,7 +130,7 @@ async fn concurrent_exact_bootstraps_have_one_winner(pool: PgPool) -> Result<(),
     );
     assert_eq!(actor_count(&pool).await?, 1);
     assert_eq!(external_identity_count(&pool).await?, 1);
-    assert_eq!(platform_grant_count(&pool).await?, 2);
+    assert_eq!(platform_grant_count(&pool).await?, 3);
     assert_eq!(bootstrap_count(&pool).await?, 1);
     Ok(())
 }
@@ -151,7 +160,7 @@ async fn a_different_second_request_cannot_replace_the_initial_operator(
 
     assert_eq!(actor_count(&pool).await?, 1);
     assert_eq!(external_identity_count(&pool).await?, 1);
-    assert_eq!(platform_grant_count(&pool).await?, 2);
+    assert_eq!(platform_grant_count(&pool).await?, 3);
     assert_eq!(bootstrap_count(&pool).await?, 1);
     Ok(())
 }

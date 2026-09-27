@@ -5,7 +5,7 @@
 Accepted, 27 September 2026.
 
 Supersedes: ADR 0051 for the bootstrap operator's initial platform grant set.
-Superseded by: none.
+Superseded by: ADR 0054 for the bootstrap operator's initial platform grant set.
 
 ## Context
 

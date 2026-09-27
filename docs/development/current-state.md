@@ -22,8 +22,8 @@
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
 - A one-time atomic bootstrap establishes the first platform operator, exact
-  external identity, identity-management and tenant-provisioning grants, and
-  immutable root audit fact;
+  external identity, platform-access, identity-management, and
+  tenant-provisioning grants, and immutable root audit fact;
   an explicit one-shot process command invokes it without opening an HTTP route.
 - Business APIs, identity-provider integration, authorization administration
   APIs, device transport listeners, operator UI, archival storage, and
@@ -163,10 +163,11 @@ exact commands have one winner; and any failed reference rolls back every row.
 The initial platform operator can be established once through a separate
 unauthorized bootstrap boundary. One transaction claims an immutable singleton
 record, creates the actor and exact external-identity mapping, and grants
-the explicit `identity.manage` and `tenant.provision` actions. Exact actor and
-identity retries resolve safely, including
-under concurrency; another bootstrap identity is rejected; and dependent-write
-failure rolls back the claim. The `bootstrap-platform-operator` process command
+the explicit `platform.access.manage`, `identity.manage`, and
+`tenant.provision` actions. Exact actor and identity retries resolve safely,
+including under concurrency; another bootstrap identity is rejected; and
+dependent-write failure rolls back the claim. The
+`bootstrap-platform-operator` process command
 validates dedicated environment values, applies migrations, invokes this
 capability without binding an HTTP listener, prints only its disposition, and
 exits. No HTTP or deployment-job adapter invokes bootstrap.
@@ -179,8 +180,18 @@ identity are independent idempotency arbiters; exact retries return the durable
 outcome, changed content is a collision, and concurrent exact commands have one
 winner. A new actor receives no platform or tenant grant implicitly.
 
-Platform grant administration, additional external-identity lifecycle,
-actor deprovisioning, and tenant lifecycle remain planned.
+Platform grant administration consumes exact `platform.access.manage`
+evidence and derives its trusted administrator from that evidence. Grant and
+revoke commands serialize through the bootstrap singleton, mutate current
+state, and append immutable audit evidence atomically. Platform-scoped command
+identities distinguish exact retries from changed-content collisions, and the
+recorded effect distinguishes a state change from an already-satisfied request.
+Revocation affects the next policy decision. The final
+`platform.access.manage` grant cannot be revoked, preventing administrative
+lockout while allowing authority to move after explicit delegation.
+
+Platform access audit queries, additional external-identity lifecycle, actor
+deprovisioning, and tenant lifecycle remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
@@ -214,11 +225,12 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-No concrete authentication provider, external-identity lifecycle administration,
-membership or role model, actor-provisioning transport,
-authentication middleware, protected route, or audit HTTP API exists yet. The
-boundary defines how those later slices must enter protected application
-behavior without treating caller-supplied actor or tenant identifiers as proof.
+No concrete authentication provider, external-identity lifecycle
+administration, membership or role model, actor-provisioning or platform-access
+administration transport, authentication middleware, protected route, or audit
+HTTP API exists yet. The boundary defines how those later slices must enter
+protected application behavior without treating caller-supplied actor or tenant
+identifiers as proof.
 
 There is no protected business resource API, authentication provider,
 authorization administration API, message broker, object archive, cache,

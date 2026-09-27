@@ -102,6 +102,7 @@ impl PlatformBootstrapRepository for PostgresPlatformBootstrap {
             r#"
             INSERT INTO identity.platform_action_grants (actor_id, action)
             VALUES
+                ($1, 'platform.access.manage'),
                 ($1, 'identity.manage'),
                 ($1, 'tenant.provision')
             "#,
