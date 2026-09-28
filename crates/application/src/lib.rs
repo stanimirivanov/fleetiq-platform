@@ -27,6 +27,7 @@ mod platform_access_administration;
 mod platform_access_audit;
 mod platform_authorization;
 mod platform_bootstrap;
+mod platform_grant_catalog;
 mod protocol_package_catalog;
 mod relationship_repository;
 mod relationship_service;
@@ -127,6 +128,11 @@ pub use platform_authorization::{
 pub use platform_bootstrap::{
     PlatformBootstrapError, PlatformBootstrapOutcome, PlatformBootstrapRepository,
     PlatformBootstrapRequest, PlatformBootstrapService,
+};
+pub use platform_grant_catalog::{
+    PlatformGrantCatalog, PlatformGrantCatalogCursor, PlatformGrantCatalogEntry,
+    PlatformGrantCatalogError, PlatformGrantCatalogPage, PlatformGrantCatalogPageSize,
+    PlatformGrantCatalogPageSizeError, PlatformGrantCatalogQuery, PlatformGrantCatalogRepository,
 };
 pub use protocol_package_catalog::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
