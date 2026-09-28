@@ -25,6 +25,7 @@ mod signal_binding_repository;
 mod tenant_access_administration;
 mod tenant_access_audit;
 mod tenant_access_policy;
+mod tenant_catalog;
 mod tenant_lifecycle_administration;
 mod tenant_lifecycle_audit;
 mod tenant_provisioning;
@@ -74,6 +75,7 @@ pub use tenant_access_audit::{
     PostgresTenantAccessAuditRepository, PostgresTenantAccessAuditRepositoryError,
 };
 pub use tenant_access_policy::{PostgresTenantAccessPolicy, PostgresTenantAccessPolicyError};
+pub use tenant_catalog::{PostgresTenantCatalogRepository, PostgresTenantCatalogRepositoryError};
 pub use tenant_lifecycle_administration::{
     PostgresTenantLifecycleAdministration, PostgresTenantLifecycleAdministrationError,
 };
