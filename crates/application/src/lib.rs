@@ -33,6 +33,7 @@ mod signal_binding_repository;
 mod signal_binding_service;
 mod tenant_access_administration;
 mod tenant_access_audit;
+mod tenant_catalog;
 mod tenant_lifecycle_administration;
 mod tenant_lifecycle_audit;
 mod tenant_provisioning;
@@ -131,6 +132,11 @@ pub use tenant_access_audit::{
     TenantAccessAudit, TenantAccessAuditCursor, TenantAccessAuditEntry, TenantAccessAuditError,
     TenantAccessAuditPage, TenantAccessAuditPageSize, TenantAccessAuditPageSizeError,
     TenantAccessAuditQuery, TenantAccessAuditRepository,
+};
+pub use tenant_catalog::{
+    TenantCatalog, TenantCatalogCursor, TenantCatalogEntry, TenantCatalogError, TenantCatalogPage,
+    TenantCatalogPageSize, TenantCatalogPageSizeError, TenantCatalogQuery, TenantCatalogRepository,
+    TenantLifecycleState,
 };
 pub use tenant_lifecycle_administration::{
     TenantLifecycleAdministration, TenantLifecycleAdministrationError,

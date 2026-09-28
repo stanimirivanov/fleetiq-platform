@@ -218,7 +218,9 @@ delegation uses audited platform grant administration. Previously issued typed
 authorization evidence is not recalled. The same exact lifecycle-management
 authorization protects bounded, newest-first lifecycle audit queries. Stable
 keyset cursors use recorded time and the platform-scoped lifecycle change
-identity. Production ingestion suspension remains planned.
+identity. It also protects a bounded platform-wide tenant catalogue ordered by
+stable tenant identity, with explicit active or suspended current state.
+Production ingestion suspension remains planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
