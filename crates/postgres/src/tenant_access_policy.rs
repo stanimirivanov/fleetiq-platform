@@ -40,10 +40,13 @@ impl TenantAccessPolicy for PostgresTenantAccessPolicy {
                 FROM identity.tenant_action_grants AS grant_state
                 INNER JOIN identity.actors AS actor_state
                     ON actor_state.actor_id = grant_state.actor_id
+                INNER JOIN metadata.tenants AS tenant_state
+                    ON tenant_state.tenant_id = grant_state.tenant_id
                 WHERE grant_state.tenant_id = $1
                   AND grant_state.actor_id = $2
                   AND grant_state.action = $3
                   AND actor_state.is_active
+                  AND tenant_state.is_active
             ) AS "allowed!"
             "#,
             request.tenant_id().as_str(),

@@ -104,7 +104,8 @@ impl PlatformBootstrapRepository for PostgresPlatformBootstrap {
             VALUES
                 ($1, 'platform.access.manage'),
                 ($1, 'identity.manage'),
-                ($1, 'tenant.provision')
+                ($1, 'tenant.provision'),
+                ($1, 'tenant.lifecycle.manage')
             "#,
             request.actor_id().as_str(),
         )

@@ -55,7 +55,15 @@ async fn pages_are_deterministic_newest_first(pool: PgPool) -> Result<(), Box<dy
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn reconstructs_complete_platform_audit_meaning(pool: PgPool) -> Result<(), Box<dyn Error>> {
     seed(&pool).await?;
-    seed_audit(&pool, "change-a", "identity.manage", "revoke", 200, false).await?;
+    seed_audit(
+        &pool,
+        "change-a",
+        "tenant.lifecycle.manage",
+        "revoke",
+        200,
+        false,
+    )
+    .await?;
 
     let page = PlatformAccessAudit::new(PostgresPlatformAccessAuditRepository::new(pool.clone()))
         .find_page(manage_platform_access(&pool).await?, &query(None))
@@ -65,7 +73,7 @@ async fn reconstructs_complete_platform_audit_meaning(pool: PgPool) -> Result<()
     assert_eq!(entry.change_id().as_str(), "change-a");
     assert_eq!(entry.administrator_actor_id().as_str(), "operator-a");
     assert_eq!(entry.target_actor_id().as_str(), "target-a");
-    assert_eq!(entry.action(), PlatformAction::ManageIdentity);
+    assert_eq!(entry.action(), PlatformAction::ManageTenantLifecycle);
     assert_eq!(entry.kind(), PlatformAccessChangeKind::Revoke);
     assert_eq!(entry.recorded_at().get(), 200);
     assert_eq!(entry.effect(), PlatformAccessChangeEffect::NoStateChange);

@@ -17,6 +17,8 @@ pub enum PlatformAction {
     ManageIdentity,
     /// Create a tenant and establish its initial administration state.
     ProvisionTenant,
+    /// Activate or suspend an existing tenant with immutable audit evidence.
+    ManageTenantLifecycle,
 }
 
 /// Describes an authenticated actor's platform authorization request.

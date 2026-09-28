@@ -87,6 +87,7 @@ async fn grants_require_existing_actors_exact_actions_and_unique_tuples(
 
     seed_grant(&pool, "actor-a", "identity.manage").await?;
     seed_grant(&pool, "actor-a", "platform.access.manage").await?;
+    seed_grant(&pool, "actor-a", "tenant.lifecycle.manage").await?;
     let unknown_action = seed_grant(&pool, "actor-a", "identity.delete")
         .await
         .expect_err("a platform grant must use the closed action vocabulary");
