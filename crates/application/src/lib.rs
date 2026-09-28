@@ -4,6 +4,7 @@
 //! contracts without exposing database or transport types to domain code.
 
 mod accepted_message_log;
+mod actor_catalog;
 mod actor_identity_resolver;
 mod actor_lifecycle_administration;
 mod actor_lifecycle_audit;
@@ -40,6 +41,11 @@ mod tenant_provisioning;
 
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
+};
+pub use actor_catalog::{
+    ActorCatalog, ActorCatalogCursor, ActorCatalogEntry, ActorCatalogError, ActorCatalogPage,
+    ActorCatalogPageSize, ActorCatalogPageSizeError, ActorCatalogQuery, ActorCatalogRepository,
+    ActorLifecycleState,
 };
 pub use actor_identity_resolver::ActorIdentityResolver;
 pub use actor_lifecycle_administration::{
