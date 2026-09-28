@@ -163,8 +163,9 @@ exact commands have one winner; and any failed reference rolls back every row.
 The initial platform operator can be established once through a separate
 unauthorized bootstrap boundary. One transaction claims an immutable singleton
 record, creates the actor and exact external-identity mapping, and grants
-the explicit `platform.access.manage`, `identity.manage`, and
-`tenant.provision` actions. Exact actor and identity retries resolve safely,
+the explicit `platform.access.manage`, `identity.manage`, `tenant.provision`,
+and `tenant.lifecycle.manage` actions. Exact actor and identity retries resolve
+safely,
 including under concurrency; another bootstrap identity is rejected; and
 dependent-write failure rolls back the claim. The
 `bootstrap-platform-operator` process command
@@ -205,8 +206,17 @@ deactivation of the final active identity administrator or platform-access
 administrator. The same exact identity-management authorization protects
 bounded, newest-first lifecycle audit queries. Stable keyset cursors use
 recorded time and the platform-scoped lifecycle change identity. Previously
-issued typed authorization evidence is not recalled. Tenant lifecycle remains
-planned.
+issued typed authorization evidence is not recalled.
+
+Tenant lifecycle administration uses a separate exact
+`tenant.lifecycle.manage` platform action. One transaction activates or
+suspends the stable tenant boundary and appends immutable audit evidence.
+Suspension retains tenant-owned data and grants while fresh tenant
+authorization decisions fail closed; activation restores the retained grants.
+The bootstrap operator receives the new action explicitly, and later
+delegation uses audited platform grant administration. Previously issued typed
+authorization evidence is not recalled. Production ingestion suspension and
+tenant lifecycle audit queries remain planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are

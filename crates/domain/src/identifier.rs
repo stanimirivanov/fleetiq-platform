@@ -57,6 +57,13 @@ pub struct IdentityAuthorityId(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct TenantAccessChangeId(String);
 
+/// Identifies one idempotent tenant lifecycle administration command.
+///
+/// The identity is platform-scoped. Exact retries resolve to the original
+/// durable operation, while reuse for different command content is a collision.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TenantLifecycleChangeId(String);
+
 /// Identifies one idempotent tenant provisioning command.
 ///
 /// The identity is platform-scoped. An exact retry returns the original
@@ -253,6 +260,7 @@ domain_identifier!(ExternalIdentityChangeId);
 domain_identifier!(PlatformAccessChangeId);
 domain_identifier!(IdentityAuthorityId);
 domain_identifier!(TenantAccessChangeId);
+domain_identifier!(TenantLifecycleChangeId);
 domain_identifier!(TenantProvisioningId);
 domain_identifier!(AssetId);
 domain_identifier!(AssetRelationshipId);

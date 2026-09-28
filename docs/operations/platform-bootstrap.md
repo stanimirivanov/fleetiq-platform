@@ -4,8 +4,10 @@
 
 Run `fleetiq-server bootstrap-platform-operator` once from a trusted operator
 environment with the four required environment variables. The command applies
-migrations, creates the actor, exact external identity, and `tenant.provision`
-grant atomically, then exits. Remove the bootstrap environment values when it
+migrations, creates the actor, exact external identity, and the initial
+`platform.access.manage`, `identity.manage`, `tenant.provision`, and
+`tenant.lifecycle.manage` grants atomically, then exits. Remove the bootstrap
+environment values when it
 finishes.
 
 ## Preconditions

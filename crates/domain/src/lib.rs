@@ -29,7 +29,8 @@ pub use identifier::{
     AssetTypeId, DeviceEndpointId, DeviceEndpointKindId, ExternalIdentifierAuthority,
     ExternalIdentifierKind, ExternalIdentifierValue, ExternalIdentityChangeId, IdentifierError,
     IdentityAuthorityId, PlatformAccessChangeId, PropertyDefinitionId, RelationshipTypeId,
-    SignalBindingId, SourceSignalId, TenantAccessChangeId, TenantId, TenantProvisioningId, UnitId,
+    SignalBindingId, SourceSignalId, TenantAccessChangeId, TenantId, TenantLifecycleChangeId,
+    TenantProvisioningId, UnitId,
 };
 pub use identity::{ExternalIdentity, ExternalIdentitySubject, ExternalIdentitySubjectError};
 pub use property_value::PropertyValue;

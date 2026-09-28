@@ -55,7 +55,7 @@ async fn creates_an_actor_mapping_and_audit_without_granting_access(
     assert_eq!(actor_count(&pool).await?, 2);
     assert_eq!(actor_provisioning_count(&pool).await?, 1);
     assert_eq!(actor_grant_count(&pool, "actor-a").await?, 0);
-    assert_eq!(actor_grant_count(&pool, "operator-a").await?, 3);
+    assert_eq!(actor_grant_count(&pool, "operator-a").await?, 4);
 
     let audit = sqlx::query!(
         r#"

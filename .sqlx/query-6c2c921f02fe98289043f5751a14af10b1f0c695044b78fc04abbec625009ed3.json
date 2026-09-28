@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT administrator_actor_id, tenant_id, change_kind,\n               recorded_at_ms, state_changed\n        FROM identity.tenant_lifecycle_changes\n        WHERE change_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "administrator_actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_lifecycle_changes",
+            "name": "administrator_actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_lifecycle_changes",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "change_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_lifecycle_changes",
+            "name": "change_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_lifecycle_changes",
+            "name": "recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "state_changed",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_lifecycle_changes",
+            "name": "state_changed"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6c2c921f02fe98289043f5751a14af10b1f0c695044b78fc04abbec625009ed3"
+}

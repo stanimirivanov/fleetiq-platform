@@ -99,6 +99,7 @@ fn action(value: &str) -> Result<PlatformAction, PostgresRepositoryError> {
         "platform.access.manage" => Ok(PlatformAction::ManagePlatformAccess),
         "identity.manage" => Ok(PlatformAction::ManageIdentity),
         "tenant.provision" => Ok(PlatformAction::ProvisionTenant),
+        "tenant.lifecycle.manage" => Ok(PlatformAction::ManageTenantLifecycle),
         _ => Err(corrupt("identity.platform_access_changes.action", value)),
     }
 }

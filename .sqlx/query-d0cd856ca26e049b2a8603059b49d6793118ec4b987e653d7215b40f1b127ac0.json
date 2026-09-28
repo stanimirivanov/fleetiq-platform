@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO identity.platform_action_grants (actor_id, action)\n            VALUES\n                ($1, 'platform.access.manage'),\n                ($1, 'identity.manage'),\n                ($1, 'tenant.provision'),\n                ($1, 'tenant.lifecycle.manage')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d0cd856ca26e049b2a8603059b49d6793118ec4b987e653d7215b40f1b127ac0"
+}

@@ -66,6 +66,7 @@ const fn action_name(action: PlatformAction) -> &'static str {
         PlatformAction::ManagePlatformAccess => "platform.access.manage",
         PlatformAction::ManageIdentity => "identity.manage",
         PlatformAction::ProvisionTenant => "tenant.provision",
+        PlatformAction::ManageTenantLifecycle => "tenant.lifecycle.manage",
     }
 }
 

@@ -129,6 +129,7 @@ the policy and adapter crates. See
 | Relationships and signal bindings | Metadata history | Append-only revisions with effective intervals |
 | Protocol package releases | Package catalogue | Immutable tenant-scoped releases |
 | Internal actors and platform or tenant action grants | Identity and authorization | Stable actors with reversible activation; mutable exact grants |
+| Tenant operational state and lifecycle audit | Identity and authorization | Reversible activation; append-only idempotent administration facts |
 | Actor provisioning evidence | Identity and authorization | Append-only idempotent administration facts |
 | Actor lifecycle change audit | Identity and authorization | Append-only idempotent administration facts |
 | External identity mappings and change audit | Identity and authorization | Mutable exact mappings; append-only administration facts |
@@ -184,6 +185,7 @@ current-system map; do not copy chronological decision history into it.
 - [External-identity audit query decision](../adr/0057-query-external-identity-audit-with-keyset-pages.md)
 - [Actor lifecycle administration decision](../adr/0058-administer-actor-lifecycle-with-atomic-audit.md)
 - [Actor lifecycle audit query decision](../adr/0059-query-actor-lifecycle-audit-with-keyset-pages.md)
+- [Tenant lifecycle administration decision](../adr/0060-administer-tenant-lifecycle-with-atomic-audit.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)
