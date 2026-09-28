@@ -194,7 +194,9 @@ lockout while allowing authority to move after explicit delegation.
 The same exact platform administration authorization protects bounded,
 newest-first audit queries. Stable keyset cursors use recorded time and the
 platform-scoped change identity, including deterministic ordering when several
-commands share one timestamp.
+commands share one timestamp. It also protects bounded current-state queries
+for one selected actor's exact platform grants. Those pages follow stable
+persisted action-name order and remain separate from immutable change history.
 
 Actor lifecycle administration consumes exact `identity.manage` evidence and
 atomically activates or deactivates a stable actor with immutable audit

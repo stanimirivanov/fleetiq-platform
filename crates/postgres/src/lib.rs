@@ -21,6 +21,7 @@ mod platform_access_administration;
 mod platform_access_audit;
 mod platform_access_policy;
 mod platform_bootstrap;
+mod platform_grant_catalog;
 mod protocol_package_catalog;
 mod relationship_repository;
 mod signal_binding_repository;
@@ -68,6 +69,9 @@ pub use platform_access_audit::{
 };
 pub use platform_access_policy::{PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError};
 pub use platform_bootstrap::{PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
+pub use platform_grant_catalog::{
+    PostgresPlatformGrantCatalogRepository, PostgresPlatformGrantCatalogRepositoryError,
+};
 pub use protocol_package_catalog::{
     PostgresProtocolPackageCatalog, PostgresProtocolPackageCatalogError,
 };
