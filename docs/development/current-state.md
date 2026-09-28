@@ -251,7 +251,10 @@ The same exact identity-management authorization protects bounded, newest-first
 queries over immutable external-identity change evidence. Stable keyset cursors
 use recorded time and the platform-scoped change identity. Authorized results
 retain the exact authority and opaque subject, while routine Rust debug output
-redacts the subject.
+redacts the subject. It also protects bounded current-state queries for one
+selected actor's external identities, ordered by exact authority and subject.
+Catalogue entry and cursor diagnostics redact the opaque subject, and the query
+does not provide platform-wide principal enumeration.
 
 The application can grant or revoke an exact tenant action only with consumed
 `ManageAccess` authorization evidence. Tenant and administrator identity come

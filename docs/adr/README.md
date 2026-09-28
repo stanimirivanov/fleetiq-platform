@@ -61,6 +61,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0061](0061-query-tenant-lifecycle-audit-with-keyset-pages.md) | Authorized bounded tenant lifecycle audit queries with stable keyset pagination |
 | [0062](0062-query-tenant-catalogue-with-keyset-pages.md) | Authorized bounded tenant catalogue queries with stable keyset pagination |
 | [0063](0063-query-actor-catalogue-with-keyset-pages.md) | Authorized bounded actor catalogue queries without external-identity disclosure |
+| [0064](0064-query-current-external-identities-by-actor.md) | Authorized bounded discovery of one actor's current external identities |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
