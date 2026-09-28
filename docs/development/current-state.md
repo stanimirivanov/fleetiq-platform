@@ -206,7 +206,10 @@ deactivation of the final active identity administrator or platform-access
 administrator. The same exact identity-management authorization protects
 bounded, newest-first lifecycle audit queries. Stable keyset cursors use
 recorded time and the platform-scoped lifecycle change identity. Previously
-issued typed authorization evidence is not recalled.
+issued typed authorization evidence is not recalled. The same exact identity
+management authorization protects a bounded platform-wide actor catalogue
+ordered by stable actor identity, with explicit active or deactivated current
+state and no external-identity subject disclosure.
 
 Tenant lifecycle administration uses a separate exact
 `tenant.lifecycle.manage` platform action. One transaction activates or
