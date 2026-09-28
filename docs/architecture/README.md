@@ -189,6 +189,7 @@ current-system map; do not copy chronological decision history into it.
 - [Tenant lifecycle audit query decision](../adr/0061-query-tenant-lifecycle-audit-with-keyset-pages.md)
 - [Tenant catalogue query decision](../adr/0062-query-tenant-catalogue-with-keyset-pages.md)
 - [Actor catalogue query decision](../adr/0063-query-actor-catalogue-with-keyset-pages.md)
+- [Current external identities query decision](../adr/0064-query-current-external-identities-by-actor.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)

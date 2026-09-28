@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT authority_id, subject\n            FROM identity.external_actor_identities\n            WHERE actor_id = $1\n              AND ($2::text IS NULL OR (authority_id, subject) > ($2, $3))\n            ORDER BY authority_id ASC, subject ASC\n            LIMIT $4\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "authority_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.external_actor_identities",
+            "name": "authority_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "subject",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.external_actor_identities",
+            "name": "subject"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "98d2a3db95b7031d9557a0a1e488b0d20d908783185d059b7e606b0dfaaea6c4"
+}

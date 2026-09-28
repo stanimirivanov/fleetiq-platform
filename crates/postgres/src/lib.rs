@@ -16,6 +16,7 @@ mod device_repository;
 mod error;
 mod external_identity_administration;
 mod external_identity_audit;
+mod external_identity_catalog;
 mod platform_access_administration;
 mod platform_access_audit;
 mod platform_access_policy;
@@ -55,6 +56,9 @@ pub use external_identity_administration::{
 };
 pub use external_identity_audit::{
     PostgresExternalIdentityAuditRepository, PostgresExternalIdentityAuditRepositoryError,
+};
+pub use external_identity_catalog::{
+    PostgresExternalIdentityCatalogRepository, PostgresExternalIdentityCatalogRepositoryError,
 };
 pub use platform_access_administration::{
     PostgresPlatformAccessAdministration, PostgresPlatformAccessAdministrationError,
