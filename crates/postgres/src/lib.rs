@@ -26,6 +26,7 @@ mod tenant_access_administration;
 mod tenant_access_audit;
 mod tenant_access_policy;
 mod tenant_lifecycle_administration;
+mod tenant_lifecycle_audit;
 mod tenant_provisioning;
 
 pub use accepted_message_log::{PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError};
@@ -75,6 +76,9 @@ pub use tenant_access_audit::{
 pub use tenant_access_policy::{PostgresTenantAccessPolicy, PostgresTenantAccessPolicyError};
 pub use tenant_lifecycle_administration::{
     PostgresTenantLifecycleAdministration, PostgresTenantLifecycleAdministrationError,
+};
+pub use tenant_lifecycle_audit::{
+    PostgresTenantLifecycleAuditRepository, PostgresTenantLifecycleAuditRepositoryError,
 };
 pub use tenant_provisioning::{PostgresTenantProvisioning, PostgresTenantProvisioningError};
 

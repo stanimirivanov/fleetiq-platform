@@ -58,6 +58,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0058](0058-administer-actor-lifecycle-with-atomic-audit.md) | Reversible actor activation with atomic immutable audit and recovery safeguards |
 | [0059](0059-query-actor-lifecycle-audit-with-keyset-pages.md) | Authorized bounded actor lifecycle audit queries with stable keyset pagination |
 | [0060](0060-administer-tenant-lifecycle-with-atomic-audit.md) | Reversible tenant suspension with exact platform authority and atomic immutable audit |
+| [0061](0061-query-tenant-lifecycle-audit-with-keyset-pages.md) | Authorized bounded tenant lifecycle audit queries with stable keyset pagination |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

@@ -34,6 +34,7 @@ mod signal_binding_service;
 mod tenant_access_administration;
 mod tenant_access_audit;
 mod tenant_lifecycle_administration;
+mod tenant_lifecycle_audit;
 mod tenant_provisioning;
 
 pub use accepted_message_log::{
@@ -135,6 +136,11 @@ pub use tenant_lifecycle_administration::{
     TenantLifecycleAdministration, TenantLifecycleAdministrationError,
     TenantLifecycleAdministrationRepository, TenantLifecycleChange, TenantLifecycleChangeEffect,
     TenantLifecycleChangeKind, TenantLifecycleChangeOutcome, TenantLifecycleChangeRequest,
+};
+pub use tenant_lifecycle_audit::{
+    TenantLifecycleAudit, TenantLifecycleAuditCursor, TenantLifecycleAuditEntry,
+    TenantLifecycleAuditError, TenantLifecycleAuditPage, TenantLifecycleAuditPageSize,
+    TenantLifecycleAuditPageSizeError, TenantLifecycleAuditQuery, TenantLifecycleAuditRepository,
 };
 pub use tenant_provisioning::{
     TenantProvisioningCommand, TenantProvisioningError, TenantProvisioningOutcome,
