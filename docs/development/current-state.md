@@ -215,8 +215,10 @@ Suspension retains tenant-owned data and grants while fresh tenant
 authorization decisions fail closed; activation restores the retained grants.
 The bootstrap operator receives the new action explicitly, and later
 delegation uses audited platform grant administration. Previously issued typed
-authorization evidence is not recalled. Production ingestion suspension and
-tenant lifecycle audit queries remain planned.
+authorization evidence is not recalled. The same exact lifecycle-management
+authorization protects bounded, newest-first lifecycle audit queries. Stable
+keyset cursors use recorded time and the platform-scoped lifecycle change
+identity. Production ingestion suspension remains planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
