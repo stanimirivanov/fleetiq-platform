@@ -6,6 +6,7 @@
 mod accepted_message_log;
 mod actor_identity_resolver;
 mod actor_lifecycle_administration;
+mod actor_lifecycle_audit;
 mod actor_provisioning;
 mod asset_repository;
 mod decoded_observation_log;
@@ -32,6 +33,9 @@ pub use actor_identity_resolver::{
 };
 pub use actor_lifecycle_administration::{
     PostgresActorLifecycleAdministration, PostgresActorLifecycleAdministrationError,
+};
+pub use actor_lifecycle_audit::{
+    PostgresActorLifecycleAuditRepository, PostgresActorLifecycleAuditRepositoryError,
 };
 pub use actor_provisioning::{PostgresActorProvisioning, PostgresActorProvisioningError};
 pub use asset_repository::PostgresAssetRepository;

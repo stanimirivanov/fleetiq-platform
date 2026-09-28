@@ -56,6 +56,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0056](0056-administer-external-identities-with-atomic-audit.md) | Authorized external-identity lifecycle with atomic immutable audit |
 | [0057](0057-query-external-identity-audit-with-keyset-pages.md) | Authorized bounded external-identity audit queries with redacted diagnostics |
 | [0058](0058-administer-actor-lifecycle-with-atomic-audit.md) | Reversible actor activation with atomic immutable audit and recovery safeguards |
+| [0059](0059-query-actor-lifecycle-audit-with-keyset-pages.md) | Authorized bounded actor lifecycle audit queries with stable keyset pagination |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

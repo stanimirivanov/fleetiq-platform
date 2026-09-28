@@ -183,6 +183,7 @@ current-system map; do not copy chronological decision history into it.
 - [Audited external-identity administration decision](../adr/0056-administer-external-identities-with-atomic-audit.md)
 - [External-identity audit query decision](../adr/0057-query-external-identity-audit-with-keyset-pages.md)
 - [Actor lifecycle administration decision](../adr/0058-administer-actor-lifecycle-with-atomic-audit.md)
+- [Actor lifecycle audit query decision](../adr/0059-query-actor-lifecycle-audit-with-keyset-pages.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)

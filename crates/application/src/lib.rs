@@ -6,6 +6,7 @@
 mod accepted_message_log;
 mod actor_identity_resolver;
 mod actor_lifecycle_administration;
+mod actor_lifecycle_audit;
 mod actor_provisioning;
 mod asset_service;
 mod authorization;
@@ -42,6 +43,11 @@ pub use actor_lifecycle_administration::{
     ActorLifecycleAdministration, ActorLifecycleAdministrationError,
     ActorLifecycleAdministrationRepository, ActorLifecycleChange, ActorLifecycleChangeEffect,
     ActorLifecycleChangeKind, ActorLifecycleChangeOutcome, ActorLifecycleChangeRequest,
+};
+pub use actor_lifecycle_audit::{
+    ActorLifecycleAudit, ActorLifecycleAuditCursor, ActorLifecycleAuditEntry,
+    ActorLifecycleAuditError, ActorLifecycleAuditPage, ActorLifecycleAuditPageSize,
+    ActorLifecycleAuditPageSizeError, ActorLifecycleAuditQuery, ActorLifecycleAuditRepository,
 };
 pub use actor_provisioning::{
     ActorProvisioningCommand, ActorProvisioningError, ActorProvisioningOutcome,

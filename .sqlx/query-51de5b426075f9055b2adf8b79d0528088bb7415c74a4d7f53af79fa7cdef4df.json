@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT change_id, administrator_actor_id, target_actor_id,\n                   change_kind, recorded_at_ms, state_changed\n            FROM identity.actor_lifecycle_changes\n            WHERE $1::bigint IS NULL\n               OR (recorded_at_ms, change_id) < ($1, $2)\n            ORDER BY recorded_at_ms DESC, change_id DESC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "change_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_lifecycle_changes",
+            "name": "change_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "administrator_actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_lifecycle_changes",
+            "name": "administrator_actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "target_actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_lifecycle_changes",
+            "name": "target_actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "change_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_lifecycle_changes",
+            "name": "change_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_lifecycle_changes",
+            "name": "recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "state_changed",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "identity.actor_lifecycle_changes",
+            "name": "state_changed"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "51de5b426075f9055b2adf8b79d0528088bb7415c74a4d7f53af79fa7cdef4df"
+}

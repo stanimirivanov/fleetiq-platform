@@ -202,8 +202,11 @@ references while making new exact identity resolution and current tenant or
 platform policy evaluation fail closed. Activation restores those retained
 paths. Global serialization preserves exact retry behavior and prevents
 deactivation of the final active identity administrator or platform-access
-administrator. Previously issued typed authorization evidence is not recalled.
-Actor lifecycle audit queries and tenant lifecycle remain planned.
+administrator. The same exact identity-management authorization protects
+bounded, newest-first lifecycle audit queries. Stable keyset cursors use
+recorded time and the platform-scoped lifecycle change identity. Previously
+issued typed authorization evidence is not recalled. Tenant lifecycle remains
+planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
