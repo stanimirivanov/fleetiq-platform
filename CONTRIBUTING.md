@@ -20,6 +20,7 @@ optional choice.
 | Workflow, issue shape, review, and completion | This document |
 | Concise tool-facing working agreement | [AGENTS.md](AGENTS.md) |
 | Rust, architecture, tests, and operations | [engineering standards](docs/development/engineering-standards.md) |
+| Direct workspace dependency policy | [dependency rules](docs/architecture/dependency-rules.md) |
 | PostgreSQL schemas and migrations | [SQL migration criteria](docs/development/sql-migrations.md) |
 | Current runtime and capability inventory | [current state](docs/development/current-state.md) |
 | Durable architecture choices | [ADRs](docs/adr/README.md) |
@@ -131,6 +132,7 @@ With `DATABASE_URL` pointing to the fully migrated supported PostgreSQL
 database, run:
 
 ```powershell
+cargo xtask architecture
 cargo fmt --all --check
 cargo sqlx prepare --check --workspace -- --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
@@ -141,6 +143,8 @@ cargo doc --workspace --no-deps --locked
 CI applies the full migration chain before compiling SQLx queries. A skipped
 database-backed test is not passing evidence. Narrow crate or test commands are
 useful during development but do not replace the applicable workspace gate.
+The architecture check itself does not require PostgreSQL and should run before
+database-backed checks.
 
 Regenerate `.sqlx` with the same workspace, target, and feature arguments after
 changing a migration or checked query. The committed descriptions let image

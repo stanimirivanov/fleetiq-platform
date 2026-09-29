@@ -40,6 +40,10 @@ brokers, object storage, identity providers, or vendors. A crate owns its
 writes; cross-capability behavior uses an application port or versioned event,
 not another crate's private table.
 
+The [workspace dependency rules](../architecture/dependency-rules.md) make
+direct crate edges executable policy. Add or change an internal dependency only
+with its role, direction, and exact policy entry in the same pull request.
+
 Protocol decoding identifies source observations. Semantic binding attributes
 them to asset properties. Keep wire DTOs, WIT-generated values, database rows,
 events, and domain values distinct when their invariants or evolution differ.

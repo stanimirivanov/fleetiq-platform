@@ -13,11 +13,22 @@
 - Assumptions:
 - Known limitations:
 
+## Architecture
+
+- Owning capability:
+- Inbound adapter or caller:
+- Consumed ports:
+- Outbound adapters:
+- Dependency edges added, removed, or excepted:
+- Runnable end-to-end behavior:
+
 ## Verification
 
 | Command or check | Result | Evidence or reason not run |
 |:--|:--|:--|
+| `cargo xtask architecture` | | |
 | `cargo fmt --all --check` | | |
+| `cargo sqlx prepare --check --workspace -- --all-targets --all-features` | | |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | | |
 | `cargo test --workspace --all-features --locked` | | |
 | `cargo doc --workspace --no-deps --locked` | | |
@@ -29,6 +40,7 @@
 ## Review checklist
 
 - [ ] One coherent capability; unrelated changes are excluded.
+- [ ] Capability ownership and dependency changes are explicit and inward.
 - [ ] Public and persisted contracts have a compatibility plan.
 - [ ] Success and relevant invalid and failure paths are verified.
 - [ ] Tenant, concurrency, idempotency, retry, and resource risks are covered.

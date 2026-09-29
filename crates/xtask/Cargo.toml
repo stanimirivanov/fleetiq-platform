@@ -1,0 +1,14 @@
+[package]
+name = "fleetiq-xtask"
+version = "0.1.0"
+description = "Repository-owned FleetIQ development tasks"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+cargo_metadata.workspace = true
+
+[lints]
+workspace = true
