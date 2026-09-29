@@ -19,10 +19,23 @@ env:
   RUSTDOCFLAGS: -D warnings
 
 jobs:
+  architecture:
+    name: Architecture policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+
+      - name: Check dependency policy
+        run: cargo xtask architecture
+
   rust:
     name: Rust quality gate
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    needs: architecture
 
     services:
       postgres:
@@ -78,6 +91,7 @@ jobs:
     name: Local Compose smoke test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: architecture
 
     steps:
       - name: Check out source

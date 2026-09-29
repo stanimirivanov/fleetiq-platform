@@ -115,6 +115,14 @@ Dependencies point toward stable policy and domain meaning. Infrastructure
 implements consumer-owned ports. SQL rows, WIT values, wire payloads, and API
 documents do not become domain values until validated.
 
+The repository enforces its direct workspace dependency policy with
+`cargo xtask architecture`; see [dependency rules](dependency-rules.md). ADR
+0003 currently permits one reported temporary exception:
+`fleetiq-semantics -> fleetiq-application` adapts existing repositories into
+semantic read views. It is an exact package-pair exception, not a general
+policy-to-application direction. That edge must be removed before application
+orchestration depends on semantic policy.
+
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing
 the policy and adapter crates. See
@@ -168,6 +176,7 @@ runtime topology, or foundational technology. Keep this document as the
 current-system map; do not copy chronological decision history into it.
 
 - [ADR index](../adr/README.md)
+- [Dependency rules](dependency-rules.md)
 - [Per-action tenant authorization decision](../adr/0042-establish-per-action-tenant-authorization-boundary.md)
 - [Persisted tenant action grant decision](../adr/0043-persist-exact-tenant-action-grants.md)
 - [Audited tenant grant administration decision](../adr/0044-administer-tenant-grants-with-atomic-audit.md)
@@ -191,6 +200,7 @@ current-system map; do not copy chronological decision history into it.
 - [Actor catalogue query decision](../adr/0063-query-actor-catalogue-with-keyset-pages.md)
 - [Current external identities query decision](../adr/0064-query-current-external-identities-by-actor.md)
 - [Current platform grants query decision](../adr/0065-query-current-platform-grants-by-actor.md)
+- [Capability dependency enforcement decision](../adr/0066-enforce-capability-dependency-policy.md)
 - [Current implementation state](../development/current-state.md)
 - [Product scope](../product/README.md)
 - [Implementation milestones](../roadmap/milestones.md)

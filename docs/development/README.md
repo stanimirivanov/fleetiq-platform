@@ -66,7 +66,9 @@ cargo sqlx prepare --workspace -- --all-targets --all-features
 ## Quality gate
 
 ```powershell
+cargo xtask architecture
 cargo fmt --all --check
+cargo sqlx prepare --check --workspace -- --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features --locked
 cargo doc --workspace --no-deps --locked
@@ -75,6 +77,9 @@ cargo doc --workspace --no-deps --locked
 SQLx macros connect to `DATABASE_URL` during compilation. Apply every migration
 before running Clippy, tests, or documentation builds that compile checked
 queries.
+
+The architecture command needs no database. It compares Cargo's workspace
+metadata with the reviewed direct dependency policy.
 
 ## Guides
 
