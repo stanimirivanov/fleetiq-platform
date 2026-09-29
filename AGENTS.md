@@ -1,8 +1,5 @@
 # Repository working agreement
 
-This is the concise entry point for coding tools and contributors.
-[`CONTRIBUTING.md`](CONTRIBUTING.md) is the canonical workflow policy.
-
 ## TL;DR
 
 Deliver one verified pull-request-sized capability at a time. Preserve inward
@@ -10,11 +7,17 @@ dependencies, trusted-host boundaries, tenant ownership, deterministic replay,
 and immutable history. Follow the Rust and SQL standards and report every check
 exactly.
 
+This is the concise entry point for coding tools and contributors.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) is the canonical workflow policy. The
+[documentation map](docs/README.md) routes each task to the additional sources
+that apply.
+
 ## Before changing anything
 
-1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md), the relevant architecture page,
-   [engineering standards](docs/development/engineering-standards.md), and
-   accepted ADRs.
+1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md), then use the
+   [documentation map](docs/README.md) to load the product, architecture,
+   development, operations, and accepted-decision sources relevant to the
+   task. Do not bulk-read unrelated guides or ADRs.
 2. Inspect the branch and working tree. Preserve pre-existing changes and keep
    unrelated work out of the task.
 3. Check [current state](docs/development/current-state.md) before assuming a
@@ -79,7 +82,10 @@ Never commit secrets, customer data, production telemetry, machine-specific
 paths, crash dumps, or unreviewed generated binaries. Do not present local
 development defaults as production configuration.
 
-Run the complete quality gate from [`CONTRIBUTING.md`](CONTRIBUTING.md#verification).
+The [coding harness guide](docs/development/harness.md) maps guidance to
+executable feedback and explains which verification tier applies. Run the
+complete applicable gate from
+[`CONTRIBUTING.md`](CONTRIBUTING.md#verification).
 Finish with its prescribed completion report, including the repository,
 milestone, copy/paste-ready issue text, limitations, and passed/failed/not-run
 checks.

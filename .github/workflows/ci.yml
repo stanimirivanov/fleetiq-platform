@@ -27,6 +27,11 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check repository policy
+        run: cargo xtask repository
 
       - name: Check dependency policy
         run: cargo xtask architecture
@@ -55,6 +60,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Show toolchain
         run: |
@@ -96,6 +103,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Build and start the local stack
         run: docker compose -f deploy/local/compose.yaml up --build --wait

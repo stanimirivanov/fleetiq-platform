@@ -26,12 +26,15 @@
 
 | Command or check | Result | Evidence or reason not run |
 |:--|:--|:--|
+| `cargo xtask repository` | | |
 | `cargo xtask architecture` | | |
 | `cargo fmt --all --check` | | |
 | `cargo sqlx prepare --check --workspace -- --all-targets --all-features` | | |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | | |
 | `cargo test --workspace --all-features --locked` | | |
 | `cargo doc --workspace --no-deps --locked` | | |
+
+Checks not run, blocking conditions, and residual risk:
 
 ## Migration, rollout, and rollback
 
@@ -40,6 +43,7 @@
 ## Review checklist
 
 - [ ] One coherent capability; unrelated changes are excluded.
+- [ ] Repository policy and architecture checks pass.
 - [ ] Capability ownership and dependency changes are explicit and inward.
 - [ ] Public and persisted contracts have a compatibility plan.
 - [ ] Success and relevant invalid and failure paths are verified.

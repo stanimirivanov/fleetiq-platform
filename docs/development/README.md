@@ -2,9 +2,13 @@
 
 ## TL;DR
 
-Use the pinned Rust toolchain, run PostgreSQL for SQLx-checked queries and
-integration tests, follow the workspace quality gate, and keep engineering and
-migration rules in their dedicated guides.
+- Use the pinned Rust toolchain and repository-owned commands.
+- Run `cargo xtask repository` and `cargo xtask architecture` for immediate,
+  database-independent structural feedback.
+- Run PostgreSQL for SQLx-checked queries and the complete Rust acceptance
+  gate.
+- Use the [coding harness](harness.md) to select the applicable feedback tier
+  and report unavailable checks honestly.
 
 ## Local setup
 
@@ -65,8 +69,17 @@ cargo sqlx prepare --workspace -- --all-targets --all-features
 
 ## Quality gate
 
+Start with the fast structural checks:
+
 ```powershell
+cargo xtask repository
 cargo xtask architecture
+```
+
+Then run the complete database-backed Rust gate from
+[CONTRIBUTING.md](../../CONTRIBUTING.md#verification). Its commands include:
+
+```powershell
 cargo fmt --all --check
 cargo sqlx prepare --check --workspace -- --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
@@ -75,15 +88,18 @@ cargo doc --workspace --no-deps --locked
 ```
 
 SQLx macros connect to `DATABASE_URL` during compilation. Apply every migration
-before running Clippy, tests, or documentation builds that compile checked
-queries.
+before running SQLx preparation, Clippy, tests, or documentation builds that
+compile checked queries.
 
-The architecture command needs no database. It compares Cargo's workspace
-metadata with the reviewed direct dependency policy.
+The repository and architecture commands need no database. The repository
+command validates mechanical documentation and template policy. The
+architecture command compares Cargo's workspace metadata with the reviewed
+direct dependency policy.
 
 ## Guides
 
 - [Engineering standards](engineering-standards.md)
+- [Coding harness and feedback tiers](harness.md)
 - [SQL migration criteria](sql-migrations.md)
 - [Current implementation state](current-state.md)
 - [Contributor workflow](../../CONTRIBUTING.md)

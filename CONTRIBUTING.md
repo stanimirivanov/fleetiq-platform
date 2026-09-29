@@ -3,9 +3,11 @@
 ## TL;DR
 
 - Deliver one coherent, verified capability per issue and pull request.
+- Use the [documentation map](docs/README.md) to read only the sources relevant
+  to the task.
 - Preserve unrelated work and make only reversible local assumptions.
 - Keep dependencies pointing inward and untrusted input behind adapters.
-- Run the complete Rust quality gate and report checks exactly as run.
+- Run the applicable harness tier and report checks exactly as run.
 - Use milestone titles `MNN - Outcome` and include one milestone in each issue.
 - Update code, tests, contracts, documentation, and operations together.
 
@@ -19,6 +21,8 @@ optional choice.
 |:--|:--|
 | Workflow, issue shape, review, and completion | This document |
 | Concise tool-facing working agreement | [AGENTS.md](AGENTS.md) |
+| Progressive task-to-document routing | [documentation map](docs/README.md) |
+| Harness tiers and executable feedback | [coding harness](docs/development/harness.md) |
 | Rust, architecture, tests, and operations | [engineering standards](docs/development/engineering-standards.md) |
 | Direct workspace dependency policy | [dependency rules](docs/architecture/dependency-rules.md) |
 | PostgreSQL schemas and migrations | [SQL migration criteria](docs/development/sql-migrations.md) |
@@ -35,7 +39,8 @@ convenient rule.
 A contributor must:
 
 - inspect the branch and working tree and preserve unrelated changes;
-- read the relevant product, architecture, development, and ADR documents;
+- use the [documentation map](docs/README.md) to read the relevant product,
+  architecture, development, operations, and accepted-decision documents;
 - define the smallest independently reviewable outcome;
 - identify affected contracts, migrations, security boundaries, documentation,
   and operational behavior; and
@@ -99,6 +104,12 @@ Describe the problem and observable result.
 Acceptance criteria describe observable behavior or verifiable invariants.
 Record known limitations explicitly.
 
+The checked-in implementation issue template also owns its canonical GitHub
+front matter: `Implementation task`, its reviewable-capability description, and
+empty default title, labels, and assignees. Change that metadata and the
+repository checker together when the project intentionally changes issue
+routing.
+
 ## Pull-request-sized work
 
 A pull request must solve one problem or deliver one coherent vertical
@@ -128,10 +139,18 @@ is deterministic.
 
 ## Verification
 
-With `DATABASE_URL` pointing to the fully migrated supported PostgreSQL
-database, run:
+Run the fast, database-independent structural checks during editing:
 
 ```powershell
+cargo xtask repository
+cargo xtask architecture
+```
+
+Before handoff, run the complete Rust acceptance gate with `DATABASE_URL`
+pointing to the fully migrated supported PostgreSQL database:
+
+```powershell
+cargo xtask repository
 cargo xtask architecture
 cargo fmt --all --check
 cargo sqlx prepare --check --workspace -- --all-targets --all-features
@@ -143,8 +162,9 @@ cargo doc --workspace --no-deps --locked
 CI applies the full migration chain before compiling SQLx queries. A skipped
 database-backed test is not passing evidence. Narrow crate or test commands are
 useful during development but do not replace the applicable workspace gate.
-The architecture check itself does not require PostgreSQL and should run before
-database-backed checks.
+The repository and architecture checks require neither PostgreSQL nor network
+access after the pinned Rust toolchain and dependencies are available. Run
+them before database-backed checks.
 
 Regenerate `.sqlx` with the same workspace, target, and feature arguments after
 changing a migration or checked query. The committed descriptions let image
@@ -155,6 +175,14 @@ If a required check cannot run, report the exact check as **not run**, the
 blocking condition, checks that did run, and the residual risk. Never weaken a
 check to suit the current environment or report an unexecuted check as passed.
 
+The [coding harness](docs/development/harness.md) classifies these checks from
+T0 task routing through T3 service-backed and explicitly requested specialist
+checks. Local Compose smoke verification is required when deployment,
+configuration, startup, readiness, or container behavior changes. The
+repository does not yet define a canonical supply-chain aggregate; record any
+explicitly requested vulnerability or license command exactly rather than
+implying an undocumented gate exists.
+
 ## Documentation
 
 Code and documentation change together when behavior, contracts,
@@ -162,7 +190,12 @@ configuration, migrations, or operations change. Long documents include a
 `## TL;DR` immediately after their title and any status metadata. A document is
 long when it has at least 800 words, more than five second-level sections, or is
 an architecture, security, migration, operational, or end-to-end guide.
-Templates are exempt because their headings are fields to complete.
+ADRs and issue or pull request templates are exempt because their fixed
+headings implement their formats. Their structure is validated separately.
+Mechanically checked issue and pull-request prompts, required ADR headings,
+lifecycle metadata and index entries, and milestone indexes and boundaries use
+plain Markdown. Raw HTML comments may provide author guidance, but raw HTML
+elements must not carry required policy fields.
 
 Public Rust APIs document purpose, invariants, errors, and examples where an
 example clarifies correct use. Accepted ADRs are historical records; supersede
@@ -173,9 +206,46 @@ configuration, operation, publication, or an external contributor workflow.
 Otherwise crate-level `//!` rustdoc is the canonical overview and the root
 repository map provides navigation.
 
+## Pull request description
+
+A pull request description must state the linked issue and exact milestone;
+the problem and resulting behavior; scope and deliberate exclusions;
+assumptions, limitations, and unresolved questions; design, architecture, and
+compatibility effects; migration, rollout, rollback, security, and operational
+effects; and verification evidence. Every applicable check must be shown as
+passed, failed, or not run. A not-run check includes the blocking condition and
+residual risk.
+
+Use [the repository template](.github/PULL_REQUEST_TEMPLATE.md). The template
+collects this evidence but does not replace the policies in this document.
+The checked-in template owns its exact level-two section order and required
+prompt vocabulary. Change that contract and the repository checker together
+when the project intentionally changes review routing. Keep every verification
+command as one exact inline-code value in the first table column, and retain the
+ordered unchecked review checklist; these shapes make drift mechanically
+detectable.
+
+## Improving the harness
+
+When the same review finding or escaped defect recurs, close the earliest
+reliable feedback loop:
+
+1. Clarify intent in the narrow canonical guide and route readers to it.
+2. Add or improve a deterministic repository sensor for a structural rule.
+3. Add a focused behavioral test or fixture for an observable regression.
+4. When automation would be noisy, record an explicit exception, owner, and
+   review trigger.
+
+Sensors must produce actionable diagnostics, stay deterministic, and link to
+the policy they enforce. They must not silently rewrite expected content,
+depend on undeclared ambient tools, weaken invariants, or treat an unavailable
+check as passing. See the [coding harness](docs/development/harness.md) for the
+feedback inventory and extension criteria.
+
 ## Review checklist
 
 - [ ] The issue names one milestone and one coherent capability.
+- [ ] Repository policy and architecture checks pass.
 - [ ] Dependencies point inward and infrastructure stays outside domain policy.
 - [ ] Public and persisted contracts are compatible or have an evolution plan.
 - [ ] Tests cover success and relevant invalid, failure, and concurrency paths.
