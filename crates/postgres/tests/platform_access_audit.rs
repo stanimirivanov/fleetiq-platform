@@ -3,8 +3,8 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    PlatformAccessAudit, PlatformAccessAuditPageSize, PlatformAccessAuditQuery,
-    PlatformAccessChangeEffect, PlatformAccessChangeKind, PlatformAction,
+    ManagePlatformAccess, PlatformAccessAudit, PlatformAccessAuditPageSize,
+    PlatformAccessAuditQuery, PlatformAccessChangeEffect, PlatformAccessChangeKind, PlatformAction,
     PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_domain::{
@@ -112,13 +112,10 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_platform_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManagePlatformAccess,
-            )
+            .authorize::<ManagePlatformAccess>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }

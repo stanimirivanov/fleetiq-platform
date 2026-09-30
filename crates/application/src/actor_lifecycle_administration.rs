@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, ActorLifecycleChangeId, UnixTimeMillis};
 
-use crate::{AuthorizedPlatformAction, PlatformAction};
+use crate::{AuthorizedPlatform, ManageIdentity};
 
 /// Requested lifecycle state for one stable internal actor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -137,19 +137,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`ActorLifecycleAdministrationError::WrongAction`] for other
-    /// platform evidence, or preserves the repository failure.
+    /// Wraps the repository error when the operation fails.
     pub async fn apply(
         &self,
-        authorization: AuthorizedPlatformAction,
+        authorization: AuthorizedPlatform<ManageIdentity>,
         request: ActorLifecycleChangeRequest,
     ) -> Result<ActorLifecycleChangeOutcome, ActorLifecycleAdministrationError<R::Error>> {
-        if authorization.action() != PlatformAction::ManageIdentity {
-            return Err(ActorLifecycleAdministrationError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         self.repository
             .apply(&ActorLifecycleChange {
                 change_id: request.change_id,
@@ -166,11 +159,6 @@ where
 /// Failure to apply an authorized actor lifecycle command.
 #[derive(Debug)]
 pub enum ActorLifecycleAdministrationError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The atomic persistence operation failed.
     Repository(E),
 }
@@ -178,10 +166,6 @@ pub enum ActorLifecycleAdministrationError<E> {
 impl<E> fmt::Display for ActorLifecycleAdministrationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "actor lifecycle administration requires ManageIdentity authorization, got {actual:?}"
-            ),
             Self::Repository(_) => {
                 formatter.write_str("actor lifecycle administration could not be persisted")
             }
@@ -195,7 +179,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }

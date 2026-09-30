@@ -52,10 +52,7 @@ async fn derives_the_administrator_from_manage_identity_evidence() {
     let repository = RecordingRepository::default();
     let recorded = repository.changes.clone();
     let outcome = ExternalIdentityAdministration::new(repository)
-        .apply(
-            authorization(PlatformAction::ManageIdentity).await,
-            request(),
-        )
+        .apply(authorization::<ManageIdentity>().await, request())
         .await
         .expect("recording repository should accept the change");
 
@@ -71,38 +68,9 @@ async fn derives_the_administrator_from_manage_identity_evidence() {
     assert_eq!(changes[0].target_actor_id().as_str(), "actor-a");
 }
 
-#[tokio::test]
-async fn rejects_other_platform_evidence_before_persistence() {
-    let repository = RecordingRepository::default();
-    let recorded = repository.changes.clone();
-    let error = ExternalIdentityAdministration::new(repository)
-        .apply(
-            authorization(PlatformAction::ProvisionTenant).await,
-            request(),
-        )
-        .await
-        .expect_err("tenant provisioning evidence must not change identities");
-
-    assert!(matches!(
-        error,
-        ExternalIdentityAdministrationError::WrongAction {
-            actual: PlatformAction::ProvisionTenant
-        }
-    ));
-    assert!(
-        recorded
-            .lock()
-            .expect("recording lock should remain available")
-            .is_empty()
-    );
-}
-
-async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
+async fn authorization<A: crate::PlatformActionMarker>() -> AuthorizedPlatform<A> {
     PlatformAuthorizationService::new(AllowPolicy)
-        .authorize(
-            crate::test_support::authenticated_actor(actor_id("operator-a")).await,
-            action,
-        )
+        .authorize::<A>(crate::test_support::authenticated_actor(actor_id("operator-a")).await)
         .await
         .expect("test policy should authorize")
 }

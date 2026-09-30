@@ -51,10 +51,7 @@ async fn derives_administrator_from_exact_authorization() {
     let recorded = repository.changes.clone();
 
     TenantLifecycleAdministration::new(repository)
-        .apply(
-            authorization(PlatformAction::ManageTenantLifecycle).await,
-            request(),
-        )
+        .apply(authorization::<ManageTenantLifecycle>().await, request())
         .await
         .expect("recording repository should apply the change");
 
@@ -66,39 +63,9 @@ async fn derives_administrator_from_exact_authorization() {
     assert_eq!(changes[0].tenant_id().as_str(), "tenant-a");
 }
 
-#[tokio::test]
-async fn rejects_other_platform_evidence_before_persistence() {
-    let repository = RecordingRepository::default();
-    let recorded = repository.changes.clone();
-
-    let error = TenantLifecycleAdministration::new(repository)
-        .apply(
-            authorization(PlatformAction::ProvisionTenant).await,
-            request(),
-        )
-        .await
-        .expect_err("tenant provisioning must not change tenant lifecycle state");
-
-    assert!(matches!(
-        error,
-        TenantLifecycleAdministrationError::WrongAction {
-            actual: PlatformAction::ProvisionTenant
-        }
-    ));
-    assert!(
-        recorded
-            .lock()
-            .expect("recording lock should remain available")
-            .is_empty()
-    );
-}
-
-async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
+async fn authorization<A: crate::PlatformActionMarker>() -> AuthorizedPlatform<A> {
     PlatformAuthorizationService::new(AllowPolicy)
-        .authorize(
-            crate::test_support::authenticated_actor(actor_id("operator-a")).await,
-            action,
-        )
+        .authorize::<A>(crate::test_support::authenticated_actor(actor_id("operator-a")).await)
         .await
         .expect("test policy should authorize")
 }

@@ -3,10 +3,11 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    PlatformAccessAdministration, PlatformAccessAdministrationError, PlatformAccessChangeEffect,
-    PlatformAccessChangeKind, PlatformAccessChangeOutcome, PlatformAccessChangeRequest,
-    PlatformAction, PlatformAuthorizationError, PlatformAuthorizationService,
-    PlatformBootstrapRequest, PlatformBootstrapService,
+    ManagePlatformAccess, PlatformAccessAdministration, PlatformAccessAdministrationError,
+    PlatformAccessChangeEffect, PlatformAccessChangeKind, PlatformAccessChangeOutcome,
+    PlatformAccessChangeRequest, PlatformAction, PlatformAuthorizationError,
+    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
+    ProvisionTenant,
 };
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId,
@@ -50,10 +51,7 @@ async fn grant_revoke_and_exact_retry_are_atomic_and_audited(
 
     let authorization =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("actor-target").await,
-                PlatformAction::ProvisionTenant,
-            )
+            .authorize::<ProvisionTenant>(support::authenticated_actor("actor-target").await)
             .await?;
     assert_eq!(authorization.actor_id().as_str(), "actor-target");
 
@@ -89,10 +87,7 @@ async fn grant_revoke_and_exact_retry_are_atomic_and_audited(
     );
 
     let error = PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-        .authorize(
-            support::authenticated_actor("actor-target").await,
-            PlatformAction::ProvisionTenant,
-        )
+        .authorize::<ProvisionTenant>(support::authenticated_actor("actor-target").await)
         .await
         .expect_err("revocation must affect the next policy decision");
     assert!(matches!(error, PlatformAuthorizationError::Denied));
@@ -114,45 +109,6 @@ async fn grant_revoke_and_exact_retry_are_atomic_and_audited(
     assert_eq!(first_audit.recorded_at_ms, 1_000);
     assert!(first_audit.state_changed);
     assert_eq!(audit_count(&pool).await?, 3);
-    Ok(())
-}
-
-#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
-async fn another_platform_action_cannot_mutate_or_audit(
-    pool: PgPool,
-) -> Result<(), Box<dyn Error>> {
-    seed(&pool).await?;
-    let identity_authorization =
-        PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManageIdentity,
-            )
-            .await?;
-
-    let error =
-        PlatformAccessAdministration::new(PostgresPlatformAccessAdministration::new(pool.clone()))
-            .apply(
-                identity_authorization,
-                request(
-                    "unauthorized-change",
-                    "actor-target",
-                    PlatformAction::ProvisionTenant,
-                    PlatformAccessChangeKind::Grant,
-                    1_000,
-                ),
-            )
-            .await
-            .expect_err("identity management must not administer platform grants");
-
-    assert!(matches!(
-        error,
-        PlatformAccessAdministrationError::WrongAction {
-            actual: PlatformAction::ManageIdentity
-        }
-    ));
-    assert_eq!(audit_count(&pool).await?, 0);
-    assert_eq!(target_grant_count(&pool).await?, 0);
     Ok(())
 }
 
@@ -308,10 +264,7 @@ async fn final_administrator_is_preserved_but_can_revoke_after_delegation(
 
     let delegated =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("actor-target").await,
-                PlatformAction::ManagePlatformAccess,
-            )
+            .authorize::<ManagePlatformAccess>(support::authenticated_actor("actor-target").await)
             .await?;
     assert_eq!(delegated.actor_id().as_str(), "actor-target");
     assert_eq!(audit_count(&pool).await?, 2);
@@ -394,13 +347,10 @@ async fn seed_actor(pool: &PgPool, actor_id: &str) -> sqlx::Result<()> {
 
 async fn manage_platform_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManagePlatformAccess,
-            )
+            .authorize::<ManagePlatformAccess>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }
@@ -436,14 +386,6 @@ async fn audit_count(pool: &PgPool) -> sqlx::Result<i64> {
     sqlx::query_scalar("SELECT COUNT(*) FROM identity.platform_access_changes")
         .fetch_one(pool)
         .await
-}
-
-async fn target_grant_count(pool: &PgPool) -> sqlx::Result<i64> {
-    sqlx::query_scalar(
-        "SELECT COUNT(*) FROM identity.platform_action_grants WHERE actor_id = 'actor-target'",
-    )
-    .fetch_one(pool)
-    .await
 }
 
 fn assert_constraint(error: &sqlx::Error, expected: &str) {

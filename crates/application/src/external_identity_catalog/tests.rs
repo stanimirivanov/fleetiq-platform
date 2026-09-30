@@ -103,35 +103,12 @@ fn debug_output_redacts_opaque_subjects() {
 async fn identity_management_authorization_allows_one_query() {
     let repository = RecordingRepository::default();
     let page = ExternalIdentityCatalog::new(repository.clone())
-        .find_page(
-            authorization(PlatformAction::ManageIdentity).await,
-            &query(),
-        )
+        .find_page(authorization::<ManageIdentity>().await, &query())
         .await
         .expect("authorized query should succeed");
 
     assert!(page.entries().is_empty());
     assert_eq!(*repository.calls.lock().expect("call lock poisoned"), 1);
-}
-
-#[tokio::test]
-async fn rejects_another_action_before_repository_access() {
-    let repository = RecordingRepository::default();
-    let error = ExternalIdentityCatalog::new(repository.clone())
-        .find_page(
-            authorization(PlatformAction::ManagePlatformAccess).await,
-            &query(),
-        )
-        .await
-        .expect_err("platform access management must not expose login mappings");
-
-    assert!(matches!(
-        error,
-        ExternalIdentityCatalogError::WrongAction {
-            actual: PlatformAction::ManagePlatformAccess
-        }
-    ));
-    assert_eq!(*repository.calls.lock().expect("call lock poisoned"), 0);
 }
 
 #[tokio::test]
@@ -141,10 +118,7 @@ async fn preserves_repository_failure_as_the_error_source() {
         ..RecordingRepository::default()
     };
     let error = ExternalIdentityCatalog::new(repository)
-        .find_page(
-            authorization(PlatformAction::ManageIdentity).await,
-            &query(),
-        )
+        .find_page(authorization::<ManageIdentity>().await, &query())
         .await
         .expect_err("repository failure should be returned");
 
@@ -163,14 +137,13 @@ fn query() -> ExternalIdentityCatalogQuery {
     )
 }
 
-async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
+async fn authorization<A: crate::PlatformActionMarker>() -> AuthorizedPlatform<A> {
     PlatformAuthorizationService::new(AllowAllPolicy)
-        .authorize(
+        .authorize::<A>(
             crate::test_support::authenticated_actor(
                 ActorId::new("actor-admin").expect("valid actor ID"),
             )
             .await,
-            action,
         )
         .await
         .expect("test policy should authorize request")

@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::ActorId;
 
-use crate::{AuthorizedPlatformAction, PlatformAction};
+use crate::{AuthorizedPlatform, ManageIdentity};
 
 const MAX_PAGE_SIZE: u16 = 100;
 
@@ -204,19 +204,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`ActorCatalogError::WrongAction`] when the evidence authorizes
-    /// another action, or wraps the repository error when loading fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn find_page(
         &self,
-        authorization: AuthorizedPlatformAction,
+        _authorization: AuthorizedPlatform<ManageIdentity>,
         query: &ActorCatalogQuery,
     ) -> Result<ActorCatalogPage, ActorCatalogError<R::Error>> {
-        if authorization.action() != PlatformAction::ManageIdentity {
-            return Err(ActorCatalogError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         self.repository
             .find_page(query)
             .await
@@ -227,11 +220,6 @@ where
 /// Failure to execute an authorized actor catalogue query.
 #[derive(Debug)]
 pub enum ActorCatalogError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The persistence operation failed.
     Repository(E),
 }
@@ -239,10 +227,6 @@ pub enum ActorCatalogError<E> {
 impl<E> fmt::Display for ActorCatalogError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "actor catalogue requires ManageIdentity authorization, got {actual:?}"
-            ),
             Self::Repository(_) => formatter.write_str("actor catalogue could not be loaded"),
         }
     }
@@ -254,7 +238,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }

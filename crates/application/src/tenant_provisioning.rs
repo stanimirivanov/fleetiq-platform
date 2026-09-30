@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, TenantId, TenantProvisioningId, UnixTimeMillis};
 
-use crate::{AuthorizedPlatformAction, PlatformAction};
+use crate::{AuthorizedPlatform, ProvisionTenant};
 
 /// Trusted input for one idempotent tenant provisioning command.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -129,15 +129,9 @@ where
     /// Wraps the repository error when the atomic provisioning operation fails.
     pub async fn provision(
         &self,
-        authorization: AuthorizedPlatformAction,
+        authorization: AuthorizedPlatform<ProvisionTenant>,
         request: TenantProvisioningRequest,
     ) -> Result<TenantProvisioningOutcome, TenantProvisioningError<R::Error>> {
-        if authorization.action() != PlatformAction::ProvisionTenant {
-            return Err(TenantProvisioningError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         let command = TenantProvisioningCommand {
             provisioning_id: request.provisioning_id,
             tenant_id: request.tenant_id,
@@ -156,11 +150,6 @@ where
 /// Failure to apply an authorized tenant provisioning command.
 #[derive(Debug)]
 pub enum TenantProvisioningError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The atomic persistence operation failed.
     Repository(E),
 }
@@ -168,10 +157,6 @@ pub enum TenantProvisioningError<E> {
 impl<E> fmt::Display for TenantProvisioningError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "tenant provisioning requires ProvisionTenant authorization, got {actual:?}"
-            ),
             Self::Repository(_) => {
                 formatter.write_str("tenant provisioning could not be persisted")
             }
@@ -185,7 +170,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }
@@ -247,7 +231,7 @@ mod tests {
 
         let outcome = service
             .provision(
-                authorization("operator-a", PlatformAction::ProvisionTenant).await,
+                authorization::<ProvisionTenant>("operator-a").await,
                 request(),
             )
             .await
@@ -266,38 +250,9 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn rejects_identity_management_evidence_before_persistence() {
-        let repository = RecordingRepository::default();
-        let recorded = repository.commands.clone();
-        let error = TenantProvisioningService::new(repository)
-            .provision(
-                authorization("operator-a", PlatformAction::ManageIdentity).await,
-                request(),
-            )
-            .await
-            .expect_err("identity management evidence must not provision a tenant");
-
-        assert!(matches!(
-            error,
-            TenantProvisioningError::WrongAction {
-                actual: PlatformAction::ManageIdentity
-            }
-        ));
-        assert!(
-            recorded
-                .lock()
-                .expect("recording lock should remain available")
-                .is_empty()
-        );
-    }
-
-    async fn authorization(actor: &str, action: PlatformAction) -> AuthorizedPlatformAction {
+    async fn authorization<A: crate::PlatformActionMarker>(actor: &str) -> AuthorizedPlatform<A> {
         PlatformAuthorizationService::new(AllowPolicy)
-            .authorize(
-                crate::test_support::authenticated_actor(actor_id(actor)).await,
-                action,
-            )
+            .authorize::<A>(crate::test_support::authenticated_actor(actor_id(actor)).await)
             .await
             .expect("test policy should authorize provisioning")
     }

@@ -3,8 +3,9 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    ActorIdentityResolver, PlatformAction, PlatformAuthorizationService, PlatformBootstrapError,
-    PlatformBootstrapOutcome, PlatformBootstrapRequest, PlatformBootstrapService,
+    ActorIdentityResolver, ManageIdentity, ManagePlatformAccess, ManageTenantLifecycle,
+    PlatformAuthorizationService, PlatformBootstrapError, PlatformBootstrapOutcome,
+    PlatformBootstrapRequest, PlatformBootstrapService, ProvisionTenant,
 };
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
@@ -43,19 +44,13 @@ async fn establishes_a_resolvable_operator_grant_and_immutable_evidence(
 
     let authorization =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ProvisionTenant,
-            )
+            .authorize::<ProvisionTenant>(support::authenticated_actor("operator-a").await)
             .await?;
     assert_eq!(authorization.actor_id(), initial_request.actor_id());
 
     let identity_authorization =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManageIdentity,
-            )
+            .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)
             .await?;
     assert_eq!(
         identity_authorization.actor_id(),
@@ -64,19 +59,13 @@ async fn establishes_a_resolvable_operator_grant_and_immutable_evidence(
 
     let access_authorization =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManagePlatformAccess,
-            )
+            .authorize::<ManagePlatformAccess>(support::authenticated_actor("operator-a").await)
             .await?;
     assert_eq!(access_authorization.actor_id(), initial_request.actor_id());
 
     let tenant_lifecycle_authorization =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManageTenantLifecycle,
-            )
+            .authorize::<ManageTenantLifecycle>(support::authenticated_actor("operator-a").await)
             .await?;
     assert_eq!(
         tenant_lifecycle_authorization.actor_id(),

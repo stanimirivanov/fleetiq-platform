@@ -3,7 +3,7 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    ActorCatalog, ActorCatalogPageSize, ActorCatalogQuery, ActorLifecycleState, PlatformAction,
+    ActorCatalog, ActorCatalogPageSize, ActorCatalogQuery, ActorLifecycleState, ManageIdentity,
     PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_domain::{
@@ -95,13 +95,10 @@ async fn seed_actor(pool: &PgPool, actor_id: &str, is_active: bool) -> sqlx::Res
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManageIdentity,
-            )
+            .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }

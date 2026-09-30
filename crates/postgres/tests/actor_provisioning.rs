@@ -4,7 +4,7 @@ use std::error::Error;
 
 use fleetiq_application::{
     ActorIdentityResolver, ActorProvisioningError, ActorProvisioningOutcome,
-    ActorProvisioningRequest, ActorProvisioningService, PlatformAction,
+    ActorProvisioningRequest, ActorProvisioningService, ManageIdentity,
     PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_domain::{
@@ -252,13 +252,10 @@ async fn bootstrap_operator(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManageIdentity,
-            )
+            .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }

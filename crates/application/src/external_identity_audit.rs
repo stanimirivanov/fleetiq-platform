@@ -3,8 +3,7 @@ use std::{error::Error, fmt, future::Future};
 use fleetiq_domain::{ActorId, ExternalIdentity, ExternalIdentityChangeId, UnixTimeMillis};
 
 use crate::{
-    AuthorizedPlatformAction, ExternalIdentityChangeEffect, ExternalIdentityChangeKind,
-    PlatformAction,
+    AuthorizedPlatform, ExternalIdentityChangeEffect, ExternalIdentityChangeKind, ManageIdentity,
 };
 
 const MAX_PAGE_SIZE: u16 = 100;
@@ -276,20 +275,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`ExternalIdentityAuditError::WrongAction`] when the evidence
-    /// authorizes another action, or wraps the repository error when loading
-    /// fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn find_page(
         &self,
-        authorization: AuthorizedPlatformAction,
+        _authorization: AuthorizedPlatform<ManageIdentity>,
         query: &ExternalIdentityAuditQuery,
     ) -> Result<ExternalIdentityAuditPage, ExternalIdentityAuditError<R::Error>> {
-        if authorization.action() != PlatformAction::ManageIdentity {
-            return Err(ExternalIdentityAuditError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         self.repository
             .find_page(query)
             .await
@@ -300,11 +291,6 @@ where
 /// Failure to execute an authorized external-identity audit query.
 #[derive(Debug)]
 pub enum ExternalIdentityAuditError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The persistence operation failed.
     Repository(E),
 }
@@ -312,10 +298,6 @@ pub enum ExternalIdentityAuditError<E> {
 impl<E> fmt::Display for ExternalIdentityAuditError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "external identity audit requires ManageIdentity authorization, got {actual:?}"
-            ),
             Self::Repository(_) => {
                 formatter.write_str("external identity audit could not be loaded")
             }
@@ -329,7 +311,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }

@@ -3,7 +3,8 @@ use std::{error::Error, fmt, future::Future};
 use fleetiq_domain::{ActorId, PlatformAccessChangeId, UnixTimeMillis};
 
 use crate::{
-    AuthorizedPlatformAction, PlatformAccessChangeEffect, PlatformAccessChangeKind, PlatformAction,
+    AuthorizedPlatform, ManagePlatformAccess, PlatformAccessChangeEffect, PlatformAccessChangeKind,
+    PlatformAction,
 };
 
 const MAX_PAGE_SIZE: u16 = 100;
@@ -259,20 +260,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`PlatformAccessAuditError::WrongAction`] when the evidence
-    /// authorizes another action, or wraps the repository error when loading
-    /// fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn find_page(
         &self,
-        authorization: AuthorizedPlatformAction,
+        _authorization: AuthorizedPlatform<ManagePlatformAccess>,
         query: &PlatformAccessAuditQuery,
     ) -> Result<PlatformAccessAuditPage, PlatformAccessAuditError<R::Error>> {
-        if authorization.action() != PlatformAction::ManagePlatformAccess {
-            return Err(PlatformAccessAuditError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         self.repository
             .find_page(query)
             .await
@@ -283,11 +276,6 @@ where
 /// Failure to execute an authorized platform access audit query.
 #[derive(Debug)]
 pub enum PlatformAccessAuditError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The persistence operation failed.
     Repository(E),
 }
@@ -295,10 +283,6 @@ pub enum PlatformAccessAuditError<E> {
 impl<E> fmt::Display for PlatformAccessAuditError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "platform access audit requires ManagePlatformAccess authorization, got {actual:?}"
-            ),
             Self::Repository(_) => formatter.write_str("platform access audit could not be loaded"),
         }
     }
@@ -310,7 +294,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }
