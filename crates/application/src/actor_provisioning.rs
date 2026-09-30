@@ -199,8 +199,7 @@ mod tests {
     use fleetiq_domain::{ExternalIdentitySubject, IdentityAuthorityId};
 
     use crate::{
-        AccessDecision, AuthenticatedActor, PlatformAccessPolicy, PlatformAccessRequest,
-        PlatformAuthorizationService,
+        AccessDecision, PlatformAccessPolicy, PlatformAccessRequest, PlatformAuthorizationService,
     };
 
     use super::*;
@@ -291,7 +290,7 @@ mod tests {
     async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
         PlatformAuthorizationService::new(AllowPolicy)
             .authorize(
-                AuthenticatedActor::from_trusted_actor_id(actor_id("operator-a")),
+                crate::test_support::authenticated_actor(actor_id("operator-a")).await,
                 action,
             )
             .await

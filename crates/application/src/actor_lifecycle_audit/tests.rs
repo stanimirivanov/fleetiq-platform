@@ -9,8 +9,7 @@ use std::{
 use fleetiq_domain::ActorId;
 
 use crate::{
-    AccessDecision, AuthenticatedActor, PlatformAccessPolicy, PlatformAccessRequest,
-    PlatformAuthorizationService,
+    AccessDecision, PlatformAccessPolicy, PlatformAccessRequest, PlatformAuthorizationService,
 };
 
 use super::*;
@@ -157,9 +156,10 @@ fn query() -> ActorLifecycleAuditQuery {
 async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
     PlatformAuthorizationService::new(AllowAllPolicy)
         .authorize(
-            AuthenticatedActor::from_trusted_actor_id(
+            crate::test_support::authenticated_actor(
                 ActorId::new("actor-admin").expect("valid actor ID"),
-            ),
+            )
+            .await,
             action,
         )
         .await

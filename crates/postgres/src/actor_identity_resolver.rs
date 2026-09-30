@@ -1,4 +1,4 @@
-use fleetiq_application::ActorIdentityResolver;
+use fleetiq_access::ActorIdentityResolver;
 use fleetiq_domain::{ActorId, ExternalIdentity};
 use sqlx::PgPool;
 

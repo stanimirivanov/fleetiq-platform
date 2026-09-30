@@ -7,6 +7,8 @@
 - Normal, development, and build dependencies are checked separately.
 - Semantic policy owns its read ports; PostgreSQL adapts them without a
   policy-to-application dependency.
+- Access policy owns authentication, authorization, and evidence; adapters
+  implement its narrow ports directly.
 
 ## Crate roles
 
@@ -16,6 +18,7 @@
 | `fleetiq-telemetry` | Contract | Protocol-neutral telemetry facts |
 | `fleetiq-protocol-sdk` | Contract | Values shared by protocol packages and the trusted host |
 | `fleetiq-analytics` | Policy | Calculator contracts and deterministic analytics policy |
+| `fleetiq-access` | Policy | Authentication, action vocabulary, authorization, and evidence |
 | `fleetiq-semantics` | Policy | Temporal semantic attribution |
 | `fleetiq-protocol-host` | Policy | Trusted framing, state, reply, and processing decisions |
 | `fleetiq-application` | Application | Use-case orchestration and consumed ports |
@@ -68,6 +71,16 @@ query for existing application callers. The architecture checker rejects a
 new `fleetiq-semantics -> fleetiq-application` edge. This implements the
 removal required by ADR 0066; see [ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
 
+## Access boundary direction
+
+`fleetiq-access` owns identity resolution, credential-authenticator and
+authorization-policy ports alongside their evidence types. It depends only on
+domain values. PostgreSQL implements the resolver and exact access-policy
+ports directly. Application use cases consume access evidence, and re-export
+the existing names for source compatibility while callers migrate to the
+capability owner. The architecture checker rejects an access-to-application
+dependency. See [ADR 0070](../adr/0070-extract-access-policy-boundary.md).
+
 ## Changing dependencies
 
 When a task changes a manifest:
@@ -89,4 +102,5 @@ a general permission for other dependencies between the same roles.
 - [Capability dependency enforcement](../adr/0066-enforce-capability-dependency-policy.md)
 - [Explicit semantic resolution](../adr/0003-explicit-semantic-resolution.md)
 - [Semantic read-port ownership](../adr/0069-own-semantic-read-ports-in-policy.md)
+- [Access policy ownership](../adr/0070-extract-access-policy-boundary.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

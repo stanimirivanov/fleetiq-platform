@@ -13,9 +13,8 @@ use fleetiq_domain::{
 };
 
 use crate::{
-    AccessDecision, AuthenticatedActor, AuthorizedTenantAction, SignalBindingRepository,
-    SignalBindingSnapshotQuery, TenantAccessPolicy, TenantAccessRequest, TenantAction,
-    TenantAuthorizationService,
+    AccessDecision, AuthorizedTenantAction, SignalBindingRepository, SignalBindingSnapshotQuery,
+    TenantAccessPolicy, TenantAccessRequest, TenantAction, TenantAuthorizationService,
 };
 
 use super::{SignalBindingApplicationError, SignalBindingApplicationService};
@@ -272,9 +271,10 @@ async fn read_authorization(tenant: &str) -> AuthorizedTenantAction {
 async fn authorization(tenant: &str, action: TenantAction) -> AuthorizedTenantAction {
     TenantAuthorizationService::new(AllowAllPolicy)
         .authorize(
-            AuthenticatedActor::from_trusted_actor_id(
+            crate::test_support::authenticated_actor(
                 ActorId::new("actor-a").expect("valid actor ID"),
-            ),
+            )
+            .await,
             tenant_id(tenant),
             action,
         )

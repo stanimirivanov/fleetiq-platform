@@ -1,0 +1,17 @@
+[package]
+name = "fleetiq-access"
+version = "0.1.0"
+description = "FleetIQ authentication and authorization policy boundary"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-domain = { path = "../domain" }
+
+[dev-dependencies]
+tokio.workspace = true
+
+[lints]
+workspace = true

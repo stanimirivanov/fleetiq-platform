@@ -614,6 +614,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e0f1c7c3a72c66fd80abe965175f7523475c0489a87d3ff9d6e8c87d87a9d2d"
 
 [[package]]
+name = "fleetiq-access"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-domain",
+ "tokio",
+]
+
+[[package]]
 name = "fleetiq-analytics"
 version = "0.1.0"
 dependencies = [
@@ -624,6 +632,7 @@ dependencies = [
 name = "fleetiq-application"
 version = "0.1.0"
 dependencies = [
+ "fleetiq-access",
  "fleetiq-domain",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
@@ -644,6 +653,7 @@ name = "fleetiq-postgres"
 version = "0.1.0"
 dependencies = [
  "bigdecimal",
+ "fleetiq-access",
  "fleetiq-application",
  "fleetiq-domain",
  "fleetiq-protocol-host",
@@ -683,7 +693,7 @@ dependencies = [
  "wasmtime",
  "wat",
  "wit-component 0.254.0",
- "wit-parser 0.259.0",
+ "wit-parser 0.254.0",
 ]
 
 [[package]]
@@ -2582,21 +2592,6 @@ dependencies = [
  "serde_json",
  "unicode-ident",
  "wasmparser 0.258.0",
-]
-
-[[package]]
-name = "wit-parser"
-version = "0.259.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6390f4f02493ce678d509c859cf1698e38929fb75c8012a6ee2f7d6b6cb66cd7"
-dependencies = [
- "anyhow",
- "hashbrown 0.17.1",
- "id-arena",
- "indexmap",
- "log",
- "semver",
- "unicode-ident",
 ]
 
 [[package]]

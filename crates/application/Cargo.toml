@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+fleetiq-access = { path = "../access" }
 fleetiq-domain = { path = "../domain" }
 fleetiq-protocol-host = { path = "../protocol-host" }
 fleetiq-protocol-sdk = { path = "../protocol-sdk" }

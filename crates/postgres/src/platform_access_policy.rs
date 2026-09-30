@@ -1,8 +1,6 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
-    AccessDecision, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
-};
+use fleetiq_access::{AccessDecision, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction};
 use sqlx::PgPool;
 
 /// PostgreSQL-backed evaluator for exact platform action grants.

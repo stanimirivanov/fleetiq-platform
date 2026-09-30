@@ -200,8 +200,7 @@ mod tests {
     };
 
     use crate::{
-        AccessDecision, AuthenticatedActor, PlatformAccessPolicy, PlatformAccessRequest,
-        PlatformAuthorizationService,
+        AccessDecision, PlatformAccessPolicy, PlatformAccessRequest, PlatformAuthorizationService,
     };
 
     use super::*;
@@ -296,7 +295,7 @@ mod tests {
     async fn authorization(actor: &str, action: PlatformAction) -> AuthorizedPlatformAction {
         PlatformAuthorizationService::new(AllowPolicy)
             .authorize(
-                AuthenticatedActor::from_trusted_actor_id(actor_id(actor)),
+                crate::test_support::authenticated_actor(actor_id(actor)).await,
                 action,
             )
             .await

@@ -5,13 +5,10 @@
 
 mod accepted_message_log;
 mod actor_catalog;
-mod actor_identity_resolver;
 mod actor_lifecycle_administration;
 mod actor_lifecycle_audit;
 mod actor_provisioning;
 mod asset_service;
-mod authorization;
-mod caller_authentication;
 mod decoded_observation_log;
 mod definition_repository;
 mod definition_service;
@@ -25,7 +22,6 @@ mod live;
 mod observation_persistence;
 mod platform_access_administration;
 mod platform_access_audit;
-mod platform_authorization;
 mod platform_bootstrap;
 mod platform_grant_catalog;
 mod protocol_package_catalog;
@@ -41,6 +37,9 @@ mod tenant_lifecycle_administration;
 mod tenant_lifecycle_audit;
 mod tenant_provisioning;
 
+#[cfg(test)]
+mod test_support;
+
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
 };
@@ -49,7 +48,6 @@ pub use actor_catalog::{
     ActorCatalogPageSize, ActorCatalogPageSizeError, ActorCatalogQuery, ActorCatalogRepository,
     ActorLifecycleState,
 };
-pub use actor_identity_resolver::ActorIdentityResolver;
 pub use actor_lifecycle_administration::{
     ActorLifecycleAdministration, ActorLifecycleAdministrationError,
     ActorLifecycleAdministrationRepository, ActorLifecycleChange, ActorLifecycleChangeEffect,
@@ -65,14 +63,6 @@ pub use actor_provisioning::{
     ActorProvisioningRepository, ActorProvisioningRequest, ActorProvisioningService,
 };
 pub use asset_service::{AssetApplicationError, AssetApplicationService};
-pub use authorization::{
-    AccessDecision, AuthorizedTenantAction, TenantAccessPolicy, TenantAccessRequest, TenantAction,
-    TenantAuthorizationError, TenantAuthorizationService,
-};
-pub use caller_authentication::{
-    AuthenticatedActor, CallerAuthenticationError, CallerAuthenticationService,
-    ExternalIdentityAuthenticator,
-};
 pub use decoded_observation_log::{
     DecodedObservationAppendOutcome, DecodedObservationBatch, DecodedObservationBatchError,
     DecodedObservationLog,
@@ -98,6 +88,13 @@ pub use external_identity_catalog::{
     ExternalIdentityCatalogPageSizeError, ExternalIdentityCatalogQuery,
     ExternalIdentityCatalogRepository,
 };
+pub use fleetiq_access::{
+    AccessDecision, ActorIdentityResolver, AuthenticatedActor, AuthorizedPlatformAction,
+    AuthorizedTenantAction, CallerAuthenticationError, CallerAuthenticationService,
+    ExternalIdentityAuthenticator, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
+    PlatformAuthorizationError, PlatformAuthorizationService, TenantAccessPolicy,
+    TenantAccessRequest, TenantAction, TenantAuthorizationError, TenantAuthorizationService,
+};
 pub use frame_acceptance::{
     DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,
     PreparedFrameAcceptance,
@@ -120,10 +117,6 @@ pub use platform_access_audit::{
     PlatformAccessAudit, PlatformAccessAuditCursor, PlatformAccessAuditEntry,
     PlatformAccessAuditError, PlatformAccessAuditPage, PlatformAccessAuditPageSize,
     PlatformAccessAuditPageSizeError, PlatformAccessAuditQuery, PlatformAccessAuditRepository,
-};
-pub use platform_authorization::{
-    AuthorizedPlatformAction, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
-    PlatformAuthorizationError, PlatformAuthorizationService,
 };
 pub use platform_bootstrap::{
     PlatformBootstrapError, PlatformBootstrapOutcome, PlatformBootstrapRepository,

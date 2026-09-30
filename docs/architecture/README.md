@@ -28,7 +28,7 @@ flowchart TB
 ```
 
 The current repository composes its backend foundation into one executable
-process. An application authorization boundary separates authenticated actors,
+process. The access policy boundary separates authenticated actors,
 selected tenants, and per-action policy decisions. PostgreSQL persists internal
 actors and exact grants and evaluates current policy without a cache; identity-
 provider integration remains planned. Business APIs, device transports,
@@ -99,7 +99,7 @@ flowchart TB
     Server[Server composition root]
     Adapters[Adapters: PostgreSQL, Wasmtime, transports, HTTP]
     Application[Application: use cases and ports]
-    Policies[Policies: semantics, analytics, protocol host]
+    Policies[Policies: access, semantics, analytics, protocol host]
     Domain[Domain and telemetry contracts]
 
     Server --> Adapters
@@ -121,6 +121,9 @@ Semantic resolution owns its read ports and bitemporal snapshot query;
 PostgreSQL implements the ports directly. Application code may depend on
 semantic policy without a reverse dependency or Cargo cycle. See
 [ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
+The access policy owns authentication and authorization evidence and its
+consumer-facing ports; PostgreSQL implements the resolver and policy adapters
+directly. See [ADR 0070](../adr/0070-extract-access-policy-boundary.md).
 
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing
