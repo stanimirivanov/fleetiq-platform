@@ -12,6 +12,12 @@
 - ADRs:
 - Assumptions:
 - Known limitations:
+- Dependency review (when dependencies change):
+  - Required capability and owning layer:
+  - Alternatives considered:
+  - Enabled features and MSRV:
+  - License, source, maintenance, and security status:
+  - Dependency-tree change and exit path:
 
 ## Architecture
 
@@ -28,6 +34,8 @@
 |:--|:--|:--|
 | `cargo xtask repository` | | |
 | `cargo xtask architecture` | | |
+| `cargo deny check` | | |
+| `cargo machete --with-metadata --skip-target-dir` | | |
 | `cargo fmt --all --check` | | |
 | `cargo sqlx prepare --check --workspace -- --all-targets --all-features` | | |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | | |

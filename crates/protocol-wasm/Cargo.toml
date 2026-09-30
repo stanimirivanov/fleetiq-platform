@@ -3,6 +3,7 @@ name = "fleetiq-protocol-wasm"
 version = "0.1.0"
 description = "Wasmtime compute and memory enforcement experiment for FleetIQ protocol packages"
 edition.workspace = true
+publish = false
 repository.workspace = true
 rust-version.workspace = true
 
@@ -15,7 +16,8 @@ sha2.workspace = true
 wasmtime.workspace = true
 
 [dev-dependencies]
-wat = "1.240.0"
+# Fixture encoding must track the parser/encoder generation used by WIT tooling.
+wat = "=1.254.0"
 wit-component = { version = "0.254.0", default-features = false, features = ["dummy-module"] }
 wit-parser = { version = "0.254.0", default-features = false }
 

@@ -5,6 +5,8 @@
 - Use the pinned Rust toolchain and repository-owned commands.
 - Run `cargo xtask repository` and `cargo xtask architecture` for immediate,
   database-independent structural feedback.
+- Run the [dependency checks](dependency-management.md) before the
+  database-backed Rust gate when reviewing a dependency or handing off a PR.
 - Run PostgreSQL for SQLx-checked queries and the complete Rust acceptance
   gate.
 - Use the [coding harness](harness.md) to select the applicable feedback tier
@@ -96,10 +98,15 @@ command validates mechanical documentation and template policy. The
 architecture command compares Cargo's workspace metadata with the reviewed
 direct dependency policy.
 
+Supply-chain checks use pinned CLI tools and no PostgreSQL. See the
+[dependency management guide](dependency-management.md) for installation,
+policy, and advisory-data requirements.
+
 ## Guides
 
 - [Engineering standards](engineering-standards.md)
 - [Coding harness and feedback tiers](harness.md)
+- [Dependency management and supply-chain gate](dependency-management.md)
 - [SQL migration criteria](sql-migrations.md)
 - [Current implementation state](current-state.md)
 - [Contributor workflow](../../CONTRIBUTING.md)

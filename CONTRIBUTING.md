@@ -152,6 +152,8 @@ pointing to the fully migrated supported PostgreSQL database:
 ```powershell
 cargo xtask repository
 cargo xtask architecture
+cargo deny check
+cargo machete --with-metadata --skip-target-dir
 cargo fmt --all --check
 cargo sqlx prepare --check --workspace -- --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
@@ -165,6 +167,13 @@ useful during development but do not replace the applicable workspace gate.
 The repository and architecture checks require neither PostgreSQL nor network
 access after the pinned Rust toolchain and dependencies are available. Run
 them before database-backed checks.
+
+The supply-chain checks require the pinned `cargo-deny` and `cargo-machete`
+versions from the [dependency management guide](docs/development/dependency-management.md).
+`cargo deny check` fetches the current RustSec advisory database. Run both
+checks on the locked workspace before the database-backed gate; CI runs them in
+a separate job. A tool download or advisory-database failure is **not run**,
+not a passing dependency review.
 
 Regenerate `.sqlx` with the same workspace, target, and feature arguments after
 changing a migration or checked query. The committed descriptions let image
@@ -224,6 +233,11 @@ when the project intentionally changes review routing. Keep every verification
 command as one exact inline-code value in the first table column, and retain the
 ordered unchecked review checklist; these shapes make drift mechanically
 detectable.
+
+When a dependency changes, explain the required capability and owning layer,
+alternatives, enabled features, MSRV, license and source, maintenance and
+security status, dependency-tree change, and exit path in the template's
+dependency-review prompt.
 
 ## Improving the harness
 

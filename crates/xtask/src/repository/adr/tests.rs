@@ -377,9 +377,10 @@ fn rejects_deleting_the_published_adr_tail() {
 
     let violations = validate_sequence(&records);
 
+    let expected = format!("records {LATEST_PUBLISHED_ADR:04}");
     assert!(
         violations
             .iter()
-            .any(|violation| violation.message.contains("records 0067"))
+            .any(|violation| violation.message.contains(&expected))
     );
 }

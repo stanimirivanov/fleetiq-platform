@@ -16,12 +16,16 @@ const PULL_REQUEST_HEADINGS: [&str; 9] = [
     "Review checklist",
 ];
 
-const PULL_REQUEST_MARKERS: [(&str, &str); 12] = [
+const PULL_REQUEST_MARKERS: [(&str, &str); 13] = [
     ("Issue and milestone", "Closes #"),
     ("Issue and milestone", "Milestone:"),
     ("Design and compatibility decisions", "ADRs:"),
     ("Design and compatibility decisions", "Assumptions:"),
     ("Design and compatibility decisions", "Known limitations:"),
+    (
+        "Design and compatibility decisions",
+        "Dependency review (when dependencies change):",
+    ),
     ("Architecture", "Owning capability:"),
     ("Architecture", "Inbound adapter or caller:"),
     ("Architecture", "Consumed ports:"),
@@ -37,9 +41,11 @@ const PULL_REQUEST_MARKERS: [(&str, &str); 12] = [
     ),
 ];
 
-const REQUIRED_VERIFICATION_COMMANDS: [&str; 7] = [
+const REQUIRED_VERIFICATION_COMMANDS: [&str; 9] = [
     "cargo xtask repository",
     "cargo xtask architecture",
+    "cargo deny check",
+    "cargo machete --with-metadata --skip-target-dir",
     "cargo fmt --all --check",
     "cargo sqlx prepare --check --workspace -- --all-targets --all-features",
     "cargo clippy --workspace --all-targets --all-features -- -D warnings",

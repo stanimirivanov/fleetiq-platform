@@ -3,6 +3,7 @@ name = "fleetiq-protocol-sdk"
 version = "0.1.0"
 description = "Protocol package output and host assembly contracts for FleetIQ"
 edition.workspace = true
+publish = false
 repository.workspace = true
 rust-version.workspace = true
 

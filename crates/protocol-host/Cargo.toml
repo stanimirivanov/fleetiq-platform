@@ -3,6 +3,7 @@ name = "fleetiq-protocol-host"
 version = "0.1.0"
 description = "Host-controlled protocol framing and runtime policies for FleetIQ"
 edition.workspace = true
+publish = false
 repository.workspace = true
 rust-version.workspace = true
 
