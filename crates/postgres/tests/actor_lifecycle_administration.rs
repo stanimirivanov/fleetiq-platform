@@ -6,7 +6,7 @@ use fleetiq_application::{
     ActorIdentityResolver, ActorLifecycleAdministration, ActorLifecycleAdministrationError,
     ActorLifecycleChangeEffect, ActorLifecycleChangeKind, ActorLifecycleChangeOutcome,
     ActorLifecycleChangeRequest, PlatformAction, PlatformAuthorizationError,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService, TenantAction,
+    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService, ReadMetadata,
     TenantAuthorizationError, TenantAuthorizationService,
 };
 use fleetiq_domain::{
@@ -66,10 +66,9 @@ async fn deactivate_and_reactivate_control_new_authentication_and_authorization(
     assert!(matches!(denied, PlatformAuthorizationError::Denied));
     let tenant_denied =
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
-            .authorize(
+            .authorize::<ReadMetadata>(
                 support::authenticated_actor("actor-target").await,
                 TenantId::new("tenant-a").expect("valid tenant ID"),
-                TenantAction::ReadMetadata,
             )
             .await
             .expect_err("inactive actors must fail tenant policy evaluation");
@@ -106,10 +105,9 @@ async fn deactivate_and_reactivate_control_new_authentication_and_authorization(
             .await?;
     let _tenant_authorization =
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
-            .authorize(
+            .authorize::<ReadMetadata>(
                 support::authenticated_actor("actor-target").await,
                 TenantId::new("tenant-a").expect("valid tenant ID"),
-                TenantAction::ReadMetadata,
             )
             .await?;
     assert_eq!(audit_count(&pool).await?, 2);

@@ -13,8 +13,8 @@ use fleetiq_domain::{
 };
 
 use crate::{
-    AccessDecision, AuthorizedTenantAction, DefinitionRepository, TenantAccessPolicy,
-    TenantAccessRequest, TenantAction, TenantAuthorizationService,
+    AccessDecision, AuthorizedTenant, DefinitionRepository, ManageMetadata, ReadMetadata,
+    TenantAccessPolicy, TenantAccessRequest, TenantAuthorizationService,
 };
 
 use super::{DefinitionApplicationError, DefinitionApplicationService};
@@ -264,40 +264,6 @@ async fn finds_every_exact_definition_kind_in_the_authorized_tenant() {
 }
 
 #[tokio::test]
-async fn rejects_wrong_actions_before_calling_the_repository() {
-    let repository = RecordingDefinitionRepository::default();
-    let service = DefinitionApplicationService::new(repository.clone());
-
-    let publication_error = service
-        .publish_property(read_authorization().await, &property_definition())
-        .await
-        .expect_err("read authorization must not permit publication");
-    assert!(matches!(
-        publication_error,
-        DefinitionApplicationError::ActionRequired {
-            required: TenantAction::ManageMetadata,
-            actual: TenantAction::ReadMetadata,
-        }
-    ));
-
-    let lookup_error = service
-        .find_asset_type(
-            manage_authorization().await,
-            asset_type_definition().reference(),
-        )
-        .await
-        .expect_err("manage authorization must not imply read authorization");
-    assert!(matches!(
-        lookup_error,
-        DefinitionApplicationError::ActionRequired {
-            required: TenantAction::ReadMetadata,
-            actual: TenantAction::ManageMetadata,
-        }
-    ));
-    assert!(repository.calls().is_empty());
-}
-
-#[tokio::test]
 async fn preserves_repository_failure_as_the_error_source() {
     let service = DefinitionApplicationService::new(RecordingDefinitionRepository::failing());
 
@@ -316,23 +282,22 @@ async fn preserves_repository_failure_as_the_error_source() {
     assert!(error.source().is_some());
 }
 
-async fn manage_authorization() -> AuthorizedTenantAction {
-    authorization(TenantAction::ManageMetadata).await
+async fn manage_authorization() -> AuthorizedTenant<ManageMetadata> {
+    authorization::<ManageMetadata>().await
 }
 
-async fn read_authorization() -> AuthorizedTenantAction {
-    authorization(TenantAction::ReadMetadata).await
+async fn read_authorization() -> AuthorizedTenant<ReadMetadata> {
+    authorization::<ReadMetadata>().await
 }
 
-async fn authorization(action: TenantAction) -> AuthorizedTenantAction {
+async fn authorization<A: crate::TenantActionMarker>() -> AuthorizedTenant<A> {
     TenantAuthorizationService::new(AllowAllPolicy)
-        .authorize(
+        .authorize::<A>(
             crate::test_support::authenticated_actor(
                 ActorId::new("actor-a").expect("valid actor ID"),
             )
             .await,
             tenant_id(),
-            action,
         )
         .await
         .expect("test policy should authorize request")

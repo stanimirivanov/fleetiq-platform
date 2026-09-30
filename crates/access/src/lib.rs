@@ -12,7 +12,8 @@ mod platform_authorization;
 
 pub use actor_identity_resolver::ActorIdentityResolver;
 pub use authorization::{
-    AccessDecision, AuthorizedTenantAction, TenantAccessPolicy, TenantAccessRequest, TenantAction,
+    AccessDecision, AuthorizedTenant, ManageAccess, ManageMetadata, ReadMetadata,
+    TenantAccessPolicy, TenantAccessRequest, TenantAction, TenantActionMarker,
     TenantAuthorizationError, TenantAuthorizationService,
 };
 pub use caller_authentication::{

@@ -12,8 +12,8 @@ use fleetiq_domain::{
 };
 
 use crate::{
-    AccessDecision, AuthorizedTenantAction, DeviceRepository, TenantAccessPolicy,
-    TenantAccessRequest, TenantAction, TenantAuthorizationService,
+    AccessDecision, AuthorizedTenant, DeviceRepository, ManageMetadata, ReadMetadata,
+    TenantAccessPolicy, TenantAccessRequest, TenantAuthorizationService,
 };
 
 use super::{DeviceApplicationError, DeviceApplicationService};
@@ -126,22 +126,10 @@ async fn registers_device_owned_by_the_authorized_tenant() {
 }
 
 #[tokio::test]
-async fn rejects_wrong_action_and_tenant_before_registration() {
+async fn rejects_wrong_tenant_before_registration() {
     let repository = RecordingDeviceRepository::default();
     let service = DeviceApplicationService::new(repository.clone());
     let device = device("tenant-b");
-
-    let wrong_action = service
-        .register(read_authorization("tenant-b").await, &device)
-        .await
-        .expect_err("read authorization must not permit registration");
-    assert!(matches!(
-        wrong_action,
-        DeviceApplicationError::ActionRequired {
-            required: TenantAction::ManageMetadata,
-            actual: TenantAction::ReadMetadata,
-        }
-    ));
 
     let wrong_tenant = service
         .register(manage_authorization("tenant-a").await, &device)
@@ -178,29 +166,6 @@ async fn lookup_derives_tenant_scope_from_read_authorization() {
 }
 
 #[tokio::test]
-async fn rejects_manage_authorization_before_lookup() {
-    let repository = RecordingDeviceRepository::default();
-    let service = DeviceApplicationService::new(repository.clone());
-
-    let error = service
-        .find_by_asset(
-            manage_authorization("tenant-a").await,
-            &AssetId::new("gateway-1").expect("valid asset ID"),
-        )
-        .await
-        .expect_err("manage authorization must not imply read authorization");
-
-    assert!(matches!(
-        error,
-        DeviceApplicationError::ActionRequired {
-            required: TenantAction::ReadMetadata,
-            actual: TenantAction::ManageMetadata,
-        }
-    ));
-    assert!(repository.calls().is_empty());
-}
-
-#[tokio::test]
 async fn preserves_repository_failure_as_the_error_source() {
     let service = DeviceApplicationService::new(RecordingDeviceRepository::failing());
 
@@ -219,23 +184,22 @@ async fn preserves_repository_failure_as_the_error_source() {
     assert!(error.source().is_some());
 }
 
-async fn manage_authorization(tenant: &str) -> AuthorizedTenantAction {
-    authorization(tenant, TenantAction::ManageMetadata).await
+async fn manage_authorization(tenant: &str) -> AuthorizedTenant<ManageMetadata> {
+    authorization::<ManageMetadata>(tenant).await
 }
 
-async fn read_authorization(tenant: &str) -> AuthorizedTenantAction {
-    authorization(tenant, TenantAction::ReadMetadata).await
+async fn read_authorization(tenant: &str) -> AuthorizedTenant<ReadMetadata> {
+    authorization::<ReadMetadata>(tenant).await
 }
 
-async fn authorization(tenant: &str, action: TenantAction) -> AuthorizedTenantAction {
+async fn authorization<A: crate::TenantActionMarker>(tenant: &str) -> AuthorizedTenant<A> {
     TenantAuthorizationService::new(AllowAllPolicy)
-        .authorize(
+        .authorize::<A>(
             crate::test_support::authenticated_actor(
                 ActorId::new("actor-a").expect("valid actor ID"),
             )
             .await,
             tenant_id(tenant),
-            action,
         )
         .await
         .expect("test policy should authorize request")

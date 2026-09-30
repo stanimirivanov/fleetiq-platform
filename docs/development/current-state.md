@@ -144,6 +144,9 @@ identity provider. The access authorization service evaluates an explicit
 actor, tenant, and action tuple through a consumer-owned policy port. Only an
 allow decision produces typed, exact-operation authorization evidence; missing
 grants and policy failures fail closed.
+Tenant evidence also carries its action in its Rust type, so protected
+metadata and access-administration use cases reject incompatible grants at
+compile time.
 
 PostgreSQL persists internal actor existence and exact tenant action grants. Its
 policy adapter performs one complete-tuple existence query for each operation,

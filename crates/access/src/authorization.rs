@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, future::Future};
+use std::{error::Error, fmt, future::Future, marker::PhantomData};
 
 use fleetiq_domain::{ActorId, TenantId};
 
@@ -19,6 +19,46 @@ pub enum TenantAction {
     ManageMetadata,
     /// Manage actors' access to a tenant.
     ManageAccess,
+}
+
+mod sealed {
+    pub trait Sealed {}
+}
+
+/// A tenant action whose authorization evidence carries its exact action in its type.
+///
+/// This trait is sealed: callers cannot define an action that bypasses the
+/// closed [`TenantAction`] vocabulary or its policy evaluation.
+pub trait TenantActionMarker: sealed::Sealed {
+    /// Persisted action evaluated by the tenant policy.
+    const ACTION: TenantAction;
+}
+
+/// Permission to read tenant-owned metadata.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReadMetadata;
+
+impl sealed::Sealed for ReadMetadata {}
+impl TenantActionMarker for ReadMetadata {
+    const ACTION: TenantAction = TenantAction::ReadMetadata;
+}
+
+/// Permission to manage tenant-owned metadata.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageMetadata;
+
+impl sealed::Sealed for ManageMetadata {}
+impl TenantActionMarker for ManageMetadata {
+    const ACTION: TenantAction = TenantAction::ManageMetadata;
+}
+
+/// Permission to administer tenant access grants.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageAccess;
+
+impl sealed::Sealed for ManageAccess {}
+impl TenantActionMarker for ManageAccess {
+    const ACTION: TenantAction = TenantAction::ManageAccess;
 }
 
 /// Describes one actor's attempt to perform an action in a selected tenant.
@@ -91,17 +131,34 @@ pub trait TenantAccessPolicy: Send + Sync {
 
 /// Evidence that one exact tenant action passed the configured policy.
 ///
-/// Protected application services should require this value instead of a bare
-/// tenant identifier. It has no public constructor and must not be persisted,
-/// serialized, cached, or reused for another action: authorization is checked
-/// against current policy for each operation.
+/// Protected services require the marker for their action, making a wrong
+/// action impossible to route to a use case. Evidence has no public constructor
+/// and must not be persisted, serialized, cached, or reused: authorization is
+/// checked against current policy for each operation.
+///
+/// ```compile_fail
+/// use fleetiq_access::{AuthorizedTenant, ManageMetadata, ReadMetadata};
+/// fn read_metadata(_: AuthorizedTenant<ReadMetadata>) {}
+/// fn wrong_action(grant: AuthorizedTenant<ManageMetadata>) {
+///     read_metadata(grant);
+/// }
+/// ```
+///
+/// ```compile_fail
+/// use fleetiq_access::{AuthorizedTenant, ReadMetadata};
+/// let _grant = AuthorizedTenant::<ReadMetadata> {
+///     request: todo!(),
+///     marker: std::marker::PhantomData,
+/// };
+/// ```
 #[derive(Debug, Eq, PartialEq)]
 #[must_use = "an authorization grant must be consumed by the protected operation"]
-pub struct AuthorizedTenantAction {
+pub struct AuthorizedTenant<A: TenantActionMarker> {
     request: TenantAccessRequest,
+    marker: PhantomData<A>,
 }
 
-impl AuthorizedTenantAction {
+impl<A: TenantActionMarker> AuthorizedTenant<A> {
     /// Returns the authenticated actor authorized for the operation.
     pub const fn actor_id(&self) -> &ActorId {
         self.request.actor_id()
@@ -114,11 +171,11 @@ impl AuthorizedTenantAction {
 
     /// Returns the exact action authorized by the policy.
     pub const fn action(&self) -> TenantAction {
-        self.request.action()
+        A::ACTION
     }
 }
 
-/// Authorizes tenant operations through one application-wide policy boundary.
+/// Authorizes tenant operations through one access-policy boundary.
 #[derive(Clone, Debug)]
 pub struct TenantAuthorizationService<P> {
     policy: P,
@@ -135,7 +192,7 @@ impl<P> TenantAuthorizationService<P>
 where
     P: TenantAccessPolicy,
 {
-    /// Authorizes one authenticated actor for an exact tenant and action.
+    /// Authorizes one authenticated actor for an exact tenant and typed action.
     ///
     /// Call this for every protected operation. Both explicit policy denial and
     /// policy evaluation failure prevent creation of authorization evidence.
@@ -145,15 +202,17 @@ where
     /// Returns [`TenantAuthorizationError::Denied`] if policy does not grant
     /// the request, or [`TenantAuthorizationError::Policy`] if policy cannot be
     /// evaluated.
-    pub async fn authorize(
+    pub async fn authorize<A: TenantActionMarker>(
         &self,
         actor: AuthenticatedActor,
         tenant_id: TenantId,
-        action: TenantAction,
-    ) -> Result<AuthorizedTenantAction, TenantAuthorizationError<P::Error>> {
-        let request = TenantAccessRequest::new(actor.into_actor_id(), tenant_id, action);
+    ) -> Result<AuthorizedTenant<A>, TenantAuthorizationError<P::Error>> {
+        let request = TenantAccessRequest::new(actor.into_actor_id(), tenant_id, A::ACTION);
         match self.policy.evaluate(&request).await {
-            Ok(AccessDecision::Allow) => Ok(AuthorizedTenantAction { request }),
+            Ok(AccessDecision::Allow) => Ok(AuthorizedTenant {
+                request,
+                marker: PhantomData,
+            }),
             Ok(AccessDecision::Deny) => Err(TenantAuthorizationError::Denied),
             Err(error) => Err(TenantAuthorizationError::Policy(error)),
         }
@@ -247,10 +306,9 @@ mod tests {
         });
 
         let authorization = service
-            .authorize(
+            .authorize::<ManageMetadata>(
                 authenticated_actor("actor-a"),
                 TenantId::new("tenant-a").expect("tenant ID should be valid"),
-                TenantAction::ManageMetadata,
             )
             .await
             .expect("exact request should be authorized");
@@ -267,10 +325,9 @@ mod tests {
         });
 
         let error = service
-            .authorize(
+            .authorize::<ReadMetadata>(
                 authenticated_actor("actor-a"),
                 TenantId::new("tenant-b").expect("tenant ID should be valid"),
-                TenantAction::ReadMetadata,
             )
             .await
             .expect_err("tenant selection must not imply authorization");
@@ -285,10 +342,9 @@ mod tests {
         });
 
         let error = service
-            .authorize(
+            .authorize::<ReadMetadata>(
                 authenticated_actor("actor-b"),
                 TenantId::new("tenant-a").expect("tenant ID should be valid"),
-                TenantAction::ReadMetadata,
             )
             .await
             .expect_err("one actor's grant must not authorize another actor");
@@ -303,10 +359,9 @@ mod tests {
         });
 
         let error = service
-            .authorize(
+            .authorize::<ManageMetadata>(
                 authenticated_actor("actor-a"),
                 TenantId::new("tenant-a").expect("tenant ID should be valid"),
-                TenantAction::ManageMetadata,
             )
             .await
             .expect_err("one action grant must not imply another");
@@ -319,10 +374,9 @@ mod tests {
         let service = TenantAuthorizationService::new(FailingPolicy);
 
         let error = service
-            .authorize(
+            .authorize::<ReadMetadata>(
                 authenticated_actor("actor-a"),
                 TenantId::new("tenant-a").expect("tenant ID should be valid"),
-                TenantAction::ReadMetadata,
             )
             .await
             .expect_err("policy failure must not authorize access");

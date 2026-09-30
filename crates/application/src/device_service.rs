@@ -2,7 +2,7 @@ use std::{error::Error, fmt};
 
 use fleetiq_domain::{AssetId, CommunicationDevice, TenantId};
 
-use crate::{AuthorizedTenantAction, DeviceRepository, TenantAction};
+use crate::{AuthorizedTenant, DeviceRepository, ManageMetadata, ReadMetadata};
 
 /// Coordinates authorized communication-device operations.
 ///
@@ -34,17 +34,14 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DeviceApplicationError::ActionRequired`] when the evidence
-    /// authorizes another action, [`DeviceApplicationError::TenantMismatch`]
-    /// when the device is outside the authorized tenant, or wraps the
-    /// repository error when registration fails.
+    /// Returns [`DeviceApplicationError::TenantMismatch`] when the device is
+    /// outside the authorized tenant, or wraps the repository error when
+    /// registration fails.
     pub async fn register(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageMetadata>,
         device: &CommunicationDevice,
     ) -> Result<(), DeviceApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ManageMetadata)?;
-
         if authorization.tenant_id() != device.tenant_id() {
             return Err(DeviceApplicationError::TenantMismatch {
                 authorized_tenant_id: authorization.tenant_id().clone(),
@@ -65,16 +62,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DeviceApplicationError::ActionRequired`] when the evidence
-    /// authorizes another action, or wraps the repository error when retrieval
-    /// fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_by_asset(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         asset_id: &AssetId,
     ) -> Result<Option<CommunicationDevice>, DeviceApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
-
         self.repository
             .find_by_asset(authorization.tenant_id(), asset_id)
             .await
@@ -85,13 +78,6 @@ where
 /// Failure to execute an authorized communication-device operation.
 #[derive(Debug)]
 pub enum DeviceApplicationError<E> {
-    /// The supplied evidence authorizes a different tenant action.
-    ActionRequired {
-        /// Action required by the attempted operation.
-        required: TenantAction,
-        /// Action carried by the rejected authorization evidence.
-        actual: TenantAction,
-    },
     /// The device aggregate belongs to another tenant.
     TenantMismatch {
         /// Tenant carried by the authorization evidence.
@@ -106,9 +92,6 @@ pub enum DeviceApplicationError<E> {
 impl<E> fmt::Display for DeviceApplicationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ActionRequired { .. } => {
-                formatter.write_str("device operation requires different authorization")
-            }
             Self::TenantMismatch { .. } => {
                 formatter.write_str("device is outside the authorized tenant")
             }
@@ -124,20 +107,8 @@ where
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Repository(error) => Some(error),
-            Self::ActionRequired { .. } | Self::TenantMismatch { .. } => None,
+            Self::TenantMismatch { .. } => None,
         }
-    }
-}
-
-fn require_action<E>(
-    authorization: &AuthorizedTenantAction,
-    required: TenantAction,
-) -> Result<(), DeviceApplicationError<E>> {
-    let actual = authorization.action();
-    if actual == required {
-        Ok(())
-    } else {
-        Err(DeviceApplicationError::ActionRequired { required, actual })
     }
 }
 

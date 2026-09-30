@@ -5,7 +5,7 @@ use fleetiq_domain::{
     RelationshipTypeDefinition, RelationshipTypeRef,
 };
 
-use crate::{AuthorizedTenantAction, DefinitionRepository, TenantAction};
+use crate::{AuthorizedTenant, DefinitionRepository, ManageMetadata, ReadMetadata};
 
 /// Coordinates authorized publication and retrieval of semantic definitions.
 ///
@@ -33,15 +33,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DefinitionApplicationError::ActionRequired`] unless the
-    /// evidence authorizes `ManageMetadata`, or wraps the repository error when
-    /// publication fails.
+    /// Wraps the repository error when publication fails.
     pub async fn publish_property(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageMetadata>,
         definition: &PropertyDefinition,
     ) -> Result<(), DefinitionApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ManageMetadata)?;
         self.repository
             .insert_property(authorization.tenant_id(), definition)
             .await
@@ -52,15 +49,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DefinitionApplicationError::ActionRequired`] unless the
-    /// evidence authorizes `ReadMetadata`, or wraps the repository error when
-    /// retrieval fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_property(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         reference: &PropertyDefinitionRef,
     ) -> Result<Option<PropertyDefinition>, DefinitionApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
         self.repository
             .find_property(authorization.tenant_id(), reference)
             .await
@@ -71,15 +65,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DefinitionApplicationError::ActionRequired`] unless the
-    /// evidence authorizes `ManageMetadata`, or wraps the repository error when
-    /// publication fails.
+    /// Wraps the repository error when publication fails.
     pub async fn publish_asset_type(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageMetadata>,
         definition: &AssetTypeDefinition,
     ) -> Result<(), DefinitionApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ManageMetadata)?;
         self.repository
             .insert_asset_type(authorization.tenant_id(), definition)
             .await
@@ -90,15 +81,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DefinitionApplicationError::ActionRequired`] unless the
-    /// evidence authorizes `ReadMetadata`, or wraps the repository error when
-    /// retrieval fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_asset_type(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         reference: &AssetTypeRef,
     ) -> Result<Option<AssetTypeDefinition>, DefinitionApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
         self.repository
             .find_asset_type(authorization.tenant_id(), reference)
             .await
@@ -109,15 +97,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DefinitionApplicationError::ActionRequired`] unless the
-    /// evidence authorizes `ManageMetadata`, or wraps the repository error when
-    /// publication fails.
+    /// Wraps the repository error when publication fails.
     pub async fn publish_relationship_type(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageMetadata>,
         definition: &RelationshipTypeDefinition,
     ) -> Result<(), DefinitionApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ManageMetadata)?;
         self.repository
             .insert_relationship_type(authorization.tenant_id(), definition)
             .await
@@ -128,15 +113,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`DefinitionApplicationError::ActionRequired`] unless the
-    /// evidence authorizes `ReadMetadata`, or wraps the repository error when
-    /// retrieval fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_relationship_type(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         reference: &RelationshipTypeRef,
     ) -> Result<Option<RelationshipTypeDefinition>, DefinitionApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
         self.repository
             .find_relationship_type(authorization.tenant_id(), reference)
             .await
@@ -147,13 +129,6 @@ where
 /// Failure to execute an authorized semantic-definition operation.
 #[derive(Debug)]
 pub enum DefinitionApplicationError<E> {
-    /// The supplied evidence authorizes a different tenant action.
-    ActionRequired {
-        /// Action required by the attempted operation.
-        required: TenantAction,
-        /// Action carried by the rejected authorization evidence.
-        actual: TenantAction,
-    },
     /// The persistence operation failed.
     Repository(E),
 }
@@ -161,9 +136,6 @@ pub enum DefinitionApplicationError<E> {
 impl<E> fmt::Display for DefinitionApplicationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ActionRequired { .. } => {
-                formatter.write_str("definition operation requires different authorization")
-            }
             Self::Repository(_) => formatter.write_str("definition repository operation failed"),
         }
     }
@@ -176,20 +148,7 @@ where
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Repository(error) => Some(error),
-            Self::ActionRequired { .. } => None,
         }
-    }
-}
-
-fn require_action<E>(
-    authorization: &AuthorizedTenantAction,
-    required: TenantAction,
-) -> Result<(), DefinitionApplicationError<E>> {
-    let actual = authorization.action();
-    if actual == required {
-        Ok(())
-    } else {
-        Err(DefinitionApplicationError::ActionRequired { required, actual })
     }
 }
 

@@ -4,7 +4,7 @@ use std::error::Error;
 
 use fleetiq_application::{
     PlatformAction, PlatformAuthorizationService, PlatformBootstrapRequest,
-    PlatformBootstrapService, TenantAction, TenantAuthorizationError, TenantAuthorizationService,
+    PlatformBootstrapService, ReadMetadata, TenantAuthorizationError, TenantAuthorizationService,
     TenantLifecycleAdministration, TenantLifecycleAdministrationError, TenantLifecycleChangeEffect,
     TenantLifecycleChangeKind, TenantLifecycleChangeOutcome, TenantLifecycleChangeRequest,
 };
@@ -254,14 +254,13 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 async fn tenant_authorization(
     pool: &PgPool,
 ) -> Result<
-    fleetiq_application::AuthorizedTenantAction,
+    fleetiq_application::AuthorizedTenant<ReadMetadata>,
     TenantAuthorizationError<fleetiq_postgres::PostgresTenantAccessPolicyError>,
 > {
     TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
-        .authorize(
+        .authorize::<ReadMetadata>(
             support::authenticated_actor("tenant-user").await,
             tenant_id("tenant-a"),
-            TenantAction::ReadMetadata,
         )
         .await
 }

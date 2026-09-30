@@ -3,7 +3,8 @@ use std::{error::Error, fmt};
 use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
 
 use crate::{
-    AuthorizedTenantAction, SignalBindingRepository, SignalBindingSnapshotQuery, TenantAction,
+    AuthorizedTenant, ManageMetadata, ReadMetadata, SignalBindingRepository,
+    SignalBindingSnapshotQuery,
 };
 
 /// Coordinates authorized operations on signal-to-property attributions.
@@ -36,18 +37,14 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`SignalBindingApplicationError::ActionRequired`] when the
-    /// evidence authorizes another action,
-    /// [`SignalBindingApplicationError::TenantMismatch`] when the revision is
-    /// outside the authorized tenant, or wraps the repository error when the
-    /// append fails.
+    /// Returns [`SignalBindingApplicationError::TenantMismatch`] when the
+    /// revision is outside the authorized tenant, or wraps the repository
+    /// error when the append fails.
     pub async fn append_revision(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageMetadata>,
         binding: &SignalBinding,
     ) -> Result<(), SignalBindingApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ManageMetadata)?;
-
         if authorization.tenant_id() != binding.tenant_id() {
             return Err(SignalBindingApplicationError::TenantMismatch {
                 authorized_tenant_id: authorization.tenant_id().clone(),
@@ -68,17 +65,13 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`SignalBindingApplicationError::ActionRequired`] when the
-    /// evidence authorizes another action, or wraps the repository error when
-    /// retrieval fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_revision(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         binding_id: &SignalBindingId,
         revision: RecordRevision,
     ) -> Result<Option<SignalBinding>, SignalBindingApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
-
         self.repository
             .find_revision(authorization.tenant_id(), binding_id, revision)
             .await
@@ -93,17 +86,13 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`SignalBindingApplicationError::ActionRequired`] when the
-    /// evidence authorizes another action, or wraps the repository error when
-    /// retrieval fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_for_source(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         source: &SignalSource,
         query: SignalBindingSnapshotQuery,
     ) -> Result<Vec<SignalBinding>, SignalBindingApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
-
         self.repository
             .find_for_source(authorization.tenant_id(), source, query)
             .await
@@ -114,13 +103,6 @@ where
 /// Failure to execute an authorized signal-binding operation.
 #[derive(Debug)]
 pub enum SignalBindingApplicationError<E> {
-    /// The supplied evidence authorizes a different tenant action.
-    ActionRequired {
-        /// Action required by the attempted operation.
-        required: TenantAction,
-        /// Action carried by the rejected authorization evidence.
-        actual: TenantAction,
-    },
     /// The signal-binding revision belongs to another tenant.
     TenantMismatch {
         /// Tenant carried by the authorization evidence.
@@ -135,9 +117,6 @@ pub enum SignalBindingApplicationError<E> {
 impl<E> fmt::Display for SignalBindingApplicationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ActionRequired { .. } => {
-                formatter.write_str("signal-binding operation requires different authorization")
-            }
             Self::TenantMismatch { .. } => {
                 formatter.write_str("signal binding is outside the authorized tenant")
             }
@@ -155,20 +134,8 @@ where
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Repository(error) => Some(error),
-            Self::ActionRequired { .. } | Self::TenantMismatch { .. } => None,
+            Self::TenantMismatch { .. } => None,
         }
-    }
-}
-
-fn require_action<E>(
-    authorization: &AuthorizedTenantAction,
-    required: TenantAction,
-) -> Result<(), SignalBindingApplicationError<E>> {
-    let actual = authorization.action();
-    if actual == required {
-        Ok(())
-    } else {
-        Err(SignalBindingApplicationError::ActionRequired { required, actual })
     }
 }
 

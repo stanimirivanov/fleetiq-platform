@@ -3,7 +3,7 @@ use std::{error::Error, fmt, future::Future};
 use fleetiq_domain::{ActorId, TenantAccessChangeId, TenantId, UnixTimeMillis};
 
 use crate::{
-    AuthorizedTenantAction, TenantAccessChangeEffect, TenantAccessChangeKind, TenantAction,
+    AuthorizedTenant, ManageAccess, TenantAccessChangeEffect, TenantAccessChangeKind, TenantAction,
 };
 
 const MAX_PAGE_SIZE: u16 = 100;
@@ -272,20 +272,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`TenantAccessAuditError::ManageAccessRequired`] when the
-    /// evidence authorizes another action, or wraps the repository error when
-    /// the page cannot be loaded.
+    /// Wraps the repository error when the page cannot be loaded.
     pub async fn find_page(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageAccess>,
         query: &TenantAccessAuditQuery,
     ) -> Result<TenantAccessAuditPage, TenantAccessAuditError<R::Error>> {
-        if authorization.action() != TenantAction::ManageAccess {
-            return Err(TenantAccessAuditError::ManageAccessRequired {
-                actual: authorization.action(),
-            });
-        }
-
         self.repository
             .find_page(authorization.tenant_id(), query)
             .await
@@ -296,11 +288,6 @@ where
 /// Failure to execute an authorized tenant access audit query.
 #[derive(Debug)]
 pub enum TenantAccessAuditError<E> {
-    /// The supplied evidence did not authorize tenant access administration.
-    ManageAccessRequired {
-        /// Action carried by the rejected authorization evidence.
-        actual: TenantAction,
-    },
     /// The persistence operation failed.
     Repository(E),
 }
@@ -308,9 +295,6 @@ pub enum TenantAccessAuditError<E> {
 impl<E> fmt::Display for TenantAccessAuditError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ManageAccessRequired { .. } => {
-                formatter.write_str("tenant access audit requires ManageAccess")
-            }
             Self::Repository(_) => formatter.write_str("tenant access audit could not be loaded"),
         }
     }
@@ -322,7 +306,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::ManageAccessRequired { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }
