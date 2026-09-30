@@ -3,7 +3,8 @@ use std::{error::Error, fmt};
 use fleetiq_domain::{AssetId, AssetRelationship, AssetRelationshipId, RecordRevision, TenantId};
 
 use crate::{
-    AuthorizedTenantAction, RelationshipRepository, RelationshipSnapshotQuery, TenantAction,
+    AuthorizedTenant, ManageMetadata, ReadMetadata, RelationshipRepository,
+    RelationshipSnapshotQuery,
 };
 
 /// Coordinates authorized operations on a tenant's semantic asset graph.
@@ -36,18 +37,14 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`RelationshipApplicationError::ActionRequired`] when the
-    /// evidence authorizes another action,
-    /// [`RelationshipApplicationError::TenantMismatch`] when the revision is
-    /// outside the authorized tenant, or wraps the repository error when the
-    /// append fails.
+    /// Returns [`RelationshipApplicationError::TenantMismatch`] when the
+    /// revision is outside the authorized tenant, or wraps the repository
+    /// error when the append fails.
     pub async fn append_revision(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageMetadata>,
         relationship: &AssetRelationship,
     ) -> Result<(), RelationshipApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ManageMetadata)?;
-
         if authorization.tenant_id() != relationship.tenant_id() {
             return Err(RelationshipApplicationError::TenantMismatch {
                 authorized_tenant_id: authorization.tenant_id().clone(),
@@ -68,17 +65,13 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`RelationshipApplicationError::ActionRequired`] when the
-    /// evidence authorizes another action, or wraps the repository error when
-    /// retrieval fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_revision(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         relationship_id: &AssetRelationshipId,
         revision: RecordRevision,
     ) -> Result<Option<AssetRelationship>, RelationshipApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
-
         self.repository
             .find_revision(authorization.tenant_id(), relationship_id, revision)
             .await
@@ -93,17 +86,13 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`RelationshipApplicationError::ActionRequired`] when the
-    /// evidence authorizes another action, or wraps the repository error when
-    /// retrieval fails.
+    /// Wraps the repository error when retrieval fails.
     pub async fn find_for_asset(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         asset_id: &AssetId,
         query: RelationshipSnapshotQuery,
     ) -> Result<Vec<AssetRelationship>, RelationshipApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
-
         self.repository
             .find_for_asset(authorization.tenant_id(), asset_id, query)
             .await
@@ -114,13 +103,6 @@ where
 /// Failure to execute an authorized relationship operation.
 #[derive(Debug)]
 pub enum RelationshipApplicationError<E> {
-    /// The supplied evidence authorizes a different tenant action.
-    ActionRequired {
-        /// Action required by the attempted operation.
-        required: TenantAction,
-        /// Action carried by the rejected authorization evidence.
-        actual: TenantAction,
-    },
     /// The relationship revision belongs to another tenant.
     TenantMismatch {
         /// Tenant carried by the authorization evidence.
@@ -135,9 +117,6 @@ pub enum RelationshipApplicationError<E> {
 impl<E> fmt::Display for RelationshipApplicationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ActionRequired { .. } => {
-                formatter.write_str("relationship operation requires different authorization")
-            }
             Self::TenantMismatch { .. } => {
                 formatter.write_str("relationship is outside the authorized tenant")
             }
@@ -153,20 +132,8 @@ where
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Repository(error) => Some(error),
-            Self::ActionRequired { .. } | Self::TenantMismatch { .. } => None,
+            Self::TenantMismatch { .. } => None,
         }
-    }
-}
-
-fn require_action<E>(
-    authorization: &AuthorizedTenantAction,
-    required: TenantAction,
-) -> Result<(), RelationshipApplicationError<E>> {
-    let actual = authorization.action();
-    if actual == required {
-        Ok(())
-    } else {
-        Err(RelationshipApplicationError::ActionRequired { required, actual })
     }
 }
 

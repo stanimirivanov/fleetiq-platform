@@ -81,6 +81,11 @@ the existing names for source compatibility while callers migrate to the
 capability owner. The architecture checker rejects an access-to-application
 dependency. See [ADR 0070](../adr/0070-extract-access-policy-boundary.md).
 
+Tenant use cases require action-typed evidence issued from the access-policy
+decision. A read grant cannot enter a metadata write or access-administration
+method, while the persisted action vocabulary remains closed. See
+[ADR 0071](../adr/0071-type-tenant-authorization-evidence.md).
+
 ## Changing dependencies
 
 When a task changes a manifest:
@@ -103,4 +108,5 @@ a general permission for other dependencies between the same roles.
 - [Explicit semantic resolution](../adr/0003-explicit-semantic-resolution.md)
 - [Semantic read-port ownership](../adr/0069-own-semantic-read-ports-in-policy.md)
 - [Access policy ownership](../adr/0070-extract-access-policy-boundary.md)
+- [Action-typed tenant evidence](../adr/0071-type-tenant-authorization-evidence.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

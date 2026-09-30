@@ -9,7 +9,7 @@ use std::{
 use fleetiq_domain::{ActorId, TenantId};
 
 use crate::{
-    AccessDecision, TenantAccessPolicy, TenantAccessRequest, TenantAction,
+    AccessDecision, ManageAccess, TenantAccessPolicy, TenantAccessRequest,
     TenantAuthorizationService,
 };
 
@@ -103,10 +103,7 @@ async fn derives_tenant_scope_from_manage_access_authorization() {
     let service = TenantAccessAudit::new(repository.clone());
 
     let page = service
-        .find_page(
-            authorization("tenant-a", TenantAction::ManageAccess).await,
-            &query(),
-        )
+        .find_page(authorization::<ManageAccess>("tenant-a").await, &query())
         .await
         .expect("authorized query should succeed");
 
@@ -122,42 +119,11 @@ async fn derives_tenant_scope_from_manage_access_authorization() {
 }
 
 #[tokio::test]
-async fn rejects_another_action_before_repository_access() {
-    let repository = RecordingRepository::default();
-    let service = TenantAccessAudit::new(repository.clone());
-
-    let error = service
-        .find_page(
-            authorization("tenant-a", TenantAction::ReadMetadata).await,
-            &query(),
-        )
-        .await
-        .expect_err("metadata read authorization must not expose access audit");
-
-    assert!(matches!(
-        error,
-        TenantAccessAuditError::ManageAccessRequired {
-            actual: TenantAction::ReadMetadata
-        }
-    ));
-    assert!(
-        repository
-            .tenants
-            .lock()
-            .expect("tenant lock poisoned")
-            .is_empty()
-    );
-}
-
-#[tokio::test]
 async fn preserves_repository_failure_as_the_error_source() {
     let service = TenantAccessAudit::new(RecordingRepository::failing());
 
     let error = service
-        .find_page(
-            authorization("tenant-a", TenantAction::ManageAccess).await,
-            &query(),
-        )
+        .find_page(authorization::<ManageAccess>("tenant-a").await, &query())
         .await
         .expect_err("repository failure should be returned");
 
@@ -175,15 +141,14 @@ fn query() -> TenantAccessAuditQuery {
     )
 }
 
-async fn authorization(tenant: &str, action: TenantAction) -> crate::AuthorizedTenantAction {
+async fn authorization<A: crate::TenantActionMarker>(tenant: &str) -> crate::AuthorizedTenant<A> {
     TenantAuthorizationService::new(AllowAllPolicy)
-        .authorize(
+        .authorize::<A>(
             crate::test_support::authenticated_actor(
                 ActorId::new("actor-admin").expect("valid actor ID"),
             )
             .await,
             TenantId::new(tenant).expect("valid tenant ID"),
-            action,
         )
         .await
         .expect("test policy should authorize request")

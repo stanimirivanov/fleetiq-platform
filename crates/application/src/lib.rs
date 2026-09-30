@@ -90,10 +90,11 @@ pub use external_identity_catalog::{
 };
 pub use fleetiq_access::{
     AccessDecision, ActorIdentityResolver, AuthenticatedActor, AuthorizedPlatformAction,
-    AuthorizedTenantAction, CallerAuthenticationError, CallerAuthenticationService,
-    ExternalIdentityAuthenticator, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
-    PlatformAuthorizationError, PlatformAuthorizationService, TenantAccessPolicy,
-    TenantAccessRequest, TenantAction, TenantAuthorizationError, TenantAuthorizationService,
+    AuthorizedTenant, CallerAuthenticationError, CallerAuthenticationService,
+    ExternalIdentityAuthenticator, ManageAccess, ManageMetadata, PlatformAccessPolicy,
+    PlatformAccessRequest, PlatformAction, PlatformAuthorizationError,
+    PlatformAuthorizationService, ReadMetadata, TenantAccessPolicy, TenantAccessRequest,
+    TenantAction, TenantActionMarker, TenantAuthorizationError, TenantAuthorizationService,
 };
 pub use frame_acceptance::{
     DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,

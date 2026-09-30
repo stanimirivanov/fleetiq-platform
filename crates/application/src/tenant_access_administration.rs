@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, TenantAccessChangeId, TenantId, UnixTimeMillis};
 
-use crate::{AuthorizedTenantAction, TenantAction};
+use crate::{AuthorizedTenant, ManageAccess, TenantAction};
 
 /// Requested mutation of one exact tenant action grant.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -157,20 +157,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`TenantAccessAdministrationError::ManageAccessRequired`] when
-    /// the evidence authorizes another action, or wraps the repository error
-    /// when the atomic mutation and audit operation fails.
+    /// Wraps the repository error when the atomic mutation and audit operation fails.
     pub async fn apply(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageAccess>,
         request: TenantAccessChangeRequest,
     ) -> Result<TenantAccessChangeOutcome, TenantAccessAdministrationError<R::Error>> {
-        if authorization.action() != TenantAction::ManageAccess {
-            return Err(TenantAccessAdministrationError::ManageAccessRequired {
-                actual: authorization.action(),
-            });
-        }
-
         let change = TenantAccessChange {
             change_id: request.change_id,
             tenant_id: authorization.tenant_id().clone(),
@@ -191,11 +183,6 @@ where
 /// Failure to apply an authorized tenant access administration command.
 #[derive(Debug)]
 pub enum TenantAccessAdministrationError<E> {
-    /// The supplied evidence did not authorize tenant access administration.
-    ManageAccessRequired {
-        /// Action carried by the rejected authorization evidence.
-        actual: TenantAction,
-    },
     /// The atomic persistence operation failed.
     Repository(E),
 }
@@ -203,9 +190,6 @@ pub enum TenantAccessAdministrationError<E> {
 impl<E> fmt::Display for TenantAccessAdministrationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ManageAccessRequired { .. } => {
-                formatter.write_str("tenant access administration requires ManageAccess")
-            }
             Self::Repository(_) => {
                 formatter.write_str("tenant access administration could not be persisted")
             }
@@ -219,7 +203,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::ManageAccessRequired { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }

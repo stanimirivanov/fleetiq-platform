@@ -3,8 +3,8 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    TenantAccessAudit, TenantAccessAuditPageSize, TenantAccessAuditQuery, TenantAccessChangeEffect,
-    TenantAccessChangeKind, TenantAction, TenantAuthorizationService,
+    ManageAccess, TenantAccessAudit, TenantAccessAuditPageSize, TenantAccessAuditQuery,
+    TenantAccessChangeEffect, TenantAccessChangeKind, TenantAction, TenantAuthorizationService,
 };
 use fleetiq_domain::TenantId;
 use fleetiq_postgres::{PostgresTenantAccessAuditRepository, PostgresTenantAccessPolicy};
@@ -89,13 +89,12 @@ fn ids(page: &fleetiq_application::TenantAccessAuditPage) -> Vec<&str> {
 
 async fn manage_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedTenantAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedTenant<ManageAccess>, Box<dyn Error>> {
     Ok(
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
-            .authorize(
+            .authorize::<ManageAccess>(
                 support::authenticated_actor("admin-a").await,
                 TenantId::new("tenant-a")?,
-                TenantAction::ManageAccess,
             )
             .await?,
     )

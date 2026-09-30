@@ -2,7 +2,7 @@ use std::{error::Error, fmt};
 
 use fleetiq_domain::{Asset, AssetId, TenantId};
 
-use crate::{AssetRepository, AuthorizedTenantAction, TenantAction};
+use crate::{AssetRepository, AuthorizedTenant, ManageMetadata, ReadMetadata};
 
 /// Coordinates authorized operations on tenant-owned assets.
 ///
@@ -34,17 +34,14 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`AssetApplicationError::ActionRequired`] when the evidence
-    /// authorizes another action, [`AssetApplicationError::TenantMismatch`]
-    /// when the asset is outside the authorized tenant, or wraps the repository
-    /// error when persistence fails.
+    /// Returns [`AssetApplicationError::TenantMismatch`] when the asset is
+    /// outside the authorized tenant, or wraps the repository error when
+    /// persistence fails.
     pub async fn register(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ManageMetadata>,
         asset: &Asset,
     ) -> Result<(), AssetApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ManageMetadata)?;
-
         if authorization.tenant_id() != asset.tenant_id() {
             return Err(AssetApplicationError::TenantMismatch {
                 authorized_tenant_id: authorization.tenant_id().clone(),
@@ -66,16 +63,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`AssetApplicationError::ActionRequired`] when the evidence
-    /// authorizes another action, or wraps the repository error when the lookup
-    /// fails.
+    /// Wraps the repository error when the lookup fails.
     pub async fn find_by_id(
         &self,
-        authorization: AuthorizedTenantAction,
+        authorization: AuthorizedTenant<ReadMetadata>,
         asset_id: &AssetId,
     ) -> Result<Option<Asset>, AssetApplicationError<R::Error>> {
-        require_action(&authorization, TenantAction::ReadMetadata)?;
-
         self.repository
             .find_by_id(authorization.tenant_id(), asset_id)
             .await
@@ -86,13 +79,6 @@ where
 /// Failure to execute an authorized asset operation.
 #[derive(Debug)]
 pub enum AssetApplicationError<E> {
-    /// The supplied evidence authorizes a different tenant action.
-    ActionRequired {
-        /// Action required by the attempted operation.
-        required: TenantAction,
-        /// Action carried by the rejected authorization evidence.
-        actual: TenantAction,
-    },
     /// The asset aggregate belongs to a tenant other than the authorized one.
     TenantMismatch {
         /// Tenant carried by the authorization evidence.
@@ -107,9 +93,6 @@ pub enum AssetApplicationError<E> {
 impl<E> fmt::Display for AssetApplicationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::ActionRequired { .. } => {
-                formatter.write_str("asset operation requires different authorization")
-            }
             Self::TenantMismatch { .. } => {
                 formatter.write_str("asset is outside the authorized tenant")
             }
@@ -125,20 +108,8 @@ where
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::Repository(error) => Some(error),
-            Self::ActionRequired { .. } | Self::TenantMismatch { .. } => None,
+            Self::TenantMismatch { .. } => None,
         }
-    }
-}
-
-fn require_action<E>(
-    authorization: &AuthorizedTenantAction,
-    required: TenantAction,
-) -> Result<(), AssetApplicationError<E>> {
-    let actual = authorization.action();
-    if actual == required {
-        Ok(())
-    } else {
-        Err(AssetApplicationError::ActionRequired { required, actual })
     }
 }
 
@@ -263,10 +234,7 @@ mod tests {
         let asset = asset("tenant-a", "asset-a");
 
         service
-            .register(
-                authorization("tenant-a", TenantAction::ManageMetadata).await,
-                &asset,
-            )
+            .register(authorization::<ManageMetadata>("tenant-a").await, &asset)
             .await
             .expect("matching tenant should be registered");
 
@@ -274,31 +242,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn rejects_wrong_action_and_tenant_before_persistence() {
+    async fn rejects_wrong_tenant_before_persistence() {
         let repository = RecordingAssetRepository::default();
         let service = AssetApplicationService::new(repository.clone());
         let asset = asset("tenant-b", "asset-a");
 
-        let wrong_action = service
-            .register(
-                authorization("tenant-b", TenantAction::ReadMetadata).await,
-                &asset,
-            )
-            .await
-            .expect_err("read authorization must not permit registration");
-        assert!(matches!(
-            wrong_action,
-            AssetApplicationError::ActionRequired {
-                required: TenantAction::ManageMetadata,
-                actual: TenantAction::ReadMetadata,
-            }
-        ));
-
         let wrong_tenant = service
-            .register(
-                authorization("tenant-a", TenantAction::ManageMetadata).await,
-                &asset,
-            )
+            .register(authorization::<ManageMetadata>("tenant-a").await, &asset)
             .await
             .expect_err("cross-tenant asset must be rejected");
         assert!(matches!(
@@ -320,10 +270,7 @@ mod tests {
         let asset_id = asset.id().clone();
 
         let found = service
-            .find_by_id(
-                authorization("tenant-a", TenantAction::ReadMetadata).await,
-                &asset_id,
-            )
+            .find_by_id(authorization::<ReadMetadata>("tenant-a").await, &asset_id)
             .await
             .expect("lookup should succeed");
 
@@ -335,38 +282,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn lookup_rejects_manage_authorization_before_persistence() {
-        let repository = RecordingAssetRepository::default();
-        let service = AssetApplicationService::new(repository.clone());
-
-        let error = service
-            .find_by_id(
-                authorization("tenant-a", TenantAction::ManageMetadata).await,
-                &AssetId::new("asset-a").expect("valid asset ID"),
-            )
-            .await
-            .expect_err("manage authorization must not imply read authorization");
-
-        assert!(matches!(
-            error,
-            AssetApplicationError::ActionRequired {
-                required: TenantAction::ReadMetadata,
-                actual: TenantAction::ManageMetadata,
-            }
-        ));
-        assert!(repository.calls().is_empty());
-    }
-
-    #[tokio::test]
     async fn preserves_repository_failure_as_the_error_source() {
         let service = AssetApplicationService::new(RecordingAssetRepository::failing());
         let asset = asset("tenant-a", "asset-a");
 
         let error = service
-            .register(
-                authorization("tenant-a", TenantAction::ManageMetadata).await,
-                &asset,
-            )
+            .register(authorization::<ManageMetadata>("tenant-a").await, &asset)
             .await
             .expect_err("repository failure should be returned");
 
@@ -377,15 +298,14 @@ mod tests {
         assert!(error.source().is_some());
     }
 
-    async fn authorization(tenant: &str, action: TenantAction) -> AuthorizedTenantAction {
+    async fn authorization<A: crate::TenantActionMarker>(tenant: &str) -> AuthorizedTenant<A> {
         TenantAuthorizationService::new(AllowAllPolicy)
-            .authorize(
+            .authorize::<A>(
                 crate::test_support::authenticated_actor(
                     ActorId::new("actor-a").expect("valid actor ID"),
                 )
                 .await,
                 tenant_id(tenant),
-                action,
             )
             .await
             .expect("test policy should authorize request")

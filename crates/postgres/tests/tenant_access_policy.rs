@@ -2,7 +2,10 @@
 
 use std::error::Error;
 
-use fleetiq_application::{TenantAction, TenantAuthorizationError, TenantAuthorizationService};
+use fleetiq_application::{
+    ManageAccess, ManageMetadata, ReadMetadata, TenantAction, TenantActionMarker,
+    TenantAuthorizationError, TenantAuthorizationService,
+};
 use fleetiq_domain::TenantId;
 use fleetiq_postgres::PostgresTenantAccessPolicy;
 use sqlx::PgPool;
@@ -22,10 +25,9 @@ async fn exact_grant_authorizes_only_its_tuple_and_revocation_is_immediate(
     let policy = PostgresTenantAccessPolicy::new(pool.clone());
     let service = TenantAuthorizationService::new(policy.clone());
     let authorization = service
-        .authorize(
+        .authorize::<ReadMetadata>(
             support::authenticated_actor("actor-a").await,
             tenant_id("tenant-a"),
-            TenantAction::ReadMetadata,
         )
         .await?;
 
@@ -33,21 +35,21 @@ async fn exact_grant_authorizes_only_its_tuple_and_revocation_is_immediate(
     assert_eq!(authorization.tenant_id().as_str(), "tenant-a");
     assert_eq!(authorization.action(), TenantAction::ReadMetadata);
 
-    for (actor, tenant, action) in [
-        ("actor-b", "tenant-a", TenantAction::ReadMetadata),
-        ("actor-a", "tenant-b", TenantAction::ReadMetadata),
-        ("actor-a", "tenant-a", TenantAction::ManageMetadata),
-    ] {
+    for (actor, tenant) in [("actor-b", "tenant-a"), ("actor-a", "tenant-b")] {
         let error = service
-            .authorize(
-                support::authenticated_actor(actor).await,
-                tenant_id(tenant),
-                action,
-            )
+            .authorize::<ReadMetadata>(support::authenticated_actor(actor).await, tenant_id(tenant))
             .await
             .expect_err("an unmatched tuple must be denied");
         assert!(matches!(error, TenantAuthorizationError::Denied));
     }
+    let wrong_action = service
+        .authorize::<ManageMetadata>(
+            support::authenticated_actor("actor-a").await,
+            tenant_id("tenant-a"),
+        )
+        .await
+        .expect_err("a read grant must not authorize metadata management");
+    assert!(matches!(wrong_action, TenantAuthorizationError::Denied));
 
     sqlx::query(
         "DELETE FROM identity.tenant_action_grants \
@@ -60,10 +62,9 @@ async fn exact_grant_authorizes_only_its_tuple_and_revocation_is_immediate(
     .await?;
 
     let error = service
-        .authorize(
+        .authorize::<ReadMetadata>(
             support::authenticated_actor("actor-a").await,
             tenant_id("tenant-a"),
-            TenantAction::ReadMetadata,
         )
         .await
         .expect_err("a deleted grant must stop authorizing the next operation");
@@ -72,7 +73,7 @@ async fn exact_grant_authorizes_only_its_tuple_and_revocation_is_immediate(
 }
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
-async fn every_application_action_matches_the_persisted_vocabulary(
+async fn every_access_action_matches_the_persisted_vocabulary(
     pool: PgPool,
 ) -> Result<(), Box<dyn Error>> {
     seed_tenant(&pool, "tenant-a").await?;
@@ -83,20 +84,22 @@ async fn every_application_action_matches_the_persisted_vocabulary(
     }
 
     let service = TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool));
-    for action in [
-        TenantAction::ReadMetadata,
-        TenantAction::ManageMetadata,
-        TenantAction::ManageAccess,
-    ] {
-        let authorization = service
-            .authorize(
-                support::authenticated_actor("actor-a").await,
-                tenant_id("tenant-a"),
-                action,
-            )
-            .await?;
-        assert_eq!(authorization.action(), action);
-    }
+    assert_action::<ReadMetadata>(&service).await?;
+    assert_action::<ManageMetadata>(&service).await?;
+    assert_action::<ManageAccess>(&service).await?;
+    Ok(())
+}
+
+async fn assert_action<A: TenantActionMarker>(
+    service: &TenantAuthorizationService<PostgresTenantAccessPolicy>,
+) -> Result<(), Box<dyn Error>> {
+    let authorization = service
+        .authorize::<A>(
+            support::authenticated_actor("actor-a").await,
+            tenant_id("tenant-a"),
+        )
+        .await?;
+    assert_eq!(authorization.action(), A::ACTION);
     Ok(())
 }
 
