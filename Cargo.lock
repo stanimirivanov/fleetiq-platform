@@ -693,7 +693,7 @@ dependencies = [
  "wasmtime",
  "wat",
  "wit-component 0.254.0",
- "wit-parser 0.254.0",
+ "wit-parser 0.258.0",
 ]
 
 [[package]]
