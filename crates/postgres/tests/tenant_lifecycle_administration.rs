@@ -3,7 +3,7 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    PlatformAction, PlatformAuthorizationService, PlatformBootstrapRequest,
+    ManageTenantLifecycle, PlatformAuthorizationService, PlatformBootstrapRequest,
     PlatformBootstrapService, ReadMetadata, TenantAuthorizationError, TenantAuthorizationService,
     TenantLifecycleAdministration, TenantLifecycleAdministrationError, TenantLifecycleChangeEffect,
     TenantLifecycleChangeKind, TenantLifecycleChangeOutcome, TenantLifecycleChangeRequest,
@@ -101,7 +101,7 @@ async fn already_active_tenant_records_no_state_change(pool: PgPool) -> Result<(
 }
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
-async fn collision_missing_tenant_and_wrong_action_do_not_change_state(
+async fn collision_and_missing_tenant_do_not_change_state(
     pool: PgPool,
 ) -> Result<(), Box<dyn Error>> {
     seed(&pool).await?;
@@ -158,24 +158,6 @@ async fn collision_missing_tenant_and_wrong_action_do_not_change_state(
         ) if tenant_id.as_str() == "tenant-missing"
     ));
 
-    let wrong_action = administration
-        .apply(
-            provision_tenant(&pool).await?,
-            request(
-                "wrong-action",
-                "tenant-a",
-                TenantLifecycleChangeKind::Activate,
-                1_003,
-            ),
-        )
-        .await
-        .expect_err("tenant provisioning must not administer lifecycle state");
-    assert!(matches!(
-        wrong_action,
-        TenantLifecycleAdministrationError::WrongAction {
-            actual: PlatformAction::ProvisionTenant
-        }
-    ));
     assert_eq!(audit_count(&pool).await?, 1);
     Ok(())
 }
@@ -267,23 +249,10 @@ async fn tenant_authorization(
 
 async fn manage_tenant_lifecycle(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
-    authorize_platform(pool, PlatformAction::ManageTenantLifecycle).await
-}
-
-async fn provision_tenant(
-    pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
-    authorize_platform(pool, PlatformAction::ProvisionTenant).await
-}
-
-async fn authorize_platform(
-    pool: &PgPool,
-    action: PlatformAction,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(support::authenticated_actor("operator-a").await, action)
+            .authorize::<ManageTenantLifecycle>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }

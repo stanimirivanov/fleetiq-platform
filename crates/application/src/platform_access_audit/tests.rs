@@ -9,7 +9,7 @@ use std::{
 use fleetiq_domain::ActorId;
 
 use crate::{
-    AccessDecision, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
+    AccessDecision, ManagePlatformAccess, PlatformAccessPolicy, PlatformAccessRequest,
     PlatformAuthorizationService,
 };
 
@@ -103,10 +103,7 @@ fn page_size_is_bounded() {
 async fn manage_platform_access_authorization_allows_one_query() {
     let repository = RecordingRepository::default();
     let page = PlatformAccessAudit::new(repository.clone())
-        .find_page(
-            authorization(PlatformAction::ManagePlatformAccess).await,
-            &query(),
-        )
+        .find_page(authorization::<ManagePlatformAccess>().await, &query())
         .await
         .expect("authorized query should succeed");
 
@@ -115,32 +112,9 @@ async fn manage_platform_access_authorization_allows_one_query() {
 }
 
 #[tokio::test]
-async fn rejects_another_action_before_repository_access() {
-    let repository = RecordingRepository::default();
-    let error = PlatformAccessAudit::new(repository.clone())
-        .find_page(
-            authorization(PlatformAction::ManageIdentity).await,
-            &query(),
-        )
-        .await
-        .expect_err("identity management must not expose platform access audit");
-
-    assert!(matches!(
-        error,
-        PlatformAccessAuditError::WrongAction {
-            actual: PlatformAction::ManageIdentity
-        }
-    ));
-    assert_eq!(*repository.calls.lock().expect("call lock poisoned"), 0);
-}
-
-#[tokio::test]
 async fn preserves_repository_failure_as_the_error_source() {
     let error = PlatformAccessAudit::new(RecordingRepository::failing())
-        .find_page(
-            authorization(PlatformAction::ManagePlatformAccess).await,
-            &query(),
-        )
+        .find_page(authorization::<ManagePlatformAccess>().await, &query())
         .await
         .expect_err("repository failure should be returned");
 
@@ -158,14 +132,13 @@ fn query() -> PlatformAccessAuditQuery {
     )
 }
 
-async fn authorization(action: PlatformAction) -> crate::AuthorizedPlatformAction {
+async fn authorization<A: crate::PlatformActionMarker>() -> crate::AuthorizedPlatform<A> {
     PlatformAuthorizationService::new(AllowAllPolicy)
-        .authorize(
+        .authorize::<A>(
             crate::test_support::authenticated_actor(
                 ActorId::new("actor-admin").expect("valid actor ID"),
             )
             .await,
-            action,
         )
         .await
         .expect("test policy should authorize request")

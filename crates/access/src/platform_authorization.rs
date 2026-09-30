@@ -1,4 +1,4 @@
-use std::{error::Error, fmt, future::Future};
+use std::{error::Error, fmt, future::Future, marker::PhantomData};
 
 use fleetiq_domain::ActorId;
 
@@ -19,6 +19,55 @@ pub enum PlatformAction {
     ProvisionTenant,
     /// Activate or suspend an existing tenant with immutable audit evidence.
     ManageTenantLifecycle,
+}
+
+mod sealed {
+    pub trait Sealed {}
+}
+
+/// A closed platform action whose authorization evidence carries its exact action in its type.
+///
+/// This trait is sealed so external callers cannot define actions outside the
+/// reviewed [`PlatformAction`] vocabulary.
+pub trait PlatformActionMarker: sealed::Sealed {
+    /// Persisted action evaluated by platform policy.
+    const ACTION: PlatformAction;
+}
+
+/// Permission to administer platform action grants.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManagePlatformAccess;
+
+impl sealed::Sealed for ManagePlatformAccess {}
+impl PlatformActionMarker for ManagePlatformAccess {
+    const ACTION: PlatformAction = PlatformAction::ManagePlatformAccess;
+}
+
+/// Permission to administer internal actors and external identities.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageIdentity;
+
+impl sealed::Sealed for ManageIdentity {}
+impl PlatformActionMarker for ManageIdentity {
+    const ACTION: PlatformAction = PlatformAction::ManageIdentity;
+}
+
+/// Permission to provision tenants and their initial access state.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ProvisionTenant;
+
+impl sealed::Sealed for ProvisionTenant {}
+impl PlatformActionMarker for ProvisionTenant {
+    const ACTION: PlatformAction = PlatformAction::ProvisionTenant;
+}
+
+/// Permission to administer existing tenant lifecycle state.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageTenantLifecycle;
+
+impl sealed::Sealed for ManageTenantLifecycle {}
+impl PlatformActionMarker for ManageTenantLifecycle {
+    const ACTION: PlatformAction = PlatformAction::ManageTenantLifecycle;
 }
 
 /// Describes an authenticated actor's platform authorization request.
@@ -67,16 +116,33 @@ pub trait PlatformAccessPolicy: Send + Sync {
 
 /// Evidence that one exact platform action passed the configured policy.
 ///
-/// The value has no public constructor and must not be persisted, serialized,
-/// cached, or reused for another operation. Protected platform services consume
-/// it as single-use authorization evidence.
+/// Protected services require the marker for their action. The value has no
+/// public constructor and must not be persisted, serialized, cached, or reused
+/// for another operation.
+///
+/// ```compile_fail
+/// use fleetiq_access::{AuthorizedPlatform, ManageIdentity, ProvisionTenant};
+/// fn provision(_: AuthorizedPlatform<ProvisionTenant>) {}
+/// fn wrong_action(grant: AuthorizedPlatform<ManageIdentity>) {
+///     provision(grant);
+/// }
+/// ```
+///
+/// ```compile_fail
+/// use fleetiq_access::{AuthorizedPlatform, ManageIdentity};
+/// let _grant = AuthorizedPlatform::<ManageIdentity> {
+///     request: todo!(),
+///     marker: std::marker::PhantomData,
+/// };
+/// ```
 #[derive(Debug, Eq, PartialEq)]
 #[must_use = "a platform authorization grant must be consumed by the protected operation"]
-pub struct AuthorizedPlatformAction {
+pub struct AuthorizedPlatform<A: PlatformActionMarker> {
     request: PlatformAccessRequest,
+    marker: PhantomData<A>,
 }
 
-impl AuthorizedPlatformAction {
+impl<A: PlatformActionMarker> AuthorizedPlatform<A> {
     /// Returns the authenticated actor authorized for the operation.
     pub const fn actor_id(&self) -> &ActorId {
         self.request.actor_id()
@@ -84,7 +150,7 @@ impl AuthorizedPlatformAction {
 
     /// Returns the exact platform action authorized by policy.
     pub const fn action(&self) -> PlatformAction {
-        self.request.action()
+        A::ACTION
     }
 }
 
@@ -115,14 +181,16 @@ where
     /// Returns [`PlatformAuthorizationError::Denied`] when the exact grant is
     /// absent, or [`PlatformAuthorizationError::Policy`] when policy cannot be
     /// evaluated.
-    pub async fn authorize(
+    pub async fn authorize<A: PlatformActionMarker>(
         &self,
         actor: AuthenticatedActor,
-        action: PlatformAction,
-    ) -> Result<AuthorizedPlatformAction, PlatformAuthorizationError<P::Error>> {
-        let request = PlatformAccessRequest::new(actor.into_actor_id(), action);
+    ) -> Result<AuthorizedPlatform<A>, PlatformAuthorizationError<P::Error>> {
+        let request = PlatformAccessRequest::new(actor.into_actor_id(), A::ACTION);
         match self.policy.evaluate(&request).await {
-            Ok(AccessDecision::Allow) => Ok(AuthorizedPlatformAction { request }),
+            Ok(AccessDecision::Allow) => Ok(AuthorizedPlatform {
+                request,
+                marker: PhantomData,
+            }),
             Ok(AccessDecision::Deny) => Err(PlatformAuthorizationError::Denied),
             Err(error) => Err(PlatformAuthorizationError::Policy(error)),
         }
@@ -211,6 +279,20 @@ mod tests {
 
     impl Error for PolicyFailure {}
 
+    #[test]
+    fn markers_match_the_closed_platform_action_vocabulary() {
+        assert_eq!(
+            ManagePlatformAccess::ACTION,
+            PlatformAction::ManagePlatformAccess
+        );
+        assert_eq!(ManageIdentity::ACTION, PlatformAction::ManageIdentity);
+        assert_eq!(ProvisionTenant::ACTION, PlatformAction::ProvisionTenant);
+        assert_eq!(
+            ManageTenantLifecycle::ACTION,
+            PlatformAction::ManageTenantLifecycle
+        );
+    }
+
     #[tokio::test]
     async fn exact_grant_produces_matching_platform_evidence() {
         let service = PlatformAuthorizationService::new(ExactPolicy {
@@ -219,10 +301,7 @@ mod tests {
         });
 
         let authorization = service
-            .authorize(
-                authenticated_actor("actor-a"),
-                PlatformAction::ProvisionTenant,
-            )
+            .authorize::<ProvisionTenant>(authenticated_actor("actor-a"))
             .await
             .expect("exact platform grant should authorize");
 
@@ -238,10 +317,7 @@ mod tests {
         });
 
         let error = service
-            .authorize(
-                authenticated_actor("actor-b"),
-                PlatformAction::ProvisionTenant,
-            )
+            .authorize::<ProvisionTenant>(authenticated_actor("actor-b"))
             .await
             .expect_err("another actor must be denied");
 
@@ -251,10 +327,7 @@ mod tests {
     #[tokio::test]
     async fn policy_failure_fails_closed() {
         let error = PlatformAuthorizationService::new(FailingPolicy)
-            .authorize(
-                authenticated_actor("actor-a"),
-                PlatformAction::ProvisionTenant,
-            )
+            .authorize::<ProvisionTenant>(authenticated_actor("actor-a"))
             .await
             .expect_err("policy failure must not authorize platform access");
 

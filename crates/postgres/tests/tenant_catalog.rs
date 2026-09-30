@@ -3,7 +3,7 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    PlatformAction, PlatformAuthorizationService, PlatformBootstrapRequest,
+    ManageTenantLifecycle, PlatformAuthorizationService, PlatformBootstrapRequest,
     PlatformBootstrapService, TenantCatalog, TenantCatalogPageSize, TenantCatalogQuery,
     TenantLifecycleState,
 };
@@ -99,13 +99,10 @@ async fn seed_tenant(pool: &PgPool, tenant_id: &str, is_active: bool) -> sqlx::R
 
 async fn manage_tenant_lifecycle(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManageTenantLifecycle,
-            )
+            .authorize::<ManageTenantLifecycle>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }

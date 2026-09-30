@@ -98,10 +98,7 @@ fn page_size_is_bounded() {
 async fn manage_tenant_lifecycle_authorization_allows_one_query() {
     let repository = RecordingRepository::default();
     let page = TenantLifecycleAudit::new(repository.clone())
-        .find_page(
-            authorization(PlatformAction::ManageTenantLifecycle).await,
-            &query(),
-        )
+        .find_page(authorization::<ManageTenantLifecycle>().await, &query())
         .await
         .expect("authorized query should succeed");
 
@@ -110,32 +107,9 @@ async fn manage_tenant_lifecycle_authorization_allows_one_query() {
 }
 
 #[tokio::test]
-async fn rejects_another_action_before_repository_access() {
-    let repository = RecordingRepository::default();
-    let error = TenantLifecycleAudit::new(repository.clone())
-        .find_page(
-            authorization(PlatformAction::ManagePlatformAccess).await,
-            &query(),
-        )
-        .await
-        .expect_err("platform access management must not expose lifecycle audit");
-
-    assert!(matches!(
-        error,
-        TenantLifecycleAuditError::WrongAction {
-            actual: PlatformAction::ManagePlatformAccess
-        }
-    ));
-    assert_eq!(*repository.calls.lock().expect("call lock poisoned"), 0);
-}
-
-#[tokio::test]
 async fn preserves_repository_failure_as_the_error_source() {
     let error = TenantLifecycleAudit::new(RecordingRepository::failing())
-        .find_page(
-            authorization(PlatformAction::ManageTenantLifecycle).await,
-            &query(),
-        )
+        .find_page(authorization::<ManageTenantLifecycle>().await, &query())
         .await
         .expect_err("repository failure should be returned");
 
@@ -153,14 +127,13 @@ fn query() -> TenantLifecycleAuditQuery {
     )
 }
 
-async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
+async fn authorization<A: crate::PlatformActionMarker>() -> AuthorizedPlatform<A> {
     PlatformAuthorizationService::new(AllowAllPolicy)
-        .authorize(
+        .authorize::<A>(
             crate::test_support::authenticated_actor(
                 ActorId::new("actor-admin").expect("valid actor ID"),
             )
             .await,
-            action,
         )
         .await
         .expect("test policy should authorize request")

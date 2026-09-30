@@ -21,6 +21,7 @@ pub use caller_authentication::{
     ExternalIdentityAuthenticator,
 };
 pub use platform_authorization::{
-    AuthorizedPlatformAction, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction,
-    PlatformAuthorizationError, PlatformAuthorizationService,
+    AuthorizedPlatform, ManageIdentity, ManagePlatformAccess, ManageTenantLifecycle,
+    PlatformAccessPolicy, PlatformAccessRequest, PlatformAction, PlatformActionMarker,
+    PlatformAuthorizationError, PlatformAuthorizationService, ProvisionTenant,
 };

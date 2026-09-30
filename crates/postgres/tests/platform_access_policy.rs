@@ -3,7 +3,8 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    PlatformAction, PlatformAuthorizationError, PlatformAuthorizationService,
+    ManageIdentity, ManagePlatformAccess, PlatformAction, PlatformAuthorizationError,
+    PlatformAuthorizationService, ProvisionTenant,
 };
 use fleetiq_postgres::PostgresPlatformAccessPolicy;
 use sqlx::PgPool;
@@ -21,38 +22,26 @@ async fn exact_grant_authorizes_only_its_actor_and_revocation_is_immediate(
     let service =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()));
     let authorization = service
-        .authorize(
-            support::authenticated_actor("actor-a").await,
-            PlatformAction::ProvisionTenant,
-        )
+        .authorize::<ProvisionTenant>(support::authenticated_actor("actor-a").await)
         .await?;
 
     assert_eq!(authorization.actor_id().as_str(), "actor-a");
     assert_eq!(authorization.action(), PlatformAction::ProvisionTenant);
 
     let error = service
-        .authorize(
-            support::authenticated_actor("actor-a").await,
-            PlatformAction::ManageIdentity,
-        )
+        .authorize::<ManageIdentity>(support::authenticated_actor("actor-a").await)
         .await
         .expect_err("one platform action must not imply another");
     assert!(matches!(error, PlatformAuthorizationError::Denied));
 
     let error = service
-        .authorize(
-            support::authenticated_actor("actor-a").await,
-            PlatformAction::ManagePlatformAccess,
-        )
+        .authorize::<ManagePlatformAccess>(support::authenticated_actor("actor-a").await)
         .await
         .expect_err("one platform action must not imply grant administration");
     assert!(matches!(error, PlatformAuthorizationError::Denied));
 
     let error = service
-        .authorize(
-            support::authenticated_actor("actor-b").await,
-            PlatformAction::ProvisionTenant,
-        )
+        .authorize::<ProvisionTenant>(support::authenticated_actor("actor-b").await)
         .await
         .expect_err("another actor must be denied");
     assert!(matches!(error, PlatformAuthorizationError::Denied));
@@ -64,10 +53,7 @@ async fn exact_grant_authorizes_only_its_actor_and_revocation_is_immediate(
         .await?;
 
     let error = service
-        .authorize(
-            support::authenticated_actor("actor-a").await,
-            PlatformAction::ProvisionTenant,
-        )
+        .authorize::<ProvisionTenant>(support::authenticated_actor("actor-a").await)
         .await
         .expect_err("revocation must affect the next policy decision");
     assert!(matches!(error, PlatformAuthorizationError::Denied));

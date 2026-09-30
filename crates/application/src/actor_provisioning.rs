@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, ActorProvisioningId, ExternalIdentity, UnixTimeMillis};
 
-use crate::{AuthorizedPlatformAction, PlatformAction};
+use crate::{AuthorizedPlatform, ManageIdentity};
 
 /// Trusted input for one idempotent actor provisioning command.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -125,19 +125,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`ActorProvisioningError::WrongAction`] for other platform
-    /// evidence, or wraps the repository error when persistence fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn provision(
         &self,
-        authorization: AuthorizedPlatformAction,
+        authorization: AuthorizedPlatform<ManageIdentity>,
         request: ActorProvisioningRequest,
     ) -> Result<ActorProvisioningOutcome, ActorProvisioningError<R::Error>> {
-        if authorization.action() != PlatformAction::ManageIdentity {
-            return Err(ActorProvisioningError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         let command = ActorProvisioningCommand {
             provisioning_id: request.provisioning_id,
             actor_id: request.actor_id,
@@ -155,11 +148,6 @@ where
 /// Failure to apply an authorized actor provisioning command.
 #[derive(Debug)]
 pub enum ActorProvisioningError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The atomic persistence operation failed.
     Repository(E),
 }
@@ -167,10 +155,6 @@ pub enum ActorProvisioningError<E> {
 impl<E> fmt::Display for ActorProvisioningError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "actor provisioning requires ManageIdentity authorization, got {actual:?}"
-            ),
             Self::Repository(_) => formatter.write_str("actor provisioning could not be persisted"),
         }
     }
@@ -182,7 +166,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }
@@ -245,10 +228,7 @@ mod tests {
         let service = ActorProvisioningService::new(repository);
 
         let outcome = service
-            .provision(
-                authorization(PlatformAction::ManageIdentity).await,
-                request(),
-            )
+            .provision(authorization::<ManageIdentity>().await, request())
             .await
             .expect("recording repository should provision");
 
@@ -261,38 +241,9 @@ mod tests {
         assert_eq!(commands[0].actor_id().as_str(), "actor-a");
     }
 
-    #[tokio::test]
-    async fn rejects_other_platform_evidence_before_persistence() {
-        let repository = RecordingRepository::default();
-        let recorded = repository.commands.clone();
-        let error = ActorProvisioningService::new(repository)
-            .provision(
-                authorization(PlatformAction::ProvisionTenant).await,
-                request(),
-            )
-            .await
-            .expect_err("tenant provisioning evidence must not provision an actor");
-
-        assert!(matches!(
-            error,
-            ActorProvisioningError::WrongAction {
-                actual: PlatformAction::ProvisionTenant
-            }
-        ));
-        assert!(
-            recorded
-                .lock()
-                .expect("recording lock should remain available")
-                .is_empty()
-        );
-    }
-
-    async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
+    async fn authorization<A: crate::PlatformActionMarker>() -> AuthorizedPlatform<A> {
         PlatformAuthorizationService::new(AllowPolicy)
-            .authorize(
-                crate::test_support::authenticated_actor(actor_id("operator-a")).await,
-                action,
-            )
+            .authorize::<A>(crate::test_support::authenticated_actor(actor_id("operator-a")).await)
             .await
             .expect("test policy should authorize")
     }

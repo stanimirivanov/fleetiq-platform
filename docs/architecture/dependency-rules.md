@@ -86,6 +86,11 @@ decision. A read grant cannot enter a metadata write or access-administration
 method, while the persisted action vocabulary remains closed. See
 [ADR 0071](../adr/0071-type-tenant-authorization-evidence.md).
 
+Platform administration likewise requires action-typed evidence issued by
+the platform policy decision. Identity, grant, tenant provisioning, and tenant
+lifecycle authority are distinct types; see
+[ADR 0072](../adr/0072-type-platform-authorization-evidence.md).
+
 ## Changing dependencies
 
 When a task changes a manifest:
@@ -109,4 +114,5 @@ a general permission for other dependencies between the same roles.
 - [Semantic read-port ownership](../adr/0069-own-semantic-read-ports-in-policy.md)
 - [Access policy ownership](../adr/0070-extract-access-policy-boundary.md)
 - [Action-typed tenant evidence](../adr/0071-type-tenant-authorization-evidence.md)
+- [Action-typed platform evidence](../adr/0072-type-platform-authorization-evidence.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

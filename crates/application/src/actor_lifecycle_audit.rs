@@ -3,7 +3,7 @@ use std::{error::Error, fmt, future::Future};
 use fleetiq_domain::{ActorId, ActorLifecycleChangeId, UnixTimeMillis};
 
 use crate::{
-    ActorLifecycleChangeEffect, ActorLifecycleChangeKind, AuthorizedPlatformAction, PlatformAction,
+    ActorLifecycleChangeEffect, ActorLifecycleChangeKind, AuthorizedPlatform, ManageIdentity,
 };
 
 const MAX_PAGE_SIZE: u16 = 100;
@@ -250,20 +250,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`ActorLifecycleAuditError::WrongAction`] when the evidence
-    /// authorizes another action, or wraps the repository error when loading
-    /// fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn find_page(
         &self,
-        authorization: AuthorizedPlatformAction,
+        _authorization: AuthorizedPlatform<ManageIdentity>,
         query: &ActorLifecycleAuditQuery,
     ) -> Result<ActorLifecycleAuditPage, ActorLifecycleAuditError<R::Error>> {
-        if authorization.action() != PlatformAction::ManageIdentity {
-            return Err(ActorLifecycleAuditError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         self.repository
             .find_page(query)
             .await
@@ -274,11 +266,6 @@ where
 /// Failure to execute an authorized actor lifecycle audit query.
 #[derive(Debug)]
 pub enum ActorLifecycleAuditError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The persistence operation failed.
     Repository(E),
 }
@@ -286,10 +273,6 @@ pub enum ActorLifecycleAuditError<E> {
 impl<E> fmt::Display for ActorLifecycleAuditError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "actor lifecycle audit requires ManageIdentity authorization, got {actual:?}"
-            ),
             Self::Repository(_) => formatter.write_str("actor lifecycle audit could not be loaded"),
         }
     }
@@ -301,7 +284,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }

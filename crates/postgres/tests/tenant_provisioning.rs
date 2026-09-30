@@ -3,7 +3,7 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    PlatformAction, PlatformAuthorizationService, TenantProvisioningOutcome,
+    PlatformAuthorizationService, ProvisionTenant, TenantProvisioningOutcome,
     TenantProvisioningService,
 };
 use fleetiq_domain::{ActorId, TenantId, TenantProvisioningId, UnixTimeMillis};
@@ -208,13 +208,10 @@ async fn provisioning_audit_is_immutable(pool: PgPool) -> Result<(), Box<dyn Err
 async fn authorization(
     pool: &PgPool,
     actor_id: &str,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ProvisionTenant>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor(actor_id).await,
-                PlatformAction::ProvisionTenant,
-            )
+            .authorize::<ProvisionTenant>(support::authenticated_actor(actor_id).await)
             .await?,
     )
 }

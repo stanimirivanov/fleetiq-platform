@@ -78,6 +78,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0069](0069-own-semantic-read-ports-in-policy.md) | Consumer-owned semantic read ports without an application dependency |
 | [0070](0070-extract-access-policy-boundary.md) | Authentication and authorization policy owned outside broad application orchestration |
 | [0071](0071-type-tenant-authorization-evidence.md) | Action-typed tenant authorization evidence and compile-time use-case routing |
+| [0072](0072-type-platform-authorization-evidence.md) | Action-typed platform authorization evidence and compile-time use-case routing |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

@@ -23,6 +23,8 @@
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
+- Platform administration now consumes action-typed evidence; a grant for one
+  platform action cannot be routed to another protected use case.
 - A one-time atomic bootstrap establishes the first platform operator, exact
   external identity, platform-access, identity-management, and
   tenant-provisioning grants, and immutable root audit fact;

@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::ActorId;
 
-use crate::{AuthorizedPlatformAction, PlatformAction};
+use crate::{AuthorizedPlatform, ManagePlatformAccess, PlatformAction};
 
 const MAX_PAGE_SIZE: u16 = 100;
 
@@ -206,20 +206,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`PlatformGrantCatalogError::WrongAction`] when the evidence
-    /// authorizes another action, or wraps the repository error when loading
-    /// fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn find_page(
         &self,
-        authorization: AuthorizedPlatformAction,
+        _authorization: AuthorizedPlatform<ManagePlatformAccess>,
         query: &PlatformGrantCatalogQuery,
     ) -> Result<PlatformGrantCatalogPage, PlatformGrantCatalogError<R::Error>> {
-        if authorization.action() != PlatformAction::ManagePlatformAccess {
-            return Err(PlatformGrantCatalogError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         self.repository
             .find_page(query)
             .await
@@ -230,11 +222,6 @@ where
 /// Failure to execute an authorized current platform-grant query.
 #[derive(Debug)]
 pub enum PlatformGrantCatalogError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The persistence operation failed.
     Repository(E),
 }
@@ -242,10 +229,6 @@ pub enum PlatformGrantCatalogError<E> {
 impl<E> fmt::Display for PlatformGrantCatalogError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "platform grant catalogue requires ManagePlatformAccess authorization, got {actual:?}"
-            ),
             Self::Repository(_) => {
                 formatter.write_str("platform grant catalogue could not be loaded")
             }
@@ -259,7 +242,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }

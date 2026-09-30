@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, ExternalIdentity, ExternalIdentityChangeId, UnixTimeMillis};
 
-use crate::{AuthorizedPlatformAction, PlatformAction};
+use crate::{AuthorizedPlatform, ManageIdentity};
 
 /// Requested mutation of one exact external-identity mapping.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -152,19 +152,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`ExternalIdentityAdministrationError::WrongAction`] for other
-    /// platform evidence, or wraps the repository error when persistence fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn apply(
         &self,
-        authorization: AuthorizedPlatformAction,
+        authorization: AuthorizedPlatform<ManageIdentity>,
         request: ExternalIdentityChangeRequest,
     ) -> Result<ExternalIdentityChangeOutcome, ExternalIdentityAdministrationError<R::Error>> {
-        if authorization.action() != PlatformAction::ManageIdentity {
-            return Err(ExternalIdentityAdministrationError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         let change = ExternalIdentityChange {
             change_id: request.change_id,
             administrator_actor_id: authorization.actor_id().clone(),
@@ -184,11 +177,6 @@ where
 /// Failure to apply an authorized external-identity command.
 #[derive(Debug)]
 pub enum ExternalIdentityAdministrationError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The atomic persistence operation failed.
     Repository(E),
 }
@@ -196,10 +184,6 @@ pub enum ExternalIdentityAdministrationError<E> {
 impl<E> fmt::Display for ExternalIdentityAdministrationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "external identity administration requires ManageIdentity authorization, got {actual:?}"
-            ),
             Self::Repository(_) => {
                 formatter.write_str("external identity administration could not be persisted")
             }
@@ -213,7 +197,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }

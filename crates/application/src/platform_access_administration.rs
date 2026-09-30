@@ -2,7 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, PlatformAccessChangeId, UnixTimeMillis};
 
-use crate::{AuthorizedPlatformAction, PlatformAction};
+use crate::{AuthorizedPlatform, ManagePlatformAccess, PlatformAction};
 
 /// Requested mutation of one exact platform action grant.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -150,19 +150,12 @@ where
     ///
     /// # Errors
     ///
-    /// Returns [`PlatformAccessAdministrationError::WrongAction`] for other
-    /// platform evidence, or wraps the repository error when persistence fails.
+    /// Wraps the repository error when the operation fails.
     pub async fn apply(
         &self,
-        authorization: AuthorizedPlatformAction,
+        authorization: AuthorizedPlatform<ManagePlatformAccess>,
         request: PlatformAccessChangeRequest,
     ) -> Result<PlatformAccessChangeOutcome, PlatformAccessAdministrationError<R::Error>> {
-        if authorization.action() != PlatformAction::ManagePlatformAccess {
-            return Err(PlatformAccessAdministrationError::WrongAction {
-                actual: authorization.action(),
-            });
-        }
-
         let change = PlatformAccessChange {
             change_id: request.change_id,
             administrator_actor_id: authorization.actor_id().clone(),
@@ -182,11 +175,6 @@ where
 /// Failure to apply an authorized platform access command.
 #[derive(Debug)]
 pub enum PlatformAccessAdministrationError<E> {
-    /// Authorization evidence permits another platform operation.
-    WrongAction {
-        /// Action carried by the rejected evidence.
-        actual: PlatformAction,
-    },
     /// The atomic persistence operation failed.
     Repository(E),
 }
@@ -194,10 +182,6 @@ pub enum PlatformAccessAdministrationError<E> {
 impl<E> fmt::Display for PlatformAccessAdministrationError<E> {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::WrongAction { actual } => write!(
-                formatter,
-                "platform access administration requires ManagePlatformAccess authorization, got {actual:?}"
-            ),
             Self::Repository(_) => {
                 formatter.write_str("platform access administration could not be persisted")
             }
@@ -211,7 +195,6 @@ where
 {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::WrongAction { .. } => None,
             Self::Repository(error) => Some(error),
         }
     }
@@ -272,10 +255,7 @@ mod tests {
         let repository = RecordingRepository::default();
         let recorded = repository.changes.clone();
         let outcome = PlatformAccessAdministration::new(repository)
-            .apply(
-                authorization(PlatformAction::ManagePlatformAccess).await,
-                request(),
-            )
+            .apply(authorization::<ManagePlatformAccess>().await, request())
             .await
             .expect("recording repository should apply the change");
 
@@ -291,38 +271,9 @@ mod tests {
         assert_eq!(changes[0].target_actor_id().as_str(), "operator-b");
     }
 
-    #[tokio::test]
-    async fn rejects_other_platform_evidence_before_persistence() {
-        let repository = RecordingRepository::default();
-        let recorded = repository.changes.clone();
-        let error = PlatformAccessAdministration::new(repository)
-            .apply(
-                authorization(PlatformAction::ManageIdentity).await,
-                request(),
-            )
-            .await
-            .expect_err("identity management must not administer platform grants");
-
-        assert!(matches!(
-            error,
-            PlatformAccessAdministrationError::WrongAction {
-                actual: PlatformAction::ManageIdentity
-            }
-        ));
-        assert!(
-            recorded
-                .lock()
-                .expect("recording lock should remain available")
-                .is_empty()
-        );
-    }
-
-    async fn authorization(action: PlatformAction) -> AuthorizedPlatformAction {
+    async fn authorization<A: crate::PlatformActionMarker>() -> AuthorizedPlatform<A> {
         PlatformAuthorizationService::new(AllowPolicy)
-            .authorize(
-                crate::test_support::authenticated_actor(actor_id("operator-a")).await,
-                action,
-            )
+            .authorize::<A>(crate::test_support::authenticated_actor(actor_id("operator-a")).await)
             .await
             .expect("test policy should authorize")
     }

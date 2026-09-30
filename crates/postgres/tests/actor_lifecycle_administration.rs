@@ -5,9 +5,9 @@ use std::error::Error;
 use fleetiq_application::{
     ActorIdentityResolver, ActorLifecycleAdministration, ActorLifecycleAdministrationError,
     ActorLifecycleChangeEffect, ActorLifecycleChangeKind, ActorLifecycleChangeOutcome,
-    ActorLifecycleChangeRequest, PlatformAction, PlatformAuthorizationError,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService, ReadMetadata,
-    TenantAuthorizationError, TenantAuthorizationService,
+    ActorLifecycleChangeRequest, ManageIdentity, PlatformAuthorizationError,
+    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
+    ProvisionTenant, ReadMetadata, TenantAuthorizationError, TenantAuthorizationService,
 };
 use fleetiq_domain::{
     ActorId, ActorLifecycleChangeId, ExternalIdentity, ExternalIdentitySubject,
@@ -57,10 +57,7 @@ async fn deactivate_and_reactivate_control_new_authentication_and_authorization(
             .is_none()
     );
     let denied = PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-        .authorize(
-            support::authenticated_actor("actor-target").await,
-            PlatformAction::ProvisionTenant,
-        )
+        .authorize::<ProvisionTenant>(support::authenticated_actor("actor-target").await)
         .await
         .expect_err("inactive actors must fail current policy evaluation");
     assert!(matches!(denied, PlatformAuthorizationError::Denied));
@@ -98,10 +95,7 @@ async fn deactivate_and_reactivate_control_new_authentication_and_authorization(
     );
     let _authorization =
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("actor-target").await,
-                PlatformAction::ProvisionTenant,
-            )
+            .authorize::<ProvisionTenant>(support::authenticated_actor("actor-target").await)
             .await?;
     let _tenant_authorization =
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
@@ -335,13 +329,10 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManageIdentity,
-            )
+            .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }

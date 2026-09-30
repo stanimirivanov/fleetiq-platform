@@ -3,7 +3,7 @@
 use std::error::Error;
 
 use fleetiq_application::{
-    PlatformAction, PlatformAuthorizationService, PlatformBootstrapRequest,
+    ManagePlatformAccess, PlatformAction, PlatformAuthorizationService, PlatformBootstrapRequest,
     PlatformBootstrapService, PlatformGrantCatalog, PlatformGrantCatalogCursor,
     PlatformGrantCatalogPageSize, PlatformGrantCatalogQuery,
 };
@@ -120,13 +120,10 @@ async fn seed_grant(pool: &PgPool, actor_id: &str, action: &str) -> sqlx::Result
 
 async fn manage_platform_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatformAction, Box<dyn Error>> {
+) -> Result<fleetiq_application::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
-            .authorize(
-                support::authenticated_actor("operator-a").await,
-                PlatformAction::ManagePlatformAccess,
-            )
+            .authorize::<ManagePlatformAccess>(support::authenticated_actor("operator-a").await)
             .await?,
     )
 }
