@@ -76,6 +76,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0067](0067-enforce-repository-documentation-policy.md) | Executable documentation and repository policy |
 | [0068](0068-enforce-supply-chain-policy.md) | Pinned dependency auditing, update review, and fixture-tool alignment |
 | [0069](0069-own-semantic-read-ports-in-policy.md) | Consumer-owned semantic read ports without an application dependency |
+| [0070](0070-extract-access-policy-boundary.md) | Authentication and authorization policy owned outside broad application orchestration |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

@@ -6,7 +6,7 @@ use crate::AuthenticatedActor;
 
 /// Identifies the protected tenant operation for an authorization decision.
 ///
-/// The initial actions form a small application-level vocabulary. Transport
+/// The initial actions form a small access-policy vocabulary. Transport
 /// scopes, identity-provider roles, and database grants must be translated to
 /// these meanings at an adapter boundary instead of entering use cases
 /// directly. The enum is deliberately closed so adding an action makes

@@ -4,7 +4,9 @@
 
 - The repository includes the first runnable backend composition root and a
   provider-neutral, PostgreSQL-backed identity and tenant authorization
-  boundary. Asset,
+  boundary. The `fleetiq-access` crate owns the authentication and
+  authorization contracts and evidence; PostgreSQL supplies policy adapters.
+  Asset,
   semantic-definition, relationship, communication-device, and signal-binding
   operations now consume exact authorization evidence, but there is no product
   or administrative API.
@@ -138,7 +140,7 @@ production manifest.
 ## Identity and tenant access
 
 The domain defines a stable internal actor identity that does not encode an
-identity provider. The application authorization service evaluates an explicit
+identity provider. The access authorization service evaluates an explicit
 actor, tenant, and action tuple through a consumer-owned policy port. Only an
 allow decision produces typed, exact-operation authorization evidence; missing
 grants and policy failures fail closed.

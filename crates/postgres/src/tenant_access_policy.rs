@@ -1,6 +1,6 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{AccessDecision, TenantAccessPolicy, TenantAccessRequest, TenantAction};
+use fleetiq_access::{AccessDecision, TenantAccessPolicy, TenantAccessRequest, TenantAction};
 use sqlx::PgPool;
 
 /// PostgreSQL-backed evaluator for exact tenant action grants.

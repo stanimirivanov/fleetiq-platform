@@ -4,6 +4,13 @@ const NONE: &[&str] = &[];
 
 pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
     PackagePolicy {
+        name: "fleetiq-access",
+        role: CrateRole::Policy,
+        normal: &["fleetiq-domain"],
+        development: NONE,
+        build: NONE,
+    },
+    PackagePolicy {
         name: "fleetiq-analytics",
         role: CrateRole::Policy,
         normal: &["fleetiq-domain"],
@@ -14,6 +21,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         name: "fleetiq-application",
         role: CrateRole::Application,
         normal: &[
+            "fleetiq-access",
             "fleetiq-domain",
             "fleetiq-protocol-host",
             "fleetiq-protocol-sdk",
@@ -34,6 +42,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         name: "fleetiq-postgres",
         role: CrateRole::Adapter,
         normal: &[
+            "fleetiq-access",
             "fleetiq-application",
             "fleetiq-domain",
             "fleetiq-semantics",
