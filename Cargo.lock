@@ -677,7 +677,7 @@ dependencies = [
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
  "fleetiq-telemetry",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "wasmtime",
  "wat",
  "wit-component",
