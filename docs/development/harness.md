@@ -70,6 +70,8 @@ applicable acceptance check before handoff.
 |:--|:--|:--|
 | `cargo xtask repository` | Local Markdown links and anchors, long-document TL;DR policy, ADR and milestone indexes, and issue or pull request template structure satisfy mechanical repository policy | T1; checked-out repository and Rust toolchain |
 | `cargo xtask architecture` | Workspace packages and direct internal dependencies match the reviewed capability policy | T1; Cargo metadata, no database |
+| `cargo deny check` | Locked dependencies satisfy RustSec advisory, license, source, and ban policy | T2; pinned CLI and network access to the advisory database |
+| `cargo machete --with-metadata --skip-target-dir` | No unused direct dependency remains in a workspace manifest | T2; pinned CLI and Cargo metadata; reported findings require review |
 | `cargo fmt --all --check` | Rust formatting is stable without changing files | T2; Rust toolchain |
 | `cargo sqlx prepare --check --workspace -- --all-targets --all-features` | Checked SQL matches the migrated database and committed `.sqlx` descriptions | T2; SQLx CLI and migrated PostgreSQL |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | Workspace code passes the configured Rust static analysis | T2; migrated PostgreSQL for checked queries |
@@ -79,7 +81,9 @@ applicable acceptance check before handoff.
 
 The T2 commands, order, and unavailable-check protocol are canonical in
 [CONTRIBUTING.md](../../CONTRIBUTING.md#verification). CI runs T1 before the
-database-backed Rust and local Compose jobs.
+separate supply-chain, database-backed Rust, and local Compose jobs. The
+[dependency management guide](dependency-management.md) records tool versions,
+exceptions, and update review.
 
 ## Repository policy
 
@@ -114,11 +118,10 @@ raw HTML. Those need semantic review or a future advisory sensor. A passing
 repository check proves document structure and local navigation, not factual
 accuracy or freshness.
 
-FleetIQ does not yet expose a repository-owned vulnerability and license
-aggregate. Do not describe an ad hoc local scanner as the project acceptance
-gate. When supply-chain enforcement is added, it must pin its tooling, define
-advisory and license policy, run separately from the deployable application,
-and join the documented command surface and CI together.
+The supply-chain job uses the repository-owned `deny.toml` and the same pinned
+CLI versions documented for local runs. Advisory data changes between runs, so
+an unavailable database or new finding is reported explicitly and never
+treated as a pass.
 
 ## Steering loop
 

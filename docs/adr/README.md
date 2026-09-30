@@ -74,6 +74,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0065](0065-query-current-platform-grants-by-actor.md) | Authorized bounded discovery of one actor's current platform grants |
 | [0066](0066-enforce-capability-dependency-policy.md) | Executable package roles and direct workspace dependency policy |
 | [0067](0067-enforce-repository-documentation-policy.md) | Executable documentation and repository policy |
+| [0068](0068-enforce-supply-chain-policy.md) | Pinned dependency auditing, update review, and fixture-tool alignment |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
