@@ -28,7 +28,7 @@ pulldown-cmark = { version = "0.13.0", default-features = false }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 sqlx = { version = "0.9.0", default-features = false, features = ["bigdecimal", "macros", "migrate", "postgres", "runtime-tokio"] }
 sha2 = { version = "0.10.9", default-features = false }
-tokio = { version = "~1.51", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal"] }
+tokio = { version = "~1.53", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal"] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
 wasmtime = { version = "48.0.3", default-features = false, features = ["anyhow", "component-model", "cranelift", "runtime", "std"] }
 
