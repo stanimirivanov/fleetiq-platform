@@ -4,7 +4,6 @@ use std::{
     future::{Future, ready},
 };
 
-use fleetiq_application::SignalBindingSnapshotQuery;
 use fleetiq_domain::{
     AssetId, DefinitionName, DefinitionVersion, DeviceEndpointId, EffectiveInterval,
     PropertyDefinition, PropertyDefinitionId, PropertyDefinitionRef, PropertyValueKind,

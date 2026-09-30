@@ -178,6 +178,57 @@ async fn binding_revision_round_trip_preserves_domain_values(
 }
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn semantic_binding_view_preserves_temporal_and_tenant_scope(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let tenant = tenant_id("tenant-a");
+    seed_topology(&pool, &tenant).await?;
+    let repository = PostgresSignalBindingRepository::new(pool);
+    let expected = binding(
+        &tenant,
+        1,
+        2_000,
+        "can-primary",
+        "bus.voltage",
+        "power-system-1",
+        "electrical.voltage",
+        1_000,
+        Some(3_000),
+    );
+    repository.insert_revision(&expected).await?;
+
+    let query =
+        SignalBindingSnapshotQuery::new(UnixTimeMillis::new(1_500), UnixTimeMillis::new(2_000));
+    let visible = fleetiq_semantics::SignalBindingView::find_for_source(
+        &repository,
+        &tenant,
+        expected.source(),
+        query,
+    )
+    .await?;
+    assert_eq!(visible, vec![expected.clone()]);
+
+    let before_recording = fleetiq_semantics::SignalBindingView::find_for_source(
+        &repository,
+        &tenant,
+        expected.source(),
+        SignalBindingSnapshotQuery::new(UnixTimeMillis::new(1_500), UnixTimeMillis::new(1_999)),
+    )
+    .await?;
+    assert!(before_recording.is_empty());
+
+    let other_tenant = fleetiq_semantics::SignalBindingView::find_for_source(
+        &repository,
+        &tenant_id("tenant-b"),
+        expected.source(),
+        query,
+    )
+    .await?;
+    assert!(other_tenant.is_empty());
+    Ok(())
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn revisions_are_contiguous_with_monotonic_recorded_time(
     pool: PgPool,
 ) -> Result<(), Box<dyn Error>> {

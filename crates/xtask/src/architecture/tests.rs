@@ -79,9 +79,9 @@ fn unapproved_development_dependency_is_rejected() {
 }
 
 #[test]
-fn removed_exception_must_also_be_removed_from_policy() {
+fn semantic_policy_cannot_depend_on_application() {
     let mut graph = declared_graph();
-    graph.dependencies.remove(&DependencyEdge::new(
+    graph.dependencies.insert(DependencyEdge::new(
         "fleetiq-semantics",
         "fleetiq-application",
         DependencyClass::Normal,
@@ -92,7 +92,7 @@ fn removed_exception_must_also_be_removed_from_policy() {
     assert_eq!(
         violations,
         vec![
-            "stale temporary exception: \
+            "unapproved dependency from policy package: \
              fleetiq-semantics -[normal]-> fleetiq-application"
                 .to_owned()
         ]

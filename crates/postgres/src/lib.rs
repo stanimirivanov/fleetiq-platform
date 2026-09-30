@@ -1,7 +1,7 @@
 //! PostgreSQL persistence adapters for `FleetIQ`.
 //!
 //! Database row types remain private to this crate. Public operations accept and
-//! return validated domain values through application-owned repository ports.
+//! return validated domain values through application and semantic-policy ports.
 
 mod accepted_message_log;
 mod actor_catalog;

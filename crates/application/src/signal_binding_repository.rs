@@ -1,40 +1,9 @@
 use std::{error::Error, future::Future};
 
-use fleetiq_domain::{
-    RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId, UnixTimeMillis,
-};
+use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
 
-/// Selects signal attributions visible at two independent time dimensions.
-///
-/// `effective_at` identifies when the attribution applied in the physical
-/// world. `known_at` is the inclusive cutoff for revisions recorded by
-/// `FleetIQ`. Callers must choose both values so corrections cannot silently
-/// change the historical view used by replay or analytics.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct SignalBindingSnapshotQuery {
-    effective_at: UnixTimeMillis,
-    known_at: UnixTimeMillis,
-}
-
-impl SignalBindingSnapshotQuery {
-    /// Constructs a bitemporal source-resolution query.
-    pub const fn new(effective_at: UnixTimeMillis, known_at: UnixTimeMillis) -> Self {
-        Self {
-            effective_at,
-            known_at,
-        }
-    }
-
-    /// Returns the physical-time instant selected by this query.
-    pub const fn effective_at(self) -> UnixTimeMillis {
-        self.effective_at
-    }
-
-    /// Returns the inclusive recorded-time cutoff selected by this query.
-    pub const fn known_at(self) -> UnixTimeMillis {
-        self.known_at
-    }
-}
+// Preserve the application-facing query name while semantic policy owns it.
+pub use fleetiq_semantics::SignalBindingSnapshotQuery;
 
 /// Persists and resolves revisioned decoded-signal attributions.
 ///

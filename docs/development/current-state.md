@@ -104,6 +104,9 @@ The semantic resolver applies bitemporal bindings and exact property
 definitions, returning explicit unresolved outcomes for missing or incompatible
 configuration. Successful binding produces asset property change candidates
 with event-time basis and deterministic interpretation identity.
+Its read ports and snapshot query belong to semantic policy; PostgreSQL
+implements the ports directly while application re-exports the query for
+existing callers.
 
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs. Live contracts represent full snapshots, forward-only deltas,

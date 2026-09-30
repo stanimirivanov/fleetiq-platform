@@ -22,8 +22,9 @@ semantic processing.
 ## Semantic resolution
 
 The resolver obtains binding candidates and exact property definitions through
-application-owned ports. It applies recorded-time and effective-time rules,
-checks value-kind and unit compatibility, and returns a bound or unresolved
+semantic-policy-owned read ports implemented by PostgreSQL. It applies
+recorded-time and effective-time rules, checks value-kind and unit
+compatibility, and returns a bound or unresolved
 outcome. It does not query PostgreSQL directly and does not hide missing
 configuration as dropped telemetry.
 

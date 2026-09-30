@@ -11,6 +11,7 @@ rust-version.workspace = true
 fleetiq-domain = { path = "../domain" }
 fleetiq-protocol-host = { path = "../protocol-host" }
 fleetiq-protocol-sdk = { path = "../protocol-sdk" }
+fleetiq-semantics = { path = "../semantics" }
 fleetiq-telemetry = { path = "../telemetry" }
 
 [dev-dependencies]

@@ -78,6 +78,34 @@ async fn property_definition_round_trip_preserves_domain_values(
 }
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn semantic_property_view_reads_only_the_exact_tenant_version(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let tenant = tenant_id("tenant-a");
+    seed_tenant(&pool, &tenant).await?;
+    let repository = PostgresDefinitionRepository::new(pool);
+    let expected = property_definition("electrical.voltage", "Voltage", Some("V"));
+    repository.insert_property(&tenant, &expected).await?;
+
+    let actual = fleetiq_semantics::PropertyDefinitionView::find_property(
+        &repository,
+        &tenant,
+        expected.reference(),
+    )
+    .await?;
+    assert_eq!(actual, Some(expected.clone()));
+
+    let another_tenant = fleetiq_semantics::PropertyDefinitionView::find_property(
+        &repository,
+        &tenant_id("tenant-b"),
+        expected.reference(),
+    )
+    .await?;
+    assert!(another_tenant.is_none());
+    Ok(())
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn asset_type_round_trip_preserves_property_declaration_order(
     pool: PgPool,
 ) -> Result<(), Box<dyn Error>> {
