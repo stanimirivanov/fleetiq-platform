@@ -1,4 +1,4 @@
-use super::model::{CrateRole, DependencyClass, PackagePolicy, TemporaryException};
+use super::model::{CrateRole, PackagePolicy, TemporaryException};
 
 const NONE: &[&str] = &[];
 
@@ -17,6 +17,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
             "fleetiq-domain",
             "fleetiq-protocol-host",
             "fleetiq-protocol-sdk",
+            "fleetiq-semantics",
             "fleetiq-telemetry",
         ],
         development: NONE,
@@ -32,7 +33,12 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
     PackagePolicy {
         name: "fleetiq-postgres",
         role: CrateRole::Adapter,
-        normal: &["fleetiq-application", "fleetiq-domain", "fleetiq-telemetry"],
+        normal: &[
+            "fleetiq-application",
+            "fleetiq-domain",
+            "fleetiq-semantics",
+            "fleetiq-telemetry",
+        ],
         development: &["fleetiq-protocol-host", "fleetiq-protocol-sdk"],
         build: NONE,
     },
@@ -92,10 +98,4 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
     },
 ];
 
-pub(super) const TEMPORARY_EXCEPTIONS: &[TemporaryException] = &[TemporaryException {
-    package: "fleetiq-semantics",
-    dependency: "fleetiq-application",
-    class: DependencyClass::Normal,
-    tracking: "ADR 0066 semantic read-port inversion",
-    reason: "ADR 0003 currently adapts application repositories into semantic read views",
-}];
+pub(super) const TEMPORARY_EXCEPTIONS: &[TemporaryException] = &[];

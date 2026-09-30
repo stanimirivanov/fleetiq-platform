@@ -5,8 +5,8 @@
 - Run `cargo xtask architecture` after changing a Cargo manifest.
 - Every workspace package and direct internal dependency is explicit policy.
 - Normal, development, and build dependencies are checked separately.
-- The semantic resolver's application dependency is the only temporary
-  exception and must disappear before application code consumes semantics.
+- Semantic policy owns its read ports; PostgreSQL adapts them without a
+  policy-to-application dependency.
 
 ## Crate roles
 
@@ -59,18 +59,14 @@ The checker covers crate dependencies. The engineering standards continue to
 govern module responsibility, source organization, public APIs, and file-size
 review.
 
-## Temporary semantic exception
+## Semantic read-port direction
 
-ADR 0003 established blanket implementations from semantic read views to the
-existing application repositories. Consequently, `fleetiq-semantics` currently
-depends on `fleetiq-application` even though semantic resolution is inward
-policy.
-
-The architecture command reports this exact edge on every successful run. It
-does not authorize other policy-to-application dependencies. Do not add
-`fleetiq-application -> fleetiq-semantics` while it exists. The follow-up
-refactoring will move the snapshot query to its semantic consumer, move the
-repository adapters outward, and remove the exception.
+The semantic resolver owns its bitemporal snapshot query and narrow binding
+and property-definition read ports. PostgreSQL implements those ports directly.
+`fleetiq-application` may consume semantic policy and re-exports the snapshot
+query for existing application callers. The architecture checker rejects a
+new `fleetiq-semantics -> fleetiq-application` edge. This implements the
+removal required by ADR 0066; see [ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
 
 ## Changing dependencies
 
@@ -92,4 +88,5 @@ a general permission for other dependencies between the same roles.
 
 - [Capability dependency enforcement](../adr/0066-enforce-capability-dependency-policy.md)
 - [Explicit semantic resolution](../adr/0003-explicit-semantic-resolution.md)
+- [Semantic read-port ownership](../adr/0069-own-semantic-read-ports-in-policy.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

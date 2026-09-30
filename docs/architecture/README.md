@@ -116,12 +116,11 @@ implements consumer-owned ports. SQL rows, WIT values, wire payloads, and API
 documents do not become domain values until validated.
 
 The repository enforces its direct workspace dependency policy with
-`cargo xtask architecture`; see [dependency rules](dependency-rules.md). ADR
-0003 currently permits one reported temporary exception:
-`fleetiq-semantics -> fleetiq-application` adapts existing repositories into
-semantic read views. It is an exact package-pair exception, not a general
-policy-to-application direction. That edge must be removed before application
-orchestration depends on semantic policy.
+`cargo xtask architecture`; see [dependency rules](dependency-rules.md).
+Semantic resolution owns its read ports and bitemporal snapshot query;
+PostgreSQL implements the ports directly. Application code may depend on
+semantic policy without a reverse dependency or Cargo cycle. See
+[ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
 
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing

@@ -627,6 +627,7 @@ dependencies = [
  "fleetiq-domain",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
+ "fleetiq-semantics",
  "fleetiq-telemetry",
  "tokio",
 ]
@@ -647,6 +648,7 @@ dependencies = [
  "fleetiq-domain",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
+ "fleetiq-semantics",
  "fleetiq-telemetry",
  "sqlx",
  "tokio",
@@ -688,7 +690,6 @@ dependencies = [
 name = "fleetiq-semantics"
 version = "0.1.0"
 dependencies = [
- "fleetiq-application",
  "fleetiq-domain",
  "fleetiq-telemetry",
  "tokio",

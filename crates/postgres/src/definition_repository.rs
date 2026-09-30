@@ -5,6 +5,7 @@ use fleetiq_domain::{
     AssetTypeDefinition, AssetTypeRef, PropertyDefinition, PropertyDefinitionRef,
     RelationshipTypeDefinition, RelationshipTypeRef, TenantId,
 };
+use fleetiq_semantics::PropertyDefinitionView;
 use sqlx::PgPool;
 
 use crate::error::PostgresRepositoryError;
@@ -77,5 +78,17 @@ impl DefinitionRepository for PostgresDefinitionRepository {
     ) -> impl Future<Output = Result<Option<RelationshipTypeDefinition>, Self::Error>> + Send + 'a
     {
         self.find_relationship_type_definition(tenant_id, reference)
+    }
+}
+
+impl PropertyDefinitionView for PostgresDefinitionRepository {
+    type Error = PostgresRepositoryError;
+
+    fn find_property<'a>(
+        &'a self,
+        tenant_id: &'a TenantId,
+        reference: &'a PropertyDefinitionRef,
+    ) -> impl Future<Output = Result<Option<PropertyDefinition>, Self::Error>> + Send + 'a {
+        self.find_property_definition(tenant_id, reference)
     }
 }

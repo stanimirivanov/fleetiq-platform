@@ -1,13 +1,12 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::SignalBindingSnapshotQuery;
 use fleetiq_domain::{PropertyDefinition, SignalBinding};
 use fleetiq_telemetry::DecodedObservation;
 
 use super::{
     BindingCandidate, BoundObservation, PropertyDefinitionView, ResolutionContext,
-    ResolutionOutcome, SignalBindingProvenance, SignalBindingView, UnresolvedObservation,
-    UnresolvedReason,
+    ResolutionOutcome, SignalBindingProvenance, SignalBindingSnapshotQuery, SignalBindingView,
+    UnresolvedObservation, UnresolvedReason,
 };
 
 /// Resolves decoded sources through bitemporal binding and definition views.

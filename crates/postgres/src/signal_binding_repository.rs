@@ -2,6 +2,7 @@ use std::future::Future;
 
 use fleetiq_application::{SignalBindingRepository, SignalBindingSnapshotQuery};
 use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
+use fleetiq_semantics::SignalBindingView;
 use sqlx::PgPool;
 
 use crate::error::PostgresRepositoryError;
@@ -42,6 +43,19 @@ impl SignalBindingRepository for PostgresSignalBindingRepository {
     ) -> impl Future<Output = Result<Option<SignalBinding>, Self::Error>> + Send {
         self.find_exact_revision(tenant_id, binding_id, revision)
     }
+
+    fn find_for_source(
+        &self,
+        tenant_id: &TenantId,
+        source: &SignalSource,
+        query: SignalBindingSnapshotQuery,
+    ) -> impl Future<Output = Result<Vec<SignalBinding>, Self::Error>> + Send {
+        self.find_source_snapshot(tenant_id, source, query)
+    }
+}
+
+impl SignalBindingView for PostgresSignalBindingRepository {
+    type Error = PostgresRepositoryError;
 
     fn find_for_source(
         &self,
