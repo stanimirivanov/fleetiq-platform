@@ -61,16 +61,17 @@ sqlx migrate run --source migrations
 cargo run -p fleetiq-server
 ```
 
-Run the repository quality gate:
+Run the immediate, database-independent harness checks:
 
 ```powershell
+cargo xtask repository
 cargo xtask architecture
-cargo fmt --all --check
-cargo sqlx prepare --check --workspace -- --all-targets --all-features
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features --locked
-cargo doc --workspace --no-deps --locked
 ```
+
+Before handoff, run the complete database-backed Rust gate from
+[CONTRIBUTING.md](CONTRIBUTING.md#verification). The
+[coding harness guide](docs/development/harness.md) explains the feedback tiers
+and specialized Compose checks.
 
 Ports `55432` and `58080` are the FleetIQ local PostgreSQL and HTTP defaults.
 Set `FLEETIQ_POSTGRES_PORT` or `FLEETIQ_HTTP_PORT` to free host ports before
@@ -91,7 +92,7 @@ The checked-in database password is for disposable local development only.
 | [`crates/application`](crates/application) | Use cases and consumer-owned infrastructure ports |
 | [`crates/postgres`](crates/postgres) | SQLx persistence adapters and private row mappings |
 | [`crates/server`](crates/server) | Backend composition root, process configuration, and HTTP health surface |
-| [`crates/xtask`](crates/xtask) | Repository-owned architecture checks and development tasks |
+| [`crates/xtask`](crates/xtask) | Repository-owned policy checks and development tasks |
 | [`migrations`](migrations) | Authoritative PostgreSQL schema history |
 | [`deploy/local`](deploy/local) | Disposable local infrastructure |
 | [`Dockerfile`](Dockerfile) | Multi-stage backend container image |
@@ -102,12 +103,14 @@ crates arrive with the first capability that requires them.
 
 ## Start here
 
+- [Documentation map](docs/README.md)
 - [Product scope](docs/product/README.md)
 - [Architecture](docs/architecture/README.md)
 - [Current implementation state](docs/development/current-state.md)
 - [Implementation milestones](docs/roadmap/milestones.md)
 - [Contributor workflow](CONTRIBUTING.md)
 - [Engineering standards](docs/development/engineering-standards.md)
+- [Coding harness](docs/development/harness.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Security policy](SECURITY.md)
 - [Code of conduct](CODE_OF_CONDUCT.md)

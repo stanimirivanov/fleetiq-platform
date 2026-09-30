@@ -13,13 +13,22 @@ decision. The architecture pages describe the current system.
    and a short kebab-case title.
 2. Use status `Proposed` while the decision is under review.
 3. Change it to `Accepted` when the change is approved.
-4. Use `Superseded by ADR NNNN` when a later decision replaces it, and link
-   both records.
+4. Use `Superseded by ADR NNNN` when a later decision replaces it, and record
+   the reciprocal `Supersedes` reference in that later record. A later ADR may
+   use a qualified `Supersedes` reference for a scoped refinement that does not
+   replace the earlier decision's remaining lifecycle.
 5. Use `Rejected` for a proposal retained to prevent repeated investigation.
+6. When publishing the next record, add its index coverage and advance
+   `LATEST_PUBLISHED_ADR` in `crates/xtask/src/repository/adr.rs`. This retained
+   high-water mark makes deletion of the newest historical record detectable.
 
 Do not renumber records. Correct spelling or broken links in an accepted ADR,
 but do not rewrite its context, decision, alternatives, or consequences to make
 history match the current system.
+
+Write required headings, lifecycle and supersession metadata, and index entries
+in plain Markdown. Raw HTML comments may explain authoring, but raw HTML
+elements must not carry checked ADR fields.
 
 ## Required content
 
@@ -64,6 +73,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0064](0064-query-current-external-identities-by-actor.md) | Authorized bounded discovery of one actor's current external identities |
 | [0065](0065-query-current-platform-grants-by-actor.md) | Authorized bounded discovery of one actor's current platform grants |
 | [0066](0066-enforce-capability-dependency-policy.md) | Executable package roles and direct workspace dependency policy |
+| [0067](0067-enforce-repository-documentation-policy.md) | Executable documentation and repository policy |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

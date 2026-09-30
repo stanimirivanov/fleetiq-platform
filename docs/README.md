@@ -1,48 +1,65 @@
-# FleetIQ documentation
+# FleetIQ documentation map
 
 ## TL;DR
 
-Start with product scope and architecture. Use current state for delivered
-behavior, milestones for intended sequence, development guides for engineering
-rules, and ADRs for durable decisions. Rust API detail belongs in rustdoc.
+- Start with [CONTRIBUTING.md](../CONTRIBUTING.md), then use this map to load
+  only the sources relevant to the task.
+- Product intent, current implementation, architecture, engineering rules, and
+  durable decisions have separate canonical homes.
+- Update this map when a canonical source moves or a recurring task lacks a
+  clear route.
+- Rust API detail belongs in rustdoc; add a crate README only when that crate
+  has an independent contributor or operator workflow.
 
-## Product
+## Purpose and authority
 
-- [Product scope](product/README.md) — users, vocabulary, goals, and non-goals.
-- [Milestones](roadmap/milestones.md) — planned outcomes and sequencing.
-- [Current state](development/current-state.md) — implemented behavior and
-  deliberate limitations.
+This page is the progressive-disclosure entry point for contributors and
+coding agents. It routes readers to canonical sources rather than repeating
+their policy. [CONTRIBUTING.md](../CONTRIBUTING.md) owns workflow, issue shape,
+verification, and completion reporting. [AGENTS.md](../AGENTS.md) is the
+concise tool-facing entry point.
 
-## Architecture
+Read the rows that match the work. Do not bulk-read every guide or ADR. When a
+change affects product behavior or a dependency boundary, always consult the
+product scope and relevant architecture page.
 
-- [Architecture overview](architecture/README.md) — system context, boundaries,
-  dependency direction, and data ownership.
-- [Extensible ingestion](architecture/ingestion.md) — protocol packages,
-  trusted-host gates, and durability stages.
-- [Semantic asset graph](architecture/semantic-asset-graph.md) — assets,
-  relationships, devices, bindings, and property attribution.
-- [Telemetry processing](architecture/telemetry-processing.md) — decoded data,
-  semantic changes, calculations, and live projections.
-- [ADR index](adr/README.md) — accepted decisions and decision-record policy.
+## Route by task
 
-## Development
+| Task or changed area | Read before changing it | Verify or consult as needed |
+|:--|:--|:--|
+| Product vocabulary, supported outcomes, or non-goals | [Product scope](product/README.md) | [Current state](development/current-state.md), relevant [ADRs](adr/README.md) |
+| Capability ownership, dependency direction, or deployment boundaries | [Architecture overview](architecture/README.md), [dependency rules](architecture/dependency-rules.md) | [Engineering standards](development/engineering-standards.md), `cargo xtask architecture` |
+| Rust implementation, API design, or tests | [Engineering standards](development/engineering-standards.md) | Relevant capability page, `cargo xtask repository`, complete Rust gate |
+| PostgreSQL schema, SQLx query, migration, or persisted meaning | [SQL migration criteria](development/sql-migrations.md), relevant persistence ADR | `.sqlx` metadata, database-backed quality gate |
+| Protocol packages, framing, sessions, or Wasm execution | [Extensible ingestion](architecture/ingestion.md) | Relevant ingestion ADRs and host-boundary tests |
+| Asset graph, signal binding, or property attribution | [Semantic asset graph](architecture/semantic-asset-graph.md) | [Telemetry processing](architecture/telemetry-processing.md), relevant ADRs |
+| Calculators, projections, or live telemetry behavior | [Telemetry processing](architecture/telemetry-processing.md) | [Semantic asset graph](architecture/semantic-asset-graph.md), relevant ADRs |
+| Server composition, identity, authorization, or HTTP API | [Architecture overview](architecture/README.md), [current state](development/current-state.md) | [Security policy](../SECURITY.md), relevant ADRs |
+| Bootstrap, deployment, readiness, or local runtime behavior | [Operations index](operations/README.md), [development guide](development/README.md) | [Platform bootstrap](operations/platform-bootstrap.md), Compose smoke checks |
+| Build, CI, repository policy, agent guidance, or developer experience | [Coding harness](development/harness.md), [development guide](development/README.md) | `cargo xtask repository`, `cargo xtask architecture` |
+| Milestone or issue planning | [Milestones](roadmap/milestones.md), [CONTRIBUTING.md](../CONTRIBUTING.md) | Relevant product and architecture sources |
+| Vulnerability reporting or security-sensitive behavior | [Security policy](../SECURITY.md) | Relevant architecture and ADRs |
 
-- [Contributor workflow](../CONTRIBUTING.md) — issues, pull requests,
-  verification, and completion reports.
-- [Engineering standards](development/engineering-standards.md) — Rust,
-  architecture, testing, security, and operations.
-- [SQL migrations](development/sql-migrations.md) — schema design,
-  documentation, and verification criteria.
-- [Security policy](../SECURITY.md) — private reporting and security-sensitive
-  change expectations.
+## Canonical collections
 
-## Operations
-
-- [Operations index](operations/README.md) — explicit installation and runtime
+- [Product](product/README.md) defines users, vocabulary, goals, and non-goals.
+- [Architecture](architecture/README.md) describes system boundaries,
+  information flow, trust, and direct dependency policy.
+- [Development](development/README.md) contains setup, engineering, migration,
+  current-state, and harness guidance.
+- [Operations](operations/README.md) contains installation and runtime
   procedures.
-- [Platform bootstrap](operations/platform-bootstrap.md) — establish the first
-  platform operator through the one-shot process command.
+- [ADRs](adr/README.md) record durable choices and their lifecycle.
+- [Roadmap](roadmap/milestones.md) groups intended delivery into outcome
+  milestones.
+- [Security](../SECURITY.md) defines vulnerability reporting and expectations
+  for security-sensitive changes. [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md)
+  defines community behavior.
 
-Crate-level API overviews live in each crate's `lib.rs` module documentation.
-Add a crate README only when the crate gains independent setup, configuration,
-operation, publication, or an external contributor workflow.
+## Keeping the map useful
+
+A change must update this page when it adds, moves, renames, or removes a
+canonical source or creates a recurring task without a route. Avoid listing
+short-lived implementation details. `cargo xtask repository` checks mechanical
+documentation policy and repository-local links; semantic accuracy and stale
+guidance still require review.

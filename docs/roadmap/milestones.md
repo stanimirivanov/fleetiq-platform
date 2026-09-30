@@ -87,6 +87,10 @@ and upgrade policy, and releases the first supported product version.
 - This file owns intended sequence until an issue is created.
 - Every issue names exactly one milestone using its exact title.
 - Published milestone numbers are never reused or renumbered.
+- When publishing the next milestone, add both its index row and boundary
+  section, then advance `LATEST_PUBLISHED_MILESTONE` in
+  `crates/xtask/src/repository/milestones.rs`. This retained high-water mark
+  makes deletion of the newest published milestone detectable.
 - Move an issue only when its outcome dependency changes; update this roadmap
   when that changes the intended sequence.
 - Split work that reveals multiple independently valuable or risky outcomes.
