@@ -2,9 +2,8 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::TenantId;
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{AuthorizedPlatform, ManageTenantLifecycle};
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// Current operational state of one stable tenant boundary.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -62,7 +61,7 @@ impl TenantCatalogCursor {
 
 /// Validated maximum number of tenant catalogue entries in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct TenantCatalogPageSize(u16);
+pub struct TenantCatalogPageSize(PageSize);
 
 impl TenantCatalogPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -72,21 +71,18 @@ impl TenantCatalogPageSize {
     /// Returns [`TenantCatalogPageSizeError`] when `value` is zero or exceeds
     /// the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, TenantCatalogPageSizeError> {
-        if value == 0 {
-            Err(TenantCatalogPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(TenantCatalogPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(TenantCatalogPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(TenantCatalogPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -145,24 +141,25 @@ impl TenantCatalogQuery {
 /// One bounded page of the platform tenant catalogue.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TenantCatalogPage {
-    entries: Vec<TenantCatalogEntry>,
-    next: Option<TenantCatalogCursor>,
+    page: KeysetPage<TenantCatalogEntry, TenantCatalogCursor>,
 }
 
 impl TenantCatalogPage {
     /// Constructs a page from repository-selected entries and continuation.
     pub fn new(entries: Vec<TenantCatalogEntry>, next: Option<TenantCatalogCursor>) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns tenant entries in ascending stable-identity order.
     pub fn entries(&self) -> &[TenantCatalogEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for a later page when more entries exist.
     pub const fn next(&self) -> Option<&TenantCatalogCursor> {
-        self.next.as_ref()
+        self.page.next()
     }
 }
 

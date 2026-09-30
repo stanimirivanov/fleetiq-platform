@@ -99,6 +99,21 @@ fn debug_output_redacts_opaque_subjects() {
     assert!(!format!("{cursor:?}").contains("secret-subject"));
 }
 
+#[test]
+fn page_preserves_entries_and_cursor_without_exposing_subjects_in_debug() {
+    let entry = ExternalIdentityCatalogEntry::new(identity("oidc-a", "secret-subject"));
+    let cursor = ExternalIdentityCatalogCursor::new(
+        IdentityAuthorityId::new("oidc-a").expect("valid authority"),
+        ExternalIdentitySubject::new("secret-subject").expect("valid subject"),
+    );
+
+    let page = ExternalIdentityCatalogPage::new(vec![entry.clone()], Some(cursor.clone()));
+
+    assert_eq!(page.entries(), &[entry]);
+    assert_eq!(page.next(), Some(&cursor));
+    assert!(!format!("{page:?}").contains("secret-subject"));
+}
+
 #[tokio::test]
 async fn identity_management_authorization_allows_one_query() {
     let repository = RecordingRepository::default();

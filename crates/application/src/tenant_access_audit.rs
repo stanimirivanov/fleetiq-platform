@@ -2,11 +2,10 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, TenantAccessChangeId, TenantId, UnixTimeMillis};
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{
     AuthorizedTenant, ManageAccess, TenantAccessChangeEffect, TenantAccessChangeKind, TenantAction,
 };
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// One immutable tenant access administration audit record.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -120,7 +119,7 @@ impl TenantAccessAuditCursor {
 
 /// Validated maximum number of audit entries returned in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct TenantAccessAuditPageSize(u16);
+pub struct TenantAccessAuditPageSize(PageSize);
 
 impl TenantAccessAuditPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -130,21 +129,18 @@ impl TenantAccessAuditPageSize {
     /// Returns [`TenantAccessAuditPageSizeError`] when `value` is zero or
     /// exceeds the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, TenantAccessAuditPageSizeError> {
-        if value == 0 {
-            Err(TenantAccessAuditPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(TenantAccessAuditPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(TenantAccessAuditPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(TenantAccessAuditPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -206,8 +202,7 @@ impl TenantAccessAuditQuery {
 /// One bounded page of tenant access audit history.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TenantAccessAuditPage {
-    entries: Vec<TenantAccessAuditEntry>,
-    next: Option<TenantAccessAuditCursor>,
+    page: KeysetPage<TenantAccessAuditEntry, TenantAccessAuditCursor>,
 }
 
 impl TenantAccessAuditPage {
@@ -216,17 +211,19 @@ impl TenantAccessAuditPage {
         entries: Vec<TenantAccessAuditEntry>,
         next: Option<TenantAccessAuditCursor>,
     ) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns newest-first audit entries in this page.
     pub fn entries(&self) -> &[TenantAccessAuditEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for an older page when more entries exist.
     pub const fn next(&self) -> Option<&TenantAccessAuditCursor> {
-        self.next.as_ref()
+        self.page.next()
     }
 }
 

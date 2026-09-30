@@ -20,6 +20,7 @@ mod external_identity_catalog;
 mod frame_acceptance;
 mod live;
 mod observation_persistence;
+mod pagination;
 mod platform_access_administration;
 mod platform_access_audit;
 mod platform_bootstrap;

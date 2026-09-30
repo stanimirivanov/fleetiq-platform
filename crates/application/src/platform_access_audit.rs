@@ -2,12 +2,11 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, PlatformAccessChangeId, UnixTimeMillis};
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{
     AuthorizedPlatform, ManagePlatformAccess, PlatformAccessChangeEffect, PlatformAccessChangeKind,
     PlatformAction,
 };
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// One immutable platform access administration audit record.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -112,7 +111,7 @@ impl PlatformAccessAuditCursor {
 
 /// Validated maximum number of platform audit entries returned in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct PlatformAccessAuditPageSize(u16);
+pub struct PlatformAccessAuditPageSize(PageSize);
 
 impl PlatformAccessAuditPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -122,21 +121,18 @@ impl PlatformAccessAuditPageSize {
     /// Returns [`PlatformAccessAuditPageSizeError`] when `value` is zero or
     /// exceeds the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, PlatformAccessAuditPageSizeError> {
-        if value == 0 {
-            Err(PlatformAccessAuditPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(PlatformAccessAuditPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(PlatformAccessAuditPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(PlatformAccessAuditPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -198,8 +194,7 @@ impl PlatformAccessAuditQuery {
 /// One bounded page of platform access audit history.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PlatformAccessAuditPage {
-    entries: Vec<PlatformAccessAuditEntry>,
-    next: Option<PlatformAccessAuditCursor>,
+    page: KeysetPage<PlatformAccessAuditEntry, PlatformAccessAuditCursor>,
 }
 
 impl PlatformAccessAuditPage {
@@ -208,17 +203,19 @@ impl PlatformAccessAuditPage {
         entries: Vec<PlatformAccessAuditEntry>,
         next: Option<PlatformAccessAuditCursor>,
     ) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns newest-first audit entries in this page.
     pub fn entries(&self) -> &[PlatformAccessAuditEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for an older page when more entries exist.
     pub const fn next(&self) -> Option<&PlatformAccessAuditCursor> {
-        self.next.as_ref()
+        self.page.next()
     }
 }
 
