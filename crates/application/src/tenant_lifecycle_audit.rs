@@ -2,12 +2,11 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, TenantId, TenantLifecycleChangeId, UnixTimeMillis};
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{
     AuthorizedPlatform, ManageTenantLifecycle, TenantLifecycleChangeEffect,
     TenantLifecycleChangeKind,
 };
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// One immutable tenant lifecycle administration audit record.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -103,7 +102,7 @@ impl TenantLifecycleAuditCursor {
 
 /// Validated maximum number of tenant lifecycle audit entries in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct TenantLifecycleAuditPageSize(u16);
+pub struct TenantLifecycleAuditPageSize(PageSize);
 
 impl TenantLifecycleAuditPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -113,21 +112,18 @@ impl TenantLifecycleAuditPageSize {
     /// Returns [`TenantLifecycleAuditPageSizeError`] when `value` is zero or
     /// exceeds the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, TenantLifecycleAuditPageSizeError> {
-        if value == 0 {
-            Err(TenantLifecycleAuditPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(TenantLifecycleAuditPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(TenantLifecycleAuditPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(TenantLifecycleAuditPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -189,8 +185,7 @@ impl TenantLifecycleAuditQuery {
 /// One bounded page of tenant lifecycle audit history.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TenantLifecycleAuditPage {
-    entries: Vec<TenantLifecycleAuditEntry>,
-    next: Option<TenantLifecycleAuditCursor>,
+    page: KeysetPage<TenantLifecycleAuditEntry, TenantLifecycleAuditCursor>,
 }
 
 impl TenantLifecycleAuditPage {
@@ -199,17 +194,19 @@ impl TenantLifecycleAuditPage {
         entries: Vec<TenantLifecycleAuditEntry>,
         next: Option<TenantLifecycleAuditCursor>,
     ) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns newest-first audit entries in this page.
     pub fn entries(&self) -> &[TenantLifecycleAuditEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for an older page when more entries exist.
     pub const fn next(&self) -> Option<&TenantLifecycleAuditCursor> {
-        self.next.as_ref()
+        self.page.next()
     }
 }
 

@@ -2,9 +2,8 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::ActorId;
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{AuthorizedPlatform, ManagePlatformAccess, PlatformAction};
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// One exact current platform action grant held by a stable actor.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -47,7 +46,7 @@ impl PlatformGrantCatalogCursor {
 
 /// Validated maximum number of current platform grants in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct PlatformGrantCatalogPageSize(u16);
+pub struct PlatformGrantCatalogPageSize(PageSize);
 
 impl PlatformGrantCatalogPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -57,21 +56,18 @@ impl PlatformGrantCatalogPageSize {
     /// Returns [`PlatformGrantCatalogPageSizeError`] when `value` is zero or
     /// exceeds the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, PlatformGrantCatalogPageSizeError> {
-        if value == 0 {
-            Err(PlatformGrantCatalogPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(PlatformGrantCatalogPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(PlatformGrantCatalogPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(PlatformGrantCatalogPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -144,8 +140,7 @@ impl PlatformGrantCatalogQuery {
 /// One bounded page of an actor's current platform grants.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PlatformGrantCatalogPage {
-    entries: Vec<PlatformGrantCatalogEntry>,
-    next: Option<PlatformGrantCatalogCursor>,
+    page: KeysetPage<PlatformGrantCatalogEntry, PlatformGrantCatalogCursor>,
 }
 
 impl PlatformGrantCatalogPage {
@@ -154,17 +149,19 @@ impl PlatformGrantCatalogPage {
         entries: Vec<PlatformGrantCatalogEntry>,
         next: Option<PlatformGrantCatalogCursor>,
     ) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns exact grants in ascending durable action-name order.
     pub fn entries(&self) -> &[PlatformGrantCatalogEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for a later page when more grants exist.
     pub const fn next(&self) -> Option<PlatformGrantCatalogCursor> {
-        self.next
+        self.page.next_copied()
     }
 }
 

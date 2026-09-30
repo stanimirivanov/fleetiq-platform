@@ -2,11 +2,10 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, ActorLifecycleChangeId, UnixTimeMillis};
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{
     ActorLifecycleChangeEffect, ActorLifecycleChangeKind, AuthorizedPlatform, ManageIdentity,
 };
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// One immutable actor lifecycle administration audit record.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -102,7 +101,7 @@ impl ActorLifecycleAuditCursor {
 
 /// Validated maximum number of actor lifecycle audit entries in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ActorLifecycleAuditPageSize(u16);
+pub struct ActorLifecycleAuditPageSize(PageSize);
 
 impl ActorLifecycleAuditPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -112,21 +111,18 @@ impl ActorLifecycleAuditPageSize {
     /// Returns [`ActorLifecycleAuditPageSizeError`] when `value` is zero or
     /// exceeds the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, ActorLifecycleAuditPageSizeError> {
-        if value == 0 {
-            Err(ActorLifecycleAuditPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(ActorLifecycleAuditPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(ActorLifecycleAuditPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(ActorLifecycleAuditPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -188,8 +184,7 @@ impl ActorLifecycleAuditQuery {
 /// One bounded page of actor lifecycle audit history.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ActorLifecycleAuditPage {
-    entries: Vec<ActorLifecycleAuditEntry>,
-    next: Option<ActorLifecycleAuditCursor>,
+    page: KeysetPage<ActorLifecycleAuditEntry, ActorLifecycleAuditCursor>,
 }
 
 impl ActorLifecycleAuditPage {
@@ -198,17 +193,19 @@ impl ActorLifecycleAuditPage {
         entries: Vec<ActorLifecycleAuditEntry>,
         next: Option<ActorLifecycleAuditCursor>,
     ) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns newest-first audit entries in this page.
     pub fn entries(&self) -> &[ActorLifecycleAuditEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for an older page when more entries exist.
     pub const fn next(&self) -> Option<&ActorLifecycleAuditCursor> {
-        self.next.as_ref()
+        self.page.next()
     }
 }
 

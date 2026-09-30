@@ -2,9 +2,8 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::ActorId;
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{AuthorizedPlatform, ManageIdentity};
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// Current operational state of one stable actor boundary.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -62,7 +61,7 @@ impl ActorCatalogCursor {
 
 /// Validated maximum number of actor catalogue entries in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ActorCatalogPageSize(u16);
+pub struct ActorCatalogPageSize(PageSize);
 
 impl ActorCatalogPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -72,21 +71,18 @@ impl ActorCatalogPageSize {
     /// Returns [`ActorCatalogPageSizeError`] when `value` is zero or exceeds
     /// the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, ActorCatalogPageSizeError> {
-        if value == 0 {
-            Err(ActorCatalogPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(ActorCatalogPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(ActorCatalogPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(ActorCatalogPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -145,24 +141,25 @@ impl ActorCatalogQuery {
 /// One bounded page of the platform actor catalogue.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ActorCatalogPage {
-    entries: Vec<ActorCatalogEntry>,
-    next: Option<ActorCatalogCursor>,
+    page: KeysetPage<ActorCatalogEntry, ActorCatalogCursor>,
 }
 
 impl ActorCatalogPage {
     /// Constructs a page from repository-selected entries and continuation.
     pub fn new(entries: Vec<ActorCatalogEntry>, next: Option<ActorCatalogCursor>) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns actor entries in ascending stable-identity order.
     pub fn entries(&self) -> &[ActorCatalogEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for a later page when more entries exist.
     pub const fn next(&self) -> Option<&ActorCatalogCursor> {
-        self.next.as_ref()
+        self.page.next()
     }
 }
 

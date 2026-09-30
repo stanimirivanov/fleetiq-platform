@@ -2,11 +2,10 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, ExternalIdentity, ExternalIdentityChangeId, UnixTimeMillis};
 
+use crate::pagination::{KeysetPage, PageSize, PageSizeError};
 use crate::{
     AuthorizedPlatform, ExternalIdentityChangeEffect, ExternalIdentityChangeKind, ManageIdentity,
 };
-
-const MAX_PAGE_SIZE: u16 = 100;
 
 /// One immutable external-identity administration audit record.
 #[derive(Clone, Eq, PartialEq)]
@@ -127,7 +126,7 @@ impl ExternalIdentityAuditCursor {
 
 /// Validated maximum number of external-identity audit entries in one page.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ExternalIdentityAuditPageSize(u16);
+pub struct ExternalIdentityAuditPageSize(PageSize);
 
 impl ExternalIdentityAuditPageSize {
     /// Creates a page size in the inclusive range `1..=100`.
@@ -137,21 +136,18 @@ impl ExternalIdentityAuditPageSize {
     /// Returns [`ExternalIdentityAuditPageSizeError`] when `value` is zero or
     /// exceeds the maximum supported page size.
     pub const fn new(value: u16) -> Result<Self, ExternalIdentityAuditPageSizeError> {
-        if value == 0 {
-            Err(ExternalIdentityAuditPageSizeError::Zero)
-        } else if value > MAX_PAGE_SIZE {
-            Err(ExternalIdentityAuditPageSizeError::TooLarge {
-                maximum: MAX_PAGE_SIZE,
-                actual: value,
-            })
-        } else {
-            Ok(Self(value))
+        match PageSize::new(value) {
+            Ok(size) => Ok(Self(size)),
+            Err(PageSizeError::Zero) => Err(ExternalIdentityAuditPageSizeError::Zero),
+            Err(PageSizeError::TooLarge { maximum, actual }) => {
+                Err(ExternalIdentityAuditPageSizeError::TooLarge { maximum, actual })
+            }
         }
     }
 
     /// Returns the validated page size.
     pub const fn get(self) -> u16 {
-        self.0
+        self.0.get()
     }
 }
 
@@ -213,8 +209,7 @@ impl ExternalIdentityAuditQuery {
 /// One bounded page of external-identity audit history.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExternalIdentityAuditPage {
-    entries: Vec<ExternalIdentityAuditEntry>,
-    next: Option<ExternalIdentityAuditCursor>,
+    page: KeysetPage<ExternalIdentityAuditEntry, ExternalIdentityAuditCursor>,
 }
 
 impl ExternalIdentityAuditPage {
@@ -223,17 +218,19 @@ impl ExternalIdentityAuditPage {
         entries: Vec<ExternalIdentityAuditEntry>,
         next: Option<ExternalIdentityAuditCursor>,
     ) -> Self {
-        Self { entries, next }
+        Self {
+            page: KeysetPage::new(entries, next),
+        }
     }
 
     /// Returns newest-first audit entries in this page.
     pub fn entries(&self) -> &[ExternalIdentityAuditEntry] {
-        &self.entries
+        self.page.entries()
     }
 
     /// Returns the cursor for an older page when more entries exist.
     pub const fn next(&self) -> Option<&ExternalIdentityAuditCursor> {
-        self.next.as_ref()
+        self.page.next()
     }
 }
 
