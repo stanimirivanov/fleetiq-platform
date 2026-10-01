@@ -11,3 +11,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [Bootstrap the first platform operator](platform-bootstrap.md) — initialize
   the installation's first internal platform authority through the one-shot
   process command.
+- [Protected asset query](asset-query.md) — configure the first credential,
+  provision its identity and grant, and read a tenant-owned asset.

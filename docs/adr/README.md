@@ -85,6 +85,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0076](0076-extract-live-projection-contracts.md) | Revisioned live projection contracts owned by a transport-independent crate |
 | [0077](0077-organize-postgres-adapters-by-capability.md) | Capability-aligned PostgreSQL adapter modules and exact persisted action codecs |
 | [0078](0078-retire-application-compatibility-facade.md) | Direct capability imports and retirement of the flat application facade |
+| [0079](0079-protect-initial-asset-query.md) | Configured bearer credential and first authorized asset query |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

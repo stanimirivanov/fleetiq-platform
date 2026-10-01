@@ -59,6 +59,13 @@ binding its listener, and defaults `FLEETIQ_BIND_ADDRESS` to
 compilation and database inspection; applying them again at server startup is
 safe and idempotent.
 
+The protected asset query requires all three HTTP bearer identity variables
+and a provisioned actor with a current tenant `metadata.read` grant. See the
+[protected asset query procedure](../operations/asset-query.md) for its
+configuration and HTTP contract. The default Compose stack does not configure
+that credential, so it exposes only discovery and health until explicitly
+configured.
+
 The backend image builds with committed `.sqlx` query descriptions and
 `SQLX_OFFLINE=true`; image builds therefore do not receive database credentials
 or require access to a running database. After changing a checked query or
