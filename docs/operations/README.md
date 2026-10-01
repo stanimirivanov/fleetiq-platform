@@ -13,3 +13,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   process command.
 - [Protected asset query](asset-query.md) — configure the first credential,
   provision its identity and grant, and read a tenant-owned asset.
+- [Protected communication-device query](device-query.md) — read a device
+  asset's ordered endpoint declarations with the same tenant grant.

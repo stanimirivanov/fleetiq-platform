@@ -1,7 +1,7 @@
 [package]
 name = "fleetiq-server"
 version = "0.1.0"
-description = "FleetIQ backend composition root and protected HTTP asset query"
+description = "FleetIQ backend composition root and protected HTTP metadata queries"
 edition.workspace = true
 publish = false
 repository.workspace = true

@@ -1,8 +1,8 @@
-//! Backend composition root, HTTP health surface, and first protected query for `FleetIQ`.
+//! Backend composition root, HTTP health surface, and protected metadata queries for `FleetIQ`.
 //!
 //! The crate owns process configuration, PostgreSQL startup, migrations,
-//! transport binding, and graceful shutdown. One configured-credential asset
-//! query composes authentication, current tenant policy, and metadata lookup.
+//! transport binding, and graceful shutdown. Configured-credential asset and
+//! communication-device queries use current tenant policy and metadata lookup.
 
 mod bearer_authentication;
 mod bootstrap;
@@ -11,6 +11,8 @@ mod config;
 mod health;
 mod http_api;
 mod protected_asset;
+mod protected_device;
+mod protected_request;
 
 use std::{error::Error, fmt, io};
 
@@ -59,7 +61,15 @@ pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
 fn application_router(pool: PgPool, config: &ServerConfig) -> Router {
     let mut router = Router::new().merge(health_router(pool.clone()));
     if let Some(bearer) = config.bearer_identity() {
-        router = router.merge(protected_asset::postgres_asset_router(pool, bearer.clone()));
+        router = router
+            .merge(protected_asset::postgres_asset_router(
+                pool.clone(),
+                bearer.clone(),
+            ))
+            .merge(protected_device::postgres_device_router(
+                pool,
+                bearer.clone(),
+            ));
     }
     router.merge(api_router())
 }
@@ -147,7 +157,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn configured_process_router_mounts_protected_asset_query() {
+    async fn configured_process_router_mounts_protected_metadata_queries() {
         let pool = PgPoolOptions::new()
             .connect_lazy("postgres://unused:unused@127.0.0.1:1/unused")
             .expect("lazy test pool");
@@ -155,8 +165,14 @@ mod tests {
             .expect("valid base configuration");
         let unconfigured = application_router(pool.clone(), &base);
         let path = "/api/v1/tenants/tenant-a/assets/asset-1";
+        let device_path = "/api/v1/tenants/tenant-a/assets/asset-1/device";
         let response = unconfigured
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let response = application_router(pool.clone(), &base)
+            .oneshot(Request::get(device_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -168,6 +184,12 @@ mod tests {
         let response = router
             .clone()
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        let response = router
+            .clone()
+            .oneshot(Request::get(device_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);

@@ -11,8 +11,9 @@
   `fleetiq-ingestion` owns durable acceptance, decoded-result persistence,
   and package-catalogue ports. Asset, semantic-definition, relationship,
   communication-device, and signal-binding operations consume exact
-  authorization evidence. One configured-credential HTTP asset query now uses
-  those boundaries; administration remains without an HTTP API.
+  authorization evidence. Configured-credential HTTP asset and communication-
+  device queries now use those boundaries; administration remains without an
+  HTTP API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -22,7 +23,7 @@
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
-  `/api/v1`, plus an optional authenticated and authorized asset lookup.
+  `/api/v1`, plus optional authenticated and authorized asset and device reads.
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
@@ -136,9 +137,10 @@ The `fleetiq-server` binary validates environment configuration, applies the
 embedded migration chain, exposes liveness and PostgreSQL-backed readiness
 probes, identifies the version 1 HTTP contract, returns bounded problem details
 for unknown API resources and unsupported methods, and shuts down gracefully
-after `Ctrl+C`. A configured bearer identity enables the protected asset query;
-without complete credential configuration that route is absent. It is an
-operable development composition root, not a production deployment. Unix
+after `Ctrl+C`. A configured bearer identity enables the protected asset and
+communication-device queries; without complete credential configuration those
+routes are absent. It is an operable development composition root, not a
+production deployment. Unix
 deployments also handle `SIGTERM`, which is the normal container stop signal.
 
 The local Compose deployment builds that binary in a multi-stage image, waits
@@ -297,15 +299,17 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-One configured opaque bearer credential now authenticates a single external
-identity for `GET /api/v1/tenants/{tenant_id}/assets/{asset_id}`. The process
-mounts that route only when the token, authority, and subject are configured
-together. The current actor mapping and exact `metadata.read` tenant grant are
-checked on every request before the asset repository is called. A production
-identity provider, multi-principal login, membership or role model,
+One configured opaque bearer credential authenticates a single external
+identity for `GET /api/v1/tenants/{tenant_id}/assets/{asset_id}` and the nested
+`/device` resource. The process mounts those routes only when the token,
+authority, and subject are configured together. The current actor mapping and
+exact `metadata.read` tenant grant are checked on every request before the
+asset or device repository is called. A production identity provider,
+multi-principal login, membership or role model,
 administration transport, generalized authentication middleware, and audit
 HTTP API remain future work. See the
-[protected asset query procedure](../operations/asset-query.md).
+[protected asset query procedure](../operations/asset-query.md) and
+[device query procedure](../operations/device-query.md).
 
 There is no broader business resource API, production authentication provider,
 authorization administration API, message broker, object archive, cache,

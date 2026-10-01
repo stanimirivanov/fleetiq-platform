@@ -86,6 +86,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0077](0077-organize-postgres-adapters-by-capability.md) | Capability-aligned PostgreSQL adapter modules and exact persisted action codecs |
 | [0078](0078-retire-application-compatibility-facade.md) | Direct capability imports and retirement of the flat application facade |
 | [0079](0079-protect-initial-asset-query.md) | Configured bearer credential and first authorized asset query |
+| [0080](0080-expose-communication-device-detail.md) | Authorized communication-device detail nested beneath its asset |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
