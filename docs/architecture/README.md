@@ -33,16 +33,19 @@ The current repository composes its backend foundation into one executable
 process. The access policy boundary separates authenticated actors,
 selected tenants, and per-action policy decisions. PostgreSQL persists internal
 actors and exact grants and evaluates current policy without a cache; identity-
-provider integration remains planned. Configured-credential asset and device
-queries now join these boundaries through the server composition root; see
+provider integration remains planned. Configured-credential asset, device, and
+asset-type queries now join these boundaries through the server composition
+root; see
 [ADR 0079](../adr/0079-protect-initial-asset-query.md) and
-[ADR 0080](../adr/0080-expose-communication-device-detail.md). Other business APIs, device transports,
+[ADR 0080](../adr/0080-expose-communication-device-detail.md) and
+[ADR 0081](../adr/0081-read-exact-asset-type-versions.md). Other business APIs,
+device transports,
 production deployment, archival storage, and the web application arrive in
 later milestones.
 
 ```mermaid
 flowchart LR
-    Request[Asset or device GET with bearer credential]
+    Request[Asset, device, or type GET with bearer credential]
     Validator[Credential validation]
     Resolver[Exact external identity to actor]
     Policy[Current tenant metadata.read grant]
