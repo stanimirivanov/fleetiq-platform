@@ -83,8 +83,8 @@ ordered observation collection in one transaction. The marker records
 successful decoding even when the package emits no observations. Child rows are
 batched with set-based SQL. A retry compares the complete immutable batch.
 
-The application returns the exact pending value after an ambiguous storage
-failure so the caller can retry without reconstruction. Replies gated only on
+The `fleetiq-ingestion` application capability returns the exact pending value
+after an ambiguous storage failure so the caller can retry without reconstruction. Replies gated only on
 raw-message durability remain independent of later decoded-result persistence.
 
 ## Resource and failure boundaries

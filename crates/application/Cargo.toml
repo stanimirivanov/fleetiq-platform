@@ -1,7 +1,7 @@
 [package]
 name = "fleetiq-application"
 version = "0.1.0"
-description = "FleetIQ application ports and use-case orchestration"
+description = "FleetIQ live contracts and compatibility facade"
 edition.workspace = true
 publish = false
 repository.workspace = true
@@ -9,15 +9,9 @@ rust-version.workspace = true
 
 [dependencies]
 fleetiq-access = { path = "../access" }
-fleetiq-domain = { path = "../domain" }
 fleetiq-identity = { path = "../identity" }
+fleetiq-ingestion = { path = "../ingestion" }
 fleetiq-metadata = { path = "../metadata" }
-fleetiq-protocol-host = { path = "../protocol-host" }
-fleetiq-protocol-sdk = { path = "../protocol-sdk" }
-fleetiq-telemetry = { path = "../telemetry" }
-
-[dev-dependencies]
-tokio.workspace = true
 
 [lints]
 workspace = true

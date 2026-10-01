@@ -1,9 +1,9 @@
 use std::{error::Error, fmt, future::Future};
 
-use fleetiq_application::{
+use fleetiq_domain::TenantId;
+use fleetiq_ingestion::{
     DecodedObservationAppendOutcome, DecodedObservationBatch, DecodedObservationLog,
 };
-use fleetiq_domain::TenantId;
 use fleetiq_telemetry::{AcceptedMessageId, ProtocolPackageRef};
 use sqlx::PgPool;
 

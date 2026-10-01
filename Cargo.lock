@@ -633,13 +633,9 @@ name = "fleetiq-application"
 version = "0.1.0"
 dependencies = [
  "fleetiq-access",
- "fleetiq-domain",
  "fleetiq-identity",
+ "fleetiq-ingestion",
  "fleetiq-metadata",
- "fleetiq-protocol-host",
- "fleetiq-protocol-sdk",
- "fleetiq-telemetry",
- "tokio",
 ]
 
 [[package]]
@@ -655,6 +651,17 @@ version = "0.1.0"
 dependencies = [
  "fleetiq-access",
  "fleetiq-domain",
+ "tokio",
+]
+
+[[package]]
+name = "fleetiq-ingestion"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-domain",
+ "fleetiq-protocol-host",
+ "fleetiq-protocol-sdk",
+ "fleetiq-telemetry",
  "tokio",
 ]
 
@@ -677,6 +684,7 @@ dependencies = [
  "fleetiq-application",
  "fleetiq-domain",
  "fleetiq-identity",
+ "fleetiq-ingestion",
  "fleetiq-metadata",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",

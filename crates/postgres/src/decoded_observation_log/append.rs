@@ -1,6 +1,6 @@
 use bigdecimal::BigDecimal;
-use fleetiq_application::{DecodedObservationAppendOutcome, DecodedObservationBatch};
 use fleetiq_domain::PropertyValue;
+use fleetiq_ingestion::{DecodedObservationAppendOutcome, DecodedObservationBatch};
 
 use super::{
     PostgresDecodedObservationLog, PostgresDecodedObservationLogError,

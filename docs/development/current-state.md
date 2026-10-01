@@ -7,10 +7,11 @@
   boundary. The `fleetiq-access` crate owns authentication and
   authorization policy and evidence; `fleetiq-identity` owns the actor, grant,
   tenant, and bootstrap use cases and ports. PostgreSQL supplies their adapters.
-  The `fleetiq-metadata` crate owns asset-graph use cases and ports. Asset,
-  semantic-definition, relationship, communication-device, and signal-binding
-  operations consume exact authorization evidence, but there is no product
-  or administrative API.
+  The `fleetiq-metadata` crate owns asset-graph use cases and ports;
+  `fleetiq-ingestion` owns durable acceptance, decoded-result persistence,
+  and package-catalogue ports. Asset, semantic-definition, relationship,
+  communication-device, and signal-binding operations consume exact
+  authorization evidence, but there is no product or administrative API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -89,7 +90,8 @@ author tooling remain planned.
 
 ## Durable ingestion
 
-The application and PostgreSQL adapters implement two append-only boundaries:
+The `fleetiq-ingestion` application capability and PostgreSQL adapters
+implement two append-only boundaries:
 
 1. accepted messages retain tenant, device, package release, receipt time, and
    exact wire bytes; and
@@ -98,7 +100,7 @@ The application and PostgreSQL adapters implement two append-only boundaries:
 
 Both distinguish first append, exact retry, and immutable identity collision.
 Decoded marker and child rows append atomically, including zero-output results.
-Application orchestration withholds decoded values and durability-gated replies
+Ingestion orchestration withholds decoded values and durability-gated replies
 until their required append succeeds and returns exact pending work on failure.
 A PostgreSQL recovery harness covers suppressed successful responses and exact
 retry across both durability stages.

@@ -62,6 +62,10 @@ flowchart LR
     Projection --> UI
 ```
 
+`fleetiq-ingestion` owns durable acceptance and decoded-result orchestration;
+PostgreSQL implements its consumer-owned ports. The trusted protocol host owns
+framing and validation policy.
+
 Every transition preserves the identity and provenance needed for replay and
 diagnosis. Durable source facts precede effects that claim acceptance. See
 [extensible ingestion](ingestion.md) and
@@ -134,6 +138,11 @@ Asset graph use cases now have a separate metadata application crate.
 PostgreSQL implements its ports directly while the remaining application crate
 re-exports the public API for compatibility. See
 [ADR 0074](../adr/0074-extract-asset-graph-application-capability.md).
+
+Durable ingestion orchestration and its ports now live in `fleetiq-ingestion`.
+PostgreSQL implements those ports directly, and the broad application crate
+re-exports them for compatibility. See
+[ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing

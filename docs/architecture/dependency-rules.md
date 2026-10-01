@@ -23,7 +23,8 @@
 | `fleetiq-protocol-host` | Policy | Trusted framing, state, reply, and processing decisions |
 | `fleetiq-identity` | Application | Actor, external-identity, grant, tenant, and bootstrap use cases and consumed ports |
 | `fleetiq-metadata` | Application | Asset graph use cases and consumer-owned persistence ports |
-| `fleetiq-application` | Application | Remaining ingestion use cases, live contracts, and transitional re-exports |
+| `fleetiq-ingestion` | Application | Durable ingestion orchestration and consumer-owned persistence ports |
+| `fleetiq-application` | Application | Live contracts and transitional re-exports |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
@@ -113,6 +114,17 @@ for existing metadata callers. The broad application crate temporarily
 re-exports the metadata API for compatibility. See
 [ADR 0074](../adr/0074-extract-asset-graph-application-capability.md).
 
+## Ingestion application boundary
+
+`fleetiq-ingestion` owns accepted-message and decoded-result append ports,
+protocol-package catalogue ports, and the orchestration that preserves pending
+work across failed durable writes. It consumes protocol-host policy and
+protocol-neutral contracts without depending on PostgreSQL or unrelated
+application capabilities. PostgreSQL implements the ingestion ports directly
+and keeps its application facade dependency test-only. `fleetiq-application`
+temporarily re-exports them for existing callers. See
+[ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
+
 ## Protocol fixture toolchain
 
 The architecture check also compares exact pinned development requirements for
@@ -148,4 +160,5 @@ a general permission for other dependencies between the same roles.
 - [Action-typed platform evidence](../adr/0072-type-platform-authorization-evidence.md)
 - [Identity application capability](../adr/0073-extract-identity-application-capability.md)
 - [Metadata application capability](../adr/0074-extract-asset-graph-application-capability.md)
+- [Ingestion application capability](../adr/0075-extract-ingestion-application-capability.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)
