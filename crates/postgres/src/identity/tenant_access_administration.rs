@@ -1,11 +1,12 @@
 use std::{error::Error, fmt};
 
-use fleetiq_access::TenantAction;
+use crate::action_codec::tenant_action_name;
 use fleetiq_domain::{TenantAccessChangeId, TenantId};
 use fleetiq_identity::{
     TenantAccessAdministrationRepository, TenantAccessChange, TenantAccessChangeEffect,
     TenantAccessChangeKind, TenantAccessChangeOutcome,
 };
+
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::classify_database_error};
@@ -65,7 +66,7 @@ impl TenantAccessAdministrationRepository for PostgresTenantAccessAdministration
         {
             if existing.administrator_actor_id != change.administrator_actor_id().as_str()
                 || existing.target_actor_id != change.target_actor_id().as_str()
-                || existing.action != action_name(change.action())
+                || existing.action != tenant_action_name(change.action())
                 || existing.change_kind != kind_name(change.kind())
                 || existing.recorded_at_ms != change.recorded_at().get()
             {
@@ -92,7 +93,7 @@ impl TenantAccessAdministrationRepository for PostgresTenantAccessAdministration
                     "#,
                     change.tenant_id().as_str(),
                     change.target_actor_id().as_str(),
-                    action_name(change.action()),
+                    tenant_action_name(change.action()),
                 )
                 .execute(&mut *transaction)
                 .await
@@ -105,7 +106,7 @@ impl TenantAccessAdministrationRepository for PostgresTenantAccessAdministration
                     "#,
                     change.tenant_id().as_str(),
                     change.target_actor_id().as_str(),
-                    action_name(change.action()),
+                    tenant_action_name(change.action()),
                 )
                 .execute(&mut *transaction)
                 .await
@@ -125,7 +126,7 @@ impl TenantAccessAdministrationRepository for PostgresTenantAccessAdministration
             change.change_id().as_str(),
             change.administrator_actor_id().as_str(),
             change.target_actor_id().as_str(),
-            action_name(change.action()),
+            tenant_action_name(change.action()),
             kind_name(change.kind()),
             change.recorded_at().get(),
             state_changed,
@@ -136,14 +137,6 @@ impl TenantAccessAdministrationRepository for PostgresTenantAccessAdministration
 
         transaction.commit().await.map_err(repository_error)?;
         Ok(TenantAccessChangeOutcome::Recorded(effect(state_changed)))
-    }
-}
-
-const fn action_name(action: TenantAction) -> &'static str {
-    match action {
-        TenantAction::ReadMetadata => "metadata.read",
-        TenantAction::ManageMetadata => "metadata.manage",
-        TenantAction::ManageAccess => "access.manage",
     }
 }
 

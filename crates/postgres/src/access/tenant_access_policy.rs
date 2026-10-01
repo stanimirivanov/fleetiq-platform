@@ -1,6 +1,8 @@
 use std::{error::Error, fmt};
 
-use fleetiq_access::{AccessDecision, TenantAccessPolicy, TenantAccessRequest, TenantAction};
+use crate::action_codec::tenant_action_name;
+use fleetiq_access::{AccessDecision, TenantAccessPolicy, TenantAccessRequest};
+
 use sqlx::PgPool;
 
 /// PostgreSQL-backed evaluator for exact tenant action grants.
@@ -32,7 +34,7 @@ impl TenantAccessPolicy for PostgresTenantAccessPolicy {
         &'a self,
         request: &'a TenantAccessRequest,
     ) -> Result<AccessDecision, Self::Error> {
-        let action = action_name(request.action());
+        let action = tenant_action_name(request.action());
         let allowed = sqlx::query_scalar!(
             r#"
             SELECT EXISTS (
@@ -62,14 +64,6 @@ impl TenantAccessPolicy for PostgresTenantAccessPolicy {
         } else {
             AccessDecision::Deny
         })
-    }
-}
-
-const fn action_name(action: TenantAction) -> &'static str {
-    match action {
-        TenantAction::ReadMetadata => "metadata.read",
-        TenantAction::ManageMetadata => "metadata.manage",
-        TenantAction::ManageAccess => "access.manage",
     }
 }
 
