@@ -4,6 +4,7 @@ members = [
     "crates/analytics",
     "crates/application",
     "crates/domain",
+    "crates/identity",
     "crates/postgres",
     "crates/protocol-host",
     "crates/protocol-sdk",

@@ -1,8 +1,9 @@
-use fleetiq_application::{
-    TenantAccessAuditCursor, TenantAccessAuditEntry, TenantAccessAuditPage, TenantAccessAuditQuery,
-    TenantAccessAuditRepository, TenantAccessChangeEffect, TenantAccessChangeKind, TenantAction,
-};
+use fleetiq_access::TenantAction;
 use fleetiq_domain::{ActorId, TenantAccessChangeId, TenantId, UnixTimeMillis};
+use fleetiq_identity::{
+    TenantAccessAuditCursor, TenantAccessAuditEntry, TenantAccessAuditPage, TenantAccessAuditQuery,
+    TenantAccessAuditRepository, TenantAccessChangeEffect, TenantAccessChangeKind,
+};
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};

@@ -1,6 +1,7 @@
-use fleetiq_application::{
-    PlatformAction, PlatformGrantCatalogCursor, PlatformGrantCatalogEntry,
-    PlatformGrantCatalogPage, PlatformGrantCatalogQuery, PlatformGrantCatalogRepository,
+use fleetiq_access::PlatformAction;
+use fleetiq_identity::{
+    PlatformGrantCatalogCursor, PlatformGrantCatalogEntry, PlatformGrantCatalogPage,
+    PlatformGrantCatalogQuery, PlatformGrantCatalogRepository,
 };
 use sqlx::PgPool;
 

@@ -4,8 +4,9 @@
 
 - The repository includes the first runnable backend composition root and a
   provider-neutral, PostgreSQL-backed identity and tenant authorization
-  boundary. The `fleetiq-access` crate owns the authentication and
-  authorization contracts and evidence; PostgreSQL supplies policy adapters.
+  boundary. The `fleetiq-access` crate owns authentication and
+  authorization policy and evidence; `fleetiq-identity` owns the actor, grant,
+  tenant, and bootstrap use cases and ports. PostgreSQL supplies their adapters.
   Asset,
   semantic-definition, relationship, communication-device, and signal-binding
   operations now consume exact authorization evidence, but there is no product

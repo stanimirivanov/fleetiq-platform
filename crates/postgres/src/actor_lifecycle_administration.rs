@@ -1,10 +1,10 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
+use fleetiq_domain::{ActorId, ActorLifecycleChangeId};
+use fleetiq_identity::{
     ActorLifecycleAdministrationRepository, ActorLifecycleChange, ActorLifecycleChangeEffect,
     ActorLifecycleChangeKind, ActorLifecycleChangeOutcome,
 };
-use fleetiq_domain::{ActorId, ActorLifecycleChangeId};
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::{PostgresRepositoryError, error::classify_database_error};

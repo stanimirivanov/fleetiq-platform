@@ -1,10 +1,10 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
+use fleetiq_domain::{TenantId, TenantLifecycleChangeId};
+use fleetiq_identity::{
     TenantLifecycleAdministrationRepository, TenantLifecycleChange, TenantLifecycleChangeEffect,
     TenantLifecycleChangeKind, TenantLifecycleChangeOutcome,
 };
-use fleetiq_domain::{TenantId, TenantLifecycleChangeId};
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::{PostgresRepositoryError, error::classify_database_error};

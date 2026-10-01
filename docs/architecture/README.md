@@ -125,6 +125,11 @@ The access policy owns authentication and authorization evidence and its
 consumer-facing ports; PostgreSQL implements the resolver and policy adapters
 directly. See [ADR 0070](../adr/0070-extract-access-policy-boundary.md).
 
+Identity administration now has its own application crate. PostgreSQL implements
+its ports directly, and the server composes its bootstrap use case without
+directly importing the remaining broad application facade. See
+[ADR 0073](../adr/0073-extract-identity-application-capability.md).
+
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing
 the policy and adapter crates. See

@@ -1,9 +1,9 @@
-use fleetiq_application::{
+use fleetiq_domain::{ActorId, TenantId, TenantLifecycleChangeId, UnixTimeMillis};
+use fleetiq_identity::{
     TenantLifecycleAuditCursor, TenantLifecycleAuditEntry, TenantLifecycleAuditPage,
     TenantLifecycleAuditQuery, TenantLifecycleAuditRepository, TenantLifecycleChangeEffect,
     TenantLifecycleChangeKind,
 };
-use fleetiq_domain::{ActorId, TenantId, TenantLifecycleChangeId, UnixTimeMillis};
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};

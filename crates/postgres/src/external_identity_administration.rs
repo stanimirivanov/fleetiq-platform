@@ -1,10 +1,10 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
+use fleetiq_domain::{ActorId, ExternalIdentityChangeId};
+use fleetiq_identity::{
     ExternalIdentityAdministrationRepository, ExternalIdentityChange, ExternalIdentityChangeEffect,
     ExternalIdentityChangeKind, ExternalIdentityChangeOutcome,
 };
-use fleetiq_domain::{ActorId, ExternalIdentityChangeId};
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::{PostgresRepositoryError, error::classify_database_error};

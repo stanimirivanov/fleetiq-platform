@@ -79,6 +79,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0070](0070-extract-access-policy-boundary.md) | Authentication and authorization policy owned outside broad application orchestration |
 | [0071](0071-type-tenant-authorization-evidence.md) | Action-typed tenant authorization evidence and compile-time use-case routing |
 | [0072](0072-type-platform-authorization-evidence.md) | Action-typed platform authorization evidence and compile-time use-case routing |
+| [0073](0073-extract-identity-application-capability.md) | Identity administration use cases and ports owned by a dedicated application capability |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
