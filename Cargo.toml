@@ -2,7 +2,6 @@
 members = [
     "crates/access",
     "crates/analytics",
-    "crates/application",
     "crates/domain",
     "crates/identity",
     "crates/ingestion",

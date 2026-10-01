@@ -129,25 +129,25 @@ The access policy owns authentication and authorization evidence and its
 consumer-facing ports; PostgreSQL implements the resolver and policy adapters
 directly. See [ADR 0070](../adr/0070-extract-access-policy-boundary.md).
 
-Identity administration now has its own application crate. PostgreSQL implements
-its ports directly, and the server composes its bootstrap use case without
-directly importing the remaining broad application facade. See
+Identity administration has its own application crate. PostgreSQL implements
+its ports directly, and the server composes its bootstrap use case. See
 [ADR 0073](../adr/0073-extract-identity-application-capability.md).
 
-Asset graph use cases now have a separate metadata application crate.
-PostgreSQL implements its ports directly while the remaining application crate
-re-exports the public API for compatibility. See
+Asset graph use cases have a separate metadata application crate.
+PostgreSQL implements its ports directly. See
 [ADR 0074](../adr/0074-extract-asset-graph-application-capability.md).
 
-Durable ingestion orchestration and its ports now live in `fleetiq-ingestion`.
-PostgreSQL implements those ports directly, and the broad application crate
-re-exports them for compatibility. See
+Durable ingestion orchestration and its ports live in `fleetiq-ingestion`.
+PostgreSQL implements those ports directly. See
 [ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
-Revisioned projection contracts now live in `fleetiq-live` without a transport
-or persistence dependency. The broad application crate re-exports them until
-its compatibility facade is retired. See
+Revisioned projection contracts live in `fleetiq-live` without a transport
+or persistence dependency. See
 [ADR 0076](../adr/0076-extract-live-projection-contracts.md).
+
+Callers now import each capability directly; the temporary application
+compatibility facade has been removed. See
+[ADR 0078](../adr/0078-retire-application-compatibility-facade.md).
 
 The PostgreSQL adapter remains one crate and database boundary. Its internal
 modules now mirror access, identity, metadata, and ingestion capabilities, with

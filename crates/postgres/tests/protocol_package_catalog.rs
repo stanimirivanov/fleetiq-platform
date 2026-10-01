@@ -2,10 +2,10 @@
 
 use std::{error::Error, num::NonZeroU64};
 
-use fleetiq_application::{
+use fleetiq_domain::TenantId;
+use fleetiq_ingestion::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
-use fleetiq_domain::TenantId;
 use fleetiq_postgres::{
     PostgresProtocolPackageCatalog, PostgresProtocolPackageCatalogError, PostgresRepositoryError,
 };

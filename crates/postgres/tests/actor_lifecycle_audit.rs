@@ -2,13 +2,14 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ActorLifecycleAudit, ActorLifecycleAuditPageSize, ActorLifecycleAuditQuery,
-    ActorLifecycleChangeEffect, ActorLifecycleChangeKind, ManageIdentity,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
-};
+use fleetiq_access::{ManageIdentity, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ActorLifecycleAudit, ActorLifecycleAuditPageSize, ActorLifecycleAuditQuery,
+    ActorLifecycleChangeEffect, ActorLifecycleChangeKind, PlatformBootstrapRequest,
+    PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresActorLifecycleAuditRepository, PostgresPlatformAccessPolicy, PostgresPlatformBootstrap,
@@ -65,16 +66,14 @@ async fn reconstructs_complete_actor_lifecycle_audit_meaning(
     Ok(())
 }
 
-fn query(
-    after: Option<fleetiq_application::ActorLifecycleAuditCursor>,
-) -> ActorLifecycleAuditQuery {
+fn query(after: Option<fleetiq_identity::ActorLifecycleAuditCursor>) -> ActorLifecycleAuditQuery {
     ActorLifecycleAuditQuery::new(
         ActorLifecycleAuditPageSize::new(2).expect("valid page size"),
         after,
     )
 }
 
-fn ids(page: &fleetiq_application::ActorLifecycleAuditPage) -> Vec<&str> {
+fn ids(page: &fleetiq_identity::ActorLifecycleAuditPage) -> Vec<&str> {
     page.entries()
         .iter()
         .map(|entry| entry.change_id().as_str())
@@ -97,7 +96,7 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)

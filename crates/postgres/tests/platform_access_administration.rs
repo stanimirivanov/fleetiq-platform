@@ -2,16 +2,18 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManagePlatformAccess, PlatformAccessAdministration, PlatformAccessAdministrationError,
-    PlatformAccessChangeEffect, PlatformAccessChangeKind, PlatformAccessChangeOutcome,
-    PlatformAccessChangeRequest, PlatformAction, PlatformAuthorizationError,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
+use fleetiq_access::{
+    ManagePlatformAccess, PlatformAction, PlatformAuthorizationError, PlatformAuthorizationService,
     ProvisionTenant,
 };
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId,
     PlatformAccessChangeId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformAccessAdministration, PlatformAccessAdministrationError, PlatformAccessChangeEffect,
+    PlatformAccessChangeKind, PlatformAccessChangeOutcome, PlatformAccessChangeRequest,
+    PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresPlatformAccessAdministration, PostgresPlatformAccessAdministrationError,
@@ -347,7 +349,7 @@ async fn seed_actor(pool: &PgPool, actor_id: &str) -> sqlx::Result<()> {
 
 async fn manage_platform_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManagePlatformAccess>(support::authenticated_actor("operator-a").await)

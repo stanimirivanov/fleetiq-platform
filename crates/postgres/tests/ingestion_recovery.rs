@@ -6,7 +6,7 @@
 
 use std::error::Error;
 
-use fleetiq_application::{FrameAcceptanceError, ObservationPersistenceError};
+use fleetiq_ingestion::{FrameAcceptanceError, ObservationPersistenceError};
 use fleetiq_postgres::{PostgresAcceptedMessageLog, PostgresDecodedObservationLog};
 use sqlx::PgPool;
 

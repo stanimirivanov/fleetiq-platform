@@ -2,13 +2,14 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ExternalIdentityAudit, ExternalIdentityAuditPageSize, ExternalIdentityAuditQuery,
-    ExternalIdentityChangeEffect, ExternalIdentityChangeKind, ManageIdentity,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
-};
+use fleetiq_access::{ManageIdentity, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ExternalIdentityAudit, ExternalIdentityAuditPageSize, ExternalIdentityAuditQuery,
+    ExternalIdentityChangeEffect, ExternalIdentityChangeKind, PlatformBootstrapRequest,
+    PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresExternalIdentityAuditRepository, PostgresPlatformAccessPolicy,
@@ -98,7 +99,7 @@ async fn reconstructs_complete_meaning_and_redacts_debug_subject(
 }
 
 fn query(
-    after: Option<fleetiq_application::ExternalIdentityAuditCursor>,
+    after: Option<fleetiq_identity::ExternalIdentityAuditCursor>,
 ) -> ExternalIdentityAuditQuery {
     ExternalIdentityAuditQuery::new(
         ExternalIdentityAuditPageSize::new(2).expect("valid page size"),
@@ -106,7 +107,7 @@ fn query(
     )
 }
 
-fn ids(page: &fleetiq_application::ExternalIdentityAuditPage) -> Vec<&str> {
+fn ids(page: &fleetiq_identity::ExternalIdentityAuditPage) -> Vec<&str> {
     page.entries()
         .iter()
         .map(|entry| entry.change_id().as_str())
@@ -129,7 +130,7 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)

@@ -2,13 +2,13 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ExternalIdentityCatalog, ExternalIdentityCatalogCursor, ExternalIdentityCatalogPageSize,
-    ExternalIdentityCatalogQuery, ManageIdentity, PlatformAuthorizationService,
-    PlatformBootstrapRequest, PlatformBootstrapService,
-};
+use fleetiq_access::{ManageIdentity, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ExternalIdentityCatalog, ExternalIdentityCatalogCursor, ExternalIdentityCatalogPageSize,
+    ExternalIdentityCatalogQuery, PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresExternalIdentityCatalogRepository, PostgresPlatformAccessPolicy,
@@ -81,7 +81,7 @@ fn query(
     )
 }
 
-fn identities(page: &fleetiq_application::ExternalIdentityCatalogPage) -> Vec<(&str, &str)> {
+fn identities(page: &fleetiq_identity::ExternalIdentityCatalogPage) -> Vec<(&str, &str)> {
     page.entries()
         .iter()
         .map(|entry| {
@@ -132,7 +132,7 @@ async fn seed_identity(
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)

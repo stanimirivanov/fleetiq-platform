@@ -2,12 +2,12 @@
 
 use std::error::Error;
 
-use fleetiq_application::DefinitionRepository;
 use fleetiq_domain::{
     AssetTypeDefinition, AssetTypeId, AssetTypeRef, DefinitionName, DefinitionVersion,
     PropertyDefinition, PropertyDefinitionId, PropertyDefinitionRef, PropertyValueKind,
     RelationshipTypeDefinition, RelationshipTypeId, RelationshipTypeRef, TenantId, UnitId,
 };
+use fleetiq_metadata::DefinitionRepository;
 use fleetiq_postgres::{PostgresDefinitionRepository, PostgresRepositoryError};
 use sqlx::PgPool;
 

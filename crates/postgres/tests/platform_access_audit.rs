@@ -2,13 +2,14 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManagePlatformAccess, PlatformAccessAudit, PlatformAccessAuditPageSize,
-    PlatformAccessAuditQuery, PlatformAccessChangeEffect, PlatformAccessChangeKind, PlatformAction,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
-};
+use fleetiq_access::{ManagePlatformAccess, PlatformAction, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformAccessAudit, PlatformAccessAuditPageSize, PlatformAccessAuditQuery,
+    PlatformAccessChangeEffect, PlatformAccessChangeKind, PlatformBootstrapRequest,
+    PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresPlatformAccessAuditRepository, PostgresPlatformAccessPolicy, PostgresPlatformBootstrap,
@@ -80,16 +81,14 @@ async fn reconstructs_complete_platform_audit_meaning(pool: PgPool) -> Result<()
     Ok(())
 }
 
-fn query(
-    after: Option<fleetiq_application::PlatformAccessAuditCursor>,
-) -> PlatformAccessAuditQuery {
+fn query(after: Option<fleetiq_identity::PlatformAccessAuditCursor>) -> PlatformAccessAuditQuery {
     PlatformAccessAuditQuery::new(
         PlatformAccessAuditPageSize::new(2).expect("valid page size"),
         after,
     )
 }
 
-fn ids(page: &fleetiq_application::PlatformAccessAuditPage) -> Vec<&str> {
+fn ids(page: &fleetiq_identity::PlatformAccessAuditPage) -> Vec<&str> {
     page.entries()
         .iter()
         .map(|entry| entry.change_id().as_str())
@@ -112,7 +111,7 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_platform_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManagePlatformAccess>(support::authenticated_actor("operator-a").await)

@@ -2,13 +2,14 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManageTenantLifecycle, PlatformAuthorizationService, PlatformBootstrapRequest,
-    PlatformBootstrapService, TenantLifecycleAudit, TenantLifecycleAuditPageSize,
-    TenantLifecycleAuditQuery, TenantLifecycleChangeEffect, TenantLifecycleChangeKind,
-};
+use fleetiq_access::{ManageTenantLifecycle, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformBootstrapRequest, PlatformBootstrapService, TenantLifecycleAudit,
+    TenantLifecycleAuditPageSize, TenantLifecycleAuditQuery, TenantLifecycleChangeEffect,
+    TenantLifecycleChangeKind,
 };
 use fleetiq_postgres::{
     PostgresPlatformAccessPolicy, PostgresPlatformBootstrap, PostgresTenantLifecycleAuditRepository,
@@ -66,16 +67,14 @@ async fn reconstructs_complete_tenant_lifecycle_audit_meaning(
     Ok(())
 }
 
-fn query(
-    after: Option<fleetiq_application::TenantLifecycleAuditCursor>,
-) -> TenantLifecycleAuditQuery {
+fn query(after: Option<fleetiq_identity::TenantLifecycleAuditCursor>) -> TenantLifecycleAuditQuery {
     TenantLifecycleAuditQuery::new(
         TenantLifecycleAuditPageSize::new(2).expect("valid page size"),
         after,
     )
 }
 
-fn ids(page: &fleetiq_application::TenantLifecycleAuditPage) -> Vec<&str> {
+fn ids(page: &fleetiq_identity::TenantLifecycleAuditPage) -> Vec<&str> {
     page.entries()
         .iter()
         .map(|entry| entry.change_id().as_str())
@@ -98,7 +97,7 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_tenant_lifecycle(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageTenantLifecycle>(support::authenticated_actor("operator-a").await)

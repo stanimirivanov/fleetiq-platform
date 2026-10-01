@@ -2,15 +2,16 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ActorProvisioningRequest, ActorProvisioningService, ExternalIdentityAdministration,
-    ExternalIdentityAdministrationError, ExternalIdentityChangeEffect, ExternalIdentityChangeKind,
-    ExternalIdentityChangeOutcome, ExternalIdentityChangeRequest, ManageIdentity,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
-};
+use fleetiq_access::{ManageIdentity, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ActorProvisioningId, ExternalIdentity, ExternalIdentityChangeId,
     ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ActorProvisioningRequest, ActorProvisioningService, ExternalIdentityAdministration,
+    ExternalIdentityAdministrationError, ExternalIdentityChangeEffect, ExternalIdentityChangeKind,
+    ExternalIdentityChangeOutcome, ExternalIdentityChangeRequest, PlatformBootstrapRequest,
+    PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresActorProvisioning, PostgresExternalIdentityAdministration,
@@ -364,7 +365,7 @@ async fn provision_actor(
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)

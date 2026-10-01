@@ -2,13 +2,13 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManagePlatformAccess, PlatformAction, PlatformAuthorizationService, PlatformBootstrapRequest,
-    PlatformBootstrapService, PlatformGrantCatalog, PlatformGrantCatalogCursor,
-    PlatformGrantCatalogPageSize, PlatformGrantCatalogQuery,
-};
+use fleetiq_access::{ManagePlatformAccess, PlatformAction, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformBootstrapRequest, PlatformBootstrapService, PlatformGrantCatalog,
+    PlatformGrantCatalogCursor, PlatformGrantCatalogPageSize, PlatformGrantCatalogQuery,
 };
 use fleetiq_postgres::{
     PostgresPlatformAccessPolicy, PostgresPlatformBootstrap, PostgresPlatformGrantCatalogRepository,
@@ -86,7 +86,7 @@ fn query(
     )
 }
 
-fn actions(page: &fleetiq_application::PlatformGrantCatalogPage) -> Vec<PlatformAction> {
+fn actions(page: &fleetiq_identity::PlatformGrantCatalogPage) -> Vec<PlatformAction> {
     page.entries().iter().map(|entry| entry.action()).collect()
 }
 
@@ -120,7 +120,7 @@ async fn seed_grant(pool: &PgPool, actor_id: &str, action: &str) -> sqlx::Result
 
 async fn manage_platform_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManagePlatformAccess>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManagePlatformAccess>(support::authenticated_actor("operator-a").await)

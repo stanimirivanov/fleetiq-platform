@@ -2,13 +2,16 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
+use fleetiq_access::{
     ActorIdentityResolver, ManageIdentity, ManagePlatformAccess, ManageTenantLifecycle,
-    PlatformAuthorizationService, PlatformBootstrapError, PlatformBootstrapOutcome,
-    PlatformBootstrapRequest, PlatformBootstrapService, ProvisionTenant,
+    PlatformAuthorizationService, ProvisionTenant,
 };
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformBootstrapError, PlatformBootstrapOutcome, PlatformBootstrapRequest,
+    PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresActorIdentityResolver, PostgresPlatformAccessPolicy, PostgresPlatformBootstrap,

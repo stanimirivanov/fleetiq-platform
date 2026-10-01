@@ -80,11 +80,11 @@ fn unapproved_development_dependency_is_rejected() {
 }
 
 #[test]
-fn semantic_policy_cannot_depend_on_application() {
+fn semantic_policy_cannot_depend_on_application_capability() {
     let mut graph = declared_graph();
     graph.dependencies.insert(DependencyEdge::new(
         "fleetiq-semantics",
-        "fleetiq-application",
+        "fleetiq-identity",
         DependencyClass::Normal,
     ));
 
@@ -94,7 +94,7 @@ fn semantic_policy_cannot_depend_on_application() {
         violations,
         vec![
             "unapproved dependency from policy package: \
-             fleetiq-semantics -[normal]-> fleetiq-application"
+             fleetiq-semantics -[normal]-> fleetiq-identity"
                 .to_owned()
         ]
     );

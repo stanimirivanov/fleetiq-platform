@@ -3,7 +3,7 @@ use std::{
     future::{Future, ready},
 };
 
-use fleetiq_application::{
+use fleetiq_access::{
     ActorIdentityResolver, AuthenticatedActor, CallerAuthenticationService,
     ExternalIdentityAuthenticator,
 };
