@@ -19,3 +19,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   immutable type version and ordered property references.
 - [Protected property query](property-query.md) — resolve a pinned property
   version to its name, value kind, and optional canonical unit.
+- [Protected relationship-type query](relationship-type-query.md) — resolve a
+  pinned directed-edge type to its operator-facing name.

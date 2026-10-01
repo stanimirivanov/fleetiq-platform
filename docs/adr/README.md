@@ -89,6 +89,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0080](0080-expose-communication-device-detail.md) | Authorized communication-device detail nested beneath its asset |
 | [0081](0081-read-exact-asset-type-versions.md) | Authorized exact-version asset-type definition query |
 | [0082](0082-read-exact-property-definitions.md) | Authorized exact-version property-definition query |
+| [0083](0083-read-exact-relationship-type-versions.md) | Authorized exact-version relationship-type definition query |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
