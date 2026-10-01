@@ -1,6 +1,6 @@
 use bigdecimal::BigDecimal;
-use fleetiq_application::RelationshipSnapshotQuery;
 use fleetiq_domain::{AssetId, AssetRelationship, AssetRelationshipId, RecordRevision, TenantId};
+use fleetiq_metadata::RelationshipSnapshotQuery;
 
 use crate::error::{PostgresRepositoryError, classify_database_error};
 

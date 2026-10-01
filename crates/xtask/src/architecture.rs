@@ -78,8 +78,64 @@ pub(crate) fn check() -> Result<ArchitectureReport, ArchitectureCheckError> {
     }
 
     let metadata = load_metadata().map_err(ArchitectureCheckError::Metadata)?;
+    if let Some(violation) = protocol_fixture_version_violation(&metadata) {
+        return Err(ArchitectureCheckError::Policy(vec![violation]));
+    }
     let graph = graph_from_metadata(&metadata)?;
     validate_graph(&graph)
+}
+
+/// Keeps the fixture parser and encoder on the same WIT model release.
+///
+/// These crates exchange `wit_parser` values directly. Distinct releases make
+/// their identically named Rust types incompatible before fixture tests run.
+fn protocol_fixture_version_violation(metadata: &Metadata) -> Option<String> {
+    let package = metadata
+        .workspace_packages()
+        .into_iter()
+        .find(|package| package.name == "fleetiq-protocol-wasm")?;
+    let requirement = |name| {
+        package
+            .dependencies
+            .iter()
+            .find(|dependency| {
+                dependency.name == name && dependency.kind == DependencyKind::Development
+            })
+            .map(|dependency| dependency.req.to_string())
+    };
+    fixture_version_violation(
+        requirement("wit-parser").as_deref(),
+        requirement("wit-component").as_deref(),
+    )
+}
+
+fn fixture_version_violation(parser: Option<&str>, component: Option<&str>) -> Option<String> {
+    match (parser, component) {
+        (Some(parser), Some(component))
+            if parser == component && is_exact_patch_version(parser) =>
+        {
+            None
+        }
+        _ => Some(format!(
+            concat!(
+                "protocol fixture `wit-parser` ({}) and `wit-component` ({}) ",
+                "must request the same exact pinned version; see docs/development/dependency-management.md"
+            ),
+            parser.unwrap_or("missing"),
+            component.unwrap_or("missing"),
+        )),
+    }
+}
+
+fn is_exact_patch_version(requirement: &str) -> bool {
+    let Some(version) = requirement.strip_prefix('=') else {
+        return false;
+    };
+    let segments: Vec<_> = version.split('.').collect();
+    segments.len() == 3
+        && segments
+            .iter()
+            .all(|segment| !segment.is_empty() && segment.bytes().all(|byte| byte.is_ascii_digit()))
 }
 
 fn load_metadata() -> Result<Metadata, cargo_metadata::Error> {

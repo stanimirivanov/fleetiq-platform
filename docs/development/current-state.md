@@ -7,9 +7,9 @@
   boundary. The `fleetiq-access` crate owns authentication and
   authorization policy and evidence; `fleetiq-identity` owns the actor, grant,
   tenant, and bootstrap use cases and ports. PostgreSQL supplies their adapters.
-  Asset,
+  The `fleetiq-metadata` crate owns asset-graph use cases and ports. Asset,
   semantic-definition, relationship, communication-device, and signal-binding
-  operations now consume exact authorization evidence, but there is no product
+  operations consume exact authorization evidence, but there is no product
   or administrative API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
@@ -279,7 +279,7 @@ are serialized per tenant. The same exact authorization protects bounded,
 newest-first audit queries. Stable keyset cursors use recorded time and change
 identity, and repository tenant scope comes only from authorization evidence.
 
-Protected metadata application services now cover assets, immutable semantic
+`fleetiq-metadata` application services now cover assets, immutable semantic
 definitions, revisioned relationships, communication devices, and revisioned
 signal bindings. Asset and device registration plus relationship and binding
 revision append consume exact `ManageMetadata` evidence and reject aggregates

@@ -1,6 +1,6 @@
 use bigdecimal::BigDecimal;
-use fleetiq_application::SignalBindingSnapshotQuery;
 use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
+use fleetiq_metadata::SignalBindingSnapshotQuery;
 
 use crate::error::{PostgresRepositoryError, classify_database_error};
 

@@ -1,11 +1,11 @@
 use std::future::Future;
 
 use crate::error::{PostgresRepositoryError, classify_database_error, corrupt};
-use fleetiq_application::AssetRepository;
 use fleetiq_domain::{
     Asset, AssetId, AssetName, AssetTypeId, AssetTypeRef, DefinitionVersion, ExternalIdentifier,
     ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, TenantId,
 };
+use fleetiq_metadata::AssetRepository;
 use sqlx::PgPool;
 
 /// PostgreSQL implementation of the application-owned asset repository port.

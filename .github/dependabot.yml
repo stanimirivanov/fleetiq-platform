@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      protocol-fixture-toolchain:
+        patterns:
+          - "wat"
+          - "wit-component"
+          - "wit-parser"
 
   - package-ecosystem: github-actions
     directory: "/"

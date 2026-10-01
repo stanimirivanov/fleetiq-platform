@@ -4,6 +4,7 @@ use super::*;
 fn current_workspace_matches_the_declared_policy() {
     let metadata = load_metadata().expect("workspace metadata should load");
     let graph = graph_from_metadata(&metadata).expect("workspace dependency kinds should be known");
+    assert!(protocol_fixture_version_violation(&metadata).is_none());
 
     validate_graph(&graph).expect("workspace dependencies should match the architecture policy");
     assert!(
@@ -174,4 +175,17 @@ fn policy_violations(result: Result<ArchitectureReport, ArchitectureCheckError>)
             panic!("unexpected metadata failure: {error}")
         }
     }
+}
+
+#[test]
+fn protocol_fixture_tools_must_request_the_same_version() {
+    assert!(fixture_version_violation(Some("=0.258.0"), Some("=0.258.0")).is_none());
+    assert!(fixture_version_violation(Some("^0.258.0"), Some("^0.258.0")).is_some());
+    assert!(fixture_version_violation(Some("=0.258"), Some("=0.258")).is_some());
+
+    let violation =
+        fixture_version_violation(Some("^0.258.0"), Some("^0.254.0")).expect("versions differ");
+    assert!(violation.contains("wit-parser` (^0.258.0)"));
+    assert!(violation.contains("wit-component` (^0.254.0)"));
+    assert!(fixture_version_violation(None, Some("^0.258.0")).is_some());
 }

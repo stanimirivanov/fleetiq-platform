@@ -1,7 +1,7 @@
 use std::future::Future;
 
-use fleetiq_application::{RelationshipRepository, RelationshipSnapshotQuery};
 use fleetiq_domain::{AssetId, AssetRelationship, AssetRelationshipId, RecordRevision, TenantId};
+use fleetiq_metadata::{RelationshipRepository, RelationshipSnapshotQuery};
 use sqlx::PgPool;
 
 use crate::error::PostgresRepositoryError;
