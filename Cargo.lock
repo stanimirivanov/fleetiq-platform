@@ -635,6 +635,7 @@ dependencies = [
  "fleetiq-access",
  "fleetiq-identity",
  "fleetiq-ingestion",
+ "fleetiq-live",
  "fleetiq-metadata",
 ]
 
@@ -664,6 +665,10 @@ dependencies = [
  "fleetiq-telemetry",
  "tokio",
 ]
+
+[[package]]
+name = "fleetiq-live"
+version = "0.1.0"
 
 [[package]]
 name = "fleetiq-metadata"

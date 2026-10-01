@@ -144,6 +144,11 @@ PostgreSQL implements those ports directly, and the broad application crate
 re-exports them for compatibility. See
 [ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
+Revisioned projection contracts now live in `fleetiq-live` without a transport
+or persistence dependency. The broad application crate re-exports them until
+its compatibility facade is retired. See
+[ADR 0076](../adr/0076-extract-live-projection-contracts.md).
+
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing
 the policy and adapter crates. See
