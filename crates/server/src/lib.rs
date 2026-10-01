@@ -1,8 +1,8 @@
 //! Backend composition root, HTTP health surface, and protected metadata queries for `FleetIQ`.
 //!
 //! The crate owns process configuration, PostgreSQL startup, migrations,
-//! transport binding, and graceful shutdown. Configured-credential asset and
-//! communication-device queries use current tenant policy and metadata lookup.
+//! transport binding, and graceful shutdown. Configured-credential asset,
+//! device, and definition queries use current tenant policy and metadata lookup.
 
 mod bearer_authentication;
 mod bootstrap;
@@ -11,6 +11,7 @@ mod config;
 mod health;
 mod http_api;
 mod protected_asset;
+mod protected_asset_type;
 mod protected_device;
 mod protected_request;
 
@@ -63,6 +64,10 @@ fn application_router(pool: PgPool, config: &ServerConfig) -> Router {
     if let Some(bearer) = config.bearer_identity() {
         router = router
             .merge(protected_asset::postgres_asset_router(
+                pool.clone(),
+                bearer.clone(),
+            ))
+            .merge(protected_asset_type::postgres_asset_type_router(
                 pool.clone(),
                 bearer.clone(),
             ))
@@ -166,8 +171,14 @@ mod tests {
         let unconfigured = application_router(pool.clone(), &base);
         let path = "/api/v1/tenants/tenant-a/assets/asset-1";
         let device_path = "/api/v1/tenants/tenant-a/assets/asset-1/device";
+        let type_path = "/api/v1/tenants/tenant-a/asset-types/generic.power-system/versions/2";
         let response = unconfigured
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let response = application_router(pool.clone(), &base)
+            .oneshot(Request::get(type_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -184,6 +195,12 @@ mod tests {
         let response = router
             .clone()
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        let response = router
+            .clone()
+            .oneshot(Request::get(type_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
