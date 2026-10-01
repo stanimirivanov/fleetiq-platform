@@ -25,8 +25,10 @@ with `Authorization: Bearer <token>` returns:
 
 Property references retain their definition order. They identify immutable
 property versions; this response does not include their names, value kinds,
-or units. An empty array is valid. A client must request the exact version
-from the asset; the server does not select a latest version.
+or units. Follow a reference with the
+[property-definition query](property-query.md). An empty array is valid. A
+client must request the exact version from the asset; the server does not
+select a latest version.
 
 The version path component is a positive decimal integer within the `u32`
 range. Invalid identifiers or versions return `400`. An absent exact

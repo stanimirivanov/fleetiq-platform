@@ -59,12 +59,13 @@ binding its listener, and defaults `FLEETIQ_BIND_ADDRESS` to
 compilation and database inspection; applying them again at server startup is
 safe and idempotent.
 
-The protected asset, communication-device, and asset-type queries require all
-three HTTP bearer identity variables and a provisioned actor with a current tenant
-`metadata.read` grant. See the
-[protected asset query procedure](../operations/asset-query.md) and
-[device query procedure](../operations/device-query.md) and
-[asset-type query procedure](../operations/asset-type-query.md) for their
+The protected asset, communication-device, asset-type, and property queries
+require all three HTTP bearer identity variables and a provisioned actor with a
+current tenant `metadata.read` grant. See the
+[protected asset query procedure](../operations/asset-query.md),
+[device query procedure](../operations/device-query.md),
+[asset-type query procedure](../operations/asset-type-query.md), and
+[property query procedure](../operations/property-query.md) for their
 configuration and HTTP contracts. The default Compose stack does not configure
 that credential, so it exposes only discovery and health until explicitly
 configured.
