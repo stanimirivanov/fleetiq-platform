@@ -148,6 +148,11 @@ the same fresh-snapshot identity read and complete-content comparison. Keep a
 targeted arbiter when another unique constraint represents a distinct conflict
 that callers must observe.
 
+For closed action vocabularies persisted as text, keep encoding and decoding
+in one adapter-owned codec. Make encoders exhaustive, test every exact stored
+name and round trip, and preserve table-column context when persisted values
+cannot be reconstructed.
+
 Document repository methods whose batching, transaction, locking, temporal
 selection, ordering, or deliberate multi-query shape is not obvious.
 

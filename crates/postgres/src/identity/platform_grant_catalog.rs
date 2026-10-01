@@ -1,11 +1,14 @@
-use fleetiq_access::PlatformAction;
+use crate::action_codec::platform_action_name;
 use fleetiq_identity::{
     PlatformGrantCatalogCursor, PlatformGrantCatalogEntry, PlatformGrantCatalogPage,
     PlatformGrantCatalogQuery, PlatformGrantCatalogRepository,
 };
+
+use crate::action_codec::parse_platform_action;
+
 use sqlx::PgPool;
 
-use crate::{PostgresRepositoryError, error::corrupt};
+use crate::PostgresRepositoryError;
 
 /// PostgreSQL repository for actor-scoped current platform-grant queries.
 #[derive(Clone, Debug)]
@@ -27,7 +30,9 @@ impl PlatformGrantCatalogRepository for PostgresPlatformGrantCatalogRepository {
         &self,
         query: &PlatformGrantCatalogQuery,
     ) -> Result<PlatformGrantCatalogPage, Self::Error> {
-        let after_action = query.after().map(|cursor| action_name(cursor.action()));
+        let after_action = query
+            .after()
+            .map(|cursor| platform_action_name(cursor.action()));
         let requested = i64::from(query.page_size().get());
         let fetch_limit = requested + 1;
 
@@ -50,7 +55,12 @@ impl PlatformGrantCatalogRepository for PostgresPlatformGrantCatalogRepository {
 
         let mut entries = rows
             .into_iter()
-            .map(|row| Ok(PlatformGrantCatalogEntry::new(action(&row.action)?)))
+            .map(|row| {
+                Ok(PlatformGrantCatalogEntry::new(parse_platform_action(
+                    &row.action,
+                    "identity.platform_action_grants.action",
+                )?))
+            })
             .collect::<Result<Vec<_>, PostgresRepositoryError>>()?;
 
         let has_more = entries.len() > usize::from(query.page_size().get());
@@ -67,25 +77,6 @@ impl PlatformGrantCatalogRepository for PostgresPlatformGrantCatalogRepository {
         });
 
         Ok(PlatformGrantCatalogPage::new(entries, next))
-    }
-}
-
-const fn action_name(action: PlatformAction) -> &'static str {
-    match action {
-        PlatformAction::ManagePlatformAccess => "platform.access.manage",
-        PlatformAction::ManageIdentity => "identity.manage",
-        PlatformAction::ProvisionTenant => "tenant.provision",
-        PlatformAction::ManageTenantLifecycle => "tenant.lifecycle.manage",
-    }
-}
-
-fn action(value: &str) -> Result<PlatformAction, PostgresRepositoryError> {
-    match value {
-        "platform.access.manage" => Ok(PlatformAction::ManagePlatformAccess),
-        "identity.manage" => Ok(PlatformAction::ManageIdentity),
-        "tenant.provision" => Ok(PlatformAction::ProvisionTenant),
-        "tenant.lifecycle.manage" => Ok(PlatformAction::ManageTenantLifecycle),
-        _ => Err(corrupt("identity.platform_action_grants.action", value)),
     }
 }
 

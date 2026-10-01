@@ -123,8 +123,11 @@ dashboard exists yet.
 
 ## Runtime and data
 
-The workspace is Rust 2024 on Rust 1.98.1. PostgreSQL 18.6 stores metadata and
-ingestion facts under checked SQL migrations. SQLx macros validate queries
+The workspace is Rust 2024 on Rust 1.98.1. PostgreSQL adapters are organized
+by access, identity, metadata, and ingestion capability inside one crate. A
+private codec keeps persisted platform and tenant action names consistent
+across policy, administration, catalogue, and audit paths. PostgreSQL 18.6
+stores metadata and ingestion facts under checked SQL migrations. SQLx macros validate queries
 against a migrated database. Committed offline query descriptions permit
 database-independent image builds while online checks remain authoritative.
 

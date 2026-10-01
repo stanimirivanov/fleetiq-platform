@@ -1,11 +1,13 @@
 use std::{error::Error, fmt};
 
+use crate::action_codec::platform_action_name;
 use fleetiq_access::PlatformAction;
 use fleetiq_domain::{ActorId, PlatformAccessChangeId};
 use fleetiq_identity::{
     PlatformAccessAdministrationRepository, PlatformAccessChange, PlatformAccessChangeEffect,
     PlatformAccessChangeKind, PlatformAccessChangeOutcome,
 };
+
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::{PostgresRepositoryError, error::classify_database_error};
@@ -54,7 +56,7 @@ impl PlatformAccessAdministrationRepository for PostgresPlatformAccessAdministra
             change.change_id().as_str(),
             change.administrator_actor_id().as_str(),
             change.target_actor_id().as_str(),
-            action_name(change.action()),
+            platform_action_name(change.action()),
             kind_name(change.kind()),
             change.recorded_at().get(),
             state_changed,
@@ -107,7 +109,7 @@ async fn resolve_existing(
 
     if existing.administrator_actor_id != change.administrator_actor_id().as_str()
         || existing.target_actor_id != change.target_actor_id().as_str()
-        || existing.action != action_name(change.action())
+        || existing.action != platform_action_name(change.action())
         || existing.change_kind != kind_name(change.kind())
         || existing.recorded_at_ms != change.recorded_at().get()
     {
@@ -136,7 +138,7 @@ async fn mutate_current_grant(
                 ON CONFLICT DO NOTHING
                 "#,
                 change.target_actor_id().as_str(),
-                action_name(change.action()),
+                platform_action_name(change.action()),
             )
             .execute(&mut **transaction)
             .await
@@ -148,7 +150,7 @@ async fn mutate_current_grant(
                 WHERE actor_id = $1 AND action = $2
                 "#,
                 change.target_actor_id().as_str(),
-                action_name(change.action()),
+                platform_action_name(change.action()),
             )
             .execute(&mut **transaction)
             .await
@@ -189,15 +191,6 @@ async fn preserve_final_administrator(
         );
     }
     Ok(())
-}
-
-const fn action_name(action: PlatformAction) -> &'static str {
-    match action {
-        PlatformAction::ManagePlatformAccess => "platform.access.manage",
-        PlatformAction::ManageIdentity => "identity.manage",
-        PlatformAction::ProvisionTenant => "tenant.provision",
-        PlatformAction::ManageTenantLifecycle => "tenant.lifecycle.manage",
-    }
 }
 
 const fn kind_name(kind: PlatformAccessChangeKind) -> &'static str {

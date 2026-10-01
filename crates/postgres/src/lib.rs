@@ -3,96 +3,48 @@
 //! Database row types remain private to this crate. Public operations accept and
 //! return validated domain values through application and semantic-policy ports.
 
-mod accepted_message_log;
-mod actor_catalog;
-mod actor_identity_resolver;
-mod actor_lifecycle_administration;
-mod actor_lifecycle_audit;
-mod actor_provisioning;
-mod asset_repository;
-mod decoded_observation_log;
-mod definition_repository;
-mod device_repository;
+mod access;
+mod action_codec;
 mod error;
-mod external_identity_administration;
-mod external_identity_audit;
-mod external_identity_catalog;
-mod platform_access_administration;
-mod platform_access_audit;
-mod platform_access_policy;
-mod platform_bootstrap;
-mod platform_grant_catalog;
-mod protocol_package_catalog;
-mod relationship_repository;
-mod signal_binding_repository;
-mod tenant_access_administration;
-mod tenant_access_audit;
-mod tenant_access_policy;
-mod tenant_catalog;
-mod tenant_lifecycle_administration;
-mod tenant_lifecycle_audit;
-mod tenant_provisioning;
+mod identity;
+mod ingestion;
+mod metadata;
 
-pub use accepted_message_log::{PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError};
-pub use actor_catalog::{PostgresActorCatalogRepository, PostgresActorCatalogRepositoryError};
-pub use actor_identity_resolver::{
+pub use access::{
     PostgresActorIdentityResolver, PostgresActorIdentityResolverError,
+    PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError, PostgresTenantAccessPolicy,
+    PostgresTenantAccessPolicyError,
 };
-pub use actor_lifecycle_administration::{
-    PostgresActorLifecycleAdministration, PostgresActorLifecycleAdministrationError,
-};
-pub use actor_lifecycle_audit::{
-    PostgresActorLifecycleAuditRepository, PostgresActorLifecycleAuditRepositoryError,
-};
-pub use actor_provisioning::{PostgresActorProvisioning, PostgresActorProvisioningError};
-pub use asset_repository::PostgresAssetRepository;
-pub use decoded_observation_log::{
-    PostgresDecodedObservationLog, PostgresDecodedObservationLogError,
-};
-pub use definition_repository::PostgresDefinitionRepository;
-pub use device_repository::PostgresDeviceRepository;
 pub use error::PostgresRepositoryError;
-pub use external_identity_administration::{
+pub use identity::{
+    PostgresActorCatalogRepository, PostgresActorCatalogRepositoryError,
+    PostgresActorLifecycleAdministration, PostgresActorLifecycleAdministrationError,
+    PostgresActorLifecycleAuditRepository, PostgresActorLifecycleAuditRepositoryError,
+    PostgresActorProvisioning, PostgresActorProvisioningError,
     PostgresExternalIdentityAdministration, PostgresExternalIdentityAdministrationError,
-};
-pub use external_identity_audit::{
     PostgresExternalIdentityAuditRepository, PostgresExternalIdentityAuditRepositoryError,
-};
-pub use external_identity_catalog::{
     PostgresExternalIdentityCatalogRepository, PostgresExternalIdentityCatalogRepositoryError,
-};
-pub use platform_access_administration::{
     PostgresPlatformAccessAdministration, PostgresPlatformAccessAdministrationError,
-};
-pub use platform_access_audit::{
     PostgresPlatformAccessAuditRepository, PostgresPlatformAccessAuditRepositoryError,
-};
-pub use platform_access_policy::{PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError};
-pub use platform_bootstrap::{PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
-pub use platform_grant_catalog::{
+    PostgresPlatformBootstrap, PostgresPlatformBootstrapError,
     PostgresPlatformGrantCatalogRepository, PostgresPlatformGrantCatalogRepositoryError,
-};
-pub use protocol_package_catalog::{
-    PostgresProtocolPackageCatalog, PostgresProtocolPackageCatalogError,
-};
-pub use relationship_repository::PostgresRelationshipRepository;
-pub use signal_binding_repository::PostgresSignalBindingRepository;
-use sqlx::migrate::Migrator;
-pub use tenant_access_administration::{
     PostgresTenantAccessAdministration, PostgresTenantAccessAdministrationError,
-};
-pub use tenant_access_audit::{
     PostgresTenantAccessAuditRepository, PostgresTenantAccessAuditRepositoryError,
-};
-pub use tenant_access_policy::{PostgresTenantAccessPolicy, PostgresTenantAccessPolicyError};
-pub use tenant_catalog::{PostgresTenantCatalogRepository, PostgresTenantCatalogRepositoryError};
-pub use tenant_lifecycle_administration::{
+    PostgresTenantCatalogRepository, PostgresTenantCatalogRepositoryError,
     PostgresTenantLifecycleAdministration, PostgresTenantLifecycleAdministrationError,
-};
-pub use tenant_lifecycle_audit::{
     PostgresTenantLifecycleAuditRepository, PostgresTenantLifecycleAuditRepositoryError,
+    PostgresTenantProvisioning, PostgresTenantProvisioningError,
 };
-pub use tenant_provisioning::{PostgresTenantProvisioning, PostgresTenantProvisioningError};
+pub use ingestion::{
+    PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError, PostgresDecodedObservationLog,
+    PostgresDecodedObservationLogError, PostgresProtocolPackageCatalog,
+    PostgresProtocolPackageCatalogError,
+};
+pub use metadata::{
+    PostgresAssetRepository, PostgresDefinitionRepository, PostgresDeviceRepository,
+    PostgresRelationshipRepository, PostgresSignalBindingRepository,
+};
+use sqlx::migrate::Migrator;
 
 /// Error returned by PostgreSQL asset repository operations.
 pub type PostgresAssetRepositoryError = PostgresRepositoryError;

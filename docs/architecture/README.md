@@ -149,6 +149,11 @@ or persistence dependency. The broad application crate re-exports them until
 its compatibility facade is retired. See
 [ADR 0076](../adr/0076-extract-live-projection-contracts.md).
 
+The PostgreSQL adapter remains one crate and database boundary. Its internal
+modules now mirror access, identity, metadata, and ingestion capabilities, with
+one private codec for exact persisted access-action names. See
+[ADR 0077](../adr/0077-organize-postgres-adapters-by-capability.md).
+
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing
 the policy and adapter crates. See

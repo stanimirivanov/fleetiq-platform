@@ -135,6 +135,15 @@ projection runtime can depend on the defining crate without taking on unrelated
 application capabilities. See [ADR 0076](../adr/0076-extract-live-projection-contracts.md),
 which refines only the crate placement in ADR 0008.
 
+## PostgreSQL adapter organization
+
+`fleetiq-postgres` keeps one database and migration chain, but its private
+`access`, `identity`, `metadata`, and `ingestion` modules mirror the ports they
+implement. The crate root preserves the public adapter API. A private action
+codec owns persisted platform and tenant action names for policy, command,
+audit, and catalogue paths; decoders retain the exact source-column context
+on corruption. See [ADR 0077](../adr/0077-organize-postgres-adapters-by-capability.md).
+
 ## Protocol fixture toolchain
 
 The architecture check also compares exact pinned development requirements for
@@ -172,4 +181,5 @@ a general permission for other dependencies between the same roles.
 - [Metadata application capability](../adr/0074-extract-asset-graph-application-capability.md)
 - [Ingestion application capability](../adr/0075-extract-ingestion-application-capability.md)
 - [Live projection contract ownership](../adr/0076-extract-live-projection-contracts.md)
+- [PostgreSQL adapter organization](../adr/0077-organize-postgres-adapters-by-capability.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

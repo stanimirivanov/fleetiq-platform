@@ -1,10 +1,11 @@
-use fleetiq_access::PlatformAction;
+use crate::action_codec::parse_platform_action;
 use fleetiq_domain::{ActorId, PlatformAccessChangeId, UnixTimeMillis};
 use fleetiq_identity::{
     PlatformAccessAuditCursor, PlatformAccessAuditEntry, PlatformAccessAuditPage,
     PlatformAccessAuditQuery, PlatformAccessAuditRepository, PlatformAccessChangeEffect,
     PlatformAccessChangeKind,
 };
+
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};
@@ -68,7 +69,7 @@ impl PlatformAccessAuditRepository for PostgresPlatformAccessAuditRepository {
                     ActorId::new(row.target_actor_id).map_err(|error| {
                         corrupt("identity.platform_access_changes.target_actor_id", error)
                     })?,
-                    action(&row.action)?,
+                    parse_platform_action(&row.action, "identity.platform_access_changes.action")?,
                     kind(&row.change_kind)?,
                     UnixTimeMillis::new(row.recorded_at_ms),
                     if row.state_changed {
@@ -92,16 +93,6 @@ impl PlatformAccessAuditRepository for PostgresPlatformAccessAuditRepository {
         });
 
         Ok(PlatformAccessAuditPage::new(entries, next))
-    }
-}
-
-fn action(value: &str) -> Result<PlatformAction, PostgresRepositoryError> {
-    match value {
-        "platform.access.manage" => Ok(PlatformAction::ManagePlatformAccess),
-        "identity.manage" => Ok(PlatformAction::ManageIdentity),
-        "tenant.provision" => Ok(PlatformAction::ProvisionTenant),
-        "tenant.lifecycle.manage" => Ok(PlatformAction::ManageTenantLifecycle),
-        _ => Err(corrupt("identity.platform_access_changes.action", value)),
     }
 }
 

@@ -1,9 +1,10 @@
-use fleetiq_access::TenantAction;
+use crate::action_codec::parse_tenant_action;
 use fleetiq_domain::{ActorId, TenantAccessChangeId, TenantId, UnixTimeMillis};
 use fleetiq_identity::{
     TenantAccessAuditCursor, TenantAccessAuditEntry, TenantAccessAuditPage, TenantAccessAuditQuery,
     TenantAccessAuditRepository, TenantAccessChangeEffect, TenantAccessChangeKind,
 };
+
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};
@@ -75,7 +76,7 @@ impl TenantAccessAuditRepository for PostgresTenantAccessAuditRepository {
                     ActorId::new(row.target_actor_id).map_err(|error| {
                         corrupt("identity.tenant_access_changes.target_actor_id", error)
                     })?,
-                    action(&row.action)?,
+                    parse_tenant_action(&row.action, "identity.tenant_access_changes.action")?,
                     kind(&row.change_kind)?,
                     UnixTimeMillis::new(row.recorded_at_ms),
                     if row.state_changed {
@@ -99,15 +100,6 @@ impl TenantAccessAuditRepository for PostgresTenantAccessAuditRepository {
         });
 
         Ok(TenantAccessAuditPage::new(entries, next))
-    }
-}
-
-fn action(value: &str) -> Result<TenantAction, PostgresRepositoryError> {
-    match value {
-        "metadata.read" => Ok(TenantAction::ReadMetadata),
-        "metadata.manage" => Ok(TenantAction::ManageMetadata),
-        "access.manage" => Ok(TenantAction::ManageAccess),
-        _ => Err(corrupt("identity.tenant_access_changes.action", value)),
     }
 }
 

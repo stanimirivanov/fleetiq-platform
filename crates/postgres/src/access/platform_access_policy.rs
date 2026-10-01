@@ -1,6 +1,8 @@
 use std::{error::Error, fmt};
 
-use fleetiq_access::{AccessDecision, PlatformAccessPolicy, PlatformAccessRequest, PlatformAction};
+use crate::action_codec::platform_action_name;
+use fleetiq_access::{AccessDecision, PlatformAccessPolicy, PlatformAccessRequest};
+
 use sqlx::PgPool;
 
 /// PostgreSQL-backed evaluator for exact platform action grants.
@@ -45,7 +47,7 @@ impl PlatformAccessPolicy for PostgresPlatformAccessPolicy {
             ) AS "allowed!"
             "#,
             request.actor_id().as_str(),
-            action_name(request.action()),
+            platform_action_name(request.action()),
         )
         .fetch_one(&self.pool)
         .await
@@ -56,15 +58,6 @@ impl PlatformAccessPolicy for PostgresPlatformAccessPolicy {
         } else {
             AccessDecision::Deny
         })
-    }
-}
-
-const fn action_name(action: PlatformAction) -> &'static str {
-    match action {
-        PlatformAction::ManagePlatformAccess => "platform.access.manage",
-        PlatformAction::ManageIdentity => "identity.manage",
-        PlatformAction::ProvisionTenant => "tenant.provision",
-        PlatformAction::ManageTenantLifecycle => "tenant.lifecycle.manage",
     }
 }
 
