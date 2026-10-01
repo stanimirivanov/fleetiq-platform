@@ -2,13 +2,13 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManageTenantLifecycle, PlatformAuthorizationService, PlatformBootstrapRequest,
-    PlatformBootstrapService, TenantCatalog, TenantCatalogPageSize, TenantCatalogQuery,
-    TenantLifecycleState,
-};
+use fleetiq_access::{ManageTenantLifecycle, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformBootstrapRequest, PlatformBootstrapService, TenantCatalog, TenantCatalogPageSize,
+    TenantCatalogQuery, TenantLifecycleState,
 };
 use fleetiq_postgres::{
     PostgresPlatformAccessPolicy, PostgresPlatformBootstrap, PostgresTenantCatalogRepository,
@@ -63,14 +63,14 @@ async fn entries_reconstruct_active_and_suspended_state(
     Ok(())
 }
 
-fn query(after: Option<fleetiq_application::TenantCatalogCursor>) -> TenantCatalogQuery {
+fn query(after: Option<fleetiq_identity::TenantCatalogCursor>) -> TenantCatalogQuery {
     TenantCatalogQuery::new(
         TenantCatalogPageSize::new(2).expect("valid page size"),
         after,
     )
 }
 
-fn ids(page: &fleetiq_application::TenantCatalogPage) -> Vec<&str> {
+fn ids(page: &fleetiq_identity::TenantCatalogPage) -> Vec<&str> {
     page.entries()
         .iter()
         .map(|entry| entry.tenant_id().as_str())
@@ -99,7 +99,7 @@ async fn seed_tenant(pool: &PgPool, tenant_id: &str, is_active: bool) -> sqlx::R
 
 async fn manage_tenant_lifecycle(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageTenantLifecycle>(support::authenticated_actor("operator-a").await)

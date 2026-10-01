@@ -2,14 +2,14 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    AssetRepository, DefinitionRepository, RelationshipRepository, RelationshipSnapshotQuery,
-};
 use fleetiq_domain::{
     Asset, AssetId, AssetName, AssetRelationship, AssetRelationshipId, AssetTypeDefinition,
     AssetTypeId, AssetTypeRef, DefinitionName, DefinitionVersion, EffectiveInterval,
     RecordRevision, RecordedRevision, RelationshipEndpoints, RelationshipTypeDefinition,
     RelationshipTypeId, RelationshipTypeRef, TenantId, UnixTimeMillis,
+};
+use fleetiq_metadata::{
+    AssetRepository, DefinitionRepository, RelationshipRepository, RelationshipSnapshotQuery,
 };
 use fleetiq_postgres::{
     PostgresAssetRepository, PostgresDefinitionRepository, PostgresRelationshipRepository,

@@ -89,7 +89,11 @@ The checked-in database password is for disposable local development only.
 | [`crates/protocol-wasm`](crates/protocol-wasm) | Bounded Wasmtime component admission and invocation |
 | [`crates/semantics`](crates/semantics) | Temporal signal-to-asset-property attribution |
 | [`crates/analytics`](crates/analytics) | Calculator identities and output contracts |
-| [`crates/application`](crates/application) | Use cases and consumer-owned infrastructure ports |
+| [`crates/access`](crates/access) | Authentication and authorization policy and evidence |
+| [`crates/identity`](crates/identity) | Actor, grant, tenant, and bootstrap use cases |
+| [`crates/metadata`](crates/metadata) | Asset graph use cases and persistence ports |
+| [`crates/ingestion`](crates/ingestion) | Durable ingestion orchestration and persistence ports |
+| [`crates/live`](crates/live) | Revisioned live projection contracts |
 | [`crates/postgres`](crates/postgres) | SQLx persistence adapters and private row mappings |
 | [`crates/server`](crates/server) | Backend composition root, process configuration, and HTTP health surface |
 | [`crates/xtask`](crates/xtask) | Repository-owned policy checks and development tasks |

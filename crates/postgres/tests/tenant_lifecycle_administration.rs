@@ -2,15 +2,18 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManageTenantLifecycle, PlatformAuthorizationService, PlatformBootstrapRequest,
-    PlatformBootstrapService, ReadMetadata, TenantAuthorizationError, TenantAuthorizationService,
-    TenantLifecycleAdministration, TenantLifecycleAdministrationError, TenantLifecycleChangeEffect,
-    TenantLifecycleChangeKind, TenantLifecycleChangeOutcome, TenantLifecycleChangeRequest,
+use fleetiq_access::{
+    ManageTenantLifecycle, PlatformAuthorizationService, ReadMetadata, TenantAuthorizationError,
+    TenantAuthorizationService,
 };
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, TenantId,
     TenantLifecycleChangeId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformBootstrapRequest, PlatformBootstrapService, TenantLifecycleAdministration,
+    TenantLifecycleAdministrationError, TenantLifecycleChangeEffect, TenantLifecycleChangeKind,
+    TenantLifecycleChangeOutcome, TenantLifecycleChangeRequest,
 };
 use fleetiq_postgres::{
     PostgresPlatformAccessPolicy, PostgresPlatformBootstrap, PostgresTenantAccessPolicy,
@@ -236,7 +239,7 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 async fn tenant_authorization(
     pool: &PgPool,
 ) -> Result<
-    fleetiq_application::AuthorizedTenant<ReadMetadata>,
+    fleetiq_access::AuthorizedTenant<ReadMetadata>,
     TenantAuthorizationError<fleetiq_postgres::PostgresTenantAccessPolicyError>,
 > {
     TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
@@ -249,7 +252,7 @@ async fn tenant_authorization(
 
 async fn manage_tenant_lifecycle(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageTenantLifecycle>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageTenantLifecycle>(support::authenticated_actor("operator-a").await)

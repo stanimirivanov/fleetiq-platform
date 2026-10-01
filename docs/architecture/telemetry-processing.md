@@ -57,8 +57,8 @@ stateDiagram-v2
     Resnapshot --> Snapshot
 ```
 
-The broad application crate re-exports these types temporarily for source
-compatibility. See [ADR 0076](../adr/0076-extract-live-projection-contracts.md).
+Projection consumers import these types from `fleetiq-live`. See
+[ADR 0076](../adr/0076-extract-live-projection-contracts.md).
 
 Transport choice, subscription authorization, fan-out, backpressure, and
 offline recovery remain adapter and product decisions.

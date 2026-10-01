@@ -25,15 +25,13 @@
 | `fleetiq-identity` | Application | Actor, external-identity, grant, tenant, and bootstrap use cases and consumed ports |
 | `fleetiq-metadata` | Application | Asset graph use cases and consumer-owned persistence ports |
 | `fleetiq-ingestion` | Application | Durable ingestion orchestration and consumer-owned persistence ports |
-| `fleetiq-application` | Application | Transitional compatibility re-exports |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
 | `fleetiq-xtask` | Tooling | Repository checks that do not enter production binaries |
 
-These roles describe the current workspace. Further capability extraction will
-replace the remaining broad application role with narrower application packages
-while retaining one deployable backend process.
+These roles describe the current workspace. Capability crates own their
+contracts and use cases directly while one backend process composes them.
 
 ## Enforced policy
 
@@ -71,18 +69,17 @@ review.
 The semantic resolver owns its bitemporal snapshot query and narrow binding
 and property-definition read ports. PostgreSQL implements those ports directly.
 `fleetiq-metadata` consumes and re-exports the policy-owned snapshot query
-for metadata callers. `fleetiq-application` re-exports it for compatibility. The architecture checker rejects a
-new `fleetiq-semantics -> fleetiq-application` edge. This implements the
-removal required by ADR 0066; see [ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
+for metadata callers. The architecture checker rejects policy-to-application
+dependency edges. This implements the removal required by ADR 0066; see
+[ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
 
 ## Access boundary direction
 
 `fleetiq-access` owns identity resolution, credential-authenticator and
 authorization-policy ports alongside their evidence types. It depends only on
 domain values. PostgreSQL implements the resolver and exact access-policy
-ports directly. Identity and remaining application use cases consume access evidence.
-`fleetiq-application` temporarily re-exports existing names for callers that
-have not yet migrated to their defining capability. The architecture checker rejects an access-to-application
+ports directly. Identity and metadata use cases consume access evidence from
+the defining crate. The architecture checker rejects an access-to-application
 dependency. See [ADR 0070](../adr/0070-extract-access-policy-boundary.md).
 
 Tenant use cases require action-typed evidence issued from the access-policy
@@ -99,10 +96,9 @@ lifecycle authority are distinct types; see
 
 `fleetiq-identity` owns actor, external-identity, platform and tenant grant,
 tenant lifecycle, provisioning, audit, and bootstrap use cases and their
-consumer-owned ports. It depends on access policy and domain values but not on
-`fleetiq-application` or a database adapter. PostgreSQL implements its ports
-directly, and the server composes bootstrap directly. The broad application
-crate re-exports identity types only for source compatibility; see
+consumer-owned ports. It depends on access policy and domain values, not on
+a database adapter. PostgreSQL implements its ports directly, and the server
+composes bootstrap directly. See
 [ADR 0073](../adr/0073-extract-identity-application-capability.md).
 
 ## Metadata application boundary
@@ -110,9 +106,8 @@ crate re-exports identity types only for source compatibility; see
 `fleetiq-metadata` owns authorized asset, definition, device, relationship,
 and signal-binding operations and the repository ports those use cases consume.
 PostgreSQL implements these ports directly. Semantic policy retains its own
-narrow read ports for resolution; metadata only re-exports its snapshot query
-for existing metadata callers. The broad application crate temporarily
-re-exports the metadata API for compatibility. See
+narrow read ports for resolution; metadata re-exports its snapshot query
+for metadata callers. See
 [ADR 0074](../adr/0074-extract-asset-graph-application-capability.md).
 
 ## Ingestion application boundary
@@ -121,19 +116,25 @@ re-exports the metadata API for compatibility. See
 protocol-package catalogue ports, and the orchestration that preserves pending
 work across failed durable writes. It consumes protocol-host policy and
 protocol-neutral contracts without depending on PostgreSQL or unrelated
-application capabilities. PostgreSQL implements the ingestion ports directly
-and keeps its application facade dependency test-only. `fleetiq-application`
-temporarily re-exports them for existing callers. See
+application capabilities. PostgreSQL and its integration tests import the
+ingestion ports directly. See
 [ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
 ## Live projection contract boundary
 
 `fleetiq-live` owns transport-independent snapshot, delta, revision-cursor,
-and resnapshot types. It has no workspace dependencies. The temporary
-`fleetiq-application` facade re-exports them for existing callers; a later
-projection runtime can depend on the defining crate without taking on unrelated
+and resnapshot types. It has no workspace dependencies. A later projection
+runtime can depend on this defining crate without taking on unrelated
 application capabilities. See [ADR 0076](../adr/0076-extract-live-projection-contracts.md),
 which refines only the crate placement in ADR 0008.
+
+## Direct capability imports
+
+The flat application compatibility facade has been removed. Callers import
+access evidence, identity use cases, metadata ports, ingestion orchestration,
+and live contracts from their defining crates. The exact dependency policy
+rejects reintroducing an unclassified broad package. See
+[ADR 0078](../adr/0078-retire-application-compatibility-facade.md).
 
 ## PostgreSQL adapter organization
 
@@ -182,4 +183,5 @@ a general permission for other dependencies between the same roles.
 - [Ingestion application capability](../adr/0075-extract-ingestion-application-capability.md)
 - [Live projection contract ownership](../adr/0076-extract-live-projection-contracts.md)
 - [PostgreSQL adapter organization](../adr/0077-organize-postgres-adapters-by-capability.md)
+- [Application facade retirement](../adr/0078-retire-application-compatibility-facade.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

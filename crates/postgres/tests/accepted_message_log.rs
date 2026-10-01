@@ -2,10 +2,8 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
-};
 use fleetiq_domain::{AssetId, TenantId, UnixTimeMillis};
+use fleetiq_ingestion::{AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage};
 use fleetiq_postgres::{PostgresAcceptedMessageLog, PostgresAcceptedMessageLogError};
 use fleetiq_telemetry::{
     AcceptedMessageId, AcceptedPayload, ProtocolPackageId, ProtocolPackageRef,

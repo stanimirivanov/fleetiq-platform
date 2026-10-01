@@ -2,12 +2,12 @@
 
 use std::error::Error;
 
-use fleetiq_application::{SignalBindingRepository, SignalBindingSnapshotQuery};
 use fleetiq_domain::{
     AssetId, DefinitionVersion, DeviceEndpointId, EffectiveInterval, PropertyDefinitionId,
     PropertyDefinitionRef, RecordRevision, RecordedRevision, SignalBinding, SignalBindingId,
     SignalSource, SignalTarget, SourceSignalId, TenantId, UnixTimeMillis,
 };
+use fleetiq_metadata::{SignalBindingRepository, SignalBindingSnapshotQuery};
 use fleetiq_postgres::{PostgresRepositoryError, PostgresSignalBindingRepository};
 use sqlx::PgPool;
 

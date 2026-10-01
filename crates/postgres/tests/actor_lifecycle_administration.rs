@@ -2,16 +2,19 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ActorIdentityResolver, ActorLifecycleAdministration, ActorLifecycleAdministrationError,
-    ActorLifecycleChangeEffect, ActorLifecycleChangeKind, ActorLifecycleChangeOutcome,
-    ActorLifecycleChangeRequest, ManageIdentity, PlatformAuthorizationError,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
-    ProvisionTenant, ReadMetadata, TenantAuthorizationError, TenantAuthorizationService,
+use fleetiq_access::{
+    ActorIdentityResolver, ManageIdentity, PlatformAuthorizationError,
+    PlatformAuthorizationService, ProvisionTenant, ReadMetadata, TenantAuthorizationError,
+    TenantAuthorizationService,
 };
 use fleetiq_domain::{
     ActorId, ActorLifecycleChangeId, ExternalIdentity, ExternalIdentitySubject,
     IdentityAuthorityId, TenantId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ActorLifecycleAdministration, ActorLifecycleAdministrationError, ActorLifecycleChangeEffect,
+    ActorLifecycleChangeKind, ActorLifecycleChangeOutcome, ActorLifecycleChangeRequest,
+    PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresActorIdentityResolver, PostgresActorLifecycleAdministration,
@@ -329,7 +332,7 @@ async fn seed(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)

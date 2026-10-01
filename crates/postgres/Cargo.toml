@@ -19,7 +19,6 @@ fleetiq-telemetry = { path = "../telemetry" }
 sqlx.workspace = true
 
 [dev-dependencies]
-fleetiq-application = { path = "../application" }
 fleetiq-protocol-host = { path = "../protocol-host" }
 fleetiq-protocol-sdk = { path = "../protocol-sdk" }
 tokio.workspace = true

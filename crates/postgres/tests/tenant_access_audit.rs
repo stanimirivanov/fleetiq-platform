@@ -2,11 +2,12 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManageAccess, TenantAccessAudit, TenantAccessAuditPageSize, TenantAccessAuditQuery,
-    TenantAccessChangeEffect, TenantAccessChangeKind, TenantAction, TenantAuthorizationService,
-};
+use fleetiq_access::{ManageAccess, TenantAction, TenantAuthorizationService};
 use fleetiq_domain::TenantId;
+use fleetiq_identity::{
+    TenantAccessAudit, TenantAccessAuditPageSize, TenantAccessAuditQuery, TenantAccessChangeEffect,
+    TenantAccessChangeKind,
+};
 use fleetiq_postgres::{PostgresTenantAccessAuditRepository, PostgresTenantAccessPolicy};
 use sqlx::PgPool;
 
@@ -73,14 +74,14 @@ async fn reconstructs_complete_audit_meaning(pool: PgPool) -> Result<(), Box<dyn
     Ok(())
 }
 
-fn query(after: Option<fleetiq_application::TenantAccessAuditCursor>) -> TenantAccessAuditQuery {
+fn query(after: Option<fleetiq_identity::TenantAccessAuditCursor>) -> TenantAccessAuditQuery {
     TenantAccessAuditQuery::new(
         TenantAccessAuditPageSize::new(2).expect("valid page size"),
         after,
     )
 }
 
-fn ids(page: &fleetiq_application::TenantAccessAuditPage) -> Vec<&str> {
+fn ids(page: &fleetiq_identity::TenantAccessAuditPage) -> Vec<&str> {
     page.entries()
         .iter()
         .map(|entry| entry.change_id().as_str())
@@ -89,7 +90,7 @@ fn ids(page: &fleetiq_application::TenantAccessAuditPage) -> Vec<&str> {
 
 async fn manage_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedTenant<ManageAccess>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedTenant<ManageAccess>, Box<dyn Error>> {
     Ok(
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
             .authorize::<ManageAccess>(

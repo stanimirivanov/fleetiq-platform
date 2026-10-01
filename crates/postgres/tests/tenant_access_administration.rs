@@ -2,12 +2,12 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ManageAccess, TenantAccessAdministration, TenantAccessAdministrationError,
-    TenantAccessChangeEffect, TenantAccessChangeKind, TenantAccessChangeOutcome,
-    TenantAccessChangeRequest, TenantAction, TenantAuthorizationService,
-};
+use fleetiq_access::{ManageAccess, TenantAction, TenantAuthorizationService};
 use fleetiq_domain::{ActorId, TenantAccessChangeId, TenantId, UnixTimeMillis};
+use fleetiq_identity::{
+    TenantAccessAdministration, TenantAccessAdministrationError, TenantAccessChangeEffect,
+    TenantAccessChangeKind, TenantAccessChangeOutcome, TenantAccessChangeRequest,
+};
 use fleetiq_postgres::{
     PostgresTenantAccessAdministration, PostgresTenantAccessAdministrationError,
     PostgresTenantAccessPolicy,
@@ -226,7 +226,7 @@ async fn seed_grant(pool: &PgPool, actor_id: &str, action: &str) -> sqlx::Result
 
 async fn manage_access(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedTenant<ManageAccess>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedTenant<ManageAccess>, Box<dyn Error>> {
     Ok(
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone()))
             .authorize::<ManageAccess>(

@@ -629,17 +629,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fleetiq-application"
-version = "0.1.0"
-dependencies = [
- "fleetiq-access",
- "fleetiq-identity",
- "fleetiq-ingestion",
- "fleetiq-live",
- "fleetiq-metadata",
-]
-
-[[package]]
 name = "fleetiq-domain"
 version = "0.1.0"
 dependencies = [
@@ -686,7 +675,6 @@ version = "0.1.0"
 dependencies = [
  "bigdecimal",
  "fleetiq-access",
- "fleetiq-application",
  "fleetiq-domain",
  "fleetiq-identity",
  "fleetiq-ingestion",

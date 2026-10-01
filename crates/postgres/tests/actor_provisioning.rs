@@ -2,14 +2,14 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ActorIdentityResolver, ActorProvisioningError, ActorProvisioningOutcome,
-    ActorProvisioningRequest, ActorProvisioningService, ManageIdentity,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
-};
+use fleetiq_access::{ActorIdentityResolver, ManageIdentity, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ActorProvisioningId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId,
     UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ActorProvisioningError, ActorProvisioningOutcome, ActorProvisioningRequest,
+    ActorProvisioningService, PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresActorIdentityResolver, PostgresActorProvisioning, PostgresActorProvisioningError,
@@ -252,7 +252,7 @@ async fn bootstrap_operator(pool: &PgPool) -> Result<(), Box<dyn Error>> {
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)

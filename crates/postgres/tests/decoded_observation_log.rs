@@ -3,13 +3,13 @@
 use std::{error::Error, str::FromStr};
 
 use bigdecimal::BigDecimal;
-use fleetiq_application::{
-    AcceptedMessageLog, DecodedObservationAppendOutcome, DecodedObservationBatch,
-    DecodedObservationLog, PendingAcceptedMessage,
-};
 use fleetiq_domain::{
     AssetId, DeviceEndpointId, PropertyValue, SignalSource, SourceSignalId, TenantId, UnitId,
     UnixTimeMillis,
+};
+use fleetiq_ingestion::{
+    AcceptedMessageLog, DecodedObservationAppendOutcome, DecodedObservationBatch,
+    DecodedObservationLog, PendingAcceptedMessage,
 };
 use fleetiq_postgres::{
     PostgresAcceptedMessageLog, PostgresDecodedObservationLog, PostgresDecodedObservationLogError,

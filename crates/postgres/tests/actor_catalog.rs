@@ -2,12 +2,13 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    ActorCatalog, ActorCatalogPageSize, ActorCatalogQuery, ActorLifecycleState, ManageIdentity,
-    PlatformAuthorizationService, PlatformBootstrapRequest, PlatformBootstrapService,
-};
+use fleetiq_access::{ManageIdentity, PlatformAuthorizationService};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ActorCatalog, ActorCatalogPageSize, ActorCatalogQuery, ActorLifecycleState,
+    PlatformBootstrapRequest, PlatformBootstrapService,
 };
 use fleetiq_postgres::{
     PostgresActorCatalogRepository, PostgresPlatformAccessPolicy, PostgresPlatformBootstrap,
@@ -59,14 +60,14 @@ async fn entries_reconstruct_active_and_deactivated_state(
     Ok(())
 }
 
-fn query(after: Option<fleetiq_application::ActorCatalogCursor>) -> ActorCatalogQuery {
+fn query(after: Option<fleetiq_identity::ActorCatalogCursor>) -> ActorCatalogQuery {
     ActorCatalogQuery::new(
         ActorCatalogPageSize::new(2).expect("valid page size"),
         after,
     )
 }
 
-fn ids(page: &fleetiq_application::ActorCatalogPage) -> Vec<&str> {
+fn ids(page: &fleetiq_identity::ActorCatalogPage) -> Vec<&str> {
     page.entries()
         .iter()
         .map(|entry| entry.actor_id().as_str())
@@ -95,7 +96,7 @@ async fn seed_actor(pool: &PgPool, actor_id: &str, is_active: bool) -> sqlx::Res
 
 async fn manage_identity(
     pool: &PgPool,
-) -> Result<fleetiq_application::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ManageIdentity>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ManageIdentity>(support::authenticated_actor("operator-a").await)

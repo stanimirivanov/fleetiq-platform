@@ -2,11 +2,9 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
-    PlatformAuthorizationService, ProvisionTenant, TenantProvisioningOutcome,
-    TenantProvisioningService,
-};
+use fleetiq_access::{PlatformAuthorizationService, ProvisionTenant};
 use fleetiq_domain::{ActorId, TenantId, TenantProvisioningId, UnixTimeMillis};
+use fleetiq_identity::{TenantProvisioningOutcome, TenantProvisioningService};
 use fleetiq_postgres::{
     PostgresPlatformAccessPolicy, PostgresRepositoryError, PostgresTenantProvisioning,
     PostgresTenantProvisioningError,
@@ -137,7 +135,7 @@ async fn both_unique_arbiters_reject_different_command_content(
             .expect_err("different immutable command content must collide");
         assert!(matches!(
             error,
-            fleetiq_application::TenantProvisioningError::Repository(
+            fleetiq_identity::TenantProvisioningError::Repository(
                 PostgresTenantProvisioningError::IdentityCollision { .. }
             )
         ));
@@ -162,7 +160,7 @@ async fn missing_initial_administrator_rolls_back_every_provisioned_record(
         .expect_err("missing administrator must reject the complete transaction");
     assert!(matches!(
         error,
-        fleetiq_application::TenantProvisioningError::Repository(
+        fleetiq_identity::TenantProvisioningError::Repository(
             PostgresTenantProvisioningError::Repository(
                 PostgresRepositoryError::InvalidReference { .. }
             )
@@ -208,7 +206,7 @@ async fn provisioning_audit_is_immutable(pool: PgPool) -> Result<(), Box<dyn Err
 async fn authorization(
     pool: &PgPool,
     actor_id: &str,
-) -> Result<fleetiq_application::AuthorizedPlatform<ProvisionTenant>, Box<dyn Error>> {
+) -> Result<fleetiq_access::AuthorizedPlatform<ProvisionTenant>, Box<dyn Error>> {
     Ok(
         PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
             .authorize::<ProvisionTenant>(support::authenticated_actor(actor_id).await)
@@ -221,8 +219,8 @@ fn request(
     tenant_id: &str,
     administrator_actor_id: &str,
     recorded_at_ms: i64,
-) -> fleetiq_application::TenantProvisioningRequest {
-    fleetiq_application::TenantProvisioningRequest::new(
+) -> fleetiq_identity::TenantProvisioningRequest {
+    fleetiq_identity::TenantProvisioningRequest::new(
         TenantProvisioningId::new(provisioning_id).expect("valid provisioning ID"),
         TenantId::new(tenant_id).expect("valid tenant ID"),
         ActorId::new(administrator_actor_id).expect("valid administrator actor ID"),

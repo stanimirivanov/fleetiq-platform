@@ -2,12 +2,12 @@
 
 use std::{convert::Infallible, error::Error, io, num::NonZeroUsize};
 
-use fleetiq_application::{
+use fleetiq_domain::{AssetId, TenantId, UnixTimeMillis};
+use fleetiq_ingestion::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, DecodedObservationAppendOutcome,
     DecodedObservationBatch, DecodedObservationLog, DurablyPersistedFrame, FrameAcceptanceContext,
     PendingAcceptedMessage, PreparedFrameAcceptance,
 };
-use fleetiq_domain::{AssetId, TenantId, UnixTimeMillis};
 use fleetiq_postgres::{PostgresAcceptedMessageLog, PostgresDecodedObservationLog};
 use fleetiq_protocol_host::{
     FramePoll, FrameProcessingGate, FrameProcessingLimits, SessionInputBuffer, SessionState,

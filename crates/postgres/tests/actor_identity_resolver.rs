@@ -2,7 +2,7 @@
 
 use std::error::Error;
 
-use fleetiq_application::ActorIdentityResolver;
+use fleetiq_access::ActorIdentityResolver;
 use fleetiq_domain::{ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId};
 use fleetiq_postgres::PostgresActorIdentityResolver;
 use sqlx::PgPool;

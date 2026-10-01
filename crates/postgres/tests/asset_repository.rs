@@ -2,11 +2,11 @@
 
 use std::error::Error;
 
-use fleetiq_application::AssetRepository;
 use fleetiq_domain::{
     Asset, AssetId, AssetName, AssetTypeId, AssetTypeRef, DefinitionVersion, ExternalIdentifier,
     ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, TenantId,
 };
+use fleetiq_metadata::AssetRepository;
 use fleetiq_postgres::{PostgresAssetRepository, PostgresAssetRepositoryError};
 use sqlx::PgPool;
 

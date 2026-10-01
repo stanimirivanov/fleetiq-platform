@@ -2,7 +2,7 @@
 
 use std::error::Error;
 
-use fleetiq_application::{
+use fleetiq_access::{
     ManageIdentity, ManagePlatformAccess, PlatformAction, PlatformAuthorizationError,
     PlatformAuthorizationService, ProvisionTenant,
 };

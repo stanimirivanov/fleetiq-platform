@@ -2,11 +2,11 @@
 
 use std::error::Error;
 
-use fleetiq_application::DeviceRepository;
 use fleetiq_domain::{
     AssetId, CommunicationDevice, DeviceEndpoint, DeviceEndpointId, DeviceEndpointKindId,
     DeviceEndpointName, TenantId,
 };
+use fleetiq_metadata::DeviceRepository;
 use fleetiq_postgres::{PostgresDeviceRepository, PostgresDeviceRepositoryError};
 use sqlx::PgPool;
 
