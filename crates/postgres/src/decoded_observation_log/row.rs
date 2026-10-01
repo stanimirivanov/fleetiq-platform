@@ -1,8 +1,8 @@
 use bigdecimal::BigDecimal;
-use fleetiq_application::DecodedObservationBatch;
 use fleetiq_domain::{
     DeviceEndpointId, PropertyValue, SignalSource, SourceSignalId, UnitId, UnixTimeMillis,
 };
+use fleetiq_ingestion::DecodedObservationBatch;
 use fleetiq_telemetry::{
     AcceptedMessage, DecodedMeasurement, DecodedObservation, ObservationQuality, ObservationTimes,
 };

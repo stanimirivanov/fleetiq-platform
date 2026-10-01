@@ -1,9 +1,7 @@
 use std::{error::Error, fmt, future::Future};
 
-use fleetiq_application::{
-    AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
-};
 use fleetiq_domain::{AssetId, TenantId, UnixTimeMillis};
+use fleetiq_ingestion::{AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage};
 use fleetiq_telemetry::{
     AcceptedMessage, AcceptedMessageId, AcceptedPayload, ProtocolPackageId, ProtocolPackageRef,
     ProtocolPackageVersion,

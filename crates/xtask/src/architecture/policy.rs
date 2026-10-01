@@ -22,12 +22,9 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         role: CrateRole::Application,
         normal: &[
             "fleetiq-access",
-            "fleetiq-domain",
             "fleetiq-identity",
+            "fleetiq-ingestion",
             "fleetiq-metadata",
-            "fleetiq-protocol-host",
-            "fleetiq-protocol-sdk",
-            "fleetiq-telemetry",
         ],
         development: NONE,
         build: NONE,
@@ -47,6 +44,18 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         build: NONE,
     },
     PackagePolicy {
+        name: "fleetiq-ingestion",
+        role: CrateRole::Application,
+        normal: &[
+            "fleetiq-domain",
+            "fleetiq-protocol-host",
+            "fleetiq-protocol-sdk",
+            "fleetiq-telemetry",
+        ],
+        development: NONE,
+        build: NONE,
+    },
+    PackagePolicy {
         name: "fleetiq-metadata",
         role: CrateRole::Application,
         normal: &["fleetiq-access", "fleetiq-domain", "fleetiq-semantics"],
@@ -58,14 +67,18 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         role: CrateRole::Adapter,
         normal: &[
             "fleetiq-access",
-            "fleetiq-application",
             "fleetiq-domain",
             "fleetiq-identity",
+            "fleetiq-ingestion",
             "fleetiq-metadata",
             "fleetiq-semantics",
             "fleetiq-telemetry",
         ],
-        development: &["fleetiq-protocol-host", "fleetiq-protocol-sdk"],
+        development: &[
+            "fleetiq-application",
+            "fleetiq-protocol-host",
+            "fleetiq-protocol-sdk",
+        ],
         build: NONE,
     },
     PackagePolicy {

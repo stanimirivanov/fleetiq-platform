@@ -1,10 +1,10 @@
 use std::{error::Error, fmt, future::Future, num::NonZeroU64};
 
 use bigdecimal::BigDecimal;
-use fleetiq_application::{
+use fleetiq_domain::TenantId;
+use fleetiq_ingestion::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
-use fleetiq_domain::TenantId;
 use fleetiq_telemetry::{
     ProtocolArtifactDigest, ProtocolPackageId, ProtocolPackageRef, ProtocolPackageVersion,
 };

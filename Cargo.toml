@@ -5,6 +5,7 @@ members = [
     "crates/application",
     "crates/domain",
     "crates/identity",
+    "crates/ingestion",
     "crates/metadata",
     "crates/postgres",
     "crates/protocol-host",

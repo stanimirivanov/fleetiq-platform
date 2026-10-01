@@ -1,0 +1,20 @@
+[package]
+name = "fleetiq-ingestion"
+version = "0.1.0"
+description = "Durable ingestion orchestration and persistence ports for FleetIQ"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-domain = { path = "../domain" }
+fleetiq-protocol-host = { path = "../protocol-host" }
+fleetiq-protocol-sdk = { path = "../protocol-sdk" }
+fleetiq-telemetry = { path = "../telemetry" }
+
+[dev-dependencies]
+tokio.workspace = true
+
+[lints]
+workspace = true

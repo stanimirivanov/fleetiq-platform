@@ -1,22 +1,10 @@
-//! Application ports and use-case orchestration for `FleetIQ`.
+//! Live projection contracts and compatibility exports for `FleetIQ`.
 //!
-//! Ports are owned by their consumers. Infrastructure crates implement these
-//! contracts without exposing database or transport types to domain code.
+//! Capability crates own their use cases and consumer-owned ports. This facade
+//! preserves existing import paths while callers migrate to those crates.
 
-mod accepted_message_log;
-mod decoded_observation_log;
-mod frame_acceptance;
 mod live;
-mod observation_persistence;
-mod protocol_package_catalog;
 
-pub use accepted_message_log::{
-    AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
-};
-pub use decoded_observation_log::{
-    DecodedObservationAppendOutcome, DecodedObservationBatch, DecodedObservationBatchError,
-    DecodedObservationLog,
-};
 pub use fleetiq_access::{
     AccessDecision, ActorIdentityResolver, AuthenticatedActor, AuthorizedPlatform,
     AuthorizedTenant, CallerAuthenticationError, CallerAuthenticationService,
@@ -110,6 +98,14 @@ pub use fleetiq_identity::{
     TenantProvisioningCommand, TenantProvisioningError, TenantProvisioningOutcome,
     TenantProvisioningRepository, TenantProvisioningRequest, TenantProvisioningService,
 };
+pub use fleetiq_ingestion::{
+    AcceptedMessageAppendOutcome, AcceptedMessageLog, DecodedObservationAppendOutcome,
+    DecodedObservationBatch, DecodedObservationBatchError, DecodedObservationLog,
+    DurablyAcceptedFrame, DurablyPersistedFrame, FrameAcceptanceContext, FrameAcceptanceError,
+    ObservationPersistenceError, ObservationPersistencePreparationError, PendingAcceptedMessage,
+    PendingFrameAcceptance, PendingObservationPersistence, PreparedFrameAcceptance,
+    ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
+};
 pub use fleetiq_metadata::{
     AssetApplicationError, AssetApplicationService, AssetRepository, DefinitionApplicationError,
     DefinitionApplicationService, DefinitionRepository, DeviceApplicationError,
@@ -118,19 +114,8 @@ pub use fleetiq_metadata::{
     SignalBindingApplicationError, SignalBindingApplicationService, SignalBindingRepository,
     SignalBindingSnapshotQuery,
 };
-pub use frame_acceptance::{
-    DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,
-    PreparedFrameAcceptance,
-};
 pub use live::{
     LiveMessage, ProjectionDelta, ProjectionDeltaError, ProjectionRevision, ProjectionSnapshot,
     ResnapshotReason, ResnapshotRequired, RevisionCursor, RevisionCursorError,
     RevisionOverflowError,
-};
-pub use observation_persistence::{
-    DurablyPersistedFrame, ObservationPersistenceError, ObservationPersistencePreparationError,
-    PendingObservationPersistence,
-};
-pub use protocol_package_catalog::{
-    ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
