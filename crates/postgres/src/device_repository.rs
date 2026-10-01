@@ -1,10 +1,10 @@
 use std::future::Future;
 
-use fleetiq_application::DeviceRepository;
 use fleetiq_domain::{
     AssetId, CommunicationDevice, DeviceEndpoint, DeviceEndpointId, DeviceEndpointKindId,
     DeviceEndpointName, TenantId,
 };
+use fleetiq_metadata::DeviceRepository;
 use sqlx::PgPool;
 
 use crate::error::{PostgresRepositoryError, classify_database_error, corrupt};

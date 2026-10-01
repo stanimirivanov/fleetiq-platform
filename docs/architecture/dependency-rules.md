@@ -22,7 +22,8 @@
 | `fleetiq-semantics` | Policy | Temporal semantic attribution |
 | `fleetiq-protocol-host` | Policy | Trusted framing, state, reply, and processing decisions |
 | `fleetiq-identity` | Application | Actor, external-identity, grant, tenant, and bootstrap use cases and consumed ports |
-| `fleetiq-application` | Application | Remaining metadata and ingestion use cases, live contracts, and transitional re-exports |
+| `fleetiq-metadata` | Application | Asset graph use cases and consumer-owned persistence ports |
+| `fleetiq-application` | Application | Remaining ingestion use cases, live contracts, and transitional re-exports |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
@@ -67,8 +68,8 @@ review.
 
 The semantic resolver owns its bitemporal snapshot query and narrow binding
 and property-definition read ports. PostgreSQL implements those ports directly.
-`fleetiq-application` may consume semantic policy and re-exports the snapshot
-query for existing application callers. The architecture checker rejects a
+`fleetiq-metadata` consumes and re-exports the policy-owned snapshot query
+for metadata callers. `fleetiq-application` re-exports it for compatibility. The architecture checker rejects a
 new `fleetiq-semantics -> fleetiq-application` edge. This implements the
 removal required by ADR 0066; see [ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
 
@@ -102,6 +103,16 @@ directly, and the server composes bootstrap directly. The broad application
 crate re-exports identity types only for source compatibility; see
 [ADR 0073](../adr/0073-extract-identity-application-capability.md).
 
+## Metadata application boundary
+
+`fleetiq-metadata` owns authorized asset, definition, device, relationship,
+and signal-binding operations and the repository ports those use cases consume.
+PostgreSQL implements these ports directly. Semantic policy retains its own
+narrow read ports for resolution; metadata only re-exports its snapshot query
+for existing metadata callers. The broad application crate temporarily
+re-exports the metadata API for compatibility. See
+[ADR 0074](../adr/0074-extract-asset-graph-application-capability.md).
+
 ## Changing dependencies
 
 When a task changes a manifest:
@@ -127,4 +138,5 @@ a general permission for other dependencies between the same roles.
 - [Action-typed tenant evidence](../adr/0071-type-tenant-authorization-evidence.md)
 - [Action-typed platform evidence](../adr/0072-type-platform-authorization-evidence.md)
 - [Identity application capability](../adr/0073-extract-identity-application-capability.md)
+- [Metadata application capability](../adr/0074-extract-asset-graph-application-capability.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

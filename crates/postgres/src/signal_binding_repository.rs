@@ -1,7 +1,7 @@
 use std::future::Future;
 
-use fleetiq_application::{SignalBindingRepository, SignalBindingSnapshotQuery};
 use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
+use fleetiq_metadata::{SignalBindingRepository, SignalBindingSnapshotQuery};
 use fleetiq_semantics::SignalBindingView;
 use sqlx::PgPool;
 

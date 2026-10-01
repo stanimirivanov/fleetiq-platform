@@ -1,10 +1,10 @@
 use std::future::Future;
 
-use fleetiq_application::DefinitionRepository;
 use fleetiq_domain::{
     AssetTypeDefinition, AssetTypeRef, PropertyDefinition, PropertyDefinitionRef,
     RelationshipTypeDefinition, RelationshipTypeRef, TenantId,
 };
+use fleetiq_metadata::DefinitionRepository;
 use fleetiq_semantics::PropertyDefinitionView;
 use sqlx::PgPool;
 

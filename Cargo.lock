@@ -635,9 +635,9 @@ dependencies = [
  "fleetiq-access",
  "fleetiq-domain",
  "fleetiq-identity",
+ "fleetiq-metadata",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
- "fleetiq-semantics",
  "fleetiq-telemetry",
  "tokio",
 ]
@@ -659,6 +659,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-metadata"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-access",
+ "fleetiq-domain",
+ "fleetiq-semantics",
+ "tokio",
+]
+
+[[package]]
 name = "fleetiq-postgres"
 version = "0.1.0"
 dependencies = [
@@ -667,6 +677,7 @@ dependencies = [
  "fleetiq-application",
  "fleetiq-domain",
  "fleetiq-identity",
+ "fleetiq-metadata",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
  "fleetiq-semantics",

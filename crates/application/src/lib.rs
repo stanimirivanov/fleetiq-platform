@@ -4,37 +4,19 @@
 //! contracts without exposing database or transport types to domain code.
 
 mod accepted_message_log;
-mod asset_service;
 mod decoded_observation_log;
-mod definition_repository;
-mod definition_service;
-mod device_repository;
-mod device_service;
 mod frame_acceptance;
 mod live;
 mod observation_persistence;
 mod protocol_package_catalog;
-mod relationship_repository;
-mod relationship_service;
-mod repository;
-mod signal_binding_repository;
-mod signal_binding_service;
-
-#[cfg(test)]
-mod test_support;
 
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,
 };
-pub use asset_service::{AssetApplicationError, AssetApplicationService};
 pub use decoded_observation_log::{
     DecodedObservationAppendOutcome, DecodedObservationBatch, DecodedObservationBatchError,
     DecodedObservationLog,
 };
-pub use definition_repository::DefinitionRepository;
-pub use definition_service::{DefinitionApplicationError, DefinitionApplicationService};
-pub use device_repository::DeviceRepository;
-pub use device_service::{DeviceApplicationError, DeviceApplicationService};
 pub use fleetiq_access::{
     AccessDecision, ActorIdentityResolver, AuthenticatedActor, AuthorizedPlatform,
     AuthorizedTenant, CallerAuthenticationError, CallerAuthenticationService,
@@ -128,6 +110,14 @@ pub use fleetiq_identity::{
     TenantProvisioningCommand, TenantProvisioningError, TenantProvisioningOutcome,
     TenantProvisioningRepository, TenantProvisioningRequest, TenantProvisioningService,
 };
+pub use fleetiq_metadata::{
+    AssetApplicationError, AssetApplicationService, AssetRepository, DefinitionApplicationError,
+    DefinitionApplicationService, DefinitionRepository, DeviceApplicationError,
+    DeviceApplicationService, DeviceRepository, RelationshipApplicationError,
+    RelationshipApplicationService, RelationshipRepository, RelationshipSnapshotQuery,
+    SignalBindingApplicationError, SignalBindingApplicationService, SignalBindingRepository,
+    SignalBindingSnapshotQuery,
+};
 pub use frame_acceptance::{
     DurablyAcceptedFrame, FrameAcceptanceContext, FrameAcceptanceError, PendingFrameAcceptance,
     PreparedFrameAcceptance,
@@ -144,8 +134,3 @@ pub use observation_persistence::{
 pub use protocol_package_catalog::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
-pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQuery};
-pub use relationship_service::{RelationshipApplicationError, RelationshipApplicationService};
-pub use repository::AssetRepository;
-pub use signal_binding_repository::{SignalBindingRepository, SignalBindingSnapshotQuery};
-pub use signal_binding_service::{SignalBindingApplicationError, SignalBindingApplicationService};

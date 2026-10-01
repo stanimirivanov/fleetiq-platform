@@ -118,7 +118,7 @@ documents do not become domain values until validated.
 The repository enforces its direct workspace dependency policy with
 `cargo xtask architecture`; see [dependency rules](dependency-rules.md).
 Semantic resolution owns its read ports and bitemporal snapshot query;
-PostgreSQL implements the ports directly. Application code may depend on
+PostgreSQL implements the ports directly. Metadata application code consumes
 semantic policy without a reverse dependency or Cargo cycle. See
 [ADR 0069](../adr/0069-own-semantic-read-ports-in-policy.md).
 The access policy owns authentication and authorization evidence and its
@@ -129,6 +129,11 @@ Identity administration now has its own application crate. PostgreSQL implements
 its ports directly, and the server composes its bootstrap use case without
 directly importing the remaining broad application facade. See
 [ADR 0073](../adr/0073-extract-identity-application-capability.md).
+
+Asset graph use cases now have a separate metadata application crate.
+PostgreSQL implements its ports directly while the remaining application crate
+re-exports the public API for compatibility. See
+[ADR 0074](../adr/0074-extract-asset-graph-application-capability.md).
 
 The first deployment topology is one modular backend process. It owns startup,
 configuration, migration, HTTP routing, health, and shutdown while composing

@@ -24,9 +24,9 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
             "fleetiq-access",
             "fleetiq-domain",
             "fleetiq-identity",
+            "fleetiq-metadata",
             "fleetiq-protocol-host",
             "fleetiq-protocol-sdk",
-            "fleetiq-semantics",
             "fleetiq-telemetry",
         ],
         development: NONE,
@@ -47,6 +47,13 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         build: NONE,
     },
     PackagePolicy {
+        name: "fleetiq-metadata",
+        role: CrateRole::Application,
+        normal: &["fleetiq-access", "fleetiq-domain", "fleetiq-semantics"],
+        development: NONE,
+        build: NONE,
+    },
+    PackagePolicy {
         name: "fleetiq-postgres",
         role: CrateRole::Adapter,
         normal: &[
@@ -54,6 +61,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
             "fleetiq-application",
             "fleetiq-domain",
             "fleetiq-identity",
+            "fleetiq-metadata",
             "fleetiq-semantics",
             "fleetiq-telemetry",
         ],
