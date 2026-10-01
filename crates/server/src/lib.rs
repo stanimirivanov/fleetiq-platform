@@ -173,8 +173,19 @@ mod tests {
         let device_path = "/api/v1/tenants/tenant-a/assets/asset-1/device";
         let type_path = "/api/v1/tenants/tenant-a/asset-types/generic.power-system/versions/2";
         let property_path = "/api/v1/tenants/tenant-a/properties/thermal.temperature/versions/1";
+        let relationship_type_path =
+            "/api/v1/tenants/tenant-a/relationship-types/generic.tows/versions/2";
         let response = unconfigured
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let response = application_router(pool.clone(), &base)
+            .oneshot(
+                Request::get(relationship_type_path)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -201,6 +212,16 @@ mod tests {
         let response = router
             .clone()
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        let response = router
+            .clone()
+            .oneshot(
+                Request::get(relationship_type_path)
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);

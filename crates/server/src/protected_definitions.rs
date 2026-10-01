@@ -13,7 +13,8 @@ use fleetiq_access::{
 };
 use fleetiq_domain::{
     AssetTypeDefinition, AssetTypeId, AssetTypeRef, DefinitionVersion, PropertyDefinition,
-    PropertyDefinitionId, PropertyDefinitionRef, PropertyValueKind, TenantId, UnitId,
+    PropertyDefinitionId, PropertyDefinitionRef, PropertyValueKind, RelationshipTypeDefinition,
+    RelationshipTypeId, RelationshipTypeRef, TenantId, UnitId,
 };
 use fleetiq_metadata::{DefinitionApplicationService, DefinitionRepository};
 use fleetiq_postgres::{
@@ -65,6 +66,10 @@ where
         .route(
             "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}",
             get(get_property::<A, R, P, Q>).fallback(protected_method_not_allowed),
+        )
+        .route(
+            "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions/{version}",
+            get(get_relationship_type::<A, R, P, Q>).fallback(protected_method_not_allowed),
         )
         .with_state(state)
 }
@@ -165,6 +170,53 @@ where
     }
 }
 
+async fn get_relationship_type<A, R, P, Q>(
+    State(state): State<Arc<DefinitionQueryState<A, R, P, Q>>>,
+    headers: HeaderMap,
+    path: Result<Path<(String, String, String)>, PathRejection>,
+) -> Response
+where
+    A: ExternalIdentityAuthenticator<Credential = String>,
+    R: ActorIdentityResolver,
+    P: TenantAccessPolicy,
+    Q: DefinitionRepository,
+{
+    let actor = match authenticate(&headers, &state.authentication).await {
+        Ok(actor) => actor,
+        Err(error) => return error.into_response(),
+    };
+    let Ok(Path((tenant, type_id, version))) = path else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let (Ok(tenant), Ok(type_id), Some(version)) = (
+        TenantId::new(tenant),
+        RelationshipTypeId::new(type_id),
+        parse_version(&version),
+    ) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let grant = match authorize_metadata_read(actor, tenant, &state.authorization).await {
+        Ok(grant) => grant,
+        Err(error) => return error.into_response(),
+    };
+    let reference = RelationshipTypeRef::new(type_id, version);
+    match state
+        .definitions
+        .find_relationship_type(grant, &reference)
+        .await
+    {
+        Ok(Some(definition)) => {
+            no_store(Json(RelationshipTypeResponse::from(&definition)).into_response())
+        }
+        Ok(None) => problem(StatusCode::NOT_FOUND, NOT_FOUND, "Resource not found"),
+        Err(_) => problem(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            INTERNAL,
+            "Internal server error",
+        ),
+    }
+}
+
 fn parse_version(value: &str) -> Option<DefinitionVersion> {
     if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
         return None;
@@ -230,6 +282,23 @@ impl<'a> From<&'a PropertyDefinition> for PropertyResponse<'a> {
             name: definition.name().as_str(),
             value_kind,
             canonical_unit: definition.canonical_unit().map(UnitId::as_str),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct RelationshipTypeResponse<'a> {
+    id: &'a str,
+    version: u32,
+    name: &'a str,
+}
+
+impl<'a> From<&'a RelationshipTypeDefinition> for RelationshipTypeResponse<'a> {
+    fn from(definition: &'a RelationshipTypeDefinition) -> Self {
+        Self {
+            id: definition.reference().id().as_str(),
+            version: definition.reference().version().get(),
+            name: definition.name().as_str(),
         }
     }
 }
