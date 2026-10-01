@@ -74,8 +74,12 @@ version-update PRs so security work and capability changes remain reviewable.
 Each update follows the normal PR gate and must preserve architecture
 boundaries and protocol fixture compatibility.
 
-The `wat` fixture compiler is pinned to the `1.254` wasm-tools generation used
-by `wit-parser` and `wit-component`. An update that changes one of these tools
-must verify the complete `fleetiq-protocol-wasm` fixture suite and examine the
-resolved `wasmparser` and `wasm-encoder` versions. This pin applies only to test
-fixtures; it does not change the production protocol package contract.
+The protocol component fixture parser and encoder (`wit-parser` and
+`wit-component`) must pin the same exact wasm-tools release. The repository
+architecture check enforces that requirement, and Dependabot groups their
+updates with the `wat` fixture compiler for joint review. The parser's
+`std` feature enables the in-memory `Resolve::push_str` fixture helper.
+`wat` may use a neighboring wasm-tools release only when the complete
+`fleetiq-protocol-wasm` fixture suite passes and the resolved `wasmparser`
+and `wasm-encoder` versions have been reviewed. These dependencies build test
+fixtures; they do not change the production protocol package contract.

@@ -113,6 +113,15 @@ for existing metadata callers. The broad application crate temporarily
 re-exports the metadata API for compatibility. See
 [ADR 0074](../adr/0074-extract-asset-graph-application-capability.md).
 
+## Protocol fixture toolchain
+
+The architecture check also compares exact pinned development requirements for
+`wit-parser` and `wit-component` in `fleetiq-protocol-wasm`. Their fixture
+helpers pass parser values into the encoder, so different releases cannot share
+those Rust types. The complete fixture suite remains the compatibility check
+for the associated `wat` compiler. See the
+[dependency management guide](../development/dependency-management.md).
+
 ## Changing dependencies
 
 When a task changes a manifest:
