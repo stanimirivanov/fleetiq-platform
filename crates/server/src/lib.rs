@@ -1,14 +1,16 @@
-//! Backend composition root and HTTP health surface for `FleetIQ`.
+//! Backend composition root, HTTP health surface, and first protected query for `FleetIQ`.
 //!
 //! The crate owns process configuration, PostgreSQL startup, migrations,
-//! transport binding, and graceful shutdown. Business routes will be composed
-//! here as independently authorized application capabilities are implemented.
+//! transport binding, and graceful shutdown. One configured-credential asset
+//! query composes authentication, current tenant policy, and metadata lookup.
 
+mod bearer_authentication;
 mod bootstrap;
 mod command;
 mod config;
 mod health;
 mod http_api;
+mod protected_asset;
 
 use std::{error::Error, fmt, io};
 
@@ -47,15 +49,19 @@ pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
     let listener = TcpListener::bind(config.bind_address())
         .await
         .map_err(ServerError::Listener)?;
-    let application = application_router(pool.clone());
+    let application = application_router(pool.clone(), &config);
     let serving = axum::serve(listener, application).with_graceful_shutdown(shutdown_signal());
     let result = serving.await.map_err(ServerError::Serving);
     pool.close().await;
     result
 }
 
-fn application_router(pool: PgPool) -> Router {
-    Router::new().merge(health_router(pool)).merge(api_router())
+fn application_router(pool: PgPool, config: &ServerConfig) -> Router {
+    let mut router = Router::new().merge(health_router(pool.clone()));
+    if let Some(bearer) = config.bearer_identity() {
+        router = router.merge(protected_asset::postgres_asset_router(pool, bearer.clone()));
+    }
+    router.merge(api_router())
 }
 
 async fn shutdown_signal() {
@@ -127,5 +133,48 @@ impl Error for ServerError {
             Self::Migration(error) => Some(error),
             Self::Listener(error) | Self::Serving(error) => Some(error),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use axum::{
+        body::Body,
+        http::{Request, StatusCode},
+    };
+    use tower::ServiceExt;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn configured_process_router_mounts_protected_asset_query() {
+        let pool = PgPoolOptions::new()
+            .connect_lazy("postgres://unused:unused@127.0.0.1:1/unused")
+            .expect("lazy test pool");
+        let base = ServerConfig::from_values("postgres://localhost/test", "127.0.0.1:0")
+            .expect("valid base configuration");
+        let unconfigured = application_router(pool.clone(), &base);
+        let path = "/api/v1/tenants/tenant-a/assets/asset-1";
+        let response = unconfigured
+            .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+
+        let configured = base
+            .with_bearer_identity("a".repeat(64), "workload", "reader")
+            .expect("valid bearer identity");
+        let router = application_router(pool, &configured);
+        let response = router
+            .clone()
+            .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        let response = router
+            .oneshot(Request::get("/api/v1").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }

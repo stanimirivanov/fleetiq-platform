@@ -15,8 +15,7 @@ const METHOD_NOT_ALLOWED_TYPE: &str = "urn:fleetiq:problem:method-not-allowed";
 /// `GET /api/v1` identifies the active major HTTP contract. Unknown resources
 /// and unsupported methods return bounded problem-details documents without
 /// echoing request data or exposing internal failures. Protected business
-/// routes can be merged into this router as their authentication adapters are
-/// composed.
+/// routes are merged from separately configured adapters.
 pub fn api_router() -> Router {
     Router::new()
         .route("/api/v1", get(api_description).fallback(method_not_allowed))
@@ -34,7 +33,7 @@ async fn not_found() -> ApiProblem {
     ApiProblem::new(StatusCode::NOT_FOUND, NOT_FOUND_TYPE, "Resource not found")
 }
 
-async fn method_not_allowed() -> Response {
+pub(crate) async fn method_not_allowed() -> Response {
     let mut response = ApiProblem::new(
         StatusCode::METHOD_NOT_ALLOWED,
         METHOD_NOT_ALLOWED_TYPE,
@@ -53,14 +52,18 @@ struct ApiDescription {
     version: &'static str,
 }
 
-struct ApiProblem {
+pub(crate) struct ApiProblem {
     status: StatusCode,
     problem_type: &'static str,
     title: &'static str,
 }
 
 impl ApiProblem {
-    const fn new(status: StatusCode, problem_type: &'static str, title: &'static str) -> Self {
+    pub(crate) const fn new(
+        status: StatusCode,
+        problem_type: &'static str,
+        title: &'static str,
+    ) -> Self {
         Self {
             status,
             problem_type,

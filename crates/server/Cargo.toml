@@ -1,7 +1,7 @@
 [package]
 name = "fleetiq-server"
 version = "0.1.0"
-description = "FleetIQ backend composition root and HTTP health surface"
+description = "FleetIQ backend composition root and protected HTTP asset query"
 edition.workspace = true
 publish = false
 repository.workspace = true
@@ -9,11 +9,14 @@ rust-version.workspace = true
 
 [dependencies]
 axum.workspace = true
+fleetiq-access = { path = "../access" }
 fleetiq-domain = { path = "../domain" }
 fleetiq-identity = { path = "../identity" }
+fleetiq-metadata = { path = "../metadata" }
 fleetiq-postgres = { path = "../postgres" }
 serde.workspace = true
 sqlx.workspace = true
+subtle.workspace = true
 tokio.workspace = true
 
 [dev-dependencies]

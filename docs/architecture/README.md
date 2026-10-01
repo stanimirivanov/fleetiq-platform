@@ -15,7 +15,8 @@ without committing to premature services or specialized databases.
 flowchart TB
     Operators[Operators and administrators]
     Devices[Telemetry devices and gateways]
-    Identity[Identity provider]
+    Identity[Identity provider - planned]
+    Credential[Configured bearer credential]
     FleetIQ[FleetIQ platform]
     Database[(PostgreSQL)]
     Archive[(Object archive - planned)]
@@ -23,6 +24,7 @@ flowchart TB
     Devices -->|vendor or custom protocols| FleetIQ
     Operators -->|web and API| FleetIQ
     Identity -->|authentication| FleetIQ
+    Credential -->|first protected query| FleetIQ
     FleetIQ --> Database
     FleetIQ -.-> Archive
 ```
@@ -31,9 +33,23 @@ The current repository composes its backend foundation into one executable
 process. The access policy boundary separates authenticated actors,
 selected tenants, and per-action policy decisions. PostgreSQL persists internal
 actors and exact grants and evaluates current policy without a cache; identity-
-provider integration remains planned. Business APIs, device transports,
+provider integration remains planned. One configured-credential asset query
+now joins these boundaries through the server composition root; see
+[ADR 0079](../adr/0079-protect-initial-asset-query.md). Other business APIs, device transports,
 production deployment, archival storage, and the web application arrive in
 later milestones.
+
+```mermaid
+flowchart LR
+    Request[Asset GET with bearer credential]
+    Validator[Credential validation]
+    Resolver[Exact external identity to actor]
+    Policy[Current tenant metadata.read grant]
+    Service[Asset lookup using authorized tenant]
+    Store[(PostgreSQL)]
+
+    Request --> Validator --> Resolver --> Policy --> Service --> Store
+```
 
 ## Capability flow
 
