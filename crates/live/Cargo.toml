@@ -1,0 +1,11 @@
+[package]
+name = "fleetiq-live"
+version = "0.1.0"
+description = "Transport-independent revisioned live projection contracts for FleetIQ"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true

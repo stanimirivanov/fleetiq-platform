@@ -43,10 +43,10 @@ isolation are planned around this contract.
 
 ## Live projection
 
-Live contracts define complete snapshots, forward-only deltas, and revision
-cursors. A consumer applies a delta only to the expected prior revision. Gaps,
-stale consumers, incompatible projection versions, and retention loss require
-an explicit resnapshot rather than silent repair.
+The `fleetiq-live` contract crate defines complete snapshots, forward-only
+deltas, and revision cursors. A consumer applies a delta only to the expected
+prior revision. Gaps, stale consumers, incompatible projection versions, and
+retention loss require an explicit resnapshot rather than silent repair.
 
 ```mermaid
 stateDiagram-v2
@@ -56,6 +56,9 @@ stateDiagram-v2
     Current --> Resnapshot: gap or incompatible revision
     Resnapshot --> Snapshot
 ```
+
+The broad application crate re-exports these types temporarily for source
+compatibility. See [ADR 0076](../adr/0076-extract-live-projection-contracts.md).
 
 Transport choice, subscription authorization, fan-out, backpressure, and
 offline recovery remain adapter and product decisions.

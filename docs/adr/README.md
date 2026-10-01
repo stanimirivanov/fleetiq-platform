@@ -82,6 +82,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0073](0073-extract-identity-application-capability.md) | Identity administration use cases and ports owned by a dedicated application capability |
 | [0074](0074-extract-asset-graph-application-capability.md) | Asset graph use cases and ports owned by a dedicated metadata application capability |
 | [0075](0075-extract-ingestion-application-capability.md) | Durable ingestion orchestration and ports owned by a dedicated application capability |
+| [0076](0076-extract-live-projection-contracts.md) | Revisioned live projection contracts owned by a transport-independent crate |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

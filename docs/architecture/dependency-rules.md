@@ -17,6 +17,7 @@
 | `fleetiq-domain` | Domain | Product vocabulary, invariants, and state transitions |
 | `fleetiq-telemetry` | Contract | Protocol-neutral telemetry facts |
 | `fleetiq-protocol-sdk` | Contract | Values shared by protocol packages and the trusted host |
+| `fleetiq-live` | Contract | Revisioned snapshot, delta, cursor, and resnapshot contracts |
 | `fleetiq-analytics` | Policy | Calculator contracts and deterministic analytics policy |
 | `fleetiq-access` | Policy | Authentication, action vocabulary, authorization, and evidence |
 | `fleetiq-semantics` | Policy | Temporal semantic attribution |
@@ -24,7 +25,7 @@
 | `fleetiq-identity` | Application | Actor, external-identity, grant, tenant, and bootstrap use cases and consumed ports |
 | `fleetiq-metadata` | Application | Asset graph use cases and consumer-owned persistence ports |
 | `fleetiq-ingestion` | Application | Durable ingestion orchestration and consumer-owned persistence ports |
-| `fleetiq-application` | Application | Live contracts and transitional re-exports |
+| `fleetiq-application` | Application | Transitional compatibility re-exports |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
@@ -125,6 +126,15 @@ and keeps its application facade dependency test-only. `fleetiq-application`
 temporarily re-exports them for existing callers. See
 [ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
+## Live projection contract boundary
+
+`fleetiq-live` owns transport-independent snapshot, delta, revision-cursor,
+and resnapshot types. It has no workspace dependencies. The temporary
+`fleetiq-application` facade re-exports them for existing callers; a later
+projection runtime can depend on the defining crate without taking on unrelated
+application capabilities. See [ADR 0076](../adr/0076-extract-live-projection-contracts.md),
+which refines only the crate placement in ADR 0008.
+
 ## Protocol fixture toolchain
 
 The architecture check also compares exact pinned development requirements for
@@ -161,4 +171,5 @@ a general permission for other dependencies between the same roles.
 - [Identity application capability](../adr/0073-extract-identity-application-capability.md)
 - [Metadata application capability](../adr/0074-extract-asset-graph-application-capability.md)
 - [Ingestion application capability](../adr/0075-extract-ingestion-application-capability.md)
+- [Live projection contract ownership](../adr/0076-extract-live-projection-contracts.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

@@ -16,8 +16,8 @@
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
   boundary is admitted and invoked through Wasmtime.
-- Semantic resolution, calculator output, and live projection contracts exist;
-  their production workers and stores do not.
+- Semantic resolution, calculator output, and `fleetiq-live` projection
+  contracts exist; their production workers and stores do not.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
@@ -116,8 +116,8 @@ implements the ports directly while application re-exports the query for
 existing callers.
 
 Analytics contracts represent versioned calculator evaluations and typed
-semantic outputs. Live contracts represent full snapshots, forward-only deltas,
-cursor continuity, and resnapshot reasons. No production semantic worker,
+semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
+deltas, cursor continuity, and resnapshot reasons. No production semantic worker,
 property history store, calculator runtime, subscription transport, or operator
 dashboard exists yet.
 

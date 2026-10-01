@@ -1,9 +1,7 @@
-//! Live projection contracts and compatibility exports for `FleetIQ`.
+//! Compatibility exports for `FleetIQ`.
 //!
 //! Capability crates own their use cases and consumer-owned ports. This facade
 //! preserves existing import paths while callers migrate to those crates.
-
-mod live;
 
 pub use fleetiq_access::{
     AccessDecision, ActorIdentityResolver, AuthenticatedActor, AuthorizedPlatform,
@@ -106,6 +104,11 @@ pub use fleetiq_ingestion::{
     PendingFrameAcceptance, PendingObservationPersistence, PreparedFrameAcceptance,
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
+pub use fleetiq_live::{
+    LiveMessage, ProjectionDelta, ProjectionDeltaError, ProjectionRevision, ProjectionSnapshot,
+    ResnapshotReason, ResnapshotRequired, RevisionCursor, RevisionCursorError,
+    RevisionOverflowError,
+};
 pub use fleetiq_metadata::{
     AssetApplicationError, AssetApplicationService, AssetRepository, DefinitionApplicationError,
     DefinitionApplicationService, DefinitionRepository, DeviceApplicationError,
@@ -113,9 +116,4 @@ pub use fleetiq_metadata::{
     RelationshipApplicationService, RelationshipRepository, RelationshipSnapshotQuery,
     SignalBindingApplicationError, SignalBindingApplicationService, SignalBindingRepository,
     SignalBindingSnapshotQuery,
-};
-pub use live::{
-    LiveMessage, ProjectionDelta, ProjectionDeltaError, ProjectionRevision, ProjectionSnapshot,
-    ResnapshotReason, ResnapshotRequired, RevisionCursor, RevisionCursorError,
-    RevisionOverflowError,
 };
