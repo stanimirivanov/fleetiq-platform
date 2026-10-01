@@ -3,14 +3,13 @@ use std::sync::Arc;
 use axum::{
     Json, Router,
     extract::{Path, State, rejection::PathRejection},
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
 };
 use fleetiq_access::{
-    ActorIdentityResolver, CallerAuthenticationError, CallerAuthenticationService,
-    ExternalIdentityAuthenticator, ReadMetadata, TenantAccessPolicy, TenantAuthorizationError,
-    TenantAuthorizationService,
+    ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
+    TenantAccessPolicy, TenantAuthorizationService,
 };
 use fleetiq_domain::{Asset, AssetId, TenantId};
 use fleetiq_metadata::{AssetApplicationService, AssetRepository};
@@ -23,14 +22,11 @@ use sqlx::PgPool;
 use crate::{
     bearer_authentication::ConfiguredBearerAuthenticator,
     config::BearerIdentityConfig,
-    http_api::{ApiProblem, method_not_allowed},
+    protected_request::{
+        BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store, problem,
+        protected_method_not_allowed,
+    },
 };
-
-const BAD_REQUEST: &str = "urn:fleetiq:problem:invalid-request";
-const UNAUTHORIZED: &str = "urn:fleetiq:problem:unauthorized";
-const FORBIDDEN: &str = "urn:fleetiq:problem:forbidden";
-const NOT_FOUND: &str = "urn:fleetiq:problem:not-found";
-const INTERNAL: &str = "urn:fleetiq:problem:internal-error";
 
 struct AssetQueryState<A, R, P, Q> {
     authentication: CallerAuthenticationService<A, R>,
@@ -90,23 +86,9 @@ where
     P: TenantAccessPolicy,
     Q: AssetRepository,
 {
-    let Some(credential) = bearer_credential(&headers) else {
-        return challenge();
-    };
-    let actor = match state.authentication.authenticate(&credential).await {
+    let actor = match authenticate(&headers, &state.authentication).await {
         Ok(actor) => actor,
-        Err(CallerAuthenticationError::Rejected | CallerAuthenticationError::Unregistered) => {
-            return challenge();
-        }
-        Err(
-            CallerAuthenticationError::Authenticator(_) | CallerAuthenticationError::Resolver(_),
-        ) => {
-            return problem(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                INTERNAL,
-                "Internal server error",
-            );
-        }
+        Err(error) => return error.into_response(),
     };
 
     let Ok(Path((tenant, asset))) = path else {
@@ -115,22 +97,9 @@ where
     let (Ok(tenant), Ok(asset_id)) = (TenantId::new(tenant), AssetId::new(asset)) else {
         return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
     };
-    let grant = match state
-        .authorization
-        .authorize::<ReadMetadata>(actor, tenant)
-        .await
-    {
+    let grant = match authorize_metadata_read(actor, tenant, &state.authorization).await {
         Ok(grant) => grant,
-        Err(TenantAuthorizationError::Denied) => {
-            return problem(StatusCode::FORBIDDEN, FORBIDDEN, "Access denied");
-        }
-        Err(TenantAuthorizationError::Policy(_)) => {
-            return problem(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                INTERNAL,
-                "Internal server error",
-            );
-        }
+        Err(error) => return error.into_response(),
     };
     match state.assets.find_by_id(grant, &asset_id).await {
         Ok(Some(asset)) => no_store(Json(AssetResponse::from(&asset)).into_response()),
@@ -141,50 +110,6 @@ where
             "Internal server error",
         ),
     }
-}
-
-fn bearer_credential(headers: &HeaderMap) -> Option<String> {
-    let mut values = headers.get_all(header::AUTHORIZATION).iter();
-    let value = values.next()?.to_str().ok()?;
-    if values.next().is_some() {
-        return None;
-    }
-    let (scheme, token) = value.split_once(' ')?;
-    if !scheme.eq_ignore_ascii_case("Bearer")
-        || token.len() != 64
-        || !token.bytes().all(|byte| byte.is_ascii_hexdigit())
-    {
-        return None;
-    }
-    Some(token.to_owned())
-}
-
-fn challenge() -> Response {
-    let mut response = problem(
-        StatusCode::UNAUTHORIZED,
-        UNAUTHORIZED,
-        "Authentication required",
-    );
-    response.headers_mut().insert(
-        header::WWW_AUTHENTICATE,
-        HeaderValue::from_static("Bearer realm=\"FleetIQ\""),
-    );
-    response
-}
-
-async fn protected_method_not_allowed() -> Response {
-    no_store(method_not_allowed().await)
-}
-
-fn problem(status: StatusCode, kind: &'static str, title: &'static str) -> Response {
-    no_store(ApiProblem::new(status, kind, title).into_response())
-}
-
-fn no_store(mut response: Response) -> Response {
-    response
-        .headers_mut()
-        .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
-    response
 }
 
 #[derive(Serialize)]

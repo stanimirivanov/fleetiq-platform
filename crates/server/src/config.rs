@@ -54,7 +54,7 @@ impl ServerConfig {
     ///
     /// `DATABASE_URL` is required. `FLEETIQ_BIND_ADDRESS` defaults to
     /// `127.0.0.1:8080`, keeping an unconfigured development server local.
-    /// The protected asset query is enabled only when all three HTTP bearer
+    /// Protected metadata queries are enabled only when all three HTTP bearer
     /// identity values are present and valid.
     ///
     /// # Errors
@@ -120,7 +120,7 @@ impl ServerConfig {
         })
     }
 
-    /// Enables the protected asset route with one validated opaque credential.
+    /// Enables protected metadata reads with one validated opaque credential.
     ///
     /// # Errors
     ///
