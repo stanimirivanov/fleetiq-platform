@@ -23,8 +23,8 @@
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
-  `/api/v1`, plus optional authenticated and authorized asset, device, and
-  asset-type-definition reads.
+  `/api/v1`, plus optional authenticated and authorized asset, device,
+  asset-type-definition, and property-definition reads.
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
@@ -139,10 +139,10 @@ embedded migration chain, exposes liveness and PostgreSQL-backed readiness
 probes, identifies the version 1 HTTP contract, returns bounded problem details
 for unknown API resources and unsupported methods, and shuts down gracefully
 after `Ctrl+C`. A configured bearer identity enables the protected asset,
-communication-device, and asset-type queries; without complete credential
-configuration those routes are absent. It is an operable development
-composition root, not a production deployment. Unix deployments also handle
-`SIGTERM`, which is the normal container stop signal.
+communication-device, asset-type, and property-definition queries; without
+complete credential configuration those routes are absent. It is an operable
+development composition root, not a production deployment. Unix deployments
+also handle `SIGTERM`, which is the normal container stop signal.
 
 The local Compose deployment builds that binary in a multi-stage image, waits
 for PostgreSQL readiness, publishes both services only on loopback, and runs the
@@ -302,17 +302,17 @@ implies the other.
 
 One configured opaque bearer credential authenticates a single external
 identity for `GET /api/v1/tenants/{tenant_id}/assets/{asset_id}`, its nested
-`/device` resource, and exact asset-type-version lookup. The process mounts
-those routes only when the token, authority, and subject are configured
-together. The current actor mapping and
-exact `metadata.read` tenant grant are checked on every request before the
-asset or device repository is called. A production identity provider,
-multi-principal login, membership or role model,
-administration transport, generalized authentication middleware, and audit
-HTTP API remain future work. See the
-[protected asset query procedure](../operations/asset-query.md) and
-[device query procedure](../operations/device-query.md), and
-[asset-type query procedure](../operations/asset-type-query.md).
+`/device` resource, and exact asset-type and property-definition lookup. The
+process mounts those routes only when the token, authority, and subject are
+configured together. The current actor mapping and exact `metadata.read`
+tenant grant are checked on every request before the metadata repository is
+called. A production identity provider, multi-principal login, membership or
+role model, administration transport, generalized authentication middleware,
+and audit HTTP API remain future work. See the
+[protected asset query procedure](../operations/asset-query.md),
+[device query procedure](../operations/device-query.md),
+[asset-type query procedure](../operations/asset-type-query.md), and
+[property query procedure](../operations/property-query.md).
 
 There is no broader business resource API, production authentication provider,
 authorization administration API, message broker, object archive, cache,

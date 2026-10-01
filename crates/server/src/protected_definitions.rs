@@ -11,7 +11,10 @@ use fleetiq_access::{
     ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
     TenantAccessPolicy, TenantAuthorizationService,
 };
-use fleetiq_domain::{AssetTypeDefinition, AssetTypeId, AssetTypeRef, DefinitionVersion, TenantId};
+use fleetiq_domain::{
+    AssetTypeDefinition, AssetTypeId, AssetTypeRef, DefinitionVersion, PropertyDefinition,
+    PropertyDefinitionId, PropertyDefinitionRef, PropertyValueKind, TenantId, UnitId,
+};
 use fleetiq_metadata::{DefinitionApplicationService, DefinitionRepository};
 use fleetiq_postgres::{
     PostgresActorIdentityResolver, PostgresDefinitionRepository, PostgresTenantAccessPolicy,
@@ -28,17 +31,17 @@ use crate::{
     },
 };
 
-struct AssetTypeQueryState<A, R, P, Q> {
+struct DefinitionQueryState<A, R, P, Q> {
     authentication: CallerAuthenticationService<A, R>,
     authorization: TenantAuthorizationService<P>,
     definitions: DefinitionApplicationService<Q>,
 }
 
-/// Builds an exact-version asset-type query from existing metadata ports.
+/// Builds exact-version semantic definition queries from existing metadata ports.
 ///
 /// The requested version is validated before use. The definition repository
 /// receives tenant scope solely through consumed `ReadMetadata` evidence.
-fn asset_type_router<A, R, P, Q>(
+fn definition_router<A, R, P, Q>(
     authentication: CallerAuthenticationService<A, R>,
     authorization: TenantAuthorizationService<P>,
     definitions: DefinitionApplicationService<Q>,
@@ -49,7 +52,7 @@ where
     P: TenantAccessPolicy + 'static,
     Q: DefinitionRepository + 'static,
 {
-    let state = Arc::new(AssetTypeQueryState {
+    let state = Arc::new(DefinitionQueryState {
         authentication,
         authorization,
         definitions,
@@ -59,12 +62,16 @@ where
             "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions/{version}",
             get(get_asset_type::<A, R, P, Q>).fallback(protected_method_not_allowed),
         )
+        .route(
+            "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}",
+            get(get_property::<A, R, P, Q>).fallback(protected_method_not_allowed),
+        )
         .with_state(state)
 }
 
 /// Wires the configured credential and PostgreSQL adapters to definition lookup.
-pub(crate) fn postgres_asset_type_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
-    asset_type_router(
+pub(crate) fn postgres_definition_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
+    definition_router(
         CallerAuthenticationService::new(
             ConfiguredBearerAuthenticator::new(bearer),
             PostgresActorIdentityResolver::new(pool.clone()),
@@ -75,7 +82,7 @@ pub(crate) fn postgres_asset_type_router(pool: PgPool, bearer: BearerIdentityCon
 }
 
 async fn get_asset_type<A, R, P, Q>(
-    State(state): State<Arc<AssetTypeQueryState<A, R, P, Q>>>,
+    State(state): State<Arc<DefinitionQueryState<A, R, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String, String)>, PathRejection>,
 ) -> Response
@@ -108,6 +115,47 @@ where
         Ok(Some(definition)) => {
             no_store(Json(AssetTypeResponse::from(&definition)).into_response())
         }
+        Ok(None) => problem(StatusCode::NOT_FOUND, NOT_FOUND, "Resource not found"),
+        Err(_) => problem(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            INTERNAL,
+            "Internal server error",
+        ),
+    }
+}
+
+async fn get_property<A, R, P, Q>(
+    State(state): State<Arc<DefinitionQueryState<A, R, P, Q>>>,
+    headers: HeaderMap,
+    path: Result<Path<(String, String, String)>, PathRejection>,
+) -> Response
+where
+    A: ExternalIdentityAuthenticator<Credential = String>,
+    R: ActorIdentityResolver,
+    P: TenantAccessPolicy,
+    Q: DefinitionRepository,
+{
+    let actor = match authenticate(&headers, &state.authentication).await {
+        Ok(actor) => actor,
+        Err(error) => return error.into_response(),
+    };
+    let Ok(Path((tenant, property_id, version))) = path else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let (Ok(tenant), Ok(property_id), Some(version)) = (
+        TenantId::new(tenant),
+        PropertyDefinitionId::new(property_id),
+        parse_version(&version),
+    ) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let grant = match authorize_metadata_read(actor, tenant, &state.authorization).await {
+        Ok(grant) => grant,
+        Err(error) => return error.into_response(),
+    };
+    let reference = PropertyDefinitionRef::new(property_id, version);
+    match state.definitions.find_property(grant, &reference).await {
+        Ok(Some(definition)) => no_store(Json(PropertyResponse::from(&definition)).into_response()),
         Ok(None) => problem(StatusCode::NOT_FOUND, NOT_FOUND, "Resource not found"),
         Err(_) => problem(
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -157,6 +205,33 @@ impl<'a> From<&'a AssetTypeDefinition> for AssetTypeResponse<'a> {
 struct PropertyReferenceResponse<'a> {
     id: &'a str,
     version: u32,
+}
+
+#[derive(Serialize)]
+struct PropertyResponse<'a> {
+    id: &'a str,
+    version: u32,
+    name: &'a str,
+    value_kind: &'static str,
+    canonical_unit: Option<&'a str>,
+}
+
+impl<'a> From<&'a PropertyDefinition> for PropertyResponse<'a> {
+    fn from(definition: &'a PropertyDefinition) -> Self {
+        let value_kind = match definition.value_kind() {
+            PropertyValueKind::Boolean => "boolean",
+            PropertyValueKind::Integer => "integer",
+            PropertyValueKind::Decimal => "decimal",
+            PropertyValueKind::Text => "text",
+        };
+        Self {
+            id: definition.id().as_str(),
+            version: definition.version().get(),
+            name: definition.name().as_str(),
+            value_kind,
+            canonical_unit: definition.canonical_unit().map(UnitId::as_str),
+        }
+    }
 }
 
 #[cfg(test)]

@@ -11,7 +11,7 @@ mod config;
 mod health;
 mod http_api;
 mod protected_asset;
-mod protected_asset_type;
+mod protected_definitions;
 mod protected_device;
 mod protected_request;
 
@@ -67,7 +67,7 @@ fn application_router(pool: PgPool, config: &ServerConfig) -> Router {
                 pool.clone(),
                 bearer.clone(),
             ))
-            .merge(protected_asset_type::postgres_asset_type_router(
+            .merge(protected_definitions::postgres_definition_router(
                 pool.clone(),
                 bearer.clone(),
             ))
@@ -172,8 +172,14 @@ mod tests {
         let path = "/api/v1/tenants/tenant-a/assets/asset-1";
         let device_path = "/api/v1/tenants/tenant-a/assets/asset-1/device";
         let type_path = "/api/v1/tenants/tenant-a/asset-types/generic.power-system/versions/2";
+        let property_path = "/api/v1/tenants/tenant-a/properties/thermal.temperature/versions/1";
         let response = unconfigured
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let response = application_router(pool.clone(), &base)
+            .oneshot(Request::get(property_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -195,6 +201,12 @@ mod tests {
         let response = router
             .clone()
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        let response = router
+            .clone()
+            .oneshot(Request::get(property_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);

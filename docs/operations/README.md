@@ -17,3 +17,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   asset's ordered endpoint declarations with the same tenant grant.
 - [Protected asset-type query](asset-type-query.md) — resolve an asset's pinned
   immutable type version and ordered property references.
+- [Protected property query](property-query.md) — resolve a pinned property
+  version to its name, value kind, and optional canonical unit.
