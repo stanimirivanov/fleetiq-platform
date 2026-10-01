@@ -12,6 +12,7 @@ fleetiq-access = { path = "../access" }
 bigdecimal.workspace = true
 fleetiq-application = { path = "../application" }
 fleetiq-domain = { path = "../domain" }
+fleetiq-identity = { path = "../identity" }
 fleetiq-semantics = { path = "../semantics" }
 fleetiq-telemetry = { path = "../telemetry" }
 sqlx.workspace = true

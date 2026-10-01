@@ -1,8 +1,8 @@
-use fleetiq_application::{
+use fleetiq_domain::ActorId;
+use fleetiq_identity::{
     ActorCatalogCursor, ActorCatalogEntry, ActorCatalogPage, ActorCatalogQuery,
     ActorCatalogRepository, ActorLifecycleState,
 };
-use fleetiq_domain::ActorId;
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};

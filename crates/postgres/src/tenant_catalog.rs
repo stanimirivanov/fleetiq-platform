@@ -1,8 +1,8 @@
-use fleetiq_application::{
+use fleetiq_domain::TenantId;
+use fleetiq_identity::{
     TenantCatalogCursor, TenantCatalogEntry, TenantCatalogPage, TenantCatalogQuery,
     TenantCatalogRepository, TenantLifecycleState,
 };
-use fleetiq_domain::TenantId;
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};

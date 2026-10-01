@@ -5,13 +5,13 @@ use std::{
     time::{SystemTime, SystemTimeError, UNIX_EPOCH},
 };
 
-use fleetiq_application::{
-    PlatformBootstrapError, PlatformBootstrapOutcome, PlatformBootstrapRequest,
-    PlatformBootstrapService,
-};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, ExternalIdentitySubjectError,
     IdentifierError, IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    PlatformBootstrapError, PlatformBootstrapOutcome, PlatformBootstrapRequest,
+    PlatformBootstrapService,
 };
 use fleetiq_postgres::{MIGRATOR, PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
 use sqlx::postgres::PgPoolOptions;

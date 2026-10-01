@@ -1,9 +1,9 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
+use fleetiq_domain::{ActorId, ActorProvisioningId};
+use fleetiq_identity::{
     ActorProvisioningCommand, ActorProvisioningOutcome, ActorProvisioningRepository,
 };
-use fleetiq_domain::{ActorId, ActorProvisioningId};
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::classify_database_error};

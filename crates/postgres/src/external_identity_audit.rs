@@ -1,11 +1,11 @@
-use fleetiq_application::{
-    ExternalIdentityAuditCursor, ExternalIdentityAuditEntry, ExternalIdentityAuditPage,
-    ExternalIdentityAuditQuery, ExternalIdentityAuditRepository, ExternalIdentityChangeEffect,
-    ExternalIdentityChangeKind,
-};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentityChangeId, ExternalIdentitySubject,
     IdentityAuthorityId, UnixTimeMillis,
+};
+use fleetiq_identity::{
+    ExternalIdentityAuditCursor, ExternalIdentityAuditEntry, ExternalIdentityAuditPage,
+    ExternalIdentityAuditQuery, ExternalIdentityAuditRepository, ExternalIdentityChangeEffect,
+    ExternalIdentityChangeKind,
 };
 use sqlx::PgPool;
 

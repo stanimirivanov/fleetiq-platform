@@ -1,6 +1,6 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
+use fleetiq_identity::{
     PlatformBootstrapOutcome, PlatformBootstrapRepository, PlatformBootstrapRequest,
 };
 use sqlx::PgPool;

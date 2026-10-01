@@ -2,7 +2,7 @@
 
 use std::{env, error::Error};
 
-use fleetiq_application::PlatformBootstrapOutcome;
+use fleetiq_identity::PlatformBootstrapOutcome;
 use fleetiq_server::{
     PlatformBootstrapConfig, ProcessCommand, ServerConfig, bootstrap_platform_operator,
 };

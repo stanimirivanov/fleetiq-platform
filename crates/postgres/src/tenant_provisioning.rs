@@ -1,9 +1,9 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
+use fleetiq_domain::{TenantId, TenantProvisioningId};
+use fleetiq_identity::{
     TenantProvisioningCommand, TenantProvisioningOutcome, TenantProvisioningRepository,
 };
-use fleetiq_domain::{TenantId, TenantProvisioningId};
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::classify_database_error};

@@ -1,8 +1,8 @@
-use fleetiq_application::{
+use fleetiq_domain::{ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId};
+use fleetiq_identity::{
     ExternalIdentityCatalogCursor, ExternalIdentityCatalogEntry, ExternalIdentityCatalogPage,
     ExternalIdentityCatalogQuery, ExternalIdentityCatalogRepository,
 };
-use fleetiq_domain::{ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId};
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};

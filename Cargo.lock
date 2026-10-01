@@ -634,6 +634,7 @@ version = "0.1.0"
 dependencies = [
  "fleetiq-access",
  "fleetiq-domain",
+ "fleetiq-identity",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
  "fleetiq-semantics",
@@ -649,6 +650,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-identity"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-access",
+ "fleetiq-domain",
+ "tokio",
+]
+
+[[package]]
 name = "fleetiq-postgres"
 version = "0.1.0"
 dependencies = [
@@ -656,6 +666,7 @@ dependencies = [
  "fleetiq-access",
  "fleetiq-application",
  "fleetiq-domain",
+ "fleetiq-identity",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
  "fleetiq-semantics",
@@ -710,8 +721,8 @@ name = "fleetiq-server"
 version = "0.1.0"
 dependencies = [
  "axum",
- "fleetiq-application",
  "fleetiq-domain",
+ "fleetiq-identity",
  "fleetiq-postgres",
  "serde",
  "sqlx",

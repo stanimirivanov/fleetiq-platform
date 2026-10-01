@@ -21,15 +21,16 @@
 | `fleetiq-access` | Policy | Authentication, action vocabulary, authorization, and evidence |
 | `fleetiq-semantics` | Policy | Temporal semantic attribution |
 | `fleetiq-protocol-host` | Policy | Trusted framing, state, reply, and processing decisions |
-| `fleetiq-application` | Application | Use-case orchestration and consumed ports |
+| `fleetiq-identity` | Application | Actor, external-identity, grant, tenant, and bootstrap use cases and consumed ports |
+| `fleetiq-application` | Application | Remaining metadata and ingestion use cases, live contracts, and transitional re-exports |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
 | `fleetiq-xtask` | Tooling | Repository checks that do not enter production binaries |
 
-These roles describe the current workspace. Planned capability extraction will
-replace the broad application role with narrower application packages while
-retaining one deployable backend process.
+These roles describe the current workspace. Further capability extraction will
+replace the remaining broad application role with narrower application packages
+while retaining one deployable backend process.
 
 ## Enforced policy
 
@@ -76,9 +77,9 @@ removal required by ADR 0066; see [ADR 0069](../adr/0069-own-semantic-read-ports
 `fleetiq-access` owns identity resolution, credential-authenticator and
 authorization-policy ports alongside their evidence types. It depends only on
 domain values. PostgreSQL implements the resolver and exact access-policy
-ports directly. Application use cases consume access evidence, and re-export
-the existing names for source compatibility while callers migrate to the
-capability owner. The architecture checker rejects an access-to-application
+ports directly. Identity and remaining application use cases consume access evidence.
+`fleetiq-application` temporarily re-exports existing names for callers that
+have not yet migrated to their defining capability. The architecture checker rejects an access-to-application
 dependency. See [ADR 0070](../adr/0070-extract-access-policy-boundary.md).
 
 Tenant use cases require action-typed evidence issued from the access-policy
@@ -90,6 +91,16 @@ Platform administration likewise requires action-typed evidence issued by
 the platform policy decision. Identity, grant, tenant provisioning, and tenant
 lifecycle authority are distinct types; see
 [ADR 0072](../adr/0072-type-platform-authorization-evidence.md).
+
+## Identity application boundary
+
+`fleetiq-identity` owns actor, external-identity, platform and tenant grant,
+tenant lifecycle, provisioning, audit, and bootstrap use cases and their
+consumer-owned ports. It depends on access policy and domain values but not on
+`fleetiq-application` or a database adapter. PostgreSQL implements its ports
+directly, and the server composes bootstrap directly. The broad application
+crate re-exports identity types only for source compatibility; see
+[ADR 0073](../adr/0073-extract-identity-application-capability.md).
 
 ## Changing dependencies
 
@@ -115,4 +126,5 @@ a general permission for other dependencies between the same roles.
 - [Access policy ownership](../adr/0070-extract-access-policy-boundary.md)
 - [Action-typed tenant evidence](../adr/0071-type-tenant-authorization-evidence.md)
 - [Action-typed platform evidence](../adr/0072-type-platform-authorization-evidence.md)
+- [Identity application capability](../adr/0073-extract-identity-application-capability.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)

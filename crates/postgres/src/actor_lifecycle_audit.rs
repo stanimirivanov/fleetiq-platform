@@ -1,9 +1,9 @@
-use fleetiq_application::{
+use fleetiq_domain::{ActorId, ActorLifecycleChangeId, UnixTimeMillis};
+use fleetiq_identity::{
     ActorLifecycleAuditCursor, ActorLifecycleAuditEntry, ActorLifecycleAuditPage,
     ActorLifecycleAuditQuery, ActorLifecycleAuditRepository, ActorLifecycleChangeEffect,
     ActorLifecycleChangeKind,
 };
-use fleetiq_domain::{ActorId, ActorLifecycleChangeId, UnixTimeMillis};
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};

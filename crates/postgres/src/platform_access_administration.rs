@@ -1,10 +1,11 @@
 use std::{error::Error, fmt};
 
-use fleetiq_application::{
-    PlatformAccessAdministrationRepository, PlatformAccessChange, PlatformAccessChangeEffect,
-    PlatformAccessChangeKind, PlatformAccessChangeOutcome, PlatformAction,
-};
+use fleetiq_access::PlatformAction;
 use fleetiq_domain::{ActorId, PlatformAccessChangeId};
+use fleetiq_identity::{
+    PlatformAccessAdministrationRepository, PlatformAccessChange, PlatformAccessChangeEffect,
+    PlatformAccessChangeKind, PlatformAccessChangeOutcome,
+};
 use sqlx::{PgPool, Postgres, Transaction};
 
 use crate::{PostgresRepositoryError, error::classify_database_error};

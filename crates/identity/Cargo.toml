@@ -1,0 +1,18 @@
+[package]
+name = "fleetiq-identity"
+version = "0.1.0"
+description = "FleetIQ identity and tenant administration use cases and ports"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-access = { path = "../access" }
+fleetiq-domain = { path = "../domain" }
+
+[dev-dependencies]
+tokio.workspace = true
+
+[lints]
+workspace = true

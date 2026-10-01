@@ -1,9 +1,10 @@
-use fleetiq_application::{
+use fleetiq_access::PlatformAction;
+use fleetiq_domain::{ActorId, PlatformAccessChangeId, UnixTimeMillis};
+use fleetiq_identity::{
     PlatformAccessAuditCursor, PlatformAccessAuditEntry, PlatformAccessAuditPage,
     PlatformAccessAuditQuery, PlatformAccessAuditRepository, PlatformAccessChangeEffect,
-    PlatformAccessChangeKind, PlatformAction,
+    PlatformAccessChangeKind,
 };
-use fleetiq_domain::{ActorId, PlatformAccessChangeId, UnixTimeMillis};
 use sqlx::PgPool;
 
 use crate::{PostgresRepositoryError, error::corrupt};
