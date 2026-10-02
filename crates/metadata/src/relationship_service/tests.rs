@@ -14,7 +14,8 @@ use fleetiq_domain::{
 
 use crate::{
     AccessDecision, AuthorizedTenant, ManageMetadata, ReadMetadata, RelationshipRepository,
-    RelationshipSnapshotQuery, TenantAccessPolicy, TenantAccessRequest, TenantAuthorizationService,
+    RelationshipSnapshotPage, RelationshipSnapshotPageQuery, RelationshipSnapshotQuery,
+    TenantAccessPolicy, TenantAccessRequest, TenantAuthorizationService,
 };
 
 use super::{RelationshipApplicationError, RelationshipApplicationService};
@@ -24,6 +25,7 @@ enum RepositoryCall {
     InsertRevision(AssetRelationship),
     FindRevision(TenantId, AssetRelationshipId, RecordRevision),
     FindForAsset(TenantId, AssetId, RelationshipSnapshotQuery),
+    FindForAssetPage(TenantId, AssetId, RelationshipSnapshotPageQuery),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -120,6 +122,27 @@ impl RelationshipRepository for RecordingRelationshipRepository {
             Ok(self.snapshot.clone())
         })
     }
+
+    fn find_for_asset_page(
+        &self,
+        tenant_id: &TenantId,
+        asset_id: &AssetId,
+        query: &RelationshipSnapshotPageQuery,
+    ) -> impl Future<Output = Result<Option<RelationshipSnapshotPage>, Self::Error>> + Send {
+        self.record(RepositoryCall::FindForAssetPage(
+            tenant_id.clone(),
+            asset_id.clone(),
+            query.clone(),
+        ));
+        ready(if self.fail {
+            Err(TestRepositoryError)
+        } else {
+            Ok(Some(RelationshipSnapshotPage::new(
+                self.snapshot.clone(),
+                None,
+            )))
+        })
+    }
 }
 
 struct AllowAllPolicy;
@@ -196,14 +219,26 @@ async fn reads_exact_revision_and_snapshot_in_the_authorized_tenant() {
         .find_for_asset(read_authorization("tenant-a").await, &asset_id, query)
         .await
         .expect("snapshot lookup should succeed");
+    let page_query = RelationshipSnapshotPageQuery::new(query, 1, None).unwrap();
+    let page = service
+        .find_for_asset_page(read_authorization("tenant-a").await, &asset_id, &page_query)
+        .await
+        .expect("page lookup should succeed")
+        .expect("asset exists");
 
     assert_eq!(exact, Some(relationship.clone()));
     assert_eq!(snapshot, vec![relationship]);
+    assert_eq!(page.relationships(), snapshot);
     assert_eq!(
         repository.calls(),
         vec![
             RepositoryCall::FindRevision(tenant_id("tenant-a"), relationship_id, revision),
             RepositoryCall::FindForAsset(tenant_id("tenant-a"), asset_id, query),
+            RepositoryCall::FindForAssetPage(
+                tenant_id("tenant-a"),
+                AssetId::new("assembly-a").unwrap(),
+                page_query,
+            ),
         ]
     );
 }

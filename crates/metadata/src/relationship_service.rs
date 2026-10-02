@@ -4,7 +4,7 @@ use fleetiq_domain::{AssetId, AssetRelationship, AssetRelationshipId, RecordRevi
 
 use crate::{
     AuthorizedTenant, ManageMetadata, ReadMetadata, RelationshipRepository,
-    RelationshipSnapshotQuery,
+    RelationshipSnapshotPage, RelationshipSnapshotPageQuery, RelationshipSnapshotQuery,
 };
 
 /// Coordinates authorized operations on a tenant's semantic asset graph.
@@ -95,6 +95,23 @@ where
     ) -> Result<Vec<AssetRelationship>, RelationshipApplicationError<R::Error>> {
         self.repository
             .find_for_asset(authorization.tenant_id(), asset_id, query)
+            .await
+            .map_err(RelationshipApplicationError::Repository)
+    }
+
+    /// Reads one bounded bitemporal page under consumed tenant authorization.
+    ///
+    /// # Errors
+    ///
+    /// Wraps the repository error when retrieval fails.
+    pub async fn find_for_asset_page(
+        &self,
+        authorization: AuthorizedTenant<ReadMetadata>,
+        asset_id: &AssetId,
+        query: &RelationshipSnapshotPageQuery,
+    ) -> Result<Option<RelationshipSnapshotPage>, RelationshipApplicationError<R::Error>> {
+        self.repository
+            .find_for_asset_page(authorization.tenant_id(), asset_id, query)
             .await
             .map_err(RelationshipApplicationError::Repository)
     }

@@ -1,10 +1,13 @@
-//! HTTP projection of one immutable, tenant-owned relationship revision.
+//! Protected exact-revision and bounded bitemporal asset-relationship reads.
 
 use std::sync::Arc;
 
 use axum::{
     Json, Router,
-    extract::{Path, State, rejection::PathRejection},
+    extract::{
+        Path, Query, State,
+        rejection::{PathRejection, QueryRejection},
+    },
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
@@ -13,12 +16,15 @@ use fleetiq_access::{
     ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
     TenantAccessPolicy, TenantAuthorizationService,
 };
-use fleetiq_domain::{AssetRelationship, AssetRelationshipId, TenantId};
-use fleetiq_metadata::{RelationshipApplicationService, RelationshipRepository};
+use fleetiq_domain::{AssetId, AssetRelationship, AssetRelationshipId, TenantId, UnixTimeMillis};
+use fleetiq_metadata::{
+    RelationshipApplicationService, RelationshipRepository, RelationshipSnapshotPageQuery,
+    RelationshipSnapshotQuery,
+};
 use fleetiq_postgres::{
     PostgresActorIdentityResolver, PostgresRelationshipRepository, PostgresTenantAccessPolicy,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::{
@@ -36,7 +42,7 @@ struct RelationshipQueryState<A, R, P, Q> {
     relationships: RelationshipApplicationService<Q>,
 }
 
-/// Builds the exact-revision route from the existing policy and graph ports.
+/// Builds relationship reads from the existing policy and graph ports.
 ///
 /// The relationship service derives tenant scope from consumed authorization
 /// evidence; path data cannot provide a repository tenant independently.
@@ -58,13 +64,105 @@ where
     });
     Router::new()
         .route(
+            "/api/v1/tenants/{tenant_id}/assets/{asset_id}/relationships",
+            get(get_asset_snapshot::<A, R, P, Q>).fallback(protected_method_not_allowed),
+        )
+        .route(
             "/api/v1/tenants/{tenant_id}/relationships/{relationship_id}/revisions/{revision}",
             get(get_revision::<A, R, P, Q>).fallback(protected_method_not_allowed),
         )
         .with_state(state)
 }
 
-/// Binds the configured credential and current PostgreSQL policy to revision lookup.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SnapshotParameters {
+    effective_at_ms: i64,
+    known_at_ms: i64,
+    limit: Option<u16>,
+    after: Option<String>,
+}
+
+#[derive(Serialize)]
+struct SnapshotResponse<'a> {
+    asset_id: &'a str,
+    effective_at_ms: i64,
+    known_at_ms: i64,
+    relationships: Vec<RelationshipResponse<'a>>,
+    next_after: Option<&'a str>,
+}
+
+async fn get_asset_snapshot<A, R, P, Q>(
+    State(state): State<Arc<RelationshipQueryState<A, R, P, Q>>>,
+    headers: HeaderMap,
+    path: Result<Path<(String, String)>, PathRejection>,
+    parameters: Result<Query<SnapshotParameters>, QueryRejection>,
+) -> Response
+where
+    A: ExternalIdentityAuthenticator<Credential = String>,
+    R: ActorIdentityResolver,
+    P: TenantAccessPolicy,
+    Q: RelationshipRepository,
+{
+    let actor = match authenticate(&headers, &state.authentication).await {
+        Ok(actor) => actor,
+        Err(error) => return error.into_response(),
+    };
+    let Ok(Path((tenant, asset_id))) = path else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let (Ok(tenant), Ok(asset_id)) = (TenantId::new(tenant), AssetId::new(asset_id)) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let grant = match authorize_metadata_read(actor, tenant, &state.authorization).await {
+        Ok(grant) => grant,
+        Err(error) => return error.into_response(),
+    };
+    let Ok(Query(parameters)) = parameters else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let Ok(after) = parameters.after.map(AssetRelationshipId::new).transpose() else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let snapshot = RelationshipSnapshotQuery::new(
+        UnixTimeMillis::new(parameters.effective_at_ms),
+        UnixTimeMillis::new(parameters.known_at_ms),
+    );
+    let Ok(limit) = u8::try_from(parameters.limit.unwrap_or(50)) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let Ok(query) = RelationshipSnapshotPageQuery::new(snapshot, limit, after) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    match state
+        .relationships
+        .find_for_asset_page(grant, &asset_id, &query)
+        .await
+    {
+        Ok(Some(page)) => no_store(
+            Json(SnapshotResponse {
+                asset_id: asset_id.as_str(),
+                effective_at_ms: parameters.effective_at_ms,
+                known_at_ms: parameters.known_at_ms,
+                relationships: page
+                    .relationships()
+                    .iter()
+                    .map(RelationshipResponse::from)
+                    .collect(),
+                next_after: page.next_after().map(AssetRelationshipId::as_str),
+            })
+            .into_response(),
+        ),
+        Ok(None) => problem(StatusCode::NOT_FOUND, NOT_FOUND, "Resource not found"),
+        Err(_) => problem(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            INTERNAL,
+            "Internal server error",
+        ),
+    }
+}
+
+/// Binds the configured credential and current PostgreSQL policy to both reads.
 pub(crate) fn postgres_relationship_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
     relationship_router(
         CallerAuthenticationService::new(

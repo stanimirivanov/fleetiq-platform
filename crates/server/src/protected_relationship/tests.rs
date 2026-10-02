@@ -18,7 +18,10 @@ use fleetiq_domain::{
     RecordedRevision, RelationshipEndpoints, RelationshipTypeDefinition, RelationshipTypeId,
     RelationshipTypeRef, UnixTimeMillis,
 };
-use fleetiq_metadata::{AssetRepository, DefinitionRepository, RelationshipSnapshotQuery};
+use fleetiq_metadata::{
+    AssetRepository, DefinitionRepository, RelationshipSnapshotPage, RelationshipSnapshotPageQuery,
+    RelationshipSnapshotQuery,
+};
 use fleetiq_postgres::{PostgresAssetRepository, PostgresDefinitionRepository};
 use tower::ServiceExt;
 
@@ -26,6 +29,7 @@ use super::*;
 
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const PATH: &str = "/api/v1/tenants/tenant-a/relationships/relationship-1/revisions/1";
+const SNAPSHOT_PATH: &str = "/api/v1/tenants/tenant-a/assets/assembly-a/relationships?effective_at_ms=1500&known_at_ms=2500&limit=1";
 const EXPECTED_JSON: &str = r#"{"id":"relationship-1","tenant_id":"tenant-a","revision":"1","recorded_at_ms":2000,"relationship_type":{"id":"physical.contains","version":1},"source_asset_id":"assembly-a","target_asset_id":"component-b","effective_interval":{"start_ms":1000,"end_ms":3000}}"#;
 
 #[derive(Clone, Copy, Debug)]
@@ -112,6 +116,17 @@ impl RelationshipRepository for TestRelationships {
         _: RelationshipSnapshotQuery,
     ) -> impl Future<Output = Result<Vec<AssetRelationship>, Self::Error>> + Send {
         ready(Ok(Vec::new()))
+    }
+
+    fn find_for_asset_page(
+        &self,
+        _: &TenantId,
+        _: &AssetId,
+        _: &RelationshipSnapshotPageQuery,
+    ) -> impl Future<Output = Result<Option<RelationshipSnapshotPage>, Self::Error>> + Send {
+        ready(self.result.clone().map(|item| {
+            item.map(|relationship| RelationshipSnapshotPage::new(vec![relationship], None))
+        }))
     }
 }
 
@@ -273,6 +288,65 @@ async fn operational_error_is_redacted_and_other_methods_are_rejected() {
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
 }
 
+#[tokio::test]
+async fn snapshot_requires_explicit_times_and_bounded_page_size() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let test_router = router(true, Ok(Some(sample_relationship(1, "component-b"))), calls);
+    let response = test_router
+        .clone()
+        .oneshot(request(SNAPSHOT_PATH, Some(TOKEN)))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    let body = to_bytes(response.into_body(), 4096).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("\"asset_id\":\"assembly-a\""));
+    assert!(body.contains("\"revision\":\"1\""));
+    assert!(body.contains("\"next_after\":null"));
+    for path in [
+        "/api/v1/tenants/tenant-a/assets/assembly-a/relationships",
+        "/api/v1/tenants/tenant-a/assets/assembly-a/relationships?effective_at_ms=1&known_at_ms=2&limit=0",
+        "/api/v1/tenants/tenant-a/assets/assembly-a/relationships?effective_at_ms=1&known_at_ms=2&limit=101",
+        "/api/v1/tenants/tenant-a/assets/assembly-a/relationships?effective_at_ms=1&known_at_ms=2&after=%20bad",
+    ] {
+        assert_eq!(
+            test_router
+                .clone()
+                .oneshot(request(path, Some(TOKEN)))
+                .await
+                .unwrap()
+                .status(),
+            StatusCode::BAD_REQUEST
+        );
+    }
+    assert_eq!(
+        test_router
+            .clone()
+            .oneshot(request(SNAPSHOT_PATH, None))
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        router(true, Ok(None), Arc::default())
+            .oneshot(request(SNAPSHOT_PATH, Some(TOKEN)))
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::NOT_FOUND
+    );
+    assert_eq!(
+        router(false, Ok(None), Arc::default())
+            .oneshot(request(SNAPSHOT_PATH, Some(TOKEN)))
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::FORBIDDEN
+    );
+}
+
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn configured_query_reads_exact_revision_with_current_postgres_grant(
     pool: PgPool,
@@ -339,6 +413,27 @@ async fn configured_query_reads_exact_revision_with_current_postgres_grant(
         .expect("configured credential")
         .clone();
     let router = postgres_relationship_router(pool.clone(), bearer);
+    let snapshot = router.clone().oneshot(request(
+        "/api/v1/tenants/tenant-a/assets/assembly-a/relationships?effective_at_ms=1500&known_at_ms=5000",
+        Some(TOKEN),
+    )).await?;
+    assert_eq!(snapshot.status(), StatusCode::OK);
+    let snapshot_body = to_bytes(snapshot.into_body(), 4096).await?;
+    let snapshot_body = String::from_utf8_lossy(&snapshot_body);
+    assert!(snapshot_body.contains("\"revision\":\"2\""));
+    assert!(snapshot_body.contains("\"target_asset_id\":\"component-c\""));
+    let old_endpoint = router.clone().oneshot(request(
+        "/api/v1/tenants/tenant-a/assets/component-b/relationships?effective_at_ms=1500&known_at_ms=5000",
+        Some(TOKEN),
+    )).await?;
+    assert_eq!(old_endpoint.status(), StatusCode::OK);
+    let old_endpoint_body = to_bytes(old_endpoint.into_body(), 4096).await?;
+    // The corrected relationship no longer involves component-b.
+    assert!(String::from_utf8_lossy(&old_endpoint_body).contains("\"relationships\":[]"));
+    assert_eq!(router.clone().oneshot(request(
+        "/api/v1/tenants/tenant-a/assets/absent/relationships?effective_at_ms=1500&known_at_ms=5000",
+        Some(TOKEN),
+    )).await?.status(), StatusCode::NOT_FOUND);
     let response = router.clone().oneshot(request(PATH, Some(TOKEN))).await?;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(to_bytes(response.into_body(), 2048).await?, EXPECTED_JSON);
