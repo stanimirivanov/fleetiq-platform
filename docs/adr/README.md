@@ -92,6 +92,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0083](0083-read-exact-relationship-type-versions.md) | Authorized exact-version relationship-type definition query |
 | [0084](0084-read-exact-relationship-revisions.md) | Authorized exact recorded relationship revision query |
 | [0085](0085-read-exact-signal-binding-revisions.md) | Authorized exact recorded signal-binding revision query |
+| [0086](0086-page-bitemporal-asset-relationships.md) | Authorized bounded bitemporal relationship snapshot for one asset |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

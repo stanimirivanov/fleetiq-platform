@@ -12,8 +12,9 @@
   and package-catalogue ports. Asset, semantic-definition, relationship,
   communication-device, and signal-binding operations consume exact
   authorization evidence. Configured-credential HTTP asset, communication-
-  device, exact definition, relationship-revision, and signal-binding-revision
-  queries use those boundaries; administration remains without an HTTP API.
+  device, exact definition, relationship-revision, signal-binding-revision,
+  and bounded asset-relationship snapshot queries use those boundaries;
+  administration remains without an HTTP API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -25,7 +26,8 @@
 - The HTTP surface exposes version discovery and bounded problem details under
   `/api/v1`, plus optional authenticated and authorized asset, device,
   asset-type-definition, property-definition, relationship-type-definition,
-  and exact relationship- and signal-binding-revision reads.
+  exact relationship- and signal-binding-revision reads, and a bounded
+  bitemporal relationship snapshot for one asset.
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
@@ -141,7 +143,8 @@ probes, identifies the version 1 HTTP contract, returns bounded problem details
 for unknown API resources and unsupported methods, and shuts down gracefully
 after `Ctrl+C`. A configured bearer identity enables the protected asset,
 communication-device, asset-type, property-definition, relationship-type,
-exact relationship-revision, and exact signal-binding-revision queries; without
+exact relationship-revision, exact signal-binding-revision, and bounded
+asset-relationship snapshot queries; without
 complete credential configuration those routes are absent. It is an operable
 development composition root, not a production deployment. Unix deployments
 also handle `SIGTERM`, which is the normal container stop signal.
@@ -306,7 +309,8 @@ One configured opaque bearer credential authenticates a single external
 identity for `GET /api/v1/tenants/{tenant_id}/assets/{asset_id}`, its nested
 `/device` resource, exact asset-type, property-definition, and
 relationship-type lookup, exact recorded relationship-revision lookup, and
-exact recorded signal-binding-revision lookup. The process mounts those routes
+exact recorded signal-binding-revision lookup, and a bounded asset-relationship
+snapshot. The process mounts those routes
 only when the token, authority, and subject are configured together. The
 current actor mapping and exact `metadata.read` tenant grant are checked on
 every request before the metadata repository is called. A production identity
@@ -319,7 +323,8 @@ and audit HTTP API remain future work. See the
 [property query procedure](../operations/property-query.md),
 [relationship-type query procedure](../operations/relationship-type-query.md),
 [relationship revision query procedure](../operations/relationship-revision-query.md),
-and [signal-binding revision query procedure](../operations/signal-binding-revision-query.md).
+[signal-binding revision query procedure](../operations/signal-binding-revision-query.md),
+and [asset relationship snapshot procedure](../operations/asset-relationship-snapshot.md).
 
 There is no broader business resource API, production authentication provider,
 authorization administration API, message broker, object archive, cache,
@@ -333,7 +338,7 @@ as production product behavior.
 - No package activation, connection routing, network transport, or command path.
 - No semantic history persistence or end-to-end ingestion worker.
 - No tenant/user administration, authentication, authorization, or audit UI.
-- No live map, graph editor, dashboard, alert delivery, or query API.
+- No live map, graph editor, dashboard, alert delivery, or broad graph query API.
 - No archive, retention enforcement, backup/restore, or cost controls.
 - No hardware qualification fixtures or field-device interoperability suite.
 - No production observability, scaling, rollout, or recovery automation.

@@ -9,7 +9,8 @@ use fleetiq_domain::{
     RelationshipTypeId, RelationshipTypeRef, TenantId, UnixTimeMillis,
 };
 use fleetiq_metadata::{
-    AssetRepository, DefinitionRepository, RelationshipRepository, RelationshipSnapshotQuery,
+    AssetRepository, DefinitionRepository, RelationshipRepository, RelationshipSnapshotPageQuery,
+    RelationshipSnapshotQuery,
 };
 use fleetiq_postgres::{
     PostgresAssetRepository, PostgresDefinitionRepository, PostgresRelationshipRepository,
@@ -57,21 +58,137 @@ fn relationship(
     effective_start_ms: i64,
     effective_end_ms: Option<i64>,
 ) -> AssetRelationship {
+    relationship_with_id(
+        tenant,
+        "relationship-1",
+        revision_number,
+        recorded_at_ms,
+        (source, target),
+        (effective_start_ms, effective_end_ms),
+    )
+}
+
+fn relationship_with_id(
+    tenant: &TenantId,
+    id: &str,
+    revision_number: u64,
+    recorded_at_ms: i64,
+    endpoints: (&str, &str),
+    effective_interval: (i64, Option<i64>),
+) -> AssetRelationship {
     AssetRelationship::new(
         tenant.clone(),
-        AssetRelationshipId::new("relationship-1").expect("test relationship ID should be valid"),
+        AssetRelationshipId::new(id).expect("test relationship ID should be valid"),
         RecordedRevision::new(
             revision(revision_number),
             UnixTimeMillis::new(recorded_at_ms),
         ),
         relationship_type_reference(),
-        RelationshipEndpoints::new(asset_id(source), asset_id(target)),
+        RelationshipEndpoints::new(asset_id(endpoints.0), asset_id(endpoints.1)),
         EffectiveInterval::new(
-            UnixTimeMillis::new(effective_start_ms),
-            effective_end_ms.map(UnixTimeMillis::new),
+            UnixTimeMillis::new(effective_interval.0),
+            effective_interval.1.map(UnixTimeMillis::new),
         )
         .expect("test effective interval should be valid"),
     )
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn paged_snapshot_preserves_latest_known_revision_and_exclusive_cursor(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let tenant = tenant_id("tenant-a");
+    seed_tenant_graph(&pool, &tenant).await?;
+    let other = tenant_id("tenant-b");
+    seed_tenant_graph(&pool, &other).await?;
+    let repository = PostgresRelationshipRepository::new(pool);
+    for id in ["relationship-a", "relationship-b", "relationship-c"] {
+        repository
+            .insert_revision(&relationship_with_id(
+                &tenant,
+                id,
+                1,
+                100,
+                ("assembly-a", "component-b"),
+                (0, None),
+            ))
+            .await?;
+    }
+    // The latest known revision moves relationship-b away from assembly-a.
+    repository
+        .insert_revision(&relationship_with_id(
+            &tenant,
+            "relationship-b",
+            2,
+            200,
+            ("component-c", "component-b"),
+            (0, None),
+        ))
+        .await?;
+    let early = RelationshipSnapshotQuery::new(UnixTimeMillis::new(50), UnixTimeMillis::new(150));
+    let first = repository
+        .find_for_asset_page(
+            &tenant,
+            &asset_id("assembly-a"),
+            &RelationshipSnapshotPageQuery::new(early, 1, None)?,
+        )
+        .await?
+        .expect("asset exists");
+    assert_eq!(first.relationships()[0].id().as_str(), "relationship-a");
+    assert_eq!(
+        first.next_after().map(AssetRelationshipId::as_str),
+        Some("relationship-a")
+    );
+    let second = repository
+        .find_for_asset_page(
+            &tenant,
+            &asset_id("assembly-a"),
+            &RelationshipSnapshotPageQuery::new(early, 1, first.next_after().cloned())?,
+        )
+        .await?
+        .expect("asset exists");
+    assert_eq!(second.relationships()[0].id().as_str(), "relationship-b");
+    assert_eq!(
+        second.next_after().map(AssetRelationshipId::as_str),
+        Some("relationship-b")
+    );
+    let late = RelationshipSnapshotQuery::new(UnixTimeMillis::new(50), UnixTimeMillis::new(250));
+    let after_correction = repository
+        .find_for_asset_page(
+            &tenant,
+            &asset_id("assembly-a"),
+            &RelationshipSnapshotPageQuery::new(late, 1, first.next_after().cloned())?,
+        )
+        .await?
+        .expect("asset exists");
+    assert_eq!(
+        after_correction.relationships()[0].id().as_str(),
+        "relationship-c"
+    );
+    assert!(after_correction.next_after().is_none());
+    assert!(
+        repository
+            .find_for_asset_page(
+                &tenant,
+                &asset_id("missing"),
+                &RelationshipSnapshotPageQuery::new(early, 1, None)?,
+            )
+            .await?
+            .is_none()
+    );
+    assert!(
+        repository
+            .find_for_asset_page(
+                &other,
+                &asset_id("assembly-a"),
+                &RelationshipSnapshotPageQuery::new(early, 1, None)?,
+            )
+            .await?
+            .expect("other tenant asset exists")
+            .relationships()
+            .is_empty()
+    );
+    Ok(())
 }
 
 async fn seed_tenant_graph(pool: &PgPool, tenant: &TenantId) -> Result<(), Box<dyn Error>> {

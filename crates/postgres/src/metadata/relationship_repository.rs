@@ -1,7 +1,10 @@
 use std::future::Future;
 
 use fleetiq_domain::{AssetId, AssetRelationship, AssetRelationshipId, RecordRevision, TenantId};
-use fleetiq_metadata::{RelationshipRepository, RelationshipSnapshotQuery};
+use fleetiq_metadata::{
+    RelationshipRepository, RelationshipSnapshotPage, RelationshipSnapshotPageQuery,
+    RelationshipSnapshotQuery,
+};
 use sqlx::PgPool;
 
 use crate::error::PostgresRepositoryError;
@@ -50,5 +53,14 @@ impl RelationshipRepository for PostgresRelationshipRepository {
         query: RelationshipSnapshotQuery,
     ) -> impl Future<Output = Result<Vec<AssetRelationship>, Self::Error>> + Send {
         self.find_asset_snapshot(tenant_id, asset_id, query)
+    }
+
+    fn find_for_asset_page(
+        &self,
+        tenant_id: &TenantId,
+        asset_id: &AssetId,
+        query: &RelationshipSnapshotPageQuery,
+    ) -> impl Future<Output = Result<Option<RelationshipSnapshotPage>, Self::Error>> + Send {
+        self.find_asset_snapshot_page(tenant_id, asset_id, query)
     }
 }

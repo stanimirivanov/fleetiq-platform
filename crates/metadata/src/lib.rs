@@ -32,7 +32,10 @@ pub use definition_repository::DefinitionRepository;
 pub use definition_service::{DefinitionApplicationError, DefinitionApplicationService};
 pub use device_repository::DeviceRepository;
 pub use device_service::{DeviceApplicationError, DeviceApplicationService};
-pub use relationship_repository::{RelationshipRepository, RelationshipSnapshotQuery};
+pub use relationship_repository::{
+    InvalidRelationshipPageLimit, RelationshipRepository, RelationshipSnapshotPage,
+    RelationshipSnapshotPageQuery, RelationshipSnapshotQuery,
+};
 pub use relationship_service::{RelationshipApplicationError, RelationshipApplicationService};
 pub use repository::AssetRepository;
 pub use signal_binding_repository::{SignalBindingRepository, SignalBindingSnapshotQuery};
