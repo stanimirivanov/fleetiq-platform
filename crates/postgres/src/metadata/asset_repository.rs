@@ -5,7 +5,7 @@ use fleetiq_domain::{
     Asset, AssetId, AssetName, AssetTypeId, AssetTypeRef, DefinitionVersion, ExternalIdentifier,
     ExternalIdentifierAuthority, ExternalIdentifierKind, ExternalIdentifierValue, TenantId,
 };
-use fleetiq_metadata::AssetRepository;
+use fleetiq_metadata::{AssetCatalogueEntry, AssetPage, AssetPageQuery, AssetRepository};
 use sqlx::PgPool;
 
 /// PostgreSQL implementation of the application-owned asset repository port.
@@ -130,6 +130,50 @@ impl PostgresAssetRepository {
 
         row.into_domain(identifier_rows).map(Some)
     }
+
+    /// Reads one ID-ordered page without expanding unbounded identifier sets.
+    ///
+    /// The extra row determines cursor availability; clients use the exact
+    /// asset read when they need its external identifiers.
+    async fn list_assets_page(
+        &self,
+        tenant_id: &TenantId,
+        query: &AssetPageQuery,
+    ) -> Result<AssetPage, PostgresRepositoryError> {
+        let mut rows = sqlx::query_as!(
+            AssetRow,
+            r"
+            SELECT tenant_id, asset_id, type_id, type_version, display_name
+            FROM metadata.assets
+            WHERE tenant_id = $1
+              AND ($2::text IS NULL OR asset_id > $2)
+            ORDER BY asset_id
+            LIMIT $3
+            ",
+            tenant_id.as_str(),
+            query.after().map(AssetId::as_str),
+            i64::from(query.limit()) + 1,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(classify_database_error)?;
+        let has_more = rows.len() > usize::from(query.limit());
+        rows.truncate(usize::from(query.limit()));
+        if rows.is_empty() {
+            return Ok(AssetPage::new(Vec::new(), None));
+        }
+
+        let assets = rows
+            .into_iter()
+            .map(AssetRow::into_catalogue_entry)
+            .collect::<Result<Vec<_>, _>>()?;
+        let next_after = if has_more {
+            assets.last().map(|asset| asset.id().clone())
+        } else {
+            None
+        };
+        Ok(AssetPage::new(assets, next_after))
+    }
 }
 
 impl AssetRepository for PostgresAssetRepository {
@@ -149,6 +193,14 @@ impl AssetRepository for PostgresAssetRepository {
     ) -> impl Future<Output = Result<Option<Asset>, Self::Error>> + Send + 'a {
         self.find_asset(tenant_id, asset_id)
     }
+
+    fn list_page<'a>(
+        &'a self,
+        tenant_id: &'a TenantId,
+        query: &'a AssetPageQuery,
+    ) -> impl Future<Output = Result<AssetPage, Self::Error>> + Send + 'a {
+        self.list_assets_page(tenant_id, query)
+    }
 }
 
 #[derive(Debug)]
@@ -161,6 +213,22 @@ struct AssetRow {
 }
 
 impl AssetRow {
+    fn into_catalogue_entry(self) -> Result<AssetCatalogueEntry, PostgresRepositoryError> {
+        let version = u32::try_from(self.type_version)
+            .map_err(|error| corrupt("assets.type_version", error))?;
+        Ok(AssetCatalogueEntry::new(
+            TenantId::new(self.tenant_id).map_err(|error| corrupt("assets.tenant_id", error))?,
+            AssetId::new(self.asset_id).map_err(|error| corrupt("assets.asset_id", error))?,
+            AssetName::new(self.display_name)
+                .map_err(|error| corrupt("assets.display_name", error))?,
+            AssetTypeRef::new(
+                AssetTypeId::new(self.type_id).map_err(|error| corrupt("assets.type_id", error))?,
+                DefinitionVersion::new(version)
+                    .map_err(|error| corrupt("assets.type_version", error))?,
+            ),
+        ))
+    }
+
     fn into_domain(
         self,
         identifiers: Vec<ExternalIdentifierRow>,

@@ -37,7 +37,9 @@ pub use relationship_repository::{
     RelationshipSnapshotPageQuery, RelationshipSnapshotQuery,
 };
 pub use relationship_service::{RelationshipApplicationError, RelationshipApplicationService};
-pub use repository::AssetRepository;
+pub use repository::{
+    AssetCatalogueEntry, AssetPage, AssetPageQuery, AssetRepository, InvalidAssetPageLimit,
+};
 pub use signal_binding_repository::{
     InvalidSignalBindingPageLimit, SignalBindingRepository, SignalBindingSnapshotPage,
     SignalBindingSnapshotPageQuery, SignalBindingSnapshotQuery,

@@ -11,8 +11,9 @@
   `fleetiq-ingestion` owns durable acceptance, decoded-result persistence,
   and package-catalogue ports. Asset, semantic-definition, relationship,
   communication-device, and signal-binding operations consume exact
-  authorization evidence. Configured-credential HTTP asset, communication-
-  device, exact definition, relationship-revision, signal-binding-revision,
+  authorization evidence. Configured-credential HTTP exact asset, bounded
+  asset catalogue, communication-device, exact definition,
+  relationship-revision, signal-binding-revision,
   bounded asset-relationship snapshot, and bounded source-binding snapshot
   queries use those boundaries; administration remains without an HTTP API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
@@ -24,8 +25,9 @@
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
-  `/api/v1`, plus optional authenticated and authorized asset, device,
-  asset-type-definition, property-definition, relationship-type-definition,
+  `/api/v1`, plus optional authenticated and authorized exact asset, bounded
+  asset catalogue, device, asset-type-definition, property-definition,
+  relationship-type-definition,
   exact relationship- and signal-binding-revision reads, and a bounded
   bitemporal relationship snapshot for one asset and a bounded source-binding
   snapshot for one decoded signal.
@@ -142,8 +144,9 @@ The `fleetiq-server` binary validates environment configuration, applies the
 embedded migration chain, exposes liveness and PostgreSQL-backed readiness
 probes, identifies the version 1 HTTP contract, returns bounded problem details
 for unknown API resources and unsupported methods, and shuts down gracefully
-after `Ctrl+C`. A configured bearer identity enables the protected asset,
-communication-device, asset-type, property-definition, relationship-type,
+after `Ctrl+C`. A configured bearer identity enables protected exact asset,
+bounded asset catalogue, communication-device, asset-type, property-definition,
+relationship-type,
 exact relationship-revision, exact signal-binding-revision, bounded
 asset-relationship snapshot, and bounded source-binding snapshot queries;
 without complete credential configuration those routes are absent. It is an
@@ -307,8 +310,8 @@ that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
 One configured opaque bearer credential authenticates a single external
-identity for `GET /api/v1/tenants/{tenant_id}/assets/{asset_id}`, its nested
-`/device` resource, exact asset-type, property-definition, and
+identity for exact asset and bounded tenant asset catalogue reads, the exact
+asset's nested `/device` resource, exact asset-type, property-definition, and
 relationship-type lookup, exact recorded relationship-revision lookup,
 exact recorded signal-binding-revision lookup, a bounded asset-relationship
 snapshot, and a bounded source-binding snapshot. The process mounts those
