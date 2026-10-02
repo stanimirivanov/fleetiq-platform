@@ -15,6 +15,7 @@ mod protected_definitions;
 mod protected_device;
 mod protected_relationship;
 mod protected_request;
+mod protected_signal_binding;
 
 use std::{error::Error, fmt, io};
 
@@ -77,6 +78,10 @@ fn application_router(pool: PgPool, config: &ServerConfig) -> Router {
                 bearer.clone(),
             ))
             .merge(protected_relationship::postgres_relationship_router(
+                pool.clone(),
+                bearer.clone(),
+            ))
+            .merge(protected_signal_binding::postgres_signal_binding_router(
                 pool,
                 bearer.clone(),
             ));
@@ -173,93 +178,37 @@ mod tests {
             .expect("lazy test pool");
         let base = ServerConfig::from_values("postgres://localhost/test", "127.0.0.1:0")
             .expect("valid base configuration");
+        let paths = [
+            "/api/v1/tenants/tenant-a/assets/asset-1",
+            "/api/v1/tenants/tenant-a/assets/asset-1/device",
+            "/api/v1/tenants/tenant-a/asset-types/generic.power-system/versions/2",
+            "/api/v1/tenants/tenant-a/properties/thermal.temperature/versions/1",
+            "/api/v1/tenants/tenant-a/relationship-types/generic.tows/versions/2",
+            "/api/v1/tenants/tenant-a/relationships/relationship-1/revisions/1",
+            "/api/v1/tenants/tenant-a/signal-bindings/binding-1/revisions/1",
+        ];
         let unconfigured = application_router(pool.clone(), &base);
-        let path = "/api/v1/tenants/tenant-a/assets/asset-1";
-        let device_path = "/api/v1/tenants/tenant-a/assets/asset-1/device";
-        let type_path = "/api/v1/tenants/tenant-a/asset-types/generic.power-system/versions/2";
-        let property_path = "/api/v1/tenants/tenant-a/properties/thermal.temperature/versions/1";
-        let relationship_type_path =
-            "/api/v1/tenants/tenant-a/relationship-types/generic.tows/versions/2";
-        let relationship_path = "/api/v1/tenants/tenant-a/relationships/relationship-1/revisions/1";
-        let response = unconfigured
-            .oneshot(Request::get(path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let response = application_router(pool.clone(), &base)
-            .oneshot(Request::get(relationship_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let response = application_router(pool.clone(), &base)
-            .oneshot(
-                Request::get(relationship_type_path)
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let response = application_router(pool.clone(), &base)
-            .oneshot(Request::get(property_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let response = application_router(pool.clone(), &base)
-            .oneshot(Request::get(type_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
-        let response = application_router(pool.clone(), &base)
-            .oneshot(Request::get(device_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        for path in paths {
+            let response = unconfigured
+                .clone()
+                .oneshot(Request::get(path).body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::NOT_FOUND, "{path}");
+        }
 
         let configured = base
             .with_bearer_identity("a".repeat(64), "workload", "reader")
             .expect("valid bearer identity");
         let router = application_router(pool, &configured);
-        let response = router
-            .clone()
-            .oneshot(Request::get(path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-        let response = router
-            .clone()
-            .oneshot(Request::get(relationship_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-        let response = router
-            .clone()
-            .oneshot(
-                Request::get(relationship_type_path)
-                    .body(Body::empty())
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-        let response = router
-            .clone()
-            .oneshot(Request::get(property_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-        let response = router
-            .clone()
-            .oneshot(Request::get(type_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
-        let response = router
-            .clone()
-            .oneshot(Request::get(device_path).body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        for path in paths {
+            let response = router
+                .clone()
+                .oneshot(Request::get(path).body(Body::empty()).unwrap())
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::UNAUTHORIZED, "{path}");
+        }
         let response = router
             .oneshot(Request::get("/api/v1").body(Body::empty()).unwrap())
             .await

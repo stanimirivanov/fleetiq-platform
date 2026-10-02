@@ -60,15 +60,16 @@ compilation and database inspection; applying them again at server startup is
 safe and idempotent.
 
 The protected asset, communication-device, asset-type, property,
-relationship-type, and exact relationship-revision queries require all three
-HTTP bearer identity variables, a provisioned actor, and a current tenant
-`metadata.read` grant. See the
-[protected asset query procedure](../operations/asset-query.md),
+relationship-type, exact relationship-revision, and exact
+signal-binding-revision queries require all three HTTP bearer identity
+variables, a provisioned actor, and a current tenant `metadata.read` grant. See
+the [protected asset query procedure](../operations/asset-query.md),
 [device query procedure](../operations/device-query.md),
 [asset-type query procedure](../operations/asset-type-query.md),
-[property query procedure](../operations/property-query.md), and
+[property query procedure](../operations/property-query.md),
 [relationship-type query procedure](../operations/relationship-type-query.md),
-and [relationship revision query procedure](../operations/relationship-revision-query.md)
+[relationship revision query procedure](../operations/relationship-revision-query.md),
+and [signal-binding revision query procedure](../operations/signal-binding-revision-query.md)
 for their configuration and HTTP contracts. The default Compose stack does not
 configure that credential, so it exposes only discovery and health until
 explicitly configured.

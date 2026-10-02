@@ -34,20 +34,22 @@ process. The access policy boundary separates authenticated actors,
 selected tenants, and per-action policy decisions. PostgreSQL persists internal
 actors and exact grants and evaluates current policy without a cache; identity-
 provider integration remains planned. Configured-credential asset, device,
-asset-type, property-definition, relationship-type, and exact relationship-
-revision queries join these boundaries through the server composition root; see
+asset-type, property-definition, relationship-type, exact relationship-revision,
+and exact signal-binding-revision queries join these boundaries through the
+server composition root; see
 [ADR 0079](../adr/0079-protect-initial-asset-query.md),
 [ADR 0080](../adr/0080-expose-communication-device-detail.md),
 [ADR 0081](../adr/0081-read-exact-asset-type-versions.md),
-[ADR 0082](../adr/0082-read-exact-property-definitions.md), and
-[ADR 0083](../adr/0083-read-exact-relationship-type-versions.md), and
-[ADR 0084](../adr/0084-read-exact-relationship-revisions.md). Other business APIs,
-device transports, production deployment, archival storage, and the web
+[ADR 0082](../adr/0082-read-exact-property-definitions.md),
+[ADR 0083](../adr/0083-read-exact-relationship-type-versions.md),
+[ADR 0084](../adr/0084-read-exact-relationship-revisions.md), and
+[ADR 0085](../adr/0085-read-exact-signal-binding-revisions.md). Other business
+APIs, device transports, production deployment, archival storage, and the web
 application arrive in later milestones.
 
 ```mermaid
 flowchart LR
-    Request[Asset, device, definition, or relationship GET with bearer credential]
+    Request[Protected metadata GET with bearer credential]
     Validator[Credential validation]
     Resolver[Exact external identity to actor]
     Policy[Current tenant metadata.read grant]

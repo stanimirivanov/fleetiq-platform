@@ -9,7 +9,7 @@ use fleetiq_access::{
     CallerAuthenticationService, ExternalIdentityAuthenticator, ReadMetadata, TenantAccessPolicy,
     TenantAuthorizationError, TenantAuthorizationService,
 };
-use fleetiq_domain::TenantId;
+use fleetiq_domain::{RecordRevision, TenantId};
 
 use crate::http_api::{ApiProblem, method_not_allowed};
 
@@ -121,4 +121,15 @@ pub(crate) fn no_store(mut response: Response) -> Response {
         .headers_mut()
         .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
     response
+}
+
+/// Parses the common positive decimal revision path contract for protected reads.
+pub(crate) fn parse_record_revision(value: &str) -> Option<RecordRevision> {
+    if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
+        return None;
+    }
+    value
+        .parse::<u64>()
+        .ok()
+        .and_then(|revision| RecordRevision::new(revision).ok())
 }

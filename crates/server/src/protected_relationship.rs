@@ -13,7 +13,7 @@ use fleetiq_access::{
     ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
     TenantAccessPolicy, TenantAuthorizationService,
 };
-use fleetiq_domain::{AssetRelationship, AssetRelationshipId, RecordRevision, TenantId};
+use fleetiq_domain::{AssetRelationship, AssetRelationshipId, TenantId};
 use fleetiq_metadata::{RelationshipApplicationService, RelationshipRepository};
 use fleetiq_postgres::{
     PostgresActorIdentityResolver, PostgresRelationshipRepository, PostgresTenantAccessPolicy,
@@ -25,8 +25,8 @@ use crate::{
     bearer_authentication::ConfiguredBearerAuthenticator,
     config::BearerIdentityConfig,
     protected_request::{
-        BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store, problem,
-        protected_method_not_allowed,
+        BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store,
+        parse_record_revision, problem, protected_method_not_allowed,
     },
 };
 
@@ -97,7 +97,7 @@ where
     let (Ok(tenant), Ok(relationship_id), Some(revision)) = (
         TenantId::new(tenant),
         AssetRelationshipId::new(relationship_id),
-        parse_revision(&revision),
+        parse_record_revision(&revision),
     ) else {
         return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
     };
@@ -120,16 +120,6 @@ where
             "Internal server error",
         ),
     }
-}
-
-fn parse_revision(value: &str) -> Option<RecordRevision> {
-    if value.is_empty() || !value.bytes().all(|byte| byte.is_ascii_digit()) {
-        return None;
-    }
-    value
-        .parse::<u64>()
-        .ok()
-        .and_then(|revision| RecordRevision::new(revision).ok())
 }
 
 #[derive(Serialize)]
