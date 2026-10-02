@@ -61,16 +61,18 @@ safe and idempotent.
 
 The protected asset, communication-device, asset-type, property,
 relationship-type, exact relationship-revision, exact signal-binding-revision,
-and bounded asset-relationship snapshot queries require all three HTTP bearer
-identity variables, a provisioned actor, and a current tenant `metadata.read`
-grant. See the [protected asset query procedure](../operations/asset-query.md),
+bounded asset-relationship snapshot, and bounded source-binding snapshot
+queries require all three HTTP bearer identity variables, a provisioned actor,
+and a current tenant `metadata.read` grant. See the
+[protected asset query procedure](../operations/asset-query.md),
 [device query procedure](../operations/device-query.md),
 [asset-type query procedure](../operations/asset-type-query.md),
 [property query procedure](../operations/property-query.md),
 [relationship-type query procedure](../operations/relationship-type-query.md),
 [relationship revision query procedure](../operations/relationship-revision-query.md),
 [signal-binding revision query procedure](../operations/signal-binding-revision-query.md),
-and [asset relationship snapshot procedure](../operations/asset-relationship-snapshot.md)
+[asset relationship snapshot procedure](../operations/asset-relationship-snapshot.md),
+and [signal-binding snapshot procedure](../operations/signal-binding-snapshot.md)
 for their configuration and HTTP contracts. The default Compose stack does not
 configure that credential, so it exposes only discovery and health until
 explicitly configured.

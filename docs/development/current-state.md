@@ -13,8 +13,8 @@
   communication-device, and signal-binding operations consume exact
   authorization evidence. Configured-credential HTTP asset, communication-
   device, exact definition, relationship-revision, signal-binding-revision,
-  and bounded asset-relationship snapshot queries use those boundaries;
-  administration remains without an HTTP API.
+  bounded asset-relationship snapshot, and bounded source-binding snapshot
+  queries use those boundaries; administration remains without an HTTP API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -27,7 +27,8 @@
   `/api/v1`, plus optional authenticated and authorized asset, device,
   asset-type-definition, property-definition, relationship-type-definition,
   exact relationship- and signal-binding-revision reads, and a bounded
-  bitemporal relationship snapshot for one asset.
+  bitemporal relationship snapshot for one asset and a bounded source-binding
+  snapshot for one decoded signal.
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
@@ -143,10 +144,10 @@ probes, identifies the version 1 HTTP contract, returns bounded problem details
 for unknown API resources and unsupported methods, and shuts down gracefully
 after `Ctrl+C`. A configured bearer identity enables the protected asset,
 communication-device, asset-type, property-definition, relationship-type,
-exact relationship-revision, exact signal-binding-revision, and bounded
-asset-relationship snapshot queries; without
-complete credential configuration those routes are absent. It is an operable
-development composition root, not a production deployment. Unix deployments
+exact relationship-revision, exact signal-binding-revision, bounded
+asset-relationship snapshot, and bounded source-binding snapshot queries;
+without complete credential configuration those routes are absent. It is an
+operable development composition root, not a production deployment. Unix deployments
 also handle `SIGTERM`, which is the normal container stop signal.
 
 The local Compose deployment builds that binary in a multi-stage image, waits
@@ -308,10 +309,10 @@ implies the other.
 One configured opaque bearer credential authenticates a single external
 identity for `GET /api/v1/tenants/{tenant_id}/assets/{asset_id}`, its nested
 `/device` resource, exact asset-type, property-definition, and
-relationship-type lookup, exact recorded relationship-revision lookup, and
-exact recorded signal-binding-revision lookup, and a bounded asset-relationship
-snapshot. The process mounts those routes
-only when the token, authority, and subject are configured together. The
+relationship-type lookup, exact recorded relationship-revision lookup,
+exact recorded signal-binding-revision lookup, a bounded asset-relationship
+snapshot, and a bounded source-binding snapshot. The process mounts those
+routes only when the token, authority, and subject are configured together. The
 current actor mapping and exact `metadata.read` tenant grant are checked on
 every request before the metadata repository is called. A production identity
 provider, multi-principal login, membership or
@@ -324,7 +325,8 @@ and audit HTTP API remain future work. See the
 [relationship-type query procedure](../operations/relationship-type-query.md),
 [relationship revision query procedure](../operations/relationship-revision-query.md),
 [signal-binding revision query procedure](../operations/signal-binding-revision-query.md),
-and [asset relationship snapshot procedure](../operations/asset-relationship-snapshot.md).
+[asset relationship snapshot procedure](../operations/asset-relationship-snapshot.md),
+and [signal-binding snapshot procedure](../operations/signal-binding-snapshot.md).
 
 There is no broader business resource API, production authentication provider,
 authorization administration API, message broker, object archive, cache,

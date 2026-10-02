@@ -1,10 +1,13 @@
-//! HTTP projection of one immutable, tenant-owned signal-binding revision.
+//! Protected exact-revision and bounded bitemporal source-binding reads.
 
 use std::sync::Arc;
 
 use axum::{
     Json, Router,
-    extract::{Path, State, rejection::PathRejection},
+    extract::{
+        Path, Query, State,
+        rejection::{PathRejection, QueryRejection},
+    },
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
@@ -13,12 +16,18 @@ use fleetiq_access::{
     ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
     TenantAccessPolicy, TenantAuthorizationService,
 };
-use fleetiq_domain::{SignalBinding, SignalBindingId, TenantId, UnixTimeMillis};
-use fleetiq_metadata::{SignalBindingApplicationService, SignalBindingRepository};
+use fleetiq_domain::{
+    AssetId, DeviceEndpointId, SignalBinding, SignalBindingId, SignalSource, SourceSignalId,
+    TenantId, UnixTimeMillis,
+};
+use fleetiq_metadata::{
+    SignalBindingApplicationService, SignalBindingRepository, SignalBindingSnapshotPageQuery,
+    SignalBindingSnapshotQuery,
+};
 use fleetiq_postgres::{
     PostgresActorIdentityResolver, PostgresSignalBindingRepository, PostgresTenantAccessPolicy,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
 use crate::{
@@ -36,7 +45,7 @@ struct SignalBindingQueryState<A, R, P, Q> {
     bindings: SignalBindingApplicationService<Q>,
 }
 
-/// Builds an exact binding-revision route from the existing authorized use case.
+/// Builds binding reads from the existing authorized use case.
 ///
 /// The application service derives tenant scope from consumed authorization
 /// evidence rather than trusting the path as a repository scope.
@@ -58,13 +67,119 @@ where
     });
     Router::new()
         .route(
+            "/api/v1/tenants/{tenant_id}/signal-bindings",
+            get(get_source_snapshot::<A, R, P, Q>).fallback(protected_method_not_allowed),
+        )
+        .route(
             "/api/v1/tenants/{tenant_id}/signal-bindings/{binding_id}/revisions/{revision}",
             get(get_revision::<A, R, P, Q>).fallback(protected_method_not_allowed),
         )
         .with_state(state)
 }
 
-/// Binds configured bearer identity and current PostgreSQL policy to binding lookup.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SnapshotParameters {
+    device_asset_id: String,
+    endpoint_id: String,
+    signal_id: String,
+    effective_at_ms: i64,
+    known_at_ms: i64,
+    limit: Option<u16>,
+    after: Option<String>,
+}
+
+#[derive(Serialize)]
+struct SnapshotResponse<'a> {
+    source: SignalSourceResponse<'a>,
+    effective_at_ms: i64,
+    known_at_ms: i64,
+    bindings: Vec<SignalBindingResponse<'a>>,
+    next_after: Option<&'a str>,
+}
+
+async fn get_source_snapshot<A, R, P, Q>(
+    State(state): State<Arc<SignalBindingQueryState<A, R, P, Q>>>,
+    headers: HeaderMap,
+    path: Result<Path<String>, PathRejection>,
+    parameters: Result<Query<SnapshotParameters>, QueryRejection>,
+) -> Response
+where
+    A: ExternalIdentityAuthenticator<Credential = String>,
+    R: ActorIdentityResolver,
+    P: TenantAccessPolicy,
+    Q: SignalBindingRepository,
+{
+    let actor = match authenticate(&headers, &state.authentication).await {
+        Ok(actor) => actor,
+        Err(error) => return error.into_response(),
+    };
+    let Ok(Path(tenant)) = path else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let Ok(tenant) = TenantId::new(tenant) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let grant = match authorize_metadata_read(actor, tenant, &state.authorization).await {
+        Ok(grant) => grant,
+        Err(error) => return error.into_response(),
+    };
+    let Ok(Query(parameters)) = parameters else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let (Ok(device), Ok(endpoint), Ok(signal)) = (
+        AssetId::new(parameters.device_asset_id),
+        DeviceEndpointId::new(parameters.endpoint_id),
+        SourceSignalId::new(parameters.signal_id),
+    ) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let source = SignalSource::new(device, endpoint, signal);
+    let Ok(after) = parameters.after.map(SignalBindingId::new).transpose() else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let snapshot = SignalBindingSnapshotQuery::new(
+        UnixTimeMillis::new(parameters.effective_at_ms),
+        UnixTimeMillis::new(parameters.known_at_ms),
+    );
+    let Ok(limit) = u8::try_from(parameters.limit.unwrap_or(50)) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    let Ok(query) = SignalBindingSnapshotPageQuery::new(snapshot, limit, after) else {
+        return problem(StatusCode::BAD_REQUEST, BAD_REQUEST, "Invalid request");
+    };
+    match state
+        .bindings
+        .find_for_source_page(grant, &source, &query)
+        .await
+    {
+        Ok(page) => no_store(
+            Json(SnapshotResponse {
+                source: SignalSourceResponse {
+                    device_asset: source.device_asset_id().as_str(),
+                    endpoint_id: source.endpoint_id().as_str(),
+                    signal_id: source.signal_id().as_str(),
+                },
+                effective_at_ms: parameters.effective_at_ms,
+                known_at_ms: parameters.known_at_ms,
+                bindings: page
+                    .bindings()
+                    .iter()
+                    .map(SignalBindingResponse::from)
+                    .collect(),
+                next_after: page.next_after().map(SignalBindingId::as_str),
+            })
+            .into_response(),
+        ),
+        Err(_) => problem(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            INTERNAL,
+            "Internal server error",
+        ),
+    }
+}
+
+/// Binds configured bearer identity and current PostgreSQL policy to binding reads.
 pub(crate) fn postgres_signal_binding_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
     signal_binding_router(
         CallerAuthenticationService::new(

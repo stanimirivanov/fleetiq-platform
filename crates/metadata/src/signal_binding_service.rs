@@ -4,7 +4,7 @@ use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSourc
 
 use crate::{
     AuthorizedTenant, ManageMetadata, ReadMetadata, SignalBindingRepository,
-    SignalBindingSnapshotQuery,
+    SignalBindingSnapshotPage, SignalBindingSnapshotPageQuery, SignalBindingSnapshotQuery,
 };
 
 /// Coordinates authorized operations on signal-to-property attributions.
@@ -95,6 +95,23 @@ where
     ) -> Result<Vec<SignalBinding>, SignalBindingApplicationError<R::Error>> {
         self.repository
             .find_for_source(authorization.tenant_id(), source, query)
+            .await
+            .map_err(SignalBindingApplicationError::Repository)
+    }
+
+    /// Reads one bounded source-attribution snapshot page under tenant authorization.
+    ///
+    /// # Errors
+    ///
+    /// Wraps the repository error when retrieval fails.
+    pub async fn find_for_source_page(
+        &self,
+        authorization: AuthorizedTenant<ReadMetadata>,
+        source: &SignalSource,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> Result<SignalBindingSnapshotPage, SignalBindingApplicationError<R::Error>> {
+        self.repository
+            .find_for_source_page(authorization.tenant_id(), source, query)
             .await
             .map_err(SignalBindingApplicationError::Repository)
     }

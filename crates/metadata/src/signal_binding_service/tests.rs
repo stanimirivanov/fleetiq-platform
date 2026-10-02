@@ -14,8 +14,8 @@ use fleetiq_domain::{
 
 use crate::{
     AccessDecision, AuthorizedTenant, ManageMetadata, ReadMetadata, SignalBindingRepository,
-    SignalBindingSnapshotQuery, TenantAccessPolicy, TenantAccessRequest,
-    TenantAuthorizationService,
+    SignalBindingSnapshotPage, SignalBindingSnapshotPageQuery, SignalBindingSnapshotQuery,
+    TenantAccessPolicy, TenantAccessRequest, TenantAuthorizationService,
 };
 
 use super::{SignalBindingApplicationError, SignalBindingApplicationService};
@@ -25,6 +25,7 @@ enum RepositoryCall {
     InsertRevision(SignalBinding),
     FindRevision(TenantId, SignalBindingId, RecordRevision),
     FindForSource(TenantId, SignalSource, SignalBindingSnapshotQuery),
+    FindForSourcePage(TenantId, SignalSource, SignalBindingSnapshotPageQuery),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -121,6 +122,24 @@ impl SignalBindingRepository for RecordingSignalBindingRepository {
             Ok(self.snapshot.clone())
         })
     }
+
+    fn find_for_source_page(
+        &self,
+        tenant_id: &TenantId,
+        source: &SignalSource,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> impl Future<Output = Result<SignalBindingSnapshotPage, Self::Error>> + Send {
+        self.record(RepositoryCall::FindForSourcePage(
+            tenant_id.clone(),
+            source.clone(),
+            query.clone(),
+        ));
+        ready(if self.fail {
+            Err(TestRepositoryError)
+        } else {
+            Ok(SignalBindingSnapshotPage::new(self.snapshot.clone(), None))
+        })
+    }
 }
 
 struct AllowAllPolicy;
@@ -193,14 +212,21 @@ async fn reads_exact_revision_and_snapshot_in_the_authorized_tenant() {
         .find_for_source(read_authorization("tenant-a").await, &source, query)
         .await
         .expect("snapshot lookup should succeed");
+    let page_query = SignalBindingSnapshotPageQuery::new(query, 1, None).unwrap();
+    let page = service
+        .find_for_source_page(read_authorization("tenant-a").await, &source, &page_query)
+        .await
+        .expect("page lookup should succeed");
 
     assert_eq!(exact, Some(binding.clone()));
     assert_eq!(snapshot, vec![binding]);
+    assert_eq!(page.bindings(), snapshot);
     assert_eq!(
         repository.calls(),
         vec![
             RepositoryCall::FindRevision(tenant_id("tenant-a"), binding_id, revision),
-            RepositoryCall::FindForSource(tenant_id("tenant-a"), source, query),
+            RepositoryCall::FindForSource(tenant_id("tenant-a"), source.clone(), query),
+            RepositoryCall::FindForSourcePage(tenant_id("tenant-a"), source, page_query,),
         ]
     );
 }
