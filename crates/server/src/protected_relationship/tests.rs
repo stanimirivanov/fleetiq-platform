@@ -14,9 +14,9 @@ use axum::{
 use fleetiq_access::{AccessDecision, ActorIdentityResolver, TenantAccessRequest, TenantAction};
 use fleetiq_domain::{
     ActorId, Asset, AssetId, AssetName, AssetTypeDefinition, AssetTypeId, AssetTypeRef,
-    DefinitionName, DefinitionVersion, EffectiveInterval, ExternalIdentity, RecordedRevision,
-    RelationshipEndpoints, RelationshipTypeDefinition, RelationshipTypeId, RelationshipTypeRef,
-    UnixTimeMillis,
+    DefinitionName, DefinitionVersion, EffectiveInterval, ExternalIdentity, RecordRevision,
+    RecordedRevision, RelationshipEndpoints, RelationshipTypeDefinition, RelationshipTypeId,
+    RelationshipTypeRef, UnixTimeMillis,
 };
 use fleetiq_metadata::{AssetRepository, DefinitionRepository, RelationshipSnapshotQuery};
 use fleetiq_postgres::{PostgresAssetRepository, PostgresDefinitionRepository};

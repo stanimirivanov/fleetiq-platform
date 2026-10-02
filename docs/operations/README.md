@@ -23,3 +23,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   pinned directed-edge type to its operator-facing name.
 - [Protected relationship revision query](relationship-revision-query.md) —
   inspect one exact recorded edge and its effective interval.
+- [Protected signal-binding revision query](signal-binding-revision-query.md)
+  — inspect one exact source-to-property attribution and its effective interval.

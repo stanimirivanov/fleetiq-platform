@@ -12,8 +12,8 @@
   and package-catalogue ports. Asset, semantic-definition, relationship,
   communication-device, and signal-binding operations consume exact
   authorization evidence. Configured-credential HTTP asset, communication-
-  device, exact definition, and exact relationship-revision queries use those
-  boundaries; administration remains without an HTTP API.
+  device, exact definition, relationship-revision, and signal-binding-revision
+  queries use those boundaries; administration remains without an HTTP API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -25,7 +25,7 @@
 - The HTTP surface exposes version discovery and bounded problem details under
   `/api/v1`, plus optional authenticated and authorized asset, device,
   asset-type-definition, property-definition, relationship-type-definition,
-  and exact relationship-revision reads.
+  and exact relationship- and signal-binding-revision reads.
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
@@ -140,11 +140,11 @@ embedded migration chain, exposes liveness and PostgreSQL-backed readiness
 probes, identifies the version 1 HTTP contract, returns bounded problem details
 for unknown API resources and unsupported methods, and shuts down gracefully
 after `Ctrl+C`. A configured bearer identity enables the protected asset,
-communication-device, asset-type, property-definition, relationship-type, and
-exact relationship-revision queries; without complete credential configuration
-those routes are absent. It is an operable development composition root, not a
-production deployment. Unix deployments also handle `SIGTERM`, which is the
-normal container stop signal.
+communication-device, asset-type, property-definition, relationship-type,
+exact relationship-revision, and exact signal-binding-revision queries; without
+complete credential configuration those routes are absent. It is an operable
+development composition root, not a production deployment. Unix deployments
+also handle `SIGTERM`, which is the normal container stop signal.
 
 The local Compose deployment builds that binary in a multi-stage image, waits
 for PostgreSQL readiness, publishes both services only on loopback, and runs the
@@ -305,19 +305,21 @@ implies the other.
 One configured opaque bearer credential authenticates a single external
 identity for `GET /api/v1/tenants/{tenant_id}/assets/{asset_id}`, its nested
 `/device` resource, exact asset-type, property-definition, and
-relationship-type lookup, and exact recorded relationship-revision lookup. The
-process mounts those routes only when the token, authority, and subject are
-configured together. The current actor mapping and exact `metadata.read`
-tenant grant are checked on every request before the metadata repository is
-called. A production identity provider, multi-principal login, membership or
+relationship-type lookup, exact recorded relationship-revision lookup, and
+exact recorded signal-binding-revision lookup. The process mounts those routes
+only when the token, authority, and subject are configured together. The
+current actor mapping and exact `metadata.read` tenant grant are checked on
+every request before the metadata repository is called. A production identity
+provider, multi-principal login, membership or
 role model, administration transport, generalized authentication middleware,
 and audit HTTP API remain future work. See the
 [protected asset query procedure](../operations/asset-query.md),
 [device query procedure](../operations/device-query.md),
 [asset-type query procedure](../operations/asset-type-query.md),
-[property query procedure](../operations/property-query.md), and
-[relationship-type query procedure](../operations/relationship-type-query.md)
-and [relationship revision query procedure](../operations/relationship-revision-query.md).
+[property query procedure](../operations/property-query.md),
+[relationship-type query procedure](../operations/relationship-type-query.md),
+[relationship revision query procedure](../operations/relationship-revision-query.md),
+and [signal-binding revision query procedure](../operations/signal-binding-revision-query.md).
 
 There is no broader business resource API, production authentication provider,
 authorization administration API, message broker, object archive, cache,
