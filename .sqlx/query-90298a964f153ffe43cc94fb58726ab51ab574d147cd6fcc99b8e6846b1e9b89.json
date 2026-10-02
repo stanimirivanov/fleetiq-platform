@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT tenant_id, asset_id, type_id, type_version, display_name\n            FROM metadata.assets\n            WHERE tenant_id = $1\n              AND ($2::text IS NULL OR asset_id > $2)\n            ORDER BY asset_id\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "type_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "type_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "type_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "type_version"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "display_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "display_name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "90298a964f153ffe43cc94fb58726ab51ab574d147cd6fcc99b8e6846b1e9b89"
+}

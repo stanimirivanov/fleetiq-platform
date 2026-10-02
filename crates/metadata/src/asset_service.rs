@@ -2,7 +2,9 @@ use std::{error::Error, fmt};
 
 use fleetiq_domain::{Asset, AssetId, TenantId};
 
-use crate::{AssetRepository, AuthorizedTenant, ManageMetadata, ReadMetadata};
+use crate::{
+    AssetPage, AssetPageQuery, AssetRepository, AuthorizedTenant, ManageMetadata, ReadMetadata,
+};
 
 /// Coordinates authorized operations on tenant-owned assets.
 ///
@@ -74,6 +76,22 @@ where
             .await
             .map_err(AssetApplicationError::Repository)
     }
+
+    /// Lists one bounded page using only the tenant in `ReadMetadata` evidence.
+    ///
+    /// # Errors
+    ///
+    /// Wraps the repository error when the catalogue read fails.
+    pub async fn list_page(
+        &self,
+        authorization: AuthorizedTenant<ReadMetadata>,
+        query: &AssetPageQuery,
+    ) -> Result<AssetPage, AssetApplicationError<R::Error>> {
+        self.repository
+            .list_page(authorization.tenant_id(), query)
+            .await
+            .map_err(AssetApplicationError::Repository)
+    }
 }
 
 /// Failure to execute an authorized asset operation.
@@ -133,6 +151,7 @@ mod tests {
     enum RepositoryCall {
         Insert(Asset),
         FindById(TenantId, AssetId),
+        ListPage(TenantId, AssetPageQuery),
     }
 
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -151,6 +170,7 @@ mod tests {
         calls: Arc<Mutex<Vec<RepositoryCall>>>,
         insert_result: Result<(), TestRepositoryError>,
         find_result: Result<Option<Asset>, TestRepositoryError>,
+        page_result: Result<AssetPage, TestRepositoryError>,
     }
 
     impl Default for RecordingAssetRepository {
@@ -159,6 +179,7 @@ mod tests {
                 calls: Arc::new(Mutex::new(Vec::new())),
                 insert_result: Ok(()),
                 find_result: Ok(None),
+                page_result: Ok(AssetPage::new(Vec::new(), None)),
             }
         }
     }
@@ -175,6 +196,7 @@ mod tests {
             Self {
                 insert_result: Err(TestRepositoryError),
                 find_result: Err(TestRepositoryError),
+                page_result: Err(TestRepositoryError),
                 ..Self::default()
             }
         }
@@ -211,6 +233,18 @@ mod tests {
                     asset_id.clone(),
                 ));
             ready(self.find_result.clone())
+        }
+
+        fn list_page<'a>(
+            &'a self,
+            tenant_id: &'a TenantId,
+            query: &'a AssetPageQuery,
+        ) -> impl Future<Output = Result<AssetPage, Self::Error>> + Send + 'a {
+            self.calls
+                .lock()
+                .expect("calls lock poisoned")
+                .push(RepositoryCall::ListPage(tenant_id.clone(), query.clone()));
+            ready(self.page_result.clone())
         }
     }
 
@@ -278,6 +312,24 @@ mod tests {
         assert_eq!(
             repository.calls(),
             vec![RepositoryCall::FindById(tenant_id("tenant-a"), asset_id)]
+        );
+    }
+
+    #[tokio::test]
+    async fn page_derives_tenant_scope_from_read_authorization() {
+        let repository = RecordingAssetRepository::default();
+        let service = AssetApplicationService::new(repository.clone());
+        let query = AssetPageQuery::new(25, Some(AssetId::new("asset-a").unwrap())).unwrap();
+
+        let page = service
+            .list_page(authorization::<ReadMetadata>("tenant-a").await, &query)
+            .await
+            .expect("catalogue read should succeed");
+
+        assert!(page.assets().is_empty());
+        assert_eq!(
+            repository.calls(),
+            vec![RepositoryCall::ListPage(tenant_id("tenant-a"), query)]
         );
     }
 

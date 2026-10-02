@@ -2,10 +2,11 @@
 
 ## TL;DR
 
-Set all three HTTP identity environment values to enable the read-only asset
-route. Provision the exact external identity and an active actor with a current
-`metadata.read` grant for the selected tenant. Keep the credential in approved
-secret injection, and use TLS termination outside a loopback deployment.
+Set all three HTTP identity environment values to enable exact asset and
+bounded catalogue reads. Provision the exact external identity and an active
+actor with a current `metadata.read` grant for the selected tenant. Keep the
+credential in approved secret injection, and use TLS termination outside a
+loopback deployment.
 
 ## Configuration
 
@@ -15,7 +16,7 @@ secret injection, and use TLS termination outside a loopback deployment.
 | `FLEETIQ_HTTP_IDENTITY_AUTHORITY` | Trusted stable authentication-authority ID for this credential. |
 | `FLEETIQ_HTTP_IDENTITY_SUBJECT` | Opaque subject that the credential identifies within that authority. |
 
-All three variables are optional together. Without them the route is not
+All three variables are optional together. Without them the routes are not
 mounted. Setting only some fails startup. The credential and subject are
 redacted from configuration debug output. Do not put the token in a command
 argument, committed file, URL, log, or screenshot. Generate it with a
@@ -42,6 +43,34 @@ these records; an HTTP administration API is not part of this slice.
   "external_identifiers": []
 }
 ```
+
+`GET /api/v1/tenants/{tenant_id}/assets?limit=50` returns a bounded catalogue
+of asset summaries:
+
+```json
+{
+  "assets": [
+    {
+      "id": "asset-1",
+      "tenant_id": "tenant-a",
+      "name": "Primary machine",
+      "asset_type": { "id": "generic.machine", "version": 1 }
+    }
+  ],
+  "next_after": null
+}
+```
+
+`limit` defaults to 50 and accepts 1 through 100. Assets are ordered by
+stable ID. When `next_after` is not `null`, request the next page using
+`after=<next_after>` and the same limit. An empty catalogue returns `200` with
+an empty `assets` array. Invalid limit, cursor, or query fields return `400`.
+Use the exact asset route to retrieve external identifiers; their per-asset
+count is not bounded by the catalogue page limit.
+The route uses the same credential, current tenant grant, error handling, and
+no-store policy as the exact asset query. New registrations can appear between
+pages; restart traversal if a complete current catalogue is required. See
+[ADR 0088](../adr/0088-page-tenant-asset-catalogue.md).
 
 External identifiers include `kind`, nullable `authority`, and `value`.
 Clients must treat them as tenant-owned metadata. The server sends

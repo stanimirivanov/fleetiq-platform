@@ -106,6 +106,29 @@ impl AssetRepository for TestAssets {
         self.calls.asset.fetch_add(1, Ordering::SeqCst);
         ready(Ok(self.asset.clone()))
     }
+
+    fn list_page<'a>(
+        &'a self,
+        tenant_id: &'a TenantId,
+        query: &'a AssetPageQuery,
+    ) -> impl Future<Output = Result<fleetiq_metadata::AssetPage, Self::Error>> + Send + 'a {
+        assert_eq!(tenant_id.as_str(), "tenant-a");
+        self.calls.asset.fetch_add(1, Ordering::SeqCst);
+        let assets = self
+            .asset
+            .iter()
+            .filter(|asset| query.after().is_none_or(|after| asset.id() > after))
+            .map(|asset| {
+                AssetCatalogueEntry::new(
+                    asset.tenant_id().clone(),
+                    asset.id().clone(),
+                    asset.name().clone(),
+                    asset.asset_type().clone(),
+                )
+            })
+            .collect();
+        ready(Ok(fleetiq_metadata::AssetPage::new(assets, None)))
+    }
 }
 
 fn sample_asset() -> Asset {
@@ -258,6 +281,82 @@ async fn authorized_asset_query_returns_a_transport_document() {
 }
 
 #[tokio::test]
+async fn authorized_asset_catalogue_returns_bounded_summaries_and_no_store() {
+    let calls = Calls::default();
+    let router = router(
+        Some(actor()),
+        Ok(AccessDecision::Allow),
+        Some(sample_asset()),
+        calls.clone(),
+    );
+    let response = router
+        .clone()
+        .oneshot(request(
+            "/api/v1/tenants/tenant-a/assets?limit=1",
+            Some(TOKEN),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    let body = to_bytes(response.into_body(), 4096).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("\"id\":\"asset-1\""));
+    assert!(body.contains("\"name\":\"Primary machine\""));
+    assert!(!body.contains("external_identifiers"));
+    assert!(body.contains("\"next_after\":null"));
+
+    let response = router
+        .oneshot(request(
+            "/api/v1/tenants/tenant-a/assets?after=asset-1",
+            Some(TOKEN),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(
+        to_bytes(response.into_body(), 4096).await.unwrap(),
+        r#"{"assets":[],"next_after":null}"#
+    );
+    assert_eq!(calls.asset.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn catalogue_rejects_invalid_limits_and_cursor_after_authorization() {
+    let calls = Calls::default();
+    let router = router(
+        Some(actor()),
+        Ok(AccessDecision::Allow),
+        Some(sample_asset()),
+        calls.clone(),
+    );
+    for query in [
+        "limit=0",
+        "limit=101",
+        "limit=65535",
+        "after=%20",
+        "unexpected=1",
+    ] {
+        let response = router
+            .clone()
+            .oneshot(request(
+                &format!("/api/v1/tenants/tenant-a/assets?{query}"),
+                Some(TOKEN),
+            ))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{query}");
+        assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    }
+    assert_eq!(calls.asset.load(Ordering::SeqCst), 0);
+    let response = router
+        .oneshot(request("/api/v1/tenants/tenant-a/assets", None))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(calls.asset.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test]
 async fn authorized_missing_asset_is_not_found_and_invalid_id_is_rejected() {
     let calls = Calls::default();
     let router = router(
@@ -333,6 +432,17 @@ async fn configured_route_reads_only_an_asset_with_current_postgres_grant(
     PostgresAssetRepository::new(pool.clone())
         .insert(&sample_asset())
         .await?;
+    PostgresAssetRepository::new(pool.clone())
+        .insert(&Asset::new(
+            TenantId::new("tenant-a")?,
+            AssetId::new("asset-2")?,
+            AssetTypeRef::new(
+                AssetTypeId::new("generic.machine")?,
+                DefinitionVersion::new(1)?,
+            ),
+            AssetName::new("Second machine")?,
+        ))
+        .await?;
 
     let bearer = crate::ServerConfig::from_values("postgres://localhost/test", "127.0.0.1:0")?
         .with_bearer_identity(TOKEN, "workload", "reader")?
@@ -348,6 +458,29 @@ async fn configured_route_reads_only_an_asset_with_current_postgres_grant(
             .status(),
         StatusCode::OK
     );
+    let response = router
+        .clone()
+        .oneshot(request(
+            "/api/v1/tenants/tenant-a/assets?limit=1",
+            Some(TOKEN),
+        ))
+        .await?;
+    assert_eq!(response.status(), StatusCode::OK);
+    let page = to_bytes(response.into_body(), 4096).await?;
+    let page = String::from_utf8_lossy(&page);
+    assert!(page.contains("\"id\":\"asset-1\""));
+    assert!(page.contains("\"next_after\":\"asset-1\""));
+    let response = router
+        .clone()
+        .oneshot(request(
+            "/api/v1/tenants/tenant-a/assets?limit=1&after=asset-1",
+            Some(TOKEN),
+        ))
+        .await?;
+    let page = to_bytes(response.into_body(), 4096).await?;
+    let page = String::from_utf8_lossy(&page);
+    assert!(page.contains("\"id\":\"asset-2\""));
+    assert!(page.contains("\"next_after\":null"));
     assert_eq!(
         router
             .clone()
