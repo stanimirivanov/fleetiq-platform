@@ -35,16 +35,18 @@ selected tenants, and per-action policy decisions. PostgreSQL persists internal
 actors and exact grants and evaluates current policy without a cache; identity-
 provider integration remains planned. Configured-credential asset, device,
 asset-type, property-definition, relationship-type, exact relationship-revision,
-exact signal-binding-revision, and bounded asset-relationship snapshot queries
-join these boundaries through the server composition root; see
+exact signal-binding-revision, bounded asset-relationship snapshot, and bounded
+source-binding snapshot queries join these boundaries through the server
+composition root; see
 [ADR 0079](../adr/0079-protect-initial-asset-query.md),
 [ADR 0080](../adr/0080-expose-communication-device-detail.md),
 [ADR 0081](../adr/0081-read-exact-asset-type-versions.md),
 [ADR 0082](../adr/0082-read-exact-property-definitions.md),
 [ADR 0083](../adr/0083-read-exact-relationship-type-versions.md),
 [ADR 0084](../adr/0084-read-exact-relationship-revisions.md),
-[ADR 0085](../adr/0085-read-exact-signal-binding-revisions.md), and
-[ADR 0086](../adr/0086-page-bitemporal-asset-relationships.md). Other business
+[ADR 0085](../adr/0085-read-exact-signal-binding-revisions.md),
+[ADR 0086](../adr/0086-page-bitemporal-asset-relationships.md), and
+[ADR 0087](../adr/0087-page-bitemporal-source-bindings.md). Other business
 APIs, device transports, production deployment, archival storage, and the web
 application arrive in later milestones.
 
@@ -121,7 +123,9 @@ allows late commissioning data and corrections without rewriting history. The
 same model supports a locomotive and its subsystems when their definitions are
 known. A protected [bounded relationship snapshot](../operations/asset-relationship-snapshot.md)
 now reads the edges involving one asset at explicit physical and recorded
-times. See [semantic asset graph](semantic-asset-graph.md).
+times. The protected [source-binding snapshot](../operations/signal-binding-snapshot.md)
+shows attribution from one decoded signal at the same two time dimensions.
+See [semantic asset graph](semantic-asset-graph.md).
 
 ## Dependency direction
 

@@ -7,7 +7,9 @@ use fleetiq_domain::{
     PropertyDefinitionRef, RecordRevision, RecordedRevision, SignalBinding, SignalBindingId,
     SignalSource, SignalTarget, SourceSignalId, TenantId, UnixTimeMillis,
 };
-use fleetiq_metadata::{SignalBindingRepository, SignalBindingSnapshotQuery};
+use fleetiq_metadata::{
+    SignalBindingRepository, SignalBindingSnapshotPageQuery, SignalBindingSnapshotQuery,
+};
 use fleetiq_postgres::{PostgresRepositoryError, PostgresSignalBindingRepository};
 use sqlx::PgPool;
 
@@ -65,6 +67,112 @@ fn binding(
         )
         .expect("test effective interval should be valid"),
     )
+}
+
+fn binding_with_id(
+    tenant: &TenantId,
+    id: &str,
+    revision_number: u64,
+    recorded_at_ms: i64,
+    endpoint: &str,
+) -> SignalBinding {
+    SignalBinding::new(
+        tenant.clone(),
+        SignalBindingId::new(id).expect("valid test binding ID"),
+        RecordedRevision::new(
+            revision(revision_number),
+            UnixTimeMillis::new(recorded_at_ms),
+        ),
+        source("gateway-1", endpoint, "bus.voltage"),
+        SignalTarget::new(
+            asset_id("power-system-1"),
+            PropertyDefinitionRef::new(
+                PropertyDefinitionId::new("electrical.voltage").expect("valid property ID"),
+                DefinitionVersion::new(1).expect("valid definition version"),
+            ),
+        ),
+        EffectiveInterval::new(UnixTimeMillis::new(0), None).expect("valid interval"),
+    )
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn paged_source_snapshot_preserves_corrections_cursor_and_tenant_scope(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let tenant = tenant_id("tenant-a");
+    seed_topology(&pool, &tenant).await?;
+    let other = tenant_id("tenant-b");
+    seed_topology(&pool, &other).await?;
+    let repository = PostgresSignalBindingRepository::new(pool);
+    for id in ["binding-a", "binding-b", "binding-c"] {
+        repository
+            .insert_revision(&binding_with_id(&tenant, id, 1, 100, "can-primary"))
+            .await?;
+    }
+    repository
+        .insert_revision(&binding_with_id(
+            &tenant,
+            "binding-b",
+            2,
+            200,
+            "can-secondary",
+        ))
+        .await?;
+    let selected = source("gateway-1", "can-primary", "bus.voltage");
+    let early = SignalBindingSnapshotQuery::new(UnixTimeMillis::new(50), UnixTimeMillis::new(150));
+    let first = repository
+        .find_for_source_page(
+            &tenant,
+            &selected,
+            &SignalBindingSnapshotPageQuery::new(early, 1, None)?,
+        )
+        .await?;
+    assert_eq!(first.bindings()[0].id().as_str(), "binding-a");
+    assert_eq!(
+        first.next_after().map(SignalBindingId::as_str),
+        Some("binding-a")
+    );
+    let second = repository
+        .find_for_source_page(
+            &tenant,
+            &selected,
+            &SignalBindingSnapshotPageQuery::new(early, 1, first.next_after().cloned())?,
+        )
+        .await?;
+    assert_eq!(second.bindings()[0].id().as_str(), "binding-b");
+    let late = SignalBindingSnapshotQuery::new(UnixTimeMillis::new(50), UnixTimeMillis::new(250));
+    let corrected = repository
+        .find_for_source_page(
+            &tenant,
+            &selected,
+            &SignalBindingSnapshotPageQuery::new(late, 1, first.next_after().cloned())?,
+        )
+        .await?;
+    assert_eq!(corrected.bindings()[0].id().as_str(), "binding-c");
+    assert!(corrected.next_after().is_none());
+    assert!(
+        repository
+            .find_for_source_page(
+                &other,
+                &selected,
+                &SignalBindingSnapshotPageQuery::new(early, 1, None)?,
+            )
+            .await?
+            .bindings()
+            .is_empty()
+    );
+    assert!(
+        repository
+            .find_for_source_page(
+                &tenant,
+                &source("gateway-1", "can-primary", "unmapped.signal"),
+                &SignalBindingSnapshotPageQuery::new(early, 1, None)?,
+            )
+            .await?
+            .bindings()
+            .is_empty()
+    );
+    Ok(())
 }
 
 /// Seeds a small protocol-neutral topology directly because these tests exercise

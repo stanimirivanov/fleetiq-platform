@@ -61,6 +61,10 @@ property change candidate. Missing, ambiguous, or type-incompatible
 configuration remains an explicit unresolved outcome so operators can diagnose
 and retry after configuration changes.
 
+The protected [source-binding snapshot](../operations/signal-binding-snapshot.md)
+provides a bounded diagnostic read of recorded attributions for one decoded
+source. It does not execute semantic resolution or materialize property state.
+
 ## Persistence invariants
 
 PostgreSQL composite keys prevent cross-tenant references. Foreign keys pin

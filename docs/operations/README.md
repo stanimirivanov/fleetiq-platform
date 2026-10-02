@@ -27,3 +27,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   page the edges involving one asset at explicit physical and recorded times.
 - [Protected signal-binding revision query](signal-binding-revision-query.md)
   — inspect one exact source-to-property attribution and its effective interval.
+- [Protected signal-binding snapshot](signal-binding-snapshot.md) — page the
+  attributions from one decoded source at explicit physical and recorded times.

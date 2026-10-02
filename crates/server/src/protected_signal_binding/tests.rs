@@ -17,13 +17,16 @@ use fleetiq_domain::{
     PropertyDefinitionId, PropertyDefinitionRef, RecordRevision, RecordedRevision, SignalSource,
     SignalTarget, SourceSignalId,
 };
-use fleetiq_metadata::SignalBindingSnapshotQuery;
+use fleetiq_metadata::{
+    SignalBindingSnapshotPage, SignalBindingSnapshotPageQuery, SignalBindingSnapshotQuery,
+};
 use tower::ServiceExt;
 
 use super::*;
 
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const PATH: &str = "/api/v1/tenants/tenant-a/signal-bindings/binding-1/revisions/1";
+const SNAPSHOT_PATH: &str = "/api/v1/tenants/tenant-a/signal-bindings?device_asset_id=gateway-1&endpoint_id=can-primary&signal_id=bus.voltage&effective_at_ms=1500&known_at_ms=2500&limit=1";
 const EXPECTED_JSON: &str = r#"{"id":"binding-1","tenant_id":"tenant-a","revision":"1","recorded_at_ms":2000,"source":{"device_asset_id":"gateway-1","endpoint_id":"can-primary","signal_id":"bus.voltage"},"target":{"asset_id":"power-system-1","property":{"id":"electrical.voltage","version":1}},"effective_interval":{"start_ms":1000,"end_ms":3000}}"#;
 
 #[derive(Clone, Copy, Debug)]
@@ -114,6 +117,26 @@ impl SignalBindingRepository for TestBindings {
         _: SignalBindingSnapshotQuery,
     ) -> impl Future<Output = Result<Vec<SignalBinding>, Self::Error>> + Send {
         ready(Ok(Vec::new()))
+    }
+
+    fn find_for_source_page(
+        &self,
+        tenant_id: &TenantId,
+        source: &SignalSource,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> impl Future<Output = Result<SignalBindingSnapshotPage, Self::Error>> + Send {
+        assert_eq!(tenant_id.as_str(), "tenant-a");
+        assert_eq!(source.device_asset_id().as_str(), "gateway-1");
+        assert_eq!(source.endpoint_id().as_str(), "can-primary");
+        assert_eq!(source.signal_id().as_str(), "bus.voltage");
+        assert_eq!(query.snapshot().effective_at().get(), 1_500);
+        assert_eq!(query.snapshot().known_at().get(), 2_500);
+        self.calls.fetch_add(1, Ordering::SeqCst);
+        ready(
+            self.result
+                .clone()
+                .map(|binding| SignalBindingSnapshotPage::new(binding.into_iter().collect(), None)),
+        )
     }
 }
 
@@ -290,6 +313,72 @@ async fn repository_error_is_redacted_and_other_methods_are_rejected() {
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
 }
 
+#[tokio::test]
+async fn source_snapshot_requires_authorization_and_valid_bounded_parameters() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let test_router = router(
+        true,
+        true,
+        Ok(Some(sample_binding(1, "power-system-1"))),
+        calls.clone(),
+    );
+    let response = test_router
+        .clone()
+        .oneshot(request(SNAPSHOT_PATH, Some(TOKEN)))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    let body = to_bytes(response.into_body(), 4096).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("\"signal_id\":\"bus.voltage\""));
+    assert!(body.contains("\"revision\":\"1\""));
+    assert!(body.contains("\"next_after\":null"));
+    for path in [
+        "/api/v1/tenants/tenant-a/signal-bindings",
+        "/api/v1/tenants/tenant-a/signal-bindings?device_asset_id=gateway-1&endpoint_id=can-primary&signal_id=bus.voltage&effective_at_ms=1&known_at_ms=2&limit=0",
+        "/api/v1/tenants/tenant-a/signal-bindings?device_asset_id=gateway-1&endpoint_id=can-primary&signal_id=bus.voltage&effective_at_ms=1&known_at_ms=2&limit=101",
+        "/api/v1/tenants/tenant-a/signal-bindings?device_asset_id=%20bad&endpoint_id=can-primary&signal_id=bus.voltage&effective_at_ms=1&known_at_ms=2",
+    ] {
+        assert_eq!(
+            test_router
+                .clone()
+                .oneshot(request(path, Some(TOKEN)))
+                .await
+                .unwrap()
+                .status(),
+            StatusCode::BAD_REQUEST
+        );
+    }
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        test_router
+            .clone()
+            .oneshot(request(SNAPSHOT_PATH, None))
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        router(true, false, Ok(None), Arc::default())
+            .oneshot(request(SNAPSHOT_PATH, Some(TOKEN)))
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::FORBIDDEN
+    );
+    let empty = router(true, true, Ok(None), Arc::default())
+        .oneshot(request(SNAPSHOT_PATH, Some(TOKEN)))
+        .await
+        .unwrap();
+    assert_eq!(empty.status(), StatusCode::OK);
+    assert!(
+        String::from_utf8_lossy(&to_bytes(empty.into_body(), 1024).await.unwrap())
+            .contains("\"bindings\":[]")
+    );
+}
+
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn configured_query_reads_exact_revision_and_checks_current_postgres_grant(
     pool: PgPool,
@@ -328,6 +417,14 @@ async fn configured_query_reads_exact_revision_and_checks_current_postgres_grant
         .expect("configured credential")
         .clone();
     let router = postgres_signal_binding_router(pool.clone(), bearer);
+    let snapshot = router.clone().oneshot(request(
+        "/api/v1/tenants/tenant-a/signal-bindings?device_asset_id=gateway-1&endpoint_id=can-primary&signal_id=bus.voltage&effective_at_ms=1500&known_at_ms=5000",
+        Some(TOKEN),
+    )).await?;
+    assert_eq!(snapshot.status(), StatusCode::OK);
+    let snapshot_body = to_bytes(snapshot.into_body(), 4096).await?;
+    assert!(String::from_utf8_lossy(&snapshot_body).contains("\"revision\":\"2\""));
+    assert!(String::from_utf8_lossy(&snapshot_body).contains("\"asset_id\":\"power-system-2\""));
     let response = router.clone().oneshot(request(PATH, Some(TOKEN))).await?;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(to_bytes(response.into_body(), 2048).await?, EXPECTED_JSON);
