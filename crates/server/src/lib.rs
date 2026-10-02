@@ -13,6 +13,7 @@ mod http_api;
 mod protected_asset;
 mod protected_definitions;
 mod protected_device;
+mod protected_relationship;
 mod protected_request;
 
 use std::{error::Error, fmt, io};
@@ -72,6 +73,10 @@ fn application_router(pool: PgPool, config: &ServerConfig) -> Router {
                 bearer.clone(),
             ))
             .merge(protected_device::postgres_device_router(
+                pool.clone(),
+                bearer.clone(),
+            ))
+            .merge(protected_relationship::postgres_relationship_router(
                 pool,
                 bearer.clone(),
             ));
@@ -175,8 +180,14 @@ mod tests {
         let property_path = "/api/v1/tenants/tenant-a/properties/thermal.temperature/versions/1";
         let relationship_type_path =
             "/api/v1/tenants/tenant-a/relationship-types/generic.tows/versions/2";
+        let relationship_path = "/api/v1/tenants/tenant-a/relationships/relationship-1/revisions/1";
         let response = unconfigured
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let response = application_router(pool.clone(), &base)
+            .oneshot(Request::get(relationship_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::NOT_FOUND);
@@ -212,6 +223,12 @@ mod tests {
         let response = router
             .clone()
             .oneshot(Request::get(path).body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        let response = router
+            .clone()
+            .oneshot(Request::get(relationship_path).body(Body::empty()).unwrap())
             .await
             .unwrap();
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
