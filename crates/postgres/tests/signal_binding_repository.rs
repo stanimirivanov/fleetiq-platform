@@ -76,6 +76,24 @@ fn binding_with_id(
     recorded_at_ms: i64,
     endpoint: &str,
 ) -> SignalBinding {
+    binding_with_id_target(
+        tenant,
+        id,
+        revision_number,
+        recorded_at_ms,
+        endpoint,
+        "power-system-1",
+    )
+}
+
+fn binding_with_id_target(
+    tenant: &TenantId,
+    id: &str,
+    revision_number: u64,
+    recorded_at_ms: i64,
+    endpoint: &str,
+    target_asset: &str,
+) -> SignalBinding {
     SignalBinding::new(
         tenant.clone(),
         SignalBindingId::new(id).expect("valid test binding ID"),
@@ -85,7 +103,7 @@ fn binding_with_id(
         ),
         source("gateway-1", endpoint, "bus.voltage"),
         SignalTarget::new(
-            asset_id("power-system-1"),
+            asset_id(target_asset),
             PropertyDefinitionRef::new(
                 PropertyDefinitionId::new("electrical.voltage").expect("valid property ID"),
                 DefinitionVersion::new(1).expect("valid definition version"),
@@ -93,6 +111,113 @@ fn binding_with_id(
         ),
         EffectiveInterval::new(UnixTimeMillis::new(0), None).expect("valid interval"),
     )
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn paged_target_snapshot_preserves_corrections_cursor_and_asset_existence(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let tenant = tenant_id("tenant-a");
+    seed_topology(&pool, &tenant).await?;
+    let other = tenant_id("tenant-b");
+    seed_topology(&pool, &other).await?;
+    let repository = PostgresSignalBindingRepository::new(pool);
+    for id in ["binding-a", "binding-b", "binding-c"] {
+        repository
+            .insert_revision(&binding_with_id(&tenant, id, 1, 100, "can-primary"))
+            .await?;
+    }
+    repository
+        .insert_revision(&binding_with_id_target(
+            &tenant,
+            "binding-b",
+            2,
+            200,
+            "can-primary",
+            "power-system-2",
+        ))
+        .await?;
+    let early = SignalBindingSnapshotQuery::new(UnixTimeMillis::new(50), UnixTimeMillis::new(150));
+    let target = asset_id("power-system-1");
+    let first = repository
+        .find_for_target_page(
+            &tenant,
+            &target,
+            &SignalBindingSnapshotPageQuery::new(early, 1, None)?,
+        )
+        .await?
+        .expect("target asset exists");
+    assert_eq!(first.bindings()[0].id().as_str(), "binding-a");
+    assert_eq!(
+        first.next_after().map(SignalBindingId::as_str),
+        Some("binding-a")
+    );
+    let second = repository
+        .find_for_target_page(
+            &tenant,
+            &target,
+            &SignalBindingSnapshotPageQuery::new(early, 1, first.next_after().cloned())?,
+        )
+        .await?
+        .expect("target asset exists");
+    assert_eq!(second.bindings()[0].id().as_str(), "binding-b");
+    let late = SignalBindingSnapshotQuery::new(UnixTimeMillis::new(50), UnixTimeMillis::new(250));
+    let corrected = repository
+        .find_for_target_page(
+            &tenant,
+            &target,
+            &SignalBindingSnapshotPageQuery::new(late, 1, first.next_after().cloned())?,
+        )
+        .await?
+        .expect("target asset exists");
+    assert_eq!(corrected.bindings()[0].id().as_str(), "binding-c");
+    assert!(corrected.next_after().is_none());
+    let moved = repository
+        .find_for_target_page(
+            &tenant,
+            &asset_id("power-system-2"),
+            &SignalBindingSnapshotPageQuery::new(late, 10, None)?,
+        )
+        .await?
+        .expect("new target exists");
+    assert_eq!(moved.bindings()[0].id().as_str(), "binding-b");
+    assert_eq!(moved.bindings()[0].revision().get(), 2);
+    assert_eq!(moved.bindings().len(), 1);
+    assert!(
+        repository
+            .find_for_target_page(
+                &other,
+                &target,
+                &SignalBindingSnapshotPageQuery::new(early, 10, None)?,
+            )
+            .await?
+            .expect("other tenant owns an asset with the same ID")
+            .bindings()
+            .is_empty()
+    );
+    assert!(
+        repository
+            .find_for_target_page(
+                &tenant,
+                &asset_id("gateway-1"),
+                &SignalBindingSnapshotPageQuery::new(early, 10, None)?,
+            )
+            .await?
+            .expect("unbound asset exists")
+            .bindings()
+            .is_empty()
+    );
+    assert!(
+        repository
+            .find_for_target_page(
+                &tenant,
+                &asset_id("missing-asset"),
+                &SignalBindingSnapshotPageQuery::new(early, 10, None)?,
+            )
+            .await?
+            .is_none()
+    );
+    Ok(())
 }
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]

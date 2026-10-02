@@ -1,6 +1,8 @@
 use std::future::Future;
 
-use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
+use fleetiq_domain::{
+    AssetId, RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId,
+};
 use fleetiq_metadata::{
     SignalBindingRepository, SignalBindingSnapshotPage, SignalBindingSnapshotPageQuery,
     SignalBindingSnapshotQuery,
@@ -63,6 +65,15 @@ impl SignalBindingRepository for PostgresSignalBindingRepository {
         query: &SignalBindingSnapshotPageQuery,
     ) -> impl Future<Output = Result<SignalBindingSnapshotPage, Self::Error>> + Send {
         self.find_source_snapshot_page(tenant_id, source, query)
+    }
+
+    fn find_for_target_page(
+        &self,
+        tenant_id: &TenantId,
+        asset_id: &AssetId,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> impl Future<Output = Result<Option<SignalBindingSnapshotPage>, Self::Error>> + Send {
+        self.find_target_snapshot_page(tenant_id, asset_id, query)
     }
 }
 

@@ -1,6 +1,8 @@
 use std::{error::Error, fmt};
 
-use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
+use fleetiq_domain::{
+    AssetId, RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId,
+};
 
 use crate::{
     AuthorizedTenant, ManageMetadata, ReadMetadata, SignalBindingRepository,
@@ -112,6 +114,26 @@ where
     ) -> Result<SignalBindingSnapshotPage, SignalBindingApplicationError<R::Error>> {
         self.repository
             .find_for_source_page(authorization.tenant_id(), source, query)
+            .await
+            .map_err(SignalBindingApplicationError::Repository)
+    }
+
+    /// Reads a bounded target-asset attribution page under tenant authorization.
+    ///
+    /// `None` means the requested asset does not exist in the authorized
+    /// tenant. An empty page means it exists without matching bindings.
+    ///
+    /// # Errors
+    ///
+    /// Wraps the repository error when retrieval fails.
+    pub async fn find_for_target_page(
+        &self,
+        authorization: AuthorizedTenant<ReadMetadata>,
+        asset_id: &AssetId,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> Result<Option<SignalBindingSnapshotPage>, SignalBindingApplicationError<R::Error>> {
+        self.repository
+            .find_for_target_page(authorization.tenant_id(), asset_id, query)
             .await
             .map_err(SignalBindingApplicationError::Repository)
     }

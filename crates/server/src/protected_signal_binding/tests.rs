@@ -27,6 +27,7 @@ use super::*;
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const PATH: &str = "/api/v1/tenants/tenant-a/signal-bindings/binding-1/revisions/1";
 const SNAPSHOT_PATH: &str = "/api/v1/tenants/tenant-a/signal-bindings?device_asset_id=gateway-1&endpoint_id=can-primary&signal_id=bus.voltage&effective_at_ms=1500&known_at_ms=2500&limit=1";
+const TARGET_PATH: &str = "/api/v1/tenants/tenant-a/assets/power-system-1/signal-bindings?effective_at_ms=1500&known_at_ms=2500&limit=1";
 const EXPECTED_JSON: &str = r#"{"id":"binding-1","tenant_id":"tenant-a","revision":"1","recorded_at_ms":2000,"source":{"device_asset_id":"gateway-1","endpoint_id":"can-primary","signal_id":"bus.voltage"},"target":{"asset_id":"power-system-1","property":{"id":"electrical.voltage","version":1}},"effective_interval":{"start_ms":1000,"end_ms":3000}}"#;
 
 #[derive(Clone, Copy, Debug)]
@@ -137,6 +138,22 @@ impl SignalBindingRepository for TestBindings {
                 .clone()
                 .map(|binding| SignalBindingSnapshotPage::new(binding.into_iter().collect(), None)),
         )
+    }
+
+    fn find_for_target_page(
+        &self,
+        tenant_id: &TenantId,
+        asset_id: &AssetId,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> impl Future<Output = Result<Option<SignalBindingSnapshotPage>, Self::Error>> + Send {
+        assert_eq!(tenant_id.as_str(), "tenant-a");
+        assert_eq!(query.snapshot().effective_at().get(), 1_500);
+        assert_eq!(query.snapshot().known_at().get(), 2_500);
+        self.calls.fetch_add(1, Ordering::SeqCst);
+        ready(self.result.clone().map(|binding| {
+            (asset_id.as_str() != "missing-asset")
+                .then(|| SignalBindingSnapshotPage::new(binding.into_iter().collect(), None))
+        }))
     }
 }
 
@@ -379,6 +396,82 @@ async fn source_snapshot_requires_authorization_and_valid_bounded_parameters() {
     );
 }
 
+#[tokio::test]
+async fn target_snapshot_distinguishes_missing_and_unbound_assets_and_validates_input() {
+    let calls = Arc::new(AtomicUsize::new(0));
+    let test_router = router(
+        true,
+        true,
+        Ok(Some(sample_binding(1, "power-system-1"))),
+        calls.clone(),
+    );
+    let response = test_router
+        .clone()
+        .oneshot(request(TARGET_PATH, Some(TOKEN)))
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    let body = to_bytes(response.into_body(), 4096).await.unwrap();
+    let body = String::from_utf8_lossy(&body);
+    assert!(body.contains("\"asset_id\":\"power-system-1\""));
+    assert!(body.contains("\"revision\":\"1\""));
+    assert!(body.contains("\"next_after\":null"));
+    for path in [
+        "/api/v1/tenants/tenant-a/assets/power-system-1/signal-bindings",
+        "/api/v1/tenants/tenant-a/assets/power-system-1/signal-bindings?effective_at_ms=1500&known_at_ms=2500&limit=0",
+        "/api/v1/tenants/tenant-a/assets/power-system-1/signal-bindings?effective_at_ms=1500&known_at_ms=2500&limit=101",
+        "/api/v1/tenants/tenant-a/assets/power-system-1/signal-bindings?effective_at_ms=1500&known_at_ms=2500&after=%20",
+        "/api/v1/tenants/tenant-a/assets/%20/signal-bindings?effective_at_ms=1500&known_at_ms=2500",
+    ] {
+        assert_eq!(
+            test_router
+                .clone()
+                .oneshot(request(path, Some(TOKEN)))
+                .await
+                .unwrap()
+                .status(),
+            StatusCode::BAD_REQUEST,
+            "{path}"
+        );
+    }
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        test_router
+            .clone()
+            .oneshot(request(TARGET_PATH, None))
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        router(true, false, Ok(None), Arc::default())
+            .oneshot(request(TARGET_PATH, Some(TOKEN)))
+            .await
+            .unwrap()
+            .status(),
+        StatusCode::FORBIDDEN
+    );
+    let missing = router(true, true, Ok(None), Arc::default())
+        .oneshot(request(
+            "/api/v1/tenants/tenant-a/assets/missing-asset/signal-bindings?effective_at_ms=1500&known_at_ms=2500",
+            Some(TOKEN),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(missing.status(), StatusCode::NOT_FOUND);
+    let empty = router(true, true, Ok(None), Arc::default())
+        .oneshot(request(TARGET_PATH, Some(TOKEN)))
+        .await
+        .unwrap();
+    assert_eq!(empty.status(), StatusCode::OK);
+    assert!(
+        String::from_utf8_lossy(&to_bytes(empty.into_body(), 1024).await.unwrap())
+            .contains("\"bindings\":[]")
+    );
+}
+
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn configured_query_reads_exact_revision_and_checks_current_postgres_grant(
     pool: PgPool,
@@ -417,6 +510,36 @@ async fn configured_query_reads_exact_revision_and_checks_current_postgres_grant
         .expect("configured credential")
         .clone();
     let router = postgres_signal_binding_router(pool.clone(), bearer);
+    let target_early = router
+        .clone()
+        .oneshot(request(TARGET_PATH, Some(TOKEN)))
+        .await?;
+    assert_eq!(target_early.status(), StatusCode::OK);
+    let body = to_bytes(target_early.into_body(), 4096).await?;
+    assert!(String::from_utf8_lossy(&body).contains("\"revision\":\"1\""));
+    let target_late = router.clone().oneshot(request(
+        "/api/v1/tenants/tenant-a/assets/power-system-1/signal-bindings?effective_at_ms=1500&known_at_ms=5000",
+        Some(TOKEN),
+    )).await?;
+    assert_eq!(target_late.status(), StatusCode::OK);
+    assert!(
+        String::from_utf8_lossy(&to_bytes(target_late.into_body(), 4096).await?)
+            .contains("\"bindings\":[]")
+    );
+    let moved_target = router.clone().oneshot(request(
+        "/api/v1/tenants/tenant-a/assets/power-system-2/signal-bindings?effective_at_ms=1500&known_at_ms=5000",
+        Some(TOKEN),
+    )).await?;
+    assert_eq!(moved_target.status(), StatusCode::OK);
+    let body = to_bytes(moved_target.into_body(), 4096).await?;
+    assert!(String::from_utf8_lossy(&body).contains("\"revision\":\"2\""));
+    assert_eq!(
+        router.clone().oneshot(request(
+            "/api/v1/tenants/tenant-a/assets/missing-asset/signal-bindings?effective_at_ms=1500&known_at_ms=5000",
+            Some(TOKEN),
+        )).await?.status(),
+        StatusCode::NOT_FOUND
+    );
     let snapshot = router.clone().oneshot(request(
         "/api/v1/tenants/tenant-a/signal-bindings?device_asset_id=gateway-1&endpoint_id=can-primary&signal_id=bus.voltage&effective_at_ms=1500&known_at_ms=5000",
         Some(TOKEN),

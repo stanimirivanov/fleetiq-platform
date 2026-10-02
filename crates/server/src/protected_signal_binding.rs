@@ -1,4 +1,4 @@
-//! Protected exact-revision and bounded bitemporal source-binding reads.
+//! Protected exact-revision and bounded bitemporal binding reads.
 
 use std::sync::Arc;
 
@@ -39,6 +39,8 @@ use crate::{
     },
 };
 
+mod target;
+
 struct SignalBindingQueryState<A, R, P, Q> {
     authentication: CallerAuthenticationService<A, R>,
     authorization: TenantAuthorizationService<P>,
@@ -66,6 +68,10 @@ where
         bindings,
     });
     Router::new()
+        .route(
+            "/api/v1/tenants/{tenant_id}/assets/{asset_id}/signal-bindings",
+            get(target::get_target_snapshot::<A, R, P, Q>).fallback(protected_method_not_allowed),
+        )
         .route(
             "/api/v1/tenants/{tenant_id}/signal-bindings",
             get(get_source_snapshot::<A, R, P, Q>).fallback(protected_method_not_allowed),

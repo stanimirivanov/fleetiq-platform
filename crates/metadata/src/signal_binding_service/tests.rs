@@ -26,6 +26,7 @@ enum RepositoryCall {
     FindRevision(TenantId, SignalBindingId, RecordRevision),
     FindForSource(TenantId, SignalSource, SignalBindingSnapshotQuery),
     FindForSourcePage(TenantId, SignalSource, SignalBindingSnapshotPageQuery),
+    FindForTargetPage(TenantId, AssetId, SignalBindingSnapshotPageQuery),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -140,6 +141,27 @@ impl SignalBindingRepository for RecordingSignalBindingRepository {
             Ok(SignalBindingSnapshotPage::new(self.snapshot.clone(), None))
         })
     }
+
+    fn find_for_target_page(
+        &self,
+        tenant_id: &TenantId,
+        asset_id: &AssetId,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> impl Future<Output = Result<Option<SignalBindingSnapshotPage>, Self::Error>> + Send {
+        self.record(RepositoryCall::FindForTargetPage(
+            tenant_id.clone(),
+            asset_id.clone(),
+            query.clone(),
+        ));
+        ready(if self.fail {
+            Err(TestRepositoryError)
+        } else {
+            Ok(Some(SignalBindingSnapshotPage::new(
+                self.snapshot.clone(),
+                None,
+            )))
+        })
+    }
 }
 
 struct AllowAllPolicy;
@@ -217,16 +239,28 @@ async fn reads_exact_revision_and_snapshot_in_the_authorized_tenant() {
         .find_for_source_page(read_authorization("tenant-a").await, &source, &page_query)
         .await
         .expect("page lookup should succeed");
+    let target_id = binding.target().asset_id().clone();
+    let target_page = service
+        .find_for_target_page(
+            read_authorization("tenant-a").await,
+            &target_id,
+            &page_query,
+        )
+        .await
+        .expect("target page lookup should succeed")
+        .expect("target asset should exist");
 
     assert_eq!(exact, Some(binding.clone()));
     assert_eq!(snapshot, vec![binding]);
     assert_eq!(page.bindings(), snapshot);
+    assert_eq!(target_page.bindings(), snapshot);
     assert_eq!(
         repository.calls(),
         vec![
             RepositoryCall::FindRevision(tenant_id("tenant-a"), binding_id, revision),
             RepositoryCall::FindForSource(tenant_id("tenant-a"), source.clone(), query),
-            RepositoryCall::FindForSourcePage(tenant_id("tenant-a"), source, page_query,),
+            RepositoryCall::FindForSourcePage(tenant_id("tenant-a"), source, page_query.clone()),
+            RepositoryCall::FindForTargetPage(tenant_id("tenant-a"), target_id, page_query),
         ]
     );
 }
