@@ -30,3 +30,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   — inspect one exact source-to-property attribution and its effective interval.
 - [Protected signal-binding snapshot](signal-binding-snapshot.md) — page the
   attributions from one decoded source at explicit physical and recorded times.
+- [Protected asset-binding snapshot](asset-binding-snapshot.md) — page the
+  attributions targeting one asset at explicit physical and recorded times.

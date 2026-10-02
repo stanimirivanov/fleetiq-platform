@@ -14,8 +14,9 @@
   authorization evidence. Configured-credential HTTP exact asset, bounded
   asset catalogue, communication-device, exact definition,
   relationship-revision, signal-binding-revision,
-  bounded asset-relationship snapshot, and bounded source-binding snapshot
-  queries use those boundaries; administration remains without an HTTP API.
+  bounded asset-relationship snapshot, bounded source-binding snapshot, and
+  bounded target-asset binding snapshot queries use those boundaries;
+  administration remains without an HTTP API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, and protocol releases have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
@@ -29,8 +30,9 @@
   asset catalogue, device, asset-type-definition, property-definition,
   relationship-type-definition,
   exact relationship- and signal-binding-revision reads, and a bounded
-  bitemporal relationship snapshot for one asset and a bounded source-binding
-  snapshot for one decoded signal.
+  bitemporal relationship snapshot for one asset, a bounded source-binding
+  snapshot for one decoded signal, and a bounded binding snapshot targeting one
+  asset.
 - Exact platform authorization is distinct from tenant-scoped access, and an
   authorized command provisions a tenant, its initial access, and immutable
   audit evidence atomically.
@@ -148,7 +150,8 @@ after `Ctrl+C`. A configured bearer identity enables protected exact asset,
 bounded asset catalogue, communication-device, asset-type, property-definition,
 relationship-type,
 exact relationship-revision, exact signal-binding-revision, bounded
-asset-relationship snapshot, and bounded source-binding snapshot queries;
+asset-relationship snapshot, bounded source-binding snapshot, and bounded
+target-asset binding snapshot queries;
 without complete credential configuration those routes are absent. It is an
 operable development composition root, not a production deployment. Unix deployments
 also handle `SIGTERM`, which is the normal container stop signal.
@@ -314,8 +317,9 @@ identity for exact asset and bounded tenant asset catalogue reads, the exact
 asset's nested `/device` resource, exact asset-type, property-definition, and
 relationship-type lookup, exact recorded relationship-revision lookup,
 exact recorded signal-binding-revision lookup, a bounded asset-relationship
-snapshot, and a bounded source-binding snapshot. The process mounts those
-routes only when the token, authority, and subject are configured together. The
+snapshot, a bounded source-binding snapshot, and a bounded target-asset binding
+snapshot. The process mounts those routes only when the token, authority, and
+subject are configured together. The
 current actor mapping and exact `metadata.read` tenant grant are checked on
 every request before the metadata repository is called. A production identity
 provider, multi-principal login, membership or
@@ -329,7 +333,8 @@ and audit HTTP API remain future work. See the
 [relationship revision query procedure](../operations/relationship-revision-query.md),
 [signal-binding revision query procedure](../operations/signal-binding-revision-query.md),
 [asset relationship snapshot procedure](../operations/asset-relationship-snapshot.md),
-and [signal-binding snapshot procedure](../operations/signal-binding-snapshot.md).
+[signal-binding snapshot procedure](../operations/signal-binding-snapshot.md),
+and [asset-binding snapshot procedure](../operations/asset-binding-snapshot.md).
 
 There is no broader business resource API, production authentication provider,
 authorization administration API, message broker, object archive, cache,

@@ -36,9 +36,9 @@ actors and exact grants and evaluates current policy without a cache; identity-
 provider integration remains planned. Configured-credential exact asset,
 bounded tenant asset catalogue, device, asset-type, property-definition,
 relationship-type, exact relationship-revision,
-exact signal-binding-revision, bounded asset-relationship snapshot, and bounded
-source-binding snapshot queries join these boundaries through the server
-composition root; see
+exact signal-binding-revision, bounded asset-relationship snapshot, bounded
+source-binding snapshot, and bounded target-asset binding snapshot queries join
+these boundaries through the server composition root; see
 [ADR 0079](../adr/0079-protect-initial-asset-query.md),
 [ADR 0080](../adr/0080-expose-communication-device-detail.md),
 [ADR 0081](../adr/0081-read-exact-asset-type-versions.md),
@@ -47,8 +47,9 @@ composition root; see
 [ADR 0084](../adr/0084-read-exact-relationship-revisions.md),
 [ADR 0085](../adr/0085-read-exact-signal-binding-revisions.md),
 [ADR 0086](../adr/0086-page-bitemporal-asset-relationships.md),
-[ADR 0087](../adr/0087-page-bitemporal-source-bindings.md), and
-[ADR 0088](../adr/0088-page-tenant-asset-catalogue.md). Other business
+[ADR 0087](../adr/0087-page-bitemporal-source-bindings.md),
+[ADR 0088](../adr/0088-page-tenant-asset-catalogue.md), and
+[ADR 0089](../adr/0089-page-bitemporal-asset-target-bindings.md). Other business
 APIs, device transports, production deployment, archival storage, and the web
 application arrive in later milestones.
 
@@ -126,7 +127,9 @@ same model supports a locomotive and its subsystems when their definitions are
 known. A protected [bounded relationship snapshot](../operations/asset-relationship-snapshot.md)
 now reads the edges involving one asset at explicit physical and recorded
 times. The protected [source-binding snapshot](../operations/signal-binding-snapshot.md)
-shows attribution from one decoded signal at the same two time dimensions.
+shows attribution from one decoded signal, while the
+[asset-binding snapshot](../operations/asset-binding-snapshot.md) shows the
+bindings targeting one asset at the same two time dimensions.
 See [semantic asset graph](semantic-asset-graph.md).
 
 ## Dependency direction

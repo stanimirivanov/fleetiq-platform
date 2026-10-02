@@ -95,6 +95,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0086](0086-page-bitemporal-asset-relationships.md) | Authorized bounded bitemporal relationship snapshot for one asset |
 | [0087](0087-page-bitemporal-source-bindings.md) | Authorized bounded bitemporal signal-binding snapshot for one decoded source |
 | [0088](0088-page-tenant-asset-catalogue.md) | Authorized bounded tenant asset catalogue of summaries |
+| [0089](0089-page-bitemporal-asset-target-bindings.md) | Authorized bounded binding snapshot targeting one asset |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

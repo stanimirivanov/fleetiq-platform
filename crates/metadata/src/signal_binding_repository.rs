@@ -1,11 +1,13 @@
 use std::{error::Error, future::Future};
 
-use fleetiq_domain::{RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId};
+use fleetiq_domain::{
+    AssetId, RecordRevision, SignalBinding, SignalBindingId, SignalSource, TenantId,
+};
 
 // Preserve the application-facing query name while semantic policy owns it.
 pub use fleetiq_semantics::SignalBindingSnapshotQuery;
 
-/// A bounded, exclusive-keyset request for one decoded source's bindings.
+/// A bounded, exclusive-keyset request for a bitemporal binding snapshot.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SignalBindingSnapshotPageQuery {
     snapshot: SignalBindingSnapshotQuery,
@@ -65,7 +67,7 @@ impl std::fmt::Display for InvalidSignalBindingPageLimit {
 
 impl Error for InvalidSignalBindingPageLimit {}
 
-/// One ordered page of recorded bindings selecting a decoded source.
+/// One ordered page of recorded bindings selecting a source or target asset.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SignalBindingSnapshotPage {
     bindings: Vec<SignalBinding>,
@@ -137,4 +139,17 @@ pub trait SignalBindingRepository: Send + Sync {
         source: &SignalSource,
         query: &SignalBindingSnapshotPageQuery,
     ) -> impl Future<Output = Result<SignalBindingSnapshotPage, Self::Error>> + Send;
+
+    /// Returns a bounded page of latest-known bindings targeting an asset.
+    ///
+    /// `None` means the current tenant asset does not exist; an existing asset
+    /// without effective bindings returns an empty page. Implementations must
+    /// select each candidate's latest known revision before filtering its
+    /// target and physical effective interval.
+    fn find_for_target_page(
+        &self,
+        tenant_id: &TenantId,
+        asset_id: &AssetId,
+        query: &SignalBindingSnapshotPageQuery,
+    ) -> impl Future<Output = Result<Option<SignalBindingSnapshotPage>, Self::Error>> + Send;
 }

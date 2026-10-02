@@ -63,7 +63,9 @@ and retry after configuration changes.
 
 The protected [source-binding snapshot](../operations/signal-binding-snapshot.md)
 provides a bounded diagnostic read of recorded attributions for one decoded
-source. It does not execute semantic resolution or materialize property state.
+source. The [asset-binding snapshot](../operations/asset-binding-snapshot.md)
+provides the reverse view for one target asset. Neither executes semantic
+resolution or materializes property state.
 
 ## Persistence invariants
 
