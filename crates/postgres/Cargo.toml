@@ -11,6 +11,7 @@ rust-version.workspace = true
 fleetiq-access = { path = "../access" }
 bigdecimal.workspace = true
 fleetiq-domain = { path = "../domain" }
+fleetiq-history = { path = "../history" }
 fleetiq-identity = { path = "../identity" }
 fleetiq-ingestion = { path = "../ingestion" }
 fleetiq-metadata = { path = "../metadata" }

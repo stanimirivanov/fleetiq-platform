@@ -6,6 +6,7 @@
 mod access;
 mod action_codec;
 mod error;
+mod history;
 mod identity;
 mod ingestion;
 mod metadata;
@@ -16,6 +17,7 @@ pub use access::{
     PostgresTenantAccessPolicyError,
 };
 pub use error::PostgresRepositoryError;
+pub use history::{PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError};
 pub use identity::{
     PostgresActorCatalogRepository, PostgresActorCatalogRepositoryError,
     PostgresActorLifecycleAdministration, PostgresActorLifecycleAdministrationError,

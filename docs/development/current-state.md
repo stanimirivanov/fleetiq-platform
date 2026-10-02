@@ -9,7 +9,8 @@
   tenant, and bootstrap use cases and ports. PostgreSQL supplies their adapters.
   The `fleetiq-metadata` crate owns asset-graph use cases and ports;
   `fleetiq-ingestion` owns durable acceptance, decoded-result persistence,
-  and package-catalogue ports. Asset, semantic-definition, relationship,
+  and package-catalogue ports; `fleetiq-history` owns the semantic property
+  change append port. Asset, semantic-definition, relationship,
   communication-device, and signal-binding operations consume exact
   authorization evidence. Configured-credential HTTP exact asset, bounded
   asset catalogue, communication-device, exact definition,
@@ -18,11 +19,13 @@
   bounded target-asset binding snapshot queries use those boundaries;
   administration remains without an HTTP API.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
-  messages, decoded results, and protocol releases have PostgreSQL contracts.
+  messages, decoded results, semantic property changes, and protocol releases
+  have PostgreSQL contracts.
 - Protocol framing and processing are bounded and a versioned WIT component
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and `fleetiq-live` projection
-  contracts exist; their production workers and stores do not.
+  contracts exist; property-change append history is durable, while production
+  semantic workers, calculator stores, and live projections do not exist.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
@@ -124,18 +127,21 @@ configuration. Successful binding produces asset property change candidates
 with event-time basis and deterministic interpretation identity.
 Its read ports and snapshot query belong to semantic policy; PostgreSQL
 implements the ports directly, and metadata re-exports the query for its
-callers.
+callers. `fleetiq-history` owns an append-only property-change port;
+PostgreSQL verifies the candidate against durable decoded and binding facts
+and records its exact interpretation identity and event-time basis. No worker
+invokes this port yet.
 
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
 deltas, cursor continuity, and resnapshot reasons. No production semantic worker,
-property history store, calculator runtime, subscription transport, or operator
+property history reader, calculator runtime, subscription transport, or operator
 dashboard exists yet.
 
 ## Runtime and data
 
 The workspace is Rust 2024 on Rust 1.98.1. PostgreSQL adapters are organized
-by access, identity, metadata, and ingestion capability inside one crate. A
+by access, identity, metadata, ingestion, and history capability inside one crate. A
 private codec keeps persisted platform and tenant action names consistent
 across policy, administration, catalogue, and audit paths. PostgreSQL 18.6
 stores metadata and ingestion facts under checked SQL migrations. SQLx macros validate queries
@@ -346,7 +352,8 @@ as production product behavior.
 
 - No Teltonika or other real device package is distributed.
 - No package activation, connection routing, network transport, or command path.
-- No semantic history persistence or end-to-end ingestion worker.
+- No semantic history reader or end-to-end ingestion worker; only the
+  append-only property-change persistence boundary exists.
 - No tenant/user administration, authentication, authorization, or audit UI.
 - No live map, graph editor, dashboard, alert delivery, or broad graph query API.
 - No archive, retention enforcement, backup/restore, or cost controls.
