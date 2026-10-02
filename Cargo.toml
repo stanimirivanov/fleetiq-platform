@@ -3,6 +3,7 @@ members = [
     "crates/access",
     "crates/analytics",
     "crates/domain",
+    "crates/history",
     "crates/identity",
     "crates/ingestion",
     "crates/live",

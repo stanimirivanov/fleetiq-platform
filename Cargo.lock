@@ -638,6 +638,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-history"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-semantics",
+]
+
+[[package]]
 name = "fleetiq-identity"
 version = "0.1.0"
 dependencies = [
@@ -678,6 +685,7 @@ dependencies = [
  "bigdecimal",
  "fleetiq-access",
  "fleetiq-domain",
+ "fleetiq-history",
  "fleetiq-identity",
  "fleetiq-ingestion",
  "fleetiq-metadata",

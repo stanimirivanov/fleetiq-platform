@@ -74,7 +74,10 @@ flowchart LR
     History -. retention .-> Archive[(Object archive)]
 ```
 
-The initial design favors PostgreSQL for transactional history and a separate
+The append-only property-change history now persists exact semantic
+interpretation identities with tenant-safe decoded-observation and binding
+references. The processing worker and history read API remain planned. The
+initial design favors PostgreSQL for transactional history and a separate
 object archive only when volume and retention economics justify it. Query
 stores and caches are derived and rebuildable. The source facts and pinned
 versions needed for replay remain durable.

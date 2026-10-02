@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT EXISTS (\n                SELECT 1\n                FROM ingestion.decoded_observations AS observation\n                JOIN ingestion.accepted_messages AS message\n                  USING (tenant_id, message_id, protocol_package_id,\n                         protocol_package_version)\n                JOIN metadata.signal_binding_revisions AS binding\n                  ON binding.tenant_id = observation.tenant_id\n                 AND binding.binding_id = $18\n                 AND binding.revision = $19\n                JOIN metadata.property_definitions AS property\n                  ON property.tenant_id = binding.tenant_id\n                 AND property.property_id = binding.target_property_id\n                 AND property.version = binding.target_property_version\n                WHERE observation.tenant_id = $1\n                  AND observation.message_id = $2\n                  AND observation.protocol_package_id = $3\n                  AND observation.protocol_package_version = $4\n                  AND observation.output_index = $5\n                  AND message.device_asset_id = $6\n                  AND message.received_at_ms = $7\n                  AND observation.endpoint_id = $8\n                  AND observation.signal_id = $9\n                  AND observation.device_recorded_at_ms IS NOT DISTINCT FROM $10::bigint\n                  AND observation.value_kind = $11\n                  AND observation.value_boolean IS NOT DISTINCT FROM $12::boolean\n                  AND observation.value_integer IS NOT DISTINCT FROM $13::bigint\n                  AND observation.value_decimal IS NOT DISTINCT FROM $14::numeric\n                  AND observation.value_text IS NOT DISTINCT FROM $15::text\n                  AND observation.source_unit IS NOT DISTINCT FROM $16::text\n                  AND observation.quality = $17\n                  AND binding.source_device_asset_id = message.device_asset_id\n                  AND binding.source_endpoint_id = observation.endpoint_id\n                  AND binding.source_signal_id = observation.signal_id\n                  AND binding.target_asset_id = $20\n                  AND binding.target_property_id = $21\n                  AND binding.target_property_version = $22\n                  AND property.value_kind = observation.value_kind\n                  AND property.canonical_unit IS NOT DISTINCT FROM observation.source_unit\n                  AND binding.recorded_at_ms <= $23\n                  AND binding.effective_start_ms <= $24\n                  AND (binding.effective_end_ms IS NULL\n                       OR $24 < binding.effective_end_ms)\n                  AND NOT EXISTS (\n                      SELECT 1\n                      FROM metadata.signal_binding_revisions AS later\n                      WHERE later.tenant_id = binding.tenant_id\n                        AND later.binding_id = binding.binding_id\n                        AND later.revision > binding.revision\n                        AND later.recorded_at_ms <= $23\n                  )\n            ) AS \"matches!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Int8",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Bool",
+        "Int8",
+        "Numeric",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Numeric",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d147a982fcb437226f8fc53c0c12be35cd56a9c9aa73b9a09b170fdac9750df2"
+}

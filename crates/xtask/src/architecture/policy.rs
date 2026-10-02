@@ -25,6 +25,13 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         build: NONE,
     },
     PackagePolicy {
+        name: "fleetiq-history",
+        role: CrateRole::Application,
+        normal: &["fleetiq-semantics"],
+        development: NONE,
+        build: NONE,
+    },
+    PackagePolicy {
         name: "fleetiq-identity",
         role: CrateRole::Application,
         normal: &["fleetiq-access", "fleetiq-domain"],
@@ -63,6 +70,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         normal: &[
             "fleetiq-access",
             "fleetiq-domain",
+            "fleetiq-history",
             "fleetiq-identity",
             "fleetiq-ingestion",
             "fleetiq-metadata",

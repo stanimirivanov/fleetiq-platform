@@ -1,0 +1,42 @@
+//! Application-owned durability contract for semantic property history.
+//!
+//! Successfully resolved property changes are immutable facts. The semantic
+//! resolver remains read-only; a future worker can append its output here
+//! after decoded observations are durable.
+
+use std::{error::Error, future::Future};
+
+use fleetiq_semantics::AssetPropertyChange;
+
+/// Result of durably appending one semantic interpretation.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PropertyChangeAppendOutcome {
+    /// This interpretation was appended for the first time.
+    Appended,
+    /// The same interpretation was already durable.
+    AlreadyPresent,
+}
+
+/// Append-only boundary for asset-property change candidates.
+///
+/// The exact decoded observation and binding revision must already be durable
+/// and belong to the same tenant. An implementation verifies the supplied
+/// immutable provenance against those facts before recording the interpretation.
+/// An ambiguous storage error may mean the append committed; callers retain
+/// the borrowed change and can retry it unchanged.
+pub trait AssetPropertyChangeLog: Send + Sync {
+    /// Infrastructure or invalid-reference failure.
+    type Error: Error + Send + Sync + 'static;
+
+    /// Persists one interpretation or identifies an exact retry.
+    ///
+    /// # Errors
+    ///
+    /// Returns an implementation error if provenance disagrees with durable
+    /// source facts, the change identity is reused with different content, or
+    /// durability cannot be confirmed. No partial semantic fact is exposed.
+    fn append<'a>(
+        &'a self,
+        change: &'a AssetPropertyChange,
+    ) -> impl Future<Output = Result<PropertyChangeAppendOutcome, Self::Error>> + Send + 'a;
+}

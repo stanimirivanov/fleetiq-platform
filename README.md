@@ -93,6 +93,7 @@ The checked-in database password is for disposable local development only.
 | [`crates/identity`](crates/identity) | Actor, grant, tenant, and bootstrap use cases |
 | [`crates/metadata`](crates/metadata) | Asset graph use cases and persistence ports |
 | [`crates/ingestion`](crates/ingestion) | Durable ingestion orchestration and persistence ports |
+| [`crates/history`](crates/history) | Append-only semantic property-change durability port |
 | [`crates/live`](crates/live) | Revisioned live projection contracts |
 | [`crates/postgres`](crates/postgres) | SQLx persistence adapters and private row mappings |
 | [`crates/server`](crates/server) | Backend composition root, health surface, and protected metadata queries |

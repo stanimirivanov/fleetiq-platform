@@ -1,0 +1,14 @@
+[package]
+name = "fleetiq-history"
+version = "0.1.0"
+description = "Durable semantic property-history boundary for FleetIQ"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-semantics = { path = "../semantics" }
+
+[lints]
+workspace = true

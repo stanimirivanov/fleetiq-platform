@@ -96,6 +96,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0087](0087-page-bitemporal-source-bindings.md) | Authorized bounded bitemporal signal-binding snapshot for one decoded source |
 | [0088](0088-page-tenant-asset-catalogue.md) | Authorized bounded tenant asset catalogue of summaries |
 | [0089](0089-page-bitemporal-asset-target-bindings.md) | Authorized bounded binding snapshot targeting one asset |
+| [0090](0090-persist-immutable-semantic-property-changes.md) | Append-only semantic property-change history with exact source lineage |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

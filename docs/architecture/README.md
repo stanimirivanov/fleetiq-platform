@@ -94,7 +94,9 @@ flowchart LR
 
 `fleetiq-ingestion` owns durable acceptance and decoded-result orchestration;
 PostgreSQL implements its consumer-owned ports. The trusted protocol host owns
-framing and validation policy.
+framing and validation policy. `fleetiq-history` owns the semantic change
+append port; PostgreSQL persists that fact, while the worker, projection, and
+operator delivery paths in the diagram remain planned.
 
 Every transition preserves the identity and provenance needed for replay and
 diagnosis. Durable source facts precede effects that claim acceptance. See
@@ -177,6 +179,10 @@ Durable ingestion orchestration and its ports live in `fleetiq-ingestion`.
 PostgreSQL implements those ports directly. See
 [ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
+The semantic property-change append port lives in `fleetiq-history`, and its
+PostgreSQL adapter verifies durable source and binding lineage. See
+[ADR 0090](../adr/0090-persist-immutable-semantic-property-changes.md).
+
 Revisioned projection contracts live in `fleetiq-live` without a transport
 or persistence dependency. See
 [ADR 0076](../adr/0076-extract-live-projection-contracts.md).
@@ -186,8 +192,8 @@ compatibility facade has been removed. See
 [ADR 0078](../adr/0078-retire-application-compatibility-facade.md).
 
 The PostgreSQL adapter remains one crate and database boundary. Its internal
-modules now mirror access, identity, metadata, and ingestion capabilities, with
-one private codec for exact persisted access-action names. See
+modules now mirror access, identity, metadata, ingestion, and history
+capabilities, with one private codec for exact persisted access-action names. See
 [ADR 0077](../adr/0077-organize-postgres-adapters-by-capability.md).
 
 The first deployment topology is one modular backend process. It owns startup,
@@ -212,11 +218,11 @@ the policy and adapter crates. See
 | Tenant access change audit | Identity and authorization | Append-only idempotent administration facts |
 | Accepted wire messages | Ingestion log | Append-only, idempotent facts |
 | Decoded observation batches | Ingestion log | Atomic append-only results |
-| Asset property changes | Telemetry history, planned | Append-only semantic facts |
+| Asset property changes | Semantic history | Append-only interpretations linked to decoded facts and exact binding revisions |
 | Live asset state | Projection, planned | Revisioned derived view |
 | Archived raw and historical data | Object storage, planned | Retention-governed immutable objects |
 
-PostgreSQL initially owns transactional metadata and ingestion facts. Object
+PostgreSQL initially owns transactional metadata, ingestion, and semantic history facts. Object
 storage and specialized query stores are introduced only with retention,
 volume, recovery, and cost requirements that justify them.
 

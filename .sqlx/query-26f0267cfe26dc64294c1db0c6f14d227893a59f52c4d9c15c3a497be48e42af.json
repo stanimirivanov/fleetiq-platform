@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT event_at_ms\n            FROM history.asset_property_changes\n            WHERE tenant_id = $1 AND message_id = $2\n              AND protocol_package_id = $3 AND protocol_package_version = $4\n              AND output_index = $5 AND binding_id = $6\n              AND binding_revision = $7 AND event_time_basis = $8\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "event_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Numeric",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "26f0267cfe26dc64294c1db0c6f14d227893a59f52c4d9c15c3a497be48e42af"
+}
