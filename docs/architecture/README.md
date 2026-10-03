@@ -95,8 +95,9 @@ flowchart LR
 `fleetiq-ingestion` owns durable acceptance and decoded-result orchestration;
 PostgreSQL implements its consumer-owned ports. The trusted protocol host owns
 framing and validation policy. `fleetiq-history` owns the semantic change
-append port; PostgreSQL persists that fact, while the worker, projection, and
-operator delivery paths in the diagram remain planned.
+processing operation and append port; PostgreSQL persists that fact, while
+the worker, projection, and operator delivery paths in the diagram remain
+planned.
 
 Every transition preserves the identity and provenance needed for replay and
 diagnosis. Durable source facts precede effects that claim acceptance. See
@@ -179,9 +180,10 @@ Durable ingestion orchestration and its ports live in `fleetiq-ingestion`.
 PostgreSQL implements those ports directly. See
 [ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
-The semantic property-change append port lives in `fleetiq-history`, and its
-PostgreSQL adapter verifies durable source and binding lineage. See
-[ADR 0090](../adr/0090-persist-immutable-semantic-property-changes.md).
+The one-observation semantic processing operation and property-change append
+port live in `fleetiq-history`. Its PostgreSQL adapter verifies durable source
+and binding lineage. See [ADR 0090](../adr/0090-persist-immutable-semantic-property-changes.md)
+and [ADR 0091](../adr/0091-compose-semantic-history-processing.md).
 
 Revisioned projection contracts live in `fleetiq-live` without a transport
 or persistence dependency. See

@@ -27,7 +27,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
     PackagePolicy {
         name: "fleetiq-history",
         role: CrateRole::Application,
-        normal: &["fleetiq-semantics"],
+        normal: &["fleetiq-domain", "fleetiq-semantics", "fleetiq-telemetry"],
         development: NONE,
         build: NONE,
     },

@@ -9,9 +9,10 @@
   tenant, and bootstrap use cases and ports. PostgreSQL supplies their adapters.
   The `fleetiq-metadata` crate owns asset-graph use cases and ports;
   `fleetiq-ingestion` owns durable acceptance, decoded-result persistence,
-  and package-catalogue ports; `fleetiq-history` owns the semantic property
-  change append port. Asset, semantic-definition, relationship,
-  communication-device, and signal-binding operations consume exact
+  and package-catalogue ports; `fleetiq-history` owns one-observation semantic
+  processing and the property-change append port. Asset,
+  semantic-definition, relationship, communication-device, and
+  signal-binding operations consume exact
   authorization evidence. Configured-credential HTTP exact asset, bounded
   asset catalogue, communication-device, exact definition,
   relationship-revision, signal-binding-revision,
@@ -127,10 +128,12 @@ configuration. Successful binding produces asset property change candidates
 with event-time basis and deterministic interpretation identity.
 Its read ports and snapshot query belong to semantic policy; PostgreSQL
 implements the ports directly, and metadata re-exports the query for its
-callers. `fleetiq-history` owns an append-only property-change port;
-PostgreSQL verifies the candidate against durable decoded and binding facts
-and records its exact interpretation identity and event-time basis. No worker
-invokes this port yet.
+callers. `fleetiq-history` composes the resolver and an append-only
+property-change port for one decoded observation with explicit event-time and
+knowledge choices. PostgreSQL verifies the candidate against durable decoded and binding facts
+and records its exact interpretation identity and event-time basis. The
+processor preserves unresolved observations and safe retry input. No production
+worker invokes this operation yet.
 
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
@@ -352,8 +355,8 @@ as production product behavior.
 
 - No Teltonika or other real device package is distributed.
 - No package activation, connection routing, network transport, or command path.
-- No semantic history reader or end-to-end ingestion worker; only the
-  append-only property-change persistence boundary exists.
+- No semantic history reader or end-to-end ingestion worker; the one-observation
+  processor and append-only property-change persistence boundary exist.
 - No tenant/user administration, authentication, authorization, or audit UI.
 - No live map, graph editor, dashboard, alert delivery, or broad graph query API.
 - No archive, retention enforcement, backup/restore, or cost controls.
