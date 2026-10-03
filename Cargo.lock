@@ -641,7 +641,10 @@ dependencies = [
 name = "fleetiq-history"
 version = "0.1.0"
 dependencies = [
+ "fleetiq-domain",
  "fleetiq-semantics",
+ "fleetiq-telemetry",
+ "tokio",
 ]
 
 [[package]]

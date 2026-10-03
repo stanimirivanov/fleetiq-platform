@@ -8,6 +8,12 @@ use std::{error::Error, future::Future};
 
 use fleetiq_semantics::AssetPropertyChange;
 
+mod processing;
+
+pub use processing::{
+    SemanticHistoryError, SemanticHistoryOutcome, SemanticHistoryProcessor, SemanticHistoryRetry,
+};
+
 /// Result of durably appending one semantic interpretation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PropertyChangeAppendOutcome {

@@ -7,7 +7,10 @@ use fleetiq_domain::{
     PropertyDefinitionRef, PropertyValue, RecordRevision, RecordedRevision, SignalBinding,
     SignalBindingId, SignalSource, SignalTarget, SourceSignalId, TenantId, UnitId, UnixTimeMillis,
 };
-use fleetiq_history::{AssetPropertyChangeLog, PropertyChangeAppendOutcome};
+use fleetiq_history::{
+    AssetPropertyChangeLog, PropertyChangeAppendOutcome, SemanticHistoryOutcome,
+    SemanticHistoryProcessor,
+};
 use fleetiq_metadata::SignalBindingRepository;
 use fleetiq_postgres::{
     PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError,
@@ -23,6 +26,64 @@ use fleetiq_telemetry::{
     ProtocolPackageVersion,
 };
 use sqlx::PgPool;
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn processor_resolves_appends_and_retries_the_durable_interpretation(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let observation = setup(&pool).await?;
+    let processor = SemanticHistoryProcessor::new(
+        SignalBindingResolver::new(
+            PostgresSignalBindingRepository::new(pool.clone()),
+            PostgresDefinitionRepository::new(pool.clone()),
+        ),
+        PostgresAssetPropertyChangeLog::new(pool.clone()),
+    );
+    let no_known_binding = processor
+        .process(
+            observation.clone(),
+            UnixTimeMillis::new(50),
+            EventTimeBasis::DeviceRecorded,
+        )
+        .await?;
+    assert!(matches!(
+        no_known_binding,
+        SemanticHistoryOutcome::Unresolved(_)
+    ));
+    let first = processor
+        .process(
+            observation.clone(),
+            UnixTimeMillis::new(150),
+            EventTimeBasis::DeviceRecorded,
+        )
+        .await?;
+    assert!(matches!(
+        first,
+        SemanticHistoryOutcome::Recorded {
+            append: PropertyChangeAppendOutcome::Appended,
+            ..
+        }
+    ));
+    let retry = processor
+        .process(
+            observation,
+            UnixTimeMillis::new(150),
+            EventTimeBasis::DeviceRecorded,
+        )
+        .await?;
+    assert!(matches!(
+        retry,
+        SemanticHistoryOutcome::Recorded {
+            append: PropertyChangeAppendOutcome::AlreadyPresent,
+            ..
+        }
+    ));
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM history.asset_property_changes")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(count, 1);
+    Ok(())
+}
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn first_append_exact_retry_and_later_knowledge_keep_one_fact(

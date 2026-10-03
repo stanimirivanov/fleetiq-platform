@@ -4,9 +4,9 @@
 
 Decoded observations preserve protocol facts and provenance. Semantic
 resolution converts compatible observations into asset property changes.
-Versioned calculators derive further properties, and revisioned projections
-provide live state with explicit gap recovery. Durable history and production
-workers remain planned capabilities.
+The application can append resolved changes to immutable PostgreSQL history.
+Versioned calculators and revisioned live projections have contracts; their
+production workers remain planned.
 
 ## Decoded observations
 
@@ -32,6 +32,15 @@ An asset property change records the selected event-time basis and a
 deterministic semantic-interpretation identity. Future conversion and
 multi-source authority policies require explicit versioned contracts so replay
 does not depend on mutable global configuration.
+
+`fleetiq-history::SemanticHistoryProcessor` composes the read-only resolver
+with the durable append port for one observation. The caller chooses device or
+receipt time and an explicit recorded-time knowledge cutoff. The selected
+timestamp is both event time and binding effective time. Missing device time
+fails before a lookup; unresolved configuration retains the observation.
+Read failures return the observation and its selected time policy for
+re-resolution, while append failures return the exact change for retry without
+selecting a later binding revision.
 
 ## Analytics
 
@@ -76,7 +85,7 @@ flowchart LR
 
 The append-only property-change history now persists exact semantic
 interpretation identities with tenant-safe decoded-observation and binding
-references. The processing worker and history read API remain planned. The
+references. The production worker and history read API remain planned. The
 initial design favors PostgreSQL for transactional history and a separate
 object archive only when volume and retention economics justify it. Query
 stores and caches are derived and rebuildable. The source facts and pinned
@@ -87,3 +96,5 @@ See ADRs [0002](../adr/0002-decoded-observation-contract.md),
 [0006](../adr/0006-asset-property-change-contract.md),
 [0007](../adr/0007-calculator-output-contract.md), and
 [0008](../adr/0008-revisioned-live-projection-contract.md).
+The history processing choice is recorded in
+[ADR 0091](../adr/0091-compose-semantic-history-processing.md).
