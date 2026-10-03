@@ -100,6 +100,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0091](0091-compose-semantic-history-processing.md) | One-observation resolution and durable append with aligned event time and exact retry |
 | [0092](0092-process-exact-durable-decoded-observation.md) | Exact tenant-scoped durable observation lookup followed by semantic history processing |
 | [0093](0093-read-exact-semantic-interpretation.md) | Exact tenant-scoped semantic history read with immutable source and binding provenance |
+| [0094](0094-page-observation-interpretations.md) | Bounded keyset page of one decoded output's immutable semantic interpretations |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

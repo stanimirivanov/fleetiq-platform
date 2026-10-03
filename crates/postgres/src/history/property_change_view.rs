@@ -1,13 +1,18 @@
-//! Exact tenant-scoped read of one immutable semantic interpretation.
+//! Tenant-scoped reads of immutable semantic interpretations.
 
 use std::future::Future;
+
+mod observation_page;
 
 use bigdecimal::BigDecimal;
 use fleetiq_domain::{
     AssetId, DefinitionVersion, PropertyDefinitionId, PropertyDefinitionRef, SignalTarget,
     TenantId, UnixTimeMillis,
 };
-use fleetiq_history::{AssetPropertyChangeView, DecodedObservationView, StoredPropertyChange};
+use fleetiq_history::{
+    AssetPropertyChangeView, DecodedObservationView, ObservationInterpretationPage,
+    ObservationInterpretationPageQuery, StoredPropertyChange,
+};
 use fleetiq_semantics::{AssetPropertyChangeId, ResolutionContext};
 use sqlx::PgPool;
 
@@ -16,7 +21,7 @@ use super::{
 };
 use crate::error::{PostgresRepositoryError, classify_database_error, corrupt};
 
-/// PostgreSQL view of one exact immutable property interpretation.
+/// PostgreSQL view of exact and source-scoped immutable property interpretations.
 #[derive(Clone, Debug)]
 pub struct PostgresAssetPropertyChangeView {
     pool: PgPool,
@@ -39,7 +44,6 @@ impl PostgresAssetPropertyChangeView {
     /// The second reuses the validated decoded-observation mapper. The history,
     /// binding, and source facts are immutable, so the second read cannot pick
     /// up a changed source fact.
-    /// are immutable, so the second read cannot pick up a changed source fact.
     async fn lookup(
         &self,
         tenant_id: &TenantId,
@@ -102,6 +106,14 @@ impl AssetPropertyChangeView for PostgresAssetPropertyChangeView {
         id: &'a AssetPropertyChangeId,
     ) -> impl Future<Output = Result<Option<StoredPropertyChange>, Self::Error>> + Send + 'a {
         self.lookup(tenant_id, id)
+    }
+
+    fn list_for_observation<'a>(
+        &'a self,
+        tenant_id: &'a TenantId,
+        query: &'a ObservationInterpretationPageQuery,
+    ) -> impl Future<Output = Result<ObservationInterpretationPage, Self::Error>> + Send + 'a {
+        self.list_observation_page(tenant_id, query)
     }
 }
 

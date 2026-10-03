@@ -9,10 +9,15 @@ use std::{error::Error, future::Future};
 
 use fleetiq_semantics::AssetPropertyChange;
 
+mod observation_interpretation_page;
 mod processing;
 mod property_change_view;
 mod stored_processing;
 
+pub use observation_interpretation_page::{
+    InvalidObservationInterpretationPageQuery, ObservationInterpretationPage,
+    ObservationInterpretationPageQuery,
+};
 pub use processing::{
     SemanticHistoryError, SemanticHistoryOutcome, SemanticHistoryProcessor, SemanticHistoryRetry,
 };

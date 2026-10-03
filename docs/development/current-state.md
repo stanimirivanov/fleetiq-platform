@@ -136,13 +136,14 @@ PostgreSQL verifies the candidate against durable decoded and binding facts
 and records its exact interpretation identity and event-time basis. The
 processor preserves unresolved observations and safe retry input. An exact
 history read returns the immutable source, target, event time, and first-append
-resolution context without re-resolving corrected metadata. No production
-worker invokes this operation yet.
+resolution context without re-resolving corrected metadata. A bounded keyset
+page lists all immutable interpretations of one exact decoded output with a
+shared source read. No production worker invokes this operation yet.
 
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
 deltas, cursor continuity, and resnapshot reasons. No production semantic worker,
-bounded property history page, calculator runtime, subscription transport,
+asset-wide property history query, calculator runtime, subscription transport,
 or operator dashboard exists yet.
 
 ## Runtime and data
@@ -359,8 +360,9 @@ as production product behavior.
 
 - No Teltonika or other real device package is distributed.
 - No package activation, connection routing, network transport, or command path.
-- No bounded semantic history page or end-to-end ingestion worker; exact durable
-  observation processing, exact history reads, and append-only persistence exist.
+- No asset-wide semantic history query or end-to-end ingestion worker; exact
+  observation processing, source-scoped keyset pages, and append-only
+  persistence exist.
 - No tenant/user administration, authentication, authorization, or audit UI.
 - No live map, graph editor, dashboard, alert delivery, or broad graph query API.
 - No archive, retention enforcement, backup/restore, or cost controls.

@@ -182,12 +182,13 @@ PostgreSQL implements those ports directly. See
 
 Exact durable-observation semantic processing and property-change append
 and read ports live in `fleetiq-history`. PostgreSQL verifies each append
-against durable source and binding lineage and reads one exact interpretation
-without re-resolving corrected metadata. See
+against durable source and binding lineage and reads exact interpretations or
+source-scoped keyset pages without re-resolving corrected metadata. See
 [ADR 0090](../adr/0090-persist-immutable-semantic-property-changes.md),
 [ADR 0091](../adr/0091-compose-semantic-history-processing.md),
-[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md), and
-[ADR 0093](../adr/0093-read-exact-semantic-interpretation.md).
+[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md),
+[ADR 0093](../adr/0093-read-exact-semantic-interpretation.md), and
+[ADR 0094](../adr/0094-page-observation-interpretations.md).
 
 Revisioned projection contracts live in `fleetiq-live` without a transport
 or persistence dependency. See
