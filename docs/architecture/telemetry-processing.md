@@ -42,6 +42,13 @@ Read failures return the observation and its selected time policy for
 re-resolution, while append failures return the exact change for retry without
 selecting a later binding revision.
 
+`fleetiq-history::StoredSemanticHistoryProcessor` can first load one durable
+decoded output by exact tenant, message, decoder release, and output position.
+Absence is distinct from unresolved attribution and storage failure. Its
+PostgreSQL view reads parent message metadata without copying the raw payload.
+The borrowed request retains the identity and time choices after lookup
+failure; the semantic processor retains owned retry input after lookup.
+
 ## Analytics
 
 Calculator evaluations have versioned calculator provenance, separate event
@@ -96,5 +103,6 @@ See ADRs [0002](../adr/0002-decoded-observation-contract.md),
 [0006](../adr/0006-asset-property-change-contract.md),
 [0007](../adr/0007-calculator-output-contract.md), and
 [0008](../adr/0008-revisioned-live-projection-contract.md).
-The history processing choice is recorded in
-[ADR 0091](../adr/0091-compose-semantic-history-processing.md).
+The history processing choices are recorded in
+[ADR 0091](../adr/0091-compose-semantic-history-processing.md) and
+[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md).

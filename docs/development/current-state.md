@@ -9,8 +9,8 @@
   tenant, and bootstrap use cases and ports. PostgreSQL supplies their adapters.
   The `fleetiq-metadata` crate owns asset-graph use cases and ports;
   `fleetiq-ingestion` owns durable acceptance, decoded-result persistence,
-  and package-catalogue ports; `fleetiq-history` owns one-observation semantic
-  processing and the property-change append port. Asset,
+  and package-catalogue ports; `fleetiq-history` owns exact durable-observation
+  semantic processing and the property-change append port. Asset,
   semantic-definition, relationship, communication-device, and
   signal-binding operations consume exact
   authorization evidence. Configured-credential HTTP exact asset, bounded
@@ -130,7 +130,9 @@ Its read ports and snapshot query belong to semantic policy; PostgreSQL
 implements the ports directly, and metadata re-exports the query for its
 callers. `fleetiq-history` composes the resolver and an append-only
 property-change port for one decoded observation with explicit event-time and
-knowledge choices. PostgreSQL verifies the candidate against durable decoded and binding facts
+knowledge choices. It can load an exact tenant-owned durable observation before
+processing it; absence, lookup failure, and unresolved attribution are distinct.
+PostgreSQL verifies the candidate against durable decoded and binding facts
 and records its exact interpretation identity and event-time basis. The
 processor preserves unresolved observations and safe retry input. No production
 worker invokes this operation yet.
@@ -355,8 +357,8 @@ as production product behavior.
 
 - No Teltonika or other real device package is distributed.
 - No package activation, connection routing, network transport, or command path.
-- No semantic history reader or end-to-end ingestion worker; the one-observation
-  processor and append-only property-change persistence boundary exist.
+- No semantic history reader or end-to-end ingestion worker; exact durable
+  observation processing and append-only property-change persistence exist.
 - No tenant/user administration, authentication, authorization, or audit UI.
 - No live map, graph editor, dashboard, alert delivery, or broad graph query API.
 - No archive, retention enforcement, backup/restore, or cost controls.
