@@ -180,12 +180,14 @@ Durable ingestion orchestration and its ports live in `fleetiq-ingestion`.
 PostgreSQL implements those ports directly. See
 [ADR 0075](../adr/0075-extract-ingestion-application-capability.md).
 
-Exact durable-observation semantic processing and the property-change append
-port live in `fleetiq-history`. PostgreSQL reads one tenant-scoped decoded
-output and verifies the appended change against durable source and binding
-lineage. See [ADR 0090](../adr/0090-persist-immutable-semantic-property-changes.md),
-[ADR 0091](../adr/0091-compose-semantic-history-processing.md), and
-[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md).
+Exact durable-observation semantic processing and property-change append
+and read ports live in `fleetiq-history`. PostgreSQL verifies each append
+against durable source and binding lineage and reads one exact interpretation
+without re-resolving corrected metadata. See
+[ADR 0090](../adr/0090-persist-immutable-semantic-property-changes.md),
+[ADR 0091](../adr/0091-compose-semantic-history-processing.md),
+[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md), and
+[ADR 0093](../adr/0093-read-exact-semantic-interpretation.md).
 
 Revisioned projection contracts live in `fleetiq-live` without a transport
 or persistence dependency. See
