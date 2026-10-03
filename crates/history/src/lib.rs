@@ -9,9 +9,14 @@ use std::{error::Error, future::Future};
 use fleetiq_semantics::AssetPropertyChange;
 
 mod processing;
+mod stored_processing;
 
 pub use processing::{
     SemanticHistoryError, SemanticHistoryOutcome, SemanticHistoryProcessor, SemanticHistoryRetry,
+};
+pub use stored_processing::{
+    DecodedObservationView, StoredObservationRequest, StoredSemanticHistoryError,
+    StoredSemanticHistoryProcessor,
 };
 
 /// Result of durably appending one semantic interpretation.

@@ -8,13 +8,14 @@ use fleetiq_domain::{
     SignalBindingId, SignalSource, SignalTarget, SourceSignalId, TenantId, UnitId, UnixTimeMillis,
 };
 use fleetiq_history::{
-    AssetPropertyChangeLog, PropertyChangeAppendOutcome, SemanticHistoryOutcome,
-    SemanticHistoryProcessor,
+    AssetPropertyChangeLog, DecodedObservationView, PropertyChangeAppendOutcome,
+    SemanticHistoryOutcome, SemanticHistoryProcessor, StoredObservationRequest,
+    StoredSemanticHistoryProcessor,
 };
 use fleetiq_metadata::SignalBindingRepository;
 use fleetiq_postgres::{
     PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError,
-    PostgresDefinitionRepository, PostgresSignalBindingRepository,
+    PostgresDecodedObservationView, PostgresDefinitionRepository, PostgresSignalBindingRepository,
 };
 use fleetiq_semantics::{
     AssetPropertyChange, EventTimeBasis, ResolutionContext, ResolutionOutcome,
@@ -26,6 +27,88 @@ use fleetiq_telemetry::{
     ProtocolPackageVersion,
 };
 use sqlx::PgPool;
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn exact_durable_observation_processes_without_cross_tenant_or_release_fallback(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let original = setup(&pool).await?;
+    let view = PostgresDecodedObservationView::new(pool.clone());
+    assert_eq!(
+        view.find(original.tenant_id(), original.id()).await?,
+        Some(original.clone())
+    );
+    assert!(
+        view.find(&TenantId::new("tenant-b")?, original.id())
+            .await?
+            .is_none()
+    );
+    let other_release = DecodedObservationId::new(
+        original.id().message_id().clone(),
+        ProtocolPackageRef::new(
+            ProtocolPackageId::new("vendor.protocol")?,
+            ProtocolPackageVersion::new("2")?,
+        ),
+        0,
+    );
+    assert!(
+        view.find(original.tenant_id(), &other_release)
+            .await?
+            .is_none()
+    );
+    let other_output = DecodedObservationId::new(original.id().message_id().clone(), package()?, 1);
+    assert!(
+        view.find(original.tenant_id(), &other_output)
+            .await?
+            .is_none()
+    );
+
+    let service = StoredSemanticHistoryProcessor::new(
+        view,
+        SemanticHistoryProcessor::new(
+            SignalBindingResolver::new(
+                PostgresSignalBindingRepository::new(pool.clone()),
+                PostgresDefinitionRepository::new(pool.clone()),
+            ),
+            PostgresAssetPropertyChangeLog::new(pool.clone()),
+        ),
+    );
+    let before_binding = StoredObservationRequest::new(
+        original.tenant_id().clone(),
+        original.id().clone(),
+        UnixTimeMillis::new(50),
+        EventTimeBasis::DeviceRecorded,
+    );
+    assert!(matches!(
+        service.process(&before_binding).await?,
+        Some(SemanticHistoryOutcome::Unresolved(_))
+    ));
+    let request = StoredObservationRequest::new(
+        original.tenant_id().clone(),
+        original.id().clone(),
+        UnixTimeMillis::new(150),
+        EventTimeBasis::DeviceRecorded,
+    );
+    assert!(matches!(
+        service.process(&request).await?,
+        Some(SemanticHistoryOutcome::Recorded {
+            append: PropertyChangeAppendOutcome::Appended,
+            ..
+        })
+    ));
+    assert!(matches!(
+        service.process(&request).await?,
+        Some(SemanticHistoryOutcome::Recorded {
+            append: PropertyChangeAppendOutcome::AlreadyPresent,
+            ..
+        })
+    ));
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM history.asset_property_changes")
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(count, 1);
+    Ok(())
+}
 
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn processor_resolves_appends_and_retries_the_durable_interpretation(

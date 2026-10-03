@@ -17,7 +17,10 @@ pub use access::{
     PostgresTenantAccessPolicyError,
 };
 pub use error::PostgresRepositoryError;
-pub use history::{PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError};
+pub use history::{
+    PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError,
+    PostgresDecodedObservationView,
+};
 pub use identity::{
     PostgresActorCatalogRepository, PostgresActorCatalogRepositoryError,
     PostgresActorLifecycleAdministration, PostgresActorLifecycleAdministrationError,
