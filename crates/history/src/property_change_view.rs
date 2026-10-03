@@ -1,10 +1,12 @@
-//! Exact read contract for immutable semantic property interpretations.
+//! Read contracts for immutable semantic property interpretations.
 
 use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{SignalTarget, TenantId, UnixTimeMillis};
 use fleetiq_semantics::{AssetPropertyChangeId, EventTimeBasis, ResolutionContext};
 use fleetiq_telemetry::DecodedObservation;
+
+use crate::{ObservationInterpretationPage, ObservationInterpretationPageQuery};
 
 /// One stored interpretation with its immutable source and target provenance.
 ///
@@ -105,7 +107,7 @@ impl fmt::Display for InvalidStoredPropertyChange {
 
 impl Error for InvalidStoredPropertyChange {}
 
-/// Reads one exact tenant-owned interpretation without selecting a latest value.
+/// Reads exact or source-scoped tenant-owned interpretations without selecting a latest value.
 ///
 /// Absence is distinct from repository failure. Both binding corrections and
 /// different event-time policies have different identities and remain readable.
@@ -121,6 +123,15 @@ pub trait AssetPropertyChangeView: Send + Sync {
         tenant_id: &'a TenantId,
         id: &'a AssetPropertyChangeId,
     ) -> impl Future<Output = Result<Option<StoredPropertyChange>, Self::Error>> + Send + 'a;
+    /// Lists one bounded page of this source output's interpretations.
+    ///
+    /// The implementation must read rows set-wise. It must not invoke the
+    /// exact lookup once per result or choose a latest binding revision.
+    fn list_for_observation<'a>(
+        &'a self,
+        tenant_id: &'a TenantId,
+        query: &'a ObservationInterpretationPageQuery,
+    ) -> impl Future<Output = Result<ObservationInterpretationPage, Self::Error>> + Send + 'a;
 }
 
 #[cfg(test)]

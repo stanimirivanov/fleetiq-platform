@@ -50,11 +50,14 @@ The borrowed request retains the identity and time choices after lookup
 failure; the semantic processor retains owned retry input after lookup.
 
 `fleetiq-history::AssetPropertyChangeView` reads one exact durable interpretation
-with its decoded source, binding target, selected event time, and first-append
-resolution context. It does not select latest state or apply an as-of cutoff.
-The PostgreSQL adapter reads immutable history and source facts without
-re-resolving a corrected binding. An authorized history page and HTTP route
-remain planned.
+or a bounded keyset page of interpretations for one exact decoded output.
+Each entry includes its decoded source, binding target, selected event time,
+and first-append resolution context. The PostgreSQL page loads at most 101
+joined history/binding rows and the shared source once; it never re-resolves
+a corrected binding. It does not select latest state or apply an as-of cutoff.
+Concurrent appends can enter ahead of the cursor; a new interpretation behind
+it requires restarting the traversal. An authorized HTTP history route and
+asset-wide history query remain planned.
 
 ## Analytics
 
@@ -99,7 +102,8 @@ flowchart LR
 
 The append-only property-change history now persists exact semantic
 interpretation identities with tenant-safe decoded-observation and binding
-references. The production worker and bounded history read API remain planned. The
+references. The production worker and asset-wide history read API remain
+planned. The
 initial design favors PostgreSQL for transactional history and a separate
 object archive only when volume and retention economics justify it. Query
 stores and caches are derived and rebuildable. The source facts and pinned
@@ -112,5 +116,6 @@ See ADRs [0002](../adr/0002-decoded-observation-contract.md),
 [0008](../adr/0008-revisioned-live-projection-contract.md).
 The history processing and exact read choices are recorded in
 [ADR 0091](../adr/0091-compose-semantic-history-processing.md),
-[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md), and
-[ADR 0093](../adr/0093-read-exact-semantic-interpretation.md).
+[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md),
+[ADR 0093](../adr/0093-read-exact-semantic-interpretation.md), and
+[ADR 0094](../adr/0094-page-observation-interpretations.md).

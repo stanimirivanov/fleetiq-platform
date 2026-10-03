@@ -9,8 +9,8 @@ use fleetiq_domain::{
 };
 use fleetiq_history::{
     AssetPropertyChangeLog, AssetPropertyChangeView, DecodedObservationView,
-    PropertyChangeAppendOutcome, SemanticHistoryOutcome, SemanticHistoryProcessor,
-    StoredObservationRequest, StoredSemanticHistoryProcessor,
+    ObservationInterpretationPageQuery, PropertyChangeAppendOutcome, SemanticHistoryOutcome,
+    SemanticHistoryProcessor, StoredObservationRequest, StoredSemanticHistoryProcessor,
 };
 use fleetiq_metadata::SignalBindingRepository;
 use fleetiq_postgres::{
@@ -496,6 +496,106 @@ async fn exact_history_read_keeps_corrected_and_receipt_interpretations_distinct
         UnixTimeMillis::new(250)
     );
     assert_eq!(initial_read.observation(), corrected_read.observation());
+    Ok(())
+}
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn observation_interpretation_page_is_bounded_and_exact(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let source = setup(&pool).await?;
+    let tenant = source.tenant_id();
+    let log = PostgresAssetPropertyChangeLog::new(pool.clone());
+    let view = PostgresAssetPropertyChangeView::new(pool.clone());
+    let page =
+        |limit, after| ObservationInterpretationPageQuery::new(source.id().clone(), limit, after);
+    assert!(
+        view.list_for_observation(tenant, &page(2, None)?)
+            .await?
+            .changes()
+            .is_empty()
+    );
+
+    let first = change(&pool, source.clone(), 150, EventTimeBasis::DeviceRecorded).await?;
+    let receipt = change(&pool, source.clone(), 150, EventTimeBasis::ReceivedAt).await?;
+    log.append(&first).await?;
+    log.append(&receipt).await?;
+    PostgresSignalBindingRepository::new(pool.clone())
+        .insert_revision(&binding(2, 200, "power-system-2")?)
+        .await?;
+    let corrected = change(&pool, source.clone(), 250, EventTimeBasis::DeviceRecorded).await?;
+    log.append(&corrected).await?;
+
+    let expected = [first.id(), receipt.id(), corrected.id()];
+    let mut cursor = None;
+    for id in expected {
+        let result = view.list_for_observation(tenant, &page(1, cursor)?).await?;
+        assert_eq!(result.changes().len(), 1);
+        let stored = &result.changes()[0];
+        assert_eq!(stored.id(), id);
+        assert_eq!(stored.observation(), &source);
+        assert_eq!(
+            stored.event_at(),
+            if id.event_time_basis() == EventTimeBasis::ReceivedAt {
+                UnixTimeMillis::new(1100)
+            } else {
+                UnixTimeMillis::new(1000)
+            }
+        );
+        assert_eq!(
+            stored.first_resolution().known_at(),
+            if id == corrected.id() {
+                UnixTimeMillis::new(250)
+            } else {
+                UnixTimeMillis::new(150)
+            }
+        );
+        cursor = result.next_after().cloned();
+        assert_eq!(cursor.is_some(), id != corrected.id());
+    }
+    assert!(
+        view.list_for_observation(tenant, &page(1, Some(corrected.id().clone()))?)
+            .await?
+            .changes()
+            .is_empty()
+    );
+    let full = view.list_for_observation(tenant, &page(3, None)?).await?;
+    assert_eq!(full.changes().len(), 3);
+    assert!(full.next_after().is_none());
+    assert_eq!(
+        full.changes()[0].target().asset_id().as_str(),
+        "power-system-1"
+    );
+    assert_eq!(
+        full.changes()[2].target().asset_id().as_str(),
+        "power-system-2"
+    );
+
+    let foreign_tenant = TenantId::new("tenant-b")?;
+    assert!(
+        view.list_for_observation(&foreign_tenant, &page(3, None)?)
+            .await?
+            .changes()
+            .is_empty()
+    );
+    for other_source in [
+        DecodedObservationId::new(
+            source.id().message_id().clone(),
+            ProtocolPackageRef::new(
+                ProtocolPackageId::new("vendor.protocol")?,
+                ProtocolPackageVersion::new("2")?,
+            ),
+            0,
+        ),
+        DecodedObservationId::new(source.id().message_id().clone(), package()?, 1),
+    ] {
+        let wrong = ObservationInterpretationPageQuery::new(other_source, 3, None)?;
+        assert!(
+            view.list_for_observation(tenant, &wrong)
+                .await?
+                .changes()
+                .is_empty()
+        );
+    }
     Ok(())
 }
 async fn setup(pool: &PgPool) -> Result<DecodedObservation, Box<dyn Error>> {
