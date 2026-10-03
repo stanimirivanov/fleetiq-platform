@@ -1,0 +1,95 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT change.event_at_ms, change.resolution_effective_at_ms,\n                   change.resolution_known_at_ms, binding.target_asset_id,\n                   binding.target_property_id, binding.target_property_version\n            FROM history.asset_property_changes AS change\n            JOIN metadata.signal_binding_revisions AS binding\n              ON binding.tenant_id = change.tenant_id\n             AND binding.binding_id = change.binding_id\n             AND binding.revision = change.binding_revision\n            WHERE change.tenant_id = $1 AND change.message_id = $2\n              AND change.protocol_package_id = $3\n              AND change.protocol_package_version = $4\n              AND change.output_index = $5 AND change.binding_id = $6\n              AND change.binding_revision = $7 AND change.event_time_basis = $8\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "resolution_effective_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "resolution_effective_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "resolution_known_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "resolution_known_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "target_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "target_property_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "target_property_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Numeric",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "214c6aed1bc15be8811374cf767e9c419a2c2829588bc5e27557eb9035ea9020"
+}

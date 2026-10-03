@@ -49,6 +49,13 @@ PostgreSQL view reads parent message metadata without copying the raw payload.
 The borrowed request retains the identity and time choices after lookup
 failure; the semantic processor retains owned retry input after lookup.
 
+`fleetiq-history::AssetPropertyChangeView` reads one exact durable interpretation
+with its decoded source, binding target, selected event time, and first-append
+resolution context. It does not select latest state or apply an as-of cutoff.
+The PostgreSQL adapter reads immutable history and source facts without
+re-resolving a corrected binding. An authorized history page and HTTP route
+remain planned.
+
 ## Analytics
 
 Calculator evaluations have versioned calculator provenance, separate event
@@ -92,7 +99,7 @@ flowchart LR
 
 The append-only property-change history now persists exact semantic
 interpretation identities with tenant-safe decoded-observation and binding
-references. The production worker and history read API remain planned. The
+references. The production worker and bounded history read API remain planned. The
 initial design favors PostgreSQL for transactional history and a separate
 object archive only when volume and retention economics justify it. Query
 stores and caches are derived and rebuildable. The source facts and pinned
@@ -103,6 +110,7 @@ See ADRs [0002](../adr/0002-decoded-observation-contract.md),
 [0006](../adr/0006-asset-property-change-contract.md),
 [0007](../adr/0007-calculator-output-contract.md), and
 [0008](../adr/0008-revisioned-live-projection-contract.md).
-The history processing choices are recorded in
-[ADR 0091](../adr/0091-compose-semantic-history-processing.md) and
-[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md).
+The history processing and exact read choices are recorded in
+[ADR 0091](../adr/0091-compose-semantic-history-processing.md),
+[ADR 0092](../adr/0092-process-exact-durable-decoded-observation.md), and
+[ADR 0093](../adr/0093-read-exact-semantic-interpretation.md).

@@ -10,7 +10,7 @@
   The `fleetiq-metadata` crate owns asset-graph use cases and ports;
   `fleetiq-ingestion` owns durable acceptance, decoded-result persistence,
   and package-catalogue ports; `fleetiq-history` owns exact durable-observation
-  semantic processing and the property-change append port. Asset,
+  semantic processing and the property-change append and exact read ports. Asset,
   semantic-definition, relationship, communication-device, and
   signal-binding operations consume exact
   authorization evidence. Configured-credential HTTP exact asset, bounded
@@ -25,7 +25,7 @@
 - Protocol framing and processing are bounded and a versioned WIT component
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and `fleetiq-live` projection
-  contracts exist; property-change append history is durable, while production
+  contracts exist; property-change append and exact reads are durable, while production
   semantic workers, calculator stores, and live projections do not exist.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
@@ -134,14 +134,16 @@ knowledge choices. It can load an exact tenant-owned durable observation before
 processing it; absence, lookup failure, and unresolved attribution are distinct.
 PostgreSQL verifies the candidate against durable decoded and binding facts
 and records its exact interpretation identity and event-time basis. The
-processor preserves unresolved observations and safe retry input. No production
+processor preserves unresolved observations and safe retry input. An exact
+history read returns the immutable source, target, event time, and first-append
+resolution context without re-resolving corrected metadata. No production
 worker invokes this operation yet.
 
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
 deltas, cursor continuity, and resnapshot reasons. No production semantic worker,
-property history reader, calculator runtime, subscription transport, or operator
-dashboard exists yet.
+bounded property history page, calculator runtime, subscription transport,
+or operator dashboard exists yet.
 
 ## Runtime and data
 
@@ -357,8 +359,8 @@ as production product behavior.
 
 - No Teltonika or other real device package is distributed.
 - No package activation, connection routing, network transport, or command path.
-- No semantic history reader or end-to-end ingestion worker; exact durable
-  observation processing and append-only property-change persistence exist.
+- No bounded semantic history page or end-to-end ingestion worker; exact durable
+  observation processing, exact history reads, and append-only persistence exist.
 - No tenant/user administration, authentication, authorization, or audit UI.
 - No live map, graph editor, dashboard, alert delivery, or broad graph query API.
 - No archive, retention enforcement, backup/restore, or cost controls.

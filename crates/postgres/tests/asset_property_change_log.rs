@@ -8,14 +8,15 @@ use fleetiq_domain::{
     SignalBindingId, SignalSource, SignalTarget, SourceSignalId, TenantId, UnitId, UnixTimeMillis,
 };
 use fleetiq_history::{
-    AssetPropertyChangeLog, DecodedObservationView, PropertyChangeAppendOutcome,
-    SemanticHistoryOutcome, SemanticHistoryProcessor, StoredObservationRequest,
-    StoredSemanticHistoryProcessor,
+    AssetPropertyChangeLog, AssetPropertyChangeView, DecodedObservationView,
+    PropertyChangeAppendOutcome, SemanticHistoryOutcome, SemanticHistoryProcessor,
+    StoredObservationRequest, StoredSemanticHistoryProcessor,
 };
 use fleetiq_metadata::SignalBindingRepository;
 use fleetiq_postgres::{
     PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError,
-    PostgresDecodedObservationView, PostgresDefinitionRepository, PostgresSignalBindingRepository,
+    PostgresAssetPropertyChangeView, PostgresDecodedObservationView, PostgresDefinitionRepository,
+    PostgresSignalBindingRepository,
 };
 use fleetiq_semantics::{
     AssetPropertyChange, EventTimeBasis, ResolutionContext, ResolutionOutcome,
@@ -365,6 +366,138 @@ async fn direct_sql_cannot_forge_lineage_or_mutate_history(
     Ok(())
 }
 
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn exact_history_read_preserves_source_target_and_first_context(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let source = setup(&pool).await?;
+    let log = PostgresAssetPropertyChangeLog::new(pool.clone());
+    let view = PostgresAssetPropertyChangeView::new(pool.clone());
+    let first = change(&pool, source.clone(), 150, EventTimeBasis::DeviceRecorded).await?;
+    assert!(view.find(first.tenant_id(), first.id()).await?.is_none());
+    assert_eq!(
+        log.append(&first).await?,
+        PropertyChangeAppendOutcome::Appended
+    );
+    let stored = view.find(first.tenant_id(), first.id()).await?.unwrap();
+    assert_eq!(stored.id(), first.id());
+    assert_eq!(stored.observation(), &source);
+    assert_eq!(stored.target(), first.target());
+    assert_eq!(stored.event_at(), first.event_at());
+    assert_eq!(
+        stored.first_resolution().known_at(),
+        UnixTimeMillis::new(150)
+    );
+
+    let later = change(&pool, source.clone(), 250, EventTimeBasis::DeviceRecorded).await?;
+    assert_eq!(
+        log.append(&later).await?,
+        PropertyChangeAppendOutcome::AlreadyPresent
+    );
+    assert_eq!(
+        view.find(first.tenant_id(), first.id())
+            .await?
+            .unwrap()
+            .first_resolution()
+            .known_at(),
+        UnixTimeMillis::new(150)
+    );
+    assert!(
+        view.find(&TenantId::new("tenant-b")?, first.id())
+            .await?
+            .is_none()
+    );
+    let wrong_release = fleetiq_semantics::AssetPropertyChangeId::from_parts(
+        DecodedObservationId::new(
+            source.id().message_id().clone(),
+            ProtocolPackageRef::new(
+                ProtocolPackageId::new("vendor.protocol")?,
+                ProtocolPackageVersion::new("2")?,
+            ),
+            0,
+        ),
+        first.id().binding_id().clone(),
+        first.id().binding_revision(),
+        EventTimeBasis::DeviceRecorded,
+    );
+    assert!(
+        view.find(first.tenant_id(), &wrong_release)
+            .await?
+            .is_none()
+    );
+    let wrong_output = fleetiq_semantics::AssetPropertyChangeId::from_parts(
+        DecodedObservationId::new(source.id().message_id().clone(), package()?, 1),
+        first.id().binding_id().clone(),
+        first.id().binding_revision(),
+        EventTimeBasis::DeviceRecorded,
+    );
+    assert!(view.find(first.tenant_id(), &wrong_output).await?.is_none());
+    let wrong_binding = fleetiq_semantics::AssetPropertyChangeId::from_parts(
+        source.id().clone(),
+        SignalBindingId::new("binding-2")?,
+        first.id().binding_revision(),
+        EventTimeBasis::DeviceRecorded,
+    );
+    assert!(
+        view.find(first.tenant_id(), &wrong_binding)
+            .await?
+            .is_none()
+    );
+    let wrong_revision = fleetiq_semantics::AssetPropertyChangeId::from_parts(
+        source.id().clone(),
+        first.id().binding_id().clone(),
+        RecordRevision::new(2)?,
+        EventTimeBasis::DeviceRecorded,
+    );
+    assert!(
+        view.find(first.tenant_id(), &wrong_revision)
+            .await?
+            .is_none()
+    );
+    let wrong_basis = fleetiq_semantics::AssetPropertyChangeId::from_parts(
+        source.id().clone(),
+        first.id().binding_id().clone(),
+        first.id().binding_revision(),
+        EventTimeBasis::ReceivedAt,
+    );
+    assert!(view.find(first.tenant_id(), &wrong_basis).await?.is_none());
+    Ok(())
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn exact_history_read_keeps_corrected_and_receipt_interpretations_distinct(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let source = setup(&pool).await?;
+    let log = PostgresAssetPropertyChangeLog::new(pool.clone());
+    let view = PostgresAssetPropertyChangeView::new(pool.clone());
+    let original = change(&pool, source.clone(), 150, EventTimeBasis::DeviceRecorded).await?;
+    let receipt = change(&pool, source.clone(), 150, EventTimeBasis::ReceivedAt).await?;
+    log.append(&original).await?;
+    log.append(&receipt).await?;
+    PostgresSignalBindingRepository::new(pool.clone())
+        .insert_revision(&binding(2, 200, "power-system-2")?)
+        .await?;
+    let corrected = change(&pool, source, 250, EventTimeBasis::DeviceRecorded).await?;
+    log.append(&corrected).await?;
+
+    let tenant = original.tenant_id();
+    let initial_read = view.find(tenant, original.id()).await?.unwrap();
+    let receipt_read = view.find(tenant, receipt.id()).await?.unwrap();
+    let corrected_read = view.find(tenant, corrected.id()).await?.unwrap();
+    assert_eq!(initial_read.target().asset_id().as_str(), "power-system-1");
+    assert_eq!(receipt_read.event_at(), UnixTimeMillis::new(1100));
+    assert_eq!(
+        corrected_read.target().asset_id().as_str(),
+        "power-system-2"
+    );
+    assert_eq!(
+        corrected_read.first_resolution().known_at(),
+        UnixTimeMillis::new(250)
+    );
+    assert_eq!(initial_read.observation(), corrected_read.observation());
+    Ok(())
+}
 async fn setup(pool: &PgPool) -> Result<DecodedObservation, Box<dyn Error>> {
     sqlx::query("INSERT INTO metadata.tenants (tenant_id) VALUES ('tenant-a')")
         .execute(pool)

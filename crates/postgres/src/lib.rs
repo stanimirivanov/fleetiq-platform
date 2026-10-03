@@ -19,7 +19,7 @@ pub use access::{
 pub use error::PostgresRepositoryError;
 pub use history::{
     PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError,
-    PostgresDecodedObservationView,
+    PostgresAssetPropertyChangeView, PostgresDecodedObservationView,
 };
 pub use identity::{
     PostgresActorCatalogRepository, PostgresActorCatalogRepositoryError,

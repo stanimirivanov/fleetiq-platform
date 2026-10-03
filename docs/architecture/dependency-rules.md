@@ -25,7 +25,7 @@
 | `fleetiq-identity` | Application | Actor, external-identity, grant, tenant, and bootstrap use cases and consumed ports |
 | `fleetiq-metadata` | Application | Asset graph use cases and consumer-owned persistence ports |
 | `fleetiq-ingestion` | Application | Durable ingestion orchestration and consumer-owned persistence ports |
-| `fleetiq-history` | Application | Exact durable-observation processing and append-only semantic history port |
+| `fleetiq-history` | Application | Exact durable-observation processing and semantic history append/read ports |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |

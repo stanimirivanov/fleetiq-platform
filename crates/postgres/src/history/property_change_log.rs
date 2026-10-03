@@ -253,7 +253,7 @@ impl From<PostgresRepositoryError> for PostgresAssetPropertyChangeLogError {
     }
 }
 
-fn basis_name(basis: EventTimeBasis) -> &'static str {
+pub(super) fn basis_name(basis: EventTimeBasis) -> &'static str {
     match basis {
         EventTimeBasis::DeviceRecorded => "device_recorded",
         EventTimeBasis::ReceivedAt => "received_at",

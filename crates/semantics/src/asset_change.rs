@@ -36,10 +36,28 @@ pub struct AssetPropertyChangeId {
 
 impl AssetPropertyChangeId {
     fn new(bound_observation: &BoundObservation, event_time_basis: EventTimeBasis) -> Self {
+        Self::from_parts(
+            bound_observation.id().clone(),
+            bound_observation.binding().binding_id().clone(),
+            bound_observation.binding().revision(),
+            event_time_basis,
+        )
+    }
+
+    /// Reconstructs an exact interpretation identity from validated parts.
+    ///
+    /// This is useful for immutable-history reads, where the caller knows the
+    /// source output and binding revision but has not loaded their content.
+    pub fn from_parts(
+        observation_id: DecodedObservationId,
+        binding_id: SignalBindingId,
+        binding_revision: RecordRevision,
+        event_time_basis: EventTimeBasis,
+    ) -> Self {
         Self {
-            observation_id: bound_observation.id().clone(),
-            binding_id: bound_observation.binding().binding_id().clone(),
-            binding_revision: bound_observation.binding().revision(),
+            observation_id,
+            binding_id,
+            binding_revision,
             event_time_basis,
         }
     }

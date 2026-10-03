@@ -2,17 +2,22 @@
 //!
 //! Successfully resolved property changes are immutable facts. The semantic
 //! resolver remains read-only; a future worker can append its output here
-//! after decoded observations are durable.
+//! after decoded observations are durable. An exact read port exposes stored
+//! interpretations without selecting a latest value.
 
 use std::{error::Error, future::Future};
 
 use fleetiq_semantics::AssetPropertyChange;
 
 mod processing;
+mod property_change_view;
 mod stored_processing;
 
 pub use processing::{
     SemanticHistoryError, SemanticHistoryOutcome, SemanticHistoryProcessor, SemanticHistoryRetry,
+};
+pub use property_change_view::{
+    AssetPropertyChangeView, InvalidStoredPropertyChange, StoredPropertyChange,
 };
 pub use stored_processing::{
     DecodedObservationView, StoredObservationRequest, StoredSemanticHistoryError,
