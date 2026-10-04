@@ -46,6 +46,10 @@
   external identity, platform-access, identity-management, and
   tenant-provisioning grants, and immutable root audit fact;
   an explicit one-shot process command invokes it without opening an HTTP route.
+- A backend-owned OpenAPI 3.1 UI baseline now documents version discovery and the
+  bounded asset catalogue, with examples checked against in-process responses.
+  It is a partial contract; browser-safe authentication and the remaining
+  protected routes are not yet described.
 - Further business APIs, identity-provider integration, authorization administration
   APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.

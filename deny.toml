@@ -36,6 +36,14 @@ allow = [
     "Zlib",
 ]
 
+# The test-only OpenAPI example validator (jsonschema 0.57) reaches
+# borrow-or-share through referencing and fluent-uri. MIT-0 is permissive,
+# but is not a workspace-wide license choice. Keep this exception exact.
+# Owner: HTTP contract maintainers. Remove when the validator no longer needs
+# this crate or a suitable schema validator avoids it.
+exceptions = [
+    { crate = "borrow-or-share@0.2.4", allow = ["MIT-0"] },
+]
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"

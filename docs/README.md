@@ -35,6 +35,7 @@ product scope and relevant architecture page.
 | Asset graph, signal binding, or property attribution | [Semantic asset graph](architecture/semantic-asset-graph.md) | [Telemetry processing](architecture/telemetry-processing.md), relevant ADRs |
 | Calculators, projections, or live telemetry behavior | [Telemetry processing](architecture/telemetry-processing.md) | [Semantic asset graph](architecture/semantic-asset-graph.md), relevant ADRs |
 | Server composition, identity, authorization, or HTTP API | [Architecture overview](architecture/README.md), [current state](development/current-state.md) | [Security policy](../SECURITY.md), relevant ADRs |
+| HTTP response contract, client generation, or fixtures | [Backend-owned HTTP contract](../contracts/http/README.md), [HTTP versioning ADR](adr/0048-establish-versioned-http-api-boundary.md) | Server contract tests and relevant protected-route tests |
 | Bootstrap, deployment, readiness, or local runtime behavior | [Operations index](operations/README.md), [development guide](development/README.md) | [Platform bootstrap](operations/platform-bootstrap.md), Compose smoke checks |
 | Build, CI, repository policy, agent guidance, or developer experience | [Coding harness](development/harness.md), [development guide](development/README.md) | `cargo xtask repository`, `cargo xtask architecture` |
 | Dependency additions, advisories, licenses, sources, or update proposals | [Dependency management](development/dependency-management.md), [engineering standards](development/engineering-standards.md) | `cargo deny check`, `cargo machete --with-metadata --skip-target-dir` |
@@ -46,6 +47,7 @@ product scope and relevant architecture page.
 - [Product](product/README.md) defines users, vocabulary, goals, and non-goals.
 - [Architecture](architecture/README.md) describes system boundaries,
   information flow, trust, and direct dependency policy.
+- [HTTP contracts](../contracts/http/README.md) contain backend-owned client artifacts.
 - [Development](development/README.md) contains setup, engineering, migration,
   current-state, and harness guidance.
 - [Operations](operations/README.md) contains installation and runtime
