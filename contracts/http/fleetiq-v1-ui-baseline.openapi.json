@@ -1,0 +1,216 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "FleetIQ HTTP UI baseline",
+    "version": "1.0.0-baseline.1",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface needed to begin web and mobile clients. Other implemented routes are intentionally not yet described here. Protected routes are mounted only when bearer identity is configured; the current configured credential is not a browser login mechanism."
+  },
+  "servers": [
+    { "url": "/" }
+  ],
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "operationId": "getApiVersion",
+        "summary": "Discover the active API major version",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The active product API major version.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiDescription" },
+                "example": { "service": "FleetIQ", "version": "v1" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/assets": {
+      "get": {
+        "operationId": "listAssets",
+        "summary": "List one authorized tenant's assets in stable ID order",
+        "description": "The configured bearer identity must have a current metadata.read grant for the selected tenant. The route is absent without complete bearer configuration. A cursor traversal is not a cross-request snapshot.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "description": "The tenant selected for the current authorization check.",
+            "schema": { "type": "string", "minLength": 1, "maxLength": 128 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum asset summaries returned.",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 50 }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "description": "Exclusive asset-ID cursor from a previous page.",
+            "schema": { "type": "string", "minLength": 1, "maxLength": 128 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bounded asset summaries. An empty catalogue returns an empty array and a null cursor.",
+            "headers": {
+              "Cache-Control": {
+                "description": "Protected responses are not stored by shared or browser caches.",
+                "schema": { "type": "string", "const": "no-store" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AssetPage" },
+                "example": {
+                  "assets": [
+                    {
+                      "id": "asset-1",
+                      "tenant_id": "tenant-a",
+                      "name": "Primary machine",
+                      "asset_type": { "id": "generic.machine", "version": 1 }
+                    }
+                  ],
+                  "next_after": null
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/InvalidRequest" },
+          "401": { "$ref": "#/components/responses/Unauthenticated" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/InternalError" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Current configured workload credential. A browser-safe identity flow is not available yet."
+      }
+    },
+    "schemas": {
+      "ApiDescription": {
+        "type": "object",
+        "required": ["service", "version"],
+        "properties": {
+          "service": { "type": "string", "const": "FleetIQ" },
+          "version": { "type": "string", "const": "v1" }
+        }
+      },
+      "AssetTypeRef": {
+        "type": "object",
+        "required": ["id", "version"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "version": { "type": "integer", "minimum": 1, "maximum": 4294967295 }
+        }
+      },
+      "AssetSummary": {
+        "type": "object",
+        "required": ["id", "tenant_id", "name", "asset_type"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "tenant_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "name": { "type": "string", "minLength": 1 },
+          "asset_type": { "$ref": "#/components/schemas/AssetTypeRef" }
+        }
+      },
+      "AssetPage": {
+        "type": "object",
+        "required": ["assets", "next_after"],
+        "properties": {
+          "assets": {
+            "type": "array",
+            "maxItems": 100,
+            "items": { "$ref": "#/components/schemas/AssetSummary" }
+          },
+          "next_after": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Exclusive cursor for the next page, or null when no next page exists."
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "required": ["type", "title", "status"],
+        "properties": {
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "integer", "minimum": 400, "maximum": 599 }
+        },
+        "description": "Minimum application/problem+json shape. Future compatible problems may include optional fields."
+      }
+    },
+    "responses": {
+      "InvalidRequest": {
+        "description": "Invalid tenant, limit, cursor, or query.",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" },
+            "example": {
+              "type": "urn:fleetiq:problem:invalid-request",
+              "title": "Invalid request",
+              "status": 400
+            }
+          }
+        }
+      },
+      "Unauthenticated": {
+        "description": "A bearer credential was absent or rejected.",
+        "headers": {
+          "WWW-Authenticate": {
+            "schema": { "type": "string", "const": "Bearer realm=\"FleetIQ\"" }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" },
+            "example": {
+              "type": "urn:fleetiq:problem:unauthorized",
+              "title": "Authentication required",
+              "status": 401
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The actor has no current metadata.read grant for this tenant.",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" },
+            "example": {
+              "type": "urn:fleetiq:problem:forbidden",
+              "title": "Access denied",
+              "status": 403
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "A safe, bounded server error.",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" },
+            "example": {
+              "type": "urn:fleetiq:problem:internal-error",
+              "title": "Internal server error",
+              "status": 500
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -505,3 +505,54 @@ async fn configured_route_reads_only_an_asset_with_current_postgres_grant(
     );
     Ok(())
 }
+
+#[tokio::test]
+async fn asset_catalogue_responses_match_published_examples() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../contracts/http/fleetiq-v1-ui-baseline.openapi.json"
+    ))
+    .unwrap();
+    let responses = &contract["paths"]["/api/v1/tenants/{tenant_id}/assets"]["get"]["responses"];
+    let router = router(
+        Some(actor()),
+        Ok(AccessDecision::Allow),
+        Some(sample_asset()),
+        Calls::default(),
+    );
+
+    for (path, credential, status) in [
+        (
+            "/api/v1/tenants/tenant-a/assets?limit=1",
+            Some(TOKEN),
+            "200",
+        ),
+        (
+            "/api/v1/tenants/tenant-a/assets?limit=0",
+            Some(TOKEN),
+            "400",
+        ),
+        ("/api/v1/tenants/tenant-a/assets", None, "401"),
+    ] {
+        let response = router
+            .clone()
+            .oneshot(request(path, credential))
+            .await
+            .unwrap();
+        assert_eq!(response.status().as_str(), status);
+        let body: serde_json::Value =
+            serde_json::from_slice(&to_bytes(response.into_body(), 4096).await.unwrap()).unwrap();
+        let documented = &responses[status];
+        let documented = documented["$ref"].as_str().map_or(documented, |reference| {
+            contract.pointer(reference.trim_start_matches('#')).unwrap()
+        });
+        let media = if status == "200" {
+            "application/json"
+        } else {
+            "application/problem+json"
+        };
+        assert_eq!(
+            body, documented["content"][media]["example"],
+            "{path} must match the published {status} example"
+        );
+    }
+}
