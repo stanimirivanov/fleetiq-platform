@@ -1,6 +1,6 @@
 //! Published HTTP contract checks that do not require PostgreSQL.
 
-use std::error::Error;
+use std::{collections::HashSet, error::Error};
 
 use axum::{
     body::{Body, to_bytes},
@@ -12,6 +12,80 @@ use serde_json::{Value, json};
 use tower::ServiceExt;
 
 const SPEC: &str = include_str!("../../../contracts/http/fleetiq-v1-ui-baseline.openapi.json");
+
+struct PublishedOperation {
+    path: &'static str,
+    id: &'static str,
+    protected: bool,
+    can_be_missing: bool,
+    snapshot: bool,
+}
+
+const OPERATIONS: &[PublishedOperation] = &[
+    PublishedOperation {
+        path: "/api/v1",
+        id: "getApiVersion",
+        protected: false,
+        can_be_missing: false,
+        snapshot: false,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets",
+        id: "listAssets",
+        protected: true,
+        can_be_missing: false,
+        snapshot: false,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}",
+        id: "getAsset",
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/relationships",
+        id: "listAssetRelationships",
+        protected: true,
+        can_be_missing: true,
+        snapshot: true,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/signal-bindings",
+        id: "listAssetSignalBindings",
+        protected: true,
+        can_be_missing: true,
+        snapshot: true,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/signal-bindings",
+        id: "listSourceSignalBindings",
+        protected: true,
+        can_be_missing: false,
+        snapshot: true,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions/{version}",
+        id: "getAssetTypeDefinition",
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}",
+        id: "getPropertyDefinition",
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions/{version}",
+        id: "getRelationshipTypeDefinition",
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+];
 
 fn contract() -> Result<Value, serde_json::Error> {
     serde_json::from_str(SPEC)
@@ -49,17 +123,127 @@ fn assert_references_resolve(contract: &Value, value: &Value) {
     }
 }
 
+fn success_example<'a>(contract: &'a Value, path: &str) -> &'a Value {
+    &contract["paths"][path]["get"]["responses"]["200"]["content"]["application/json"]["example"]
+}
+
+fn validate_component_example(
+    contract: &Value,
+    component: &str,
+    example: &Value,
+) -> Result<bool, Box<dyn Error>> {
+    let reference = format!("#/components/schemas/{component}");
+    let schema = json!({
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "components": { "schemas": contract["components"]["schemas"] },
+        "$ref": reference,
+    });
+    Ok(validator_for(&schema)?.is_valid(example))
+}
+
 #[test]
-fn published_examples_satisfy_their_response_schemas() -> Result<(), Box<dyn Error>> {
+fn published_operations_have_stable_security_and_request_contracts() -> Result<(), Box<dyn Error>> {
     let contract = contract()?;
     assert_eq!(contract["openapi"], "3.1.1");
     assert_references_resolve(&contract, &contract);
 
-    for (path, operation) in [
-        ("/api/v1", "get"),
-        ("/api/v1/tenants/{tenant_id}/assets", "get"),
-    ] {
-        let responses = contract["paths"][path][operation]["responses"]
+    let paths = contract["paths"]
+        .as_object()
+        .expect("published paths must be an object");
+    assert_eq!(paths.len(), OPERATIONS.len(), "review every published path");
+    let mut ids = HashSet::new();
+    for expected in OPERATIONS {
+        let path_item = paths
+            .get(expected.path)
+            .expect("every reviewed path must exist");
+        assert!(
+            path_item
+                .as_object()
+                .is_some_and(|item| item.len() == 1 && item.contains_key("get")),
+            "{} must publish only GET",
+            expected.path
+        );
+        let operation = &path_item["get"];
+        assert_eq!(operation["operationId"], expected.id, "{}", expected.path);
+        assert!(ids.insert(expected.id), "duplicate operation ID");
+        assert_eq!(
+            operation["security"],
+            if expected.protected {
+                json!([{ "bearerAuth": [] }])
+            } else {
+                json!([])
+            },
+            "{}",
+            expected.path
+        );
+
+        let responses = operation["responses"]
+            .as_object()
+            .expect("each GET must declare responses");
+        assert!(responses.contains_key("200"), "{}", expected.path);
+        if expected.protected {
+            for status in ["400", "401", "403", "500"] {
+                assert!(responses.contains_key(status), "{} {status}", expected.path);
+            }
+            assert_eq!(
+                operation["responses"]["200"]["headers"]["Cache-Control"]["schema"]["const"],
+                "no-store",
+                "{}",
+                expected.path
+            );
+        }
+        if expected.can_be_missing {
+            assert!(responses.contains_key("404"), "{}", expected.path);
+        }
+        if expected.snapshot {
+            let parameters = operation["parameters"]
+                .as_array()
+                .expect("snapshot parameters");
+            for name in ["effective_at_ms", "known_at_ms"] {
+                assert!(
+                    parameters.iter().any(|parameter| parameter["name"] == name
+                        && parameter["in"] == "query"
+                        && parameter["required"] == true),
+                    "{} requires {name}",
+                    expected.path
+                );
+            }
+            if expected.id == "listSourceSignalBindings" {
+                for name in ["device_asset_id", "endpoint_id", "signal_id"] {
+                    assert!(
+                        parameters.iter().any(|parameter| parameter["name"] == name
+                            && parameter["in"] == "query"
+                            && parameter["required"] == true),
+                        "{} requires {name}",
+                        expected.path
+                    );
+                }
+            }
+            let limit = parameters
+                .iter()
+                .find(|parameter| parameter["name"] == "limit")
+                .expect("bounded page size");
+            assert_eq!(limit["schema"]["minimum"], 1, "{}", expected.path);
+            assert_eq!(limit["schema"]["maximum"], 100, "{}", expected.path);
+            assert!(
+                parameters
+                    .iter()
+                    .any(|parameter| parameter["name"] == "after")
+            );
+        }
+    }
+    assert_eq!(
+        contract["components"]["securitySchemes"]["bearerAuth"]["scheme"],
+        "bearer"
+    );
+    Ok(())
+}
+
+#[test]
+fn published_examples_satisfy_their_response_schemas() -> Result<(), Box<dyn Error>> {
+    let contract = contract()?;
+    for expected in OPERATIONS {
+        let responses = contract["paths"][expected.path]["get"]["responses"]
             .as_object()
             .expect("documented operation must have responses");
         for (status, response) in responses {
@@ -81,19 +265,76 @@ fn published_examples_satisfy_their_response_schemas() -> Result<(), Box<dyn Err
             let validator = validator_for(&schema)?;
             assert!(
                 validator.is_valid(&body["example"]),
-                "{path} {status} example violates {schema_ref}"
+                "{} {status} example violates {schema_ref}",
+                expected.path
             );
         }
     }
+    Ok(())
+}
 
-    let page_schema = json!({
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "components": { "schemas": contract["components"]["schemas"] },
-        "$ref": "#/components/schemas/AssetPage"
-    });
-    let page_validator = validator_for(&page_schema)?;
-    assert!(!page_validator.is_valid(&json!({ "assets": [], "next_after": 42 })));
-    assert!(!page_validator.is_valid(&json!({ "assets": [{}], "next_after": null })));
+#[test]
+fn published_schemas_reject_semantically_invalid_metadata() -> Result<(), Box<dyn Error>> {
+    let contract = contract()?;
+    let mut page = success_example(&contract, "/api/v1/tenants/{tenant_id}/assets").clone();
+    page["next_after"] = json!(42);
+    assert!(!validate_component_example(&contract, "AssetPage", &page)?);
+
+    let mut asset =
+        success_example(&contract, "/api/v1/tenants/{tenant_id}/assets/{asset_id}").clone();
+    asset["external_identifiers"][0]
+        .as_object_mut()
+        .expect("sample external identifier")
+        .remove("kind");
+    assert!(!validate_component_example(&contract, "Asset", &asset)?);
+
+    let mut relationship = success_example(
+        &contract,
+        "/api/v1/tenants/{tenant_id}/assets/{asset_id}/relationships",
+    )
+    .clone();
+    relationship["relationships"][0]["revision"] = json!(1);
+    assert!(!validate_component_example(
+        &contract,
+        "RelationshipSnapshot",
+        &relationship
+    )?);
+
+    let mut target_bindings = success_example(
+        &contract,
+        "/api/v1/tenants/{tenant_id}/assets/{asset_id}/signal-bindings",
+    )
+    .clone();
+    target_bindings["bindings"][0]["source"]
+        .as_object_mut()
+        .expect("sample source")
+        .remove("endpoint_id");
+    assert!(!validate_component_example(
+        &contract,
+        "AssetBindingSnapshot",
+        &target_bindings
+    )?);
+
+    let mut source_bindings =
+        success_example(&contract, "/api/v1/tenants/{tenant_id}/signal-bindings").clone();
+    source_bindings["next_after"] = json!(7);
+    assert!(!validate_component_example(
+        &contract,
+        "SourceBindingSnapshot",
+        &source_bindings
+    )?);
+
+    let mut property = success_example(
+        &contract,
+        "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}",
+    )
+    .clone();
+    property["value_kind"] = json!("floating");
+    assert!(!validate_component_example(
+        &contract,
+        "PropertyDefinition",
+        &property
+    )?);
     Ok(())
 }
 
@@ -105,9 +346,6 @@ async fn discovery_response_matches_published_example() -> Result<(), Box<dyn Er
     assert_eq!(response.status().as_u16(), 200);
     let actual: Value = serde_json::from_slice(&to_bytes(response.into_body(), 1024).await?)?;
     let contract = contract()?;
-    assert_eq!(
-        actual,
-        contract["paths"]["/api/v1"]["get"]["responses"]["200"]["content"]["application/json"]["example"]
-    );
+    assert_eq!(&actual, success_example(&contract, "/api/v1"));
     Ok(())
 }

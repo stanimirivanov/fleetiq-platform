@@ -25,6 +25,8 @@ use fleetiq_metadata::{
 use fleetiq_postgres::{PostgresAssetRepository, PostgresDefinitionRepository};
 use tower::ServiceExt;
 
+use crate::contract_test_support::assert_published_example;
+
 use super::*;
 
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -483,4 +485,23 @@ async fn configured_query_reads_exact_revision_with_current_postgres_grant(
         StatusCode::FORBIDDEN
     );
     Ok(())
+}
+
+#[tokio::test]
+async fn relationship_snapshot_matches_published_example() {
+    let response = router(
+        true,
+        Ok(Some(sample_relationship(1, "component-b"))),
+        Arc::default(),
+    )
+    .oneshot(request(SNAPSHOT_PATH, Some(TOKEN)))
+    .await
+    .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    let body = to_bytes(response.into_body(), 4096).await.unwrap();
+    assert_published_example(
+        &body,
+        "/api/v1/tenants/{tenant_id}/assets/{asset_id}/relationships",
+    );
 }

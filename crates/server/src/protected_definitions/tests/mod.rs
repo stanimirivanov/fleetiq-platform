@@ -18,6 +18,8 @@ use fleetiq_domain::{
 };
 use tower::ServiceExt;
 
+use crate::contract_test_support::assert_published_example;
+
 use super::*;
 
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -250,3 +252,41 @@ fn request(path: &str, token: Option<&str>) -> Request<Body> {
 mod asset_type;
 mod property;
 mod relationship_type;
+
+#[tokio::test]
+async fn pinned_definitions_match_published_examples() {
+    let responses = [
+        (
+            router(true, Ok(Some(sample_definition())), Arc::default()),
+            PATH,
+            "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions/{version}",
+        ),
+        (
+            property_router(
+                true,
+                Ok(Some(sample_property(
+                    PropertyValueKind::Decimal,
+                    Some("Cel"),
+                ))),
+                Arc::default(),
+            ),
+            PROPERTY_PATH,
+            "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}",
+        ),
+        (
+            relationship_type_router(true, Ok(Some(sample_relationship_type())), Arc::default()),
+            "/api/v1/tenants/tenant-a/relationship-types/generic.tows/versions/2",
+            "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions/{version}",
+        ),
+    ];
+    for (test_router, request_path, contract_path) in responses {
+        let response = test_router
+            .oneshot(request(request_path, Some(TOKEN)))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+        let body = to_bytes(response.into_body(), 4096).await.unwrap();
+        assert_published_example(&body, contract_path);
+    }
+}

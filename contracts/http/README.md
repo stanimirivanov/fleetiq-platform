@@ -2,10 +2,38 @@
 
 ## TL;DR
 
-The backend owns this OpenAPI 3.1 artifact. It currently describes the version-discovery and bounded tenant asset-catalogue routes needed by the first web/mobile slices. It is an explicitly partial v1 description, not a claim that other implemented routes do not exist.
+The backend owns this partial OpenAPI 3.1 description of `/api/v1`. It
+publishes version discovery, bounded asset catalogue and exact asset reads,
+pinned semantic definitions, and bounded bitemporal relationship and
+signal-binding snapshots. Other implemented routes remain outside this
+client-facing subset. Protected reads still use a configured workload bearer
+and current tenant `metadata.read` access; that credential is not browser
+authentication.
 
-[The UI baseline](fleetiq-v1-ui-baseline.openapi.json) is committed source, not output copied from a running instance. Its info.version tracks revisions of this documented subset; the path major version remains v1. The baseline records the current configured bearer credential only as a temporary protected-route mechanism. Browser or mobile production login must wait for the approved identity integration. Synthetic examples are safe to use as client fixtures.
+[The UI baseline](fleetiq-v1-ui-baseline.openapi.json) is committed source,
+not output copied from a running instance. Its `info.version` tracks revisions
+of this documented subset; the path major version remains v1. The current
+configured bearer is a temporary server-side adapter for one principal.
+Browser and mobile production login require a separate approved identity
+integration. Never embed the workload credential in a web or mobile client.
 
-When changing a described route, update the artifact, its response examples, server compatibility tests, and the client-consumption plan in the same change. Frontends should pin an exact backend commit or released artifact before generating transport types, validate fixture payloads, and never treat generated wire types as trusted domain values. Add more routes in small, separately reviewed slices.
+Relationship snapshots are scoped to one asset. Target-binding snapshots are
+scoped to one asset, and source-binding snapshots to one decoded signal.
+Each uses explicit effective and known times, bounded pages, and an opaque
+continuation cursor. These diagnostic reads are not a whole-graph query,
+current semantic property-state projection, or live telemetry feed. Pinned
+definitions identify the exact version named by an asset, relationship, or
+binding. Synthetic examples are suitable for client fixtures.
 
-OpenAPI 3.1 uses JSON Schema 2020-12 for Schema Objects. The server contract tests validate examples against their schemas and compare examples with in-process HTTP responses; this does not yet prove every undocumented route or every possible response variant.
+When changing a described route, update the artifact, response examples,
+server compatibility tests, and client-consumption plan in the same change.
+A frontend should pin an exact merged backend commit or released artifact,
+regenerate transport types, validate unknown payloads at its feature boundary,
+and keep sample mode visibly separate from live data. Pinning this expanded
+contract allows typed mock-driven UI work; production browser reads remain
+unconfigured until browser-safe identity and authorization are delivered.
+
+OpenAPI 3.1 uses JSON Schema 2020-12 for Schema Objects. Contract tests
+validate examples against their schemas and compare covered examples with
+in-process HTTP responses. They do not prove every undocumented route, every
+database state, or every possible response variant.

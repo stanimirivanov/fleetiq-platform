@@ -8,6 +8,8 @@ mod bearer_authentication;
 mod bootstrap;
 mod command;
 mod config;
+#[cfg(test)]
+mod contract_test_support;
 mod health;
 mod http_api;
 mod protected_asset;
