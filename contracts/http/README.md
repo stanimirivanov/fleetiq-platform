@@ -10,12 +10,19 @@ client-facing subset. Protected reads still use a configured workload bearer
 and current tenant `metadata.read` access; that credential is not browser
 authentication.
 
-[The UI baseline](fleetiq-v1-ui-baseline.openapi.json) is committed source,
-not output copied from a running instance. Its `info.version` tracks revisions
-of this documented subset; the path major version remains v1. The current
-configured bearer is a temporary server-side adapter for one principal.
-Browser and mobile production login require a separate approved identity
-integration. Never embed the workload credential in a web or mobile client.
+[The modular UI baseline](openapi/openapi.yaml) is the committed source of
+truth, not output copied from a running instance. Paths and reusable components
+live in adjacent domain and component files. The committed
+[bundled JSON artifact](dist/openapi.json) is generated from that entrypoint
+for Rust contract tests and downstream client/server tooling; do not edit it
+by hand. A contract change updates the source, regenerates the bundle, and
+checks both together. `info.version` tracks revisions of this documented
+subset; the path major version remains v1.
+
+The current configured bearer is a temporary server-side adapter for one
+principal. Browser and mobile production login require a separate approved
+identity integration. Never embed the workload credential in a web or mobile
+client.
 
 Relationship snapshots are scoped to one asset. Target-binding snapshots are
 scoped to one asset, and source-binding snapshots to one decoded signal.
@@ -25,13 +32,20 @@ current semantic property-state projection, or live telemetry feed. Pinned
 definitions identify the exact version named by an asset, relationship, or
 binding. Synthetic examples are suitable for client fixtures.
 
-When changing a described route, update the artifact, response examples,
+When changing a described route, update the modular source, bundled
+artifact, response examples,
 server compatibility tests, and client-consumption plan in the same change.
 A frontend should pin an exact merged backend commit or released artifact,
 regenerate transport types, validate unknown payloads at its feature boundary,
 and keep sample mode visibly separate from live data. Pinning this expanded
 contract allows typed mock-driven UI work; production browser reads remain
 unconfigured until browser-safe identity and authorization are delivered.
+
+From the repository root, run `pnpm lint:openapi` to lint the modular source,
+`pnpm bundle:openapi` to regenerate the committed standalone JSON, and
+`pnpm check:openapi` to verify the bundle is current. Rust contract tests read
+the bundle at compile time; generate it before running those tests after a
+source edit.
 
 OpenAPI 3.1 uses JSON Schema 2020-12 for Schema Objects. Contract tests
 validate examples against their schemas and compare covered examples with

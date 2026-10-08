@@ -1,0 +1,22 @@
+type: "object"
+required:
+  - "device_asset_id"
+  - "endpoint_id"
+  - "signal_id"
+properties:
+  device_asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Communication-device asset ID."
+  endpoint_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Source endpoint ID."
+  signal_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Decoded source signal ID."
+description: "Exact device endpoint and source signal tuple."

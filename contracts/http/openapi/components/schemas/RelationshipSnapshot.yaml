@@ -1,0 +1,34 @@
+type: "object"
+required:
+  - "asset_id"
+  - "effective_at_ms"
+  - "known_at_ms"
+  - "relationships"
+  - "next_after"
+properties:
+  asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Queried current-catalogue asset."
+  effective_at_ms:
+    type: "integer"
+    format: "int64"
+    description: "Physical time used for this page."
+  known_at_ms:
+    type: "integer"
+    format: "int64"
+    description: "Recorded-time cutoff used for this page."
+  relationships:
+    type: "array"
+    maxItems: 100
+    items:
+      $ref: "./Relationship.yaml"
+  next_after:
+    type:
+      - "string"
+      - "null"
+    minLength: 1
+    maxLength: 128
+    description: "Exclusive stable relationship-ID cursor; null ends traversal."
+description: "One bounded, bitemporal relationship page for an asset."

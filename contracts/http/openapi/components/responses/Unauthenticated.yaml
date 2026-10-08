@@ -1,0 +1,14 @@
+description: "A bearer credential was absent or rejected."
+headers:
+  WWW-Authenticate:
+    schema:
+      type: "string"
+      const: "Bearer realm=\"FleetIQ\""
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:unauthorized"
+      title: "Authentication required"
+      status: 401

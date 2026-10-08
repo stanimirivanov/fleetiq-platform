@@ -1,0 +1,17 @@
+description: "Bounded asset summaries. An empty catalogue returns an empty array and a null cursor."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/AssetPage.yaml"
+    example:
+      assets:
+        - id: "asset-1"
+          tenant_id: "tenant-a"
+          name: "Primary machine"
+          asset_type:
+            id: "generic.machine"
+            version: 1
+      next_after: null

@@ -1,0 +1,9 @@
+name: "type_id"
+in: "path"
+required: true
+description: "Exact relationship-type definition ID."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Exact relationship-type definition ID."

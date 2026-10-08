@@ -1,0 +1,30 @@
+description: "Read a bounded signal-binding snapshot targeting one asset"
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/AssetBindingSnapshot.yaml"
+    example:
+      asset_id: "power-system-1"
+      effective_at_ms: 1500
+      known_at_ms: 2500
+      bindings:
+        - id: "binding-1"
+          tenant_id: "tenant-a"
+          revision: "1"
+          recorded_at_ms: 2000
+          source:
+            device_asset_id: "gateway-1"
+            endpoint_id: "can-primary"
+            signal_id: "bus.voltage"
+          target:
+            asset_id: "power-system-1"
+            property:
+              id: "electrical.voltage"
+              version: 1
+          effective_interval:
+            start_ms: 1000
+            end_ms: 3000
+      next_after: null

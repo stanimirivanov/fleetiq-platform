@@ -1,0 +1,143 @@
+openapi: "3.1.1"
+info:
+  title: "FleetIQ HTTP UI baseline"
+  version: "1.0.0-baseline.2"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes are mounted only when bearer identity is configured; the current single-principal workload credential is not a browser login mechanism."
+servers:
+  - url: "/"
+security: []
+paths:
+  "/api/v1":
+    $ref: "./paths/system/version.yaml"
+  "/api/v1/tenants/{tenant_id}/assets":
+    $ref: "./paths/assets/catalogue.yaml"
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}":
+    $ref: "./paths/assets/detail.yaml"
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/relationships":
+    $ref: "./paths/assets/relationships.yaml"
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/signal-bindings":
+    $ref: "./paths/assets/signal-bindings.yaml"
+  "/api/v1/tenants/{tenant_id}/signal-bindings":
+    $ref: "./paths/bindings/source.yaml"
+  "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions/{version}":
+    $ref: "./paths/definitions/asset-type.yaml"
+  "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}":
+    $ref: "./paths/definitions/property.yaml"
+  "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions/{version}":
+    $ref: "./paths/definitions/relationship-type.yaml"
+components:
+  schemas:
+    ApiDescription:
+      $ref: "./components/schemas/ApiDescription.yaml"
+    AssetTypeRef:
+      $ref: "./components/schemas/AssetTypeRef.yaml"
+    AssetSummary:
+      $ref: "./components/schemas/AssetSummary.yaml"
+    AssetPage:
+      $ref: "./components/schemas/AssetPage.yaml"
+    Problem:
+      $ref: "./components/schemas/Problem.yaml"
+    ExternalIdentifier:
+      $ref: "./components/schemas/ExternalIdentifier.yaml"
+    Asset:
+      $ref: "./components/schemas/Asset.yaml"
+    RelationshipTypeRef:
+      $ref: "./components/schemas/RelationshipTypeRef.yaml"
+    PropertyReference:
+      $ref: "./components/schemas/PropertyReference.yaml"
+    EffectiveInterval:
+      $ref: "./components/schemas/EffectiveInterval.yaml"
+    Relationship:
+      $ref: "./components/schemas/Relationship.yaml"
+    RelationshipSnapshot:
+      $ref: "./components/schemas/RelationshipSnapshot.yaml"
+    SignalSource:
+      $ref: "./components/schemas/SignalSource.yaml"
+    SignalTarget:
+      $ref: "./components/schemas/SignalTarget.yaml"
+    SignalBinding:
+      $ref: "./components/schemas/SignalBinding.yaml"
+    AssetBindingSnapshot:
+      $ref: "./components/schemas/AssetBindingSnapshot.yaml"
+    SourceBindingSnapshot:
+      $ref: "./components/schemas/SourceBindingSnapshot.yaml"
+    AssetTypeDefinition:
+      $ref: "./components/schemas/AssetTypeDefinition.yaml"
+    PropertyDefinition:
+      $ref: "./components/schemas/PropertyDefinition.yaml"
+    RelationshipTypeDefinition:
+      $ref: "./components/schemas/RelationshipTypeDefinition.yaml"
+  parameters:
+    catalogue-tenant-id:
+      $ref: "./components/parameters/catalogue-tenant-id.yaml"
+    asset-list-limit:
+      $ref: "./components/parameters/asset-list-limit.yaml"
+    asset-list-after:
+      $ref: "./components/parameters/asset-list-after.yaml"
+    metadata-read-tenant-id:
+      $ref: "./components/parameters/metadata-read-tenant-id.yaml"
+    exact-asset-id:
+      $ref: "./components/parameters/exact-asset-id.yaml"
+    relationship-asset-id:
+      $ref: "./components/parameters/relationship-asset-id.yaml"
+    effective-at-ms:
+      $ref: "./components/parameters/effective-at-ms.yaml"
+    known-at-ms:
+      $ref: "./components/parameters/known-at-ms.yaml"
+    snapshot-limit:
+      $ref: "./components/parameters/snapshot-limit.yaml"
+    relationship-after:
+      $ref: "./components/parameters/relationship-after.yaml"
+    target-binding-asset-id:
+      $ref: "./components/parameters/target-binding-asset-id.yaml"
+    binding-after:
+      $ref: "./components/parameters/binding-after.yaml"
+    device-asset-id:
+      $ref: "./components/parameters/device-asset-id.yaml"
+    endpoint-id:
+      $ref: "./components/parameters/endpoint-id.yaml"
+    signal-id:
+      $ref: "./components/parameters/signal-id.yaml"
+    asset-type-id:
+      $ref: "./components/parameters/asset-type-id.yaml"
+    definition-version:
+      $ref: "./components/parameters/definition-version.yaml"
+    property-id:
+      $ref: "./components/parameters/property-id.yaml"
+    relationship-type-id:
+      $ref: "./components/parameters/relationship-type-id.yaml"
+  responses:
+    getApiVersion-200:
+      $ref: "./components/responses/getApiVersion-200.yaml"
+    listAssets-200:
+      $ref: "./components/responses/listAssets-200.yaml"
+    getAsset-200:
+      $ref: "./components/responses/getAsset-200.yaml"
+    listAssetRelationships-200:
+      $ref: "./components/responses/listAssetRelationships-200.yaml"
+    listAssetSignalBindings-200:
+      $ref: "./components/responses/listAssetSignalBindings-200.yaml"
+    listSourceSignalBindings-200:
+      $ref: "./components/responses/listSourceSignalBindings-200.yaml"
+    getAssetTypeDefinition-200:
+      $ref: "./components/responses/getAssetTypeDefinition-200.yaml"
+    getPropertyDefinition-200:
+      $ref: "./components/responses/getPropertyDefinition-200.yaml"
+    getRelationshipTypeDefinition-200:
+      $ref: "./components/responses/getRelationshipTypeDefinition-200.yaml"
+    InvalidRequest:
+      $ref: "./components/responses/InvalidRequest.yaml"
+    Unauthenticated:
+      $ref: "./components/responses/Unauthenticated.yaml"
+    Forbidden:
+      $ref: "./components/responses/Forbidden.yaml"
+    InternalError:
+      $ref: "./components/responses/InternalError.yaml"
+    NotFound:
+      $ref: "./components/responses/NotFound.yaml"
+  headers:
+    cache-control:
+      $ref: "./components/headers/cache-control.yaml"
+  securitySchemes:
+    bearerAuth:
+      $ref: "./components/security-schemes/bearerAuth.yaml"

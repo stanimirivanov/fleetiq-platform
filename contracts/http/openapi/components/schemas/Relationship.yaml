@@ -1,0 +1,45 @@
+type: "object"
+required:
+  - "id"
+  - "tenant_id"
+  - "revision"
+  - "recorded_at_ms"
+  - "relationship_type"
+  - "source_asset_id"
+  - "target_asset_id"
+  - "effective_interval"
+properties:
+  id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Stable relationship identity."
+  tenant_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Owning tenant."
+  revision:
+    type: "string"
+    pattern: "^[1-9][0-9]*$"
+    maxLength: 20
+    description: "Positive u64 revision serialized as decimal text to preserve JavaScript precision."
+  recorded_at_ms:
+    type: "integer"
+    format: "int64"
+    description: "When FleetIQ learned this revision, in signed Unix milliseconds."
+  relationship_type:
+    $ref: "./RelationshipTypeRef.yaml"
+  source_asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Directed source asset."
+  target_asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Directed target asset."
+  effective_interval:
+    $ref: "./EffectiveInterval.yaml"
+description: "One recorded revision of a directed asset relationship."

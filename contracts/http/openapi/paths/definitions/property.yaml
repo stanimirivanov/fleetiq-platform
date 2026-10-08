@@ -1,0 +1,23 @@
+get:
+  operationId: "getPropertyDefinition"
+  summary: "Read one pinned property definition"
+  description: "Read the exact value kind and optional canonical unit; this endpoint performs no measurement conversion."
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
+    - $ref: "../../components/parameters/property-id.yaml"
+    - $ref: "../../components/parameters/definition-version.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/getPropertyDefinition-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/Forbidden.yaml"
+    "404":
+      $ref: "../../components/responses/NotFound.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

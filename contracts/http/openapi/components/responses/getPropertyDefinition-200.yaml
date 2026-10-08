@@ -1,0 +1,14 @@
+description: "Read one pinned property definition"
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/PropertyDefinition.yaml"
+    example:
+      id: "thermal.temperature"
+      version: 1
+      name: "Air temperature"
+      value_kind: "decimal"
+      canonical_unit: "Cel"

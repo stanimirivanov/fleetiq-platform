@@ -1,0 +1,9 @@
+description: "The authorized exact resource or required current asset is absent."
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:not-found"
+      title: "Resource not found"
+      status: 404

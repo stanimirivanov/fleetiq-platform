@@ -1,0 +1,3 @@
+type: "http"
+scheme: "bearer"
+description: "Current configured workload credential. A browser-safe identity flow is not available yet."

@@ -1,0 +1,16 @@
+{
+  "name": "fleetiq-platform-contracts",
+  "private": true,
+  "packageManager": "pnpm@12.5.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "lint:openapi": "redocly lint contracts/http/openapi/openapi.yaml --config contracts/http/redocly.yaml && node scripts/lint-openapi-layout.mjs",
+    "bundle:openapi": "redocly bundle contracts/http/openapi/openapi.yaml --config contracts/http/redocly.yaml --output contracts/http/dist/openapi.json --component-renaming-conflicts-severity=error",
+    "check:openapi": "pnpm lint:openapi && node scripts/check-openapi.mjs"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.53.3"
+  }
+}

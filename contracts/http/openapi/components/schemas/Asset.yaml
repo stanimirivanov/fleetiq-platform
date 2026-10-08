@@ -1,0 +1,28 @@
+type: "object"
+required:
+  - "id"
+  - "tenant_id"
+  - "name"
+  - "asset_type"
+  - "external_identifiers"
+properties:
+  id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Internal FleetIQ asset identity."
+  tenant_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Owning tenant."
+  name:
+    type: "string"
+    minLength: 1
+  asset_type:
+    $ref: "./AssetTypeRef.yaml"
+  external_identifiers:
+    type: "array"
+    items:
+      $ref: "./ExternalIdentifier.yaml"
+description: "Exact asset identity with its pinned type and external identifiers."

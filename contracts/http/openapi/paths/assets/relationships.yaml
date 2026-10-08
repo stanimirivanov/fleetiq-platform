@@ -1,0 +1,26 @@
+get:
+  operationId: "listAssetRelationships"
+  summary: "Read a bounded relationship snapshot involving one asset"
+  description: "The latest revision known at known_at_ms is selected, then tested at effective_at_ms. Results are bounded pages ordered by stable ID. A cursor traversal is not a cross-request database snapshot; repeat the same times and limit on the next page. Both directed source and target roles are returned. The asset must exist in the current catalogue; only edges are bitemporal."
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
+    - $ref: "../../components/parameters/relationship-asset-id.yaml"
+    - $ref: "../../components/parameters/effective-at-ms.yaml"
+    - $ref: "../../components/parameters/known-at-ms.yaml"
+    - $ref: "../../components/parameters/snapshot-limit.yaml"
+    - $ref: "../../components/parameters/relationship-after.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listAssetRelationships-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/Forbidden.yaml"
+    "404":
+      $ref: "../../components/responses/NotFound.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

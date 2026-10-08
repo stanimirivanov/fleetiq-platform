@@ -1,0 +1,15 @@
+type: "object"
+required:
+  - "type"
+  - "title"
+  - "status"
+properties:
+  type:
+    type: "string"
+  title:
+    type: "string"
+  status:
+    type: "integer"
+    minimum: 400
+    maximum: 599
+description: "Minimum application/problem+json shape. Future compatible problems may include optional fields."

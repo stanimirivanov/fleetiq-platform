@@ -6,6 +6,7 @@
   the task.
 - Run `cargo xtask repository` and `cargo xtask architecture` for immediate,
   database-independent structural feedback.
+- Run `pnpm check:openapi` for changes to the published HTTP contract.
 - Run the complete PostgreSQL-backed Rust gate before handoff; use Compose
   checks when deployment or runtime behavior changes.
 - Report every unavailable check as not run with its blocker and residual
@@ -52,6 +53,7 @@ cannot run.
 | [Dependency rules](../architecture/dependency-rules.md) | Allowed workspace package classifications and edges | Crate or direct dependency changes |
 | [Engineering standards](engineering-standards.md) | Rust design, tests, documentation, security, and operations | Implementation work |
 | [SQL migration criteria](sql-migrations.md) | Persisted-data invariants and migration verification | Database work |
+| [OpenAPI maintenance skill](../../.agents/skills/openapi/SKILL.md) | Modular HTTP contract layout, references, registration, and bundle workflow | Published HTTP contract work |
 | [Operations index](../operations/README.md) | Installation and runtime procedures | Deployment or operational work |
 | [ADR index](../adr/README.md) | Accepted durable decisions and supersession history | Decisions relevant to the task |
 | [Milestones](../roadmap/milestones.md) | Intended outcome sequence | Planning and issue drafting |
@@ -70,6 +72,7 @@ applicable acceptance check before handoff.
 |:--|:--|:--|
 | `cargo xtask repository` | Local Markdown links and anchors, long-document TL;DR policy, ADR and milestone indexes, and issue or pull request template structure satisfy mechanical repository policy | T1; checked-out repository and Rust toolchain |
 | `cargo xtask architecture` | Workspace packages and direct internal dependencies match the reviewed capability policy | T1; Cargo metadata, no database |
+| `pnpm check:openapi` | Modular OpenAPI syntax, references, registrations, inline schema size, and committed bundle freshness | T1 for HTTP contract changes; pinned Node.js and locked pnpm dependencies, no database |
 | `cargo deny check` | Locked dependencies satisfy RustSec advisory, license, source, and ban policy | T2; pinned CLI and network access to the advisory database |
 | `cargo machete --with-metadata --skip-target-dir` | No unused direct dependency remains in a workspace manifest | T2; pinned CLI and Cargo metadata; reported findings require review |
 | `cargo fmt --all --check` | Rust formatting is stable without changing files | T2; Rust toolchain |

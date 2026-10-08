@@ -1,0 +1,9 @@
+name: "device_asset_id"
+in: "query"
+required: true
+description: "Communication-device asset ID."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Communication-device asset ID."

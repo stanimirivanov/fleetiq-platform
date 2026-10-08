@@ -1,0 +1,8 @@
+name: "known_at_ms"
+in: "query"
+required: true
+description: "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot."
+schema:
+  type: "integer"
+  format: "int64"
+  description: "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot."

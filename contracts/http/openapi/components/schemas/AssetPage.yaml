@@ -1,0 +1,17 @@
+type: "object"
+required:
+  - "assets"
+  - "next_after"
+properties:
+  assets:
+    type: "array"
+    maxItems: 100
+    items:
+      $ref: "./AssetSummary.yaml"
+  next_after:
+    type:
+      - "string"
+      - "null"
+    minLength: 1
+    maxLength: 128
+    description: "Exclusive cursor for the next page, or null when no next page exists."

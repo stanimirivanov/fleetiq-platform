@@ -1,0 +1,9 @@
+description: "A safe, bounded server error."
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:internal-error"
+      title: "Internal server error"
+      status: 500

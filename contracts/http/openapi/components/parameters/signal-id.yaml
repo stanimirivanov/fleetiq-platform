@@ -1,0 +1,9 @@
+name: "signal_id"
+in: "query"
+required: true
+description: "Decoded source signal ID."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Decoded source signal ID."

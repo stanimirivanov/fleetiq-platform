@@ -1,0 +1,16 @@
+type: "object"
+required:
+  - "start_ms"
+  - "end_ms"
+properties:
+  start_ms:
+    type: "integer"
+    format: "int64"
+    description: "Inclusive physical effective start in signed Unix milliseconds."
+  end_ms:
+    type:
+      - "integer"
+      - "null"
+    format: "int64"
+    description: "Exclusive physical effective end; null means open-ended."
+description: "Half-open physical time interval [start_ms, end_ms)."

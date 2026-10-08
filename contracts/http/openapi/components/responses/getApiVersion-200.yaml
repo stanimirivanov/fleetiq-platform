@@ -1,0 +1,8 @@
+description: "The active product API major version."
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/ApiDescription.yaml"
+    example:
+      service: "FleetIQ"
+      version: "v1"

@@ -1,0 +1,4 @@
+description: "Protected responses are not stored by shared or browser caches."
+schema:
+  type: "string"
+  const: "no-store"

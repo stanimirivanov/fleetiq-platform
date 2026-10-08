@@ -1,0 +1,12 @@
+description: "Read one pinned relationship-type definition"
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/RelationshipTypeDefinition.yaml"
+    example:
+      id: "generic.tows"
+      version: 2
+      name: "Tows"

@@ -1,0 +1,21 @@
+get:
+  operationId: "listAssets"
+  summary: "List one authorized tenant's assets in stable ID order"
+  description: "The configured bearer identity must have a current metadata.read grant for the selected tenant. The route is absent without complete bearer configuration. A cursor traversal is not a cross-request snapshot."
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: "../../components/parameters/catalogue-tenant-id.yaml"
+    - $ref: "../../components/parameters/asset-list-limit.yaml"
+    - $ref: "../../components/parameters/asset-list-after.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listAssets-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/Forbidden.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
