@@ -11,6 +11,6 @@
     "check:openapi": "pnpm lint:openapi && node scripts/check-openapi.mjs"
   },
   "devDependencies": {
-    "@redocly/cli": "2.53.3"
+    "@redocly/cli": "2.58.1"
   }
 }
