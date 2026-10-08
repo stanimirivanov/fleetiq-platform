@@ -22,6 +22,8 @@ use fleetiq_metadata::{
 };
 use tower::ServiceExt;
 
+use crate::contract_test_support::assert_published_example;
+
 use super::*;
 
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -651,4 +653,29 @@ async fn seed_topology(pool: &PgPool) -> Result<(), Box<dyn Error>> {
     .execute(pool)
     .await?;
     Ok(())
+}
+
+#[tokio::test]
+async fn source_and_target_snapshots_match_published_examples() {
+    for (request_path, contract_path) in [
+        (SNAPSHOT_PATH, "/api/v1/tenants/{tenant_id}/signal-bindings"),
+        (
+            TARGET_PATH,
+            "/api/v1/tenants/{tenant_id}/assets/{asset_id}/signal-bindings",
+        ),
+    ] {
+        let response = router(
+            true,
+            true,
+            Ok(Some(sample_binding(1, "power-system-1"))),
+            Arc::default(),
+        )
+        .oneshot(request(request_path, Some(TOKEN)))
+        .await
+        .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+        let body = to_bytes(response.into_body(), 4096).await.unwrap();
+        assert_published_example(&body, contract_path);
+    }
 }

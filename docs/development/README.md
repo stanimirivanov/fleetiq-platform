@@ -127,6 +127,7 @@ policy, and advisory-data requirements.
 - [Dependency management and supply-chain gate](dependency-management.md)
 - [SQL migration criteria](sql-migrations.md)
 - [Current implementation state](current-state.md)
+- [Browser-safe semantic metadata UI plan](plans/browser-semantic-metadata-ui.md)
 - [Contributor workflow](../../CONTRIBUTING.md)
 - [Architecture decisions](../adr/README.md)
 

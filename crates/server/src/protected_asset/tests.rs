@@ -19,6 +19,8 @@ use fleetiq_domain::{
 };
 use tower::ServiceExt;
 
+use crate::contract_test_support::assert_published_example;
+
 use super::*;
 
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -555,4 +557,21 @@ async fn asset_catalogue_responses_match_published_examples() {
             "{path} must match the published {status} example"
         );
     }
+}
+
+#[tokio::test]
+async fn exact_asset_response_matches_published_example() {
+    let response = router(
+        Some(actor()),
+        Ok(AccessDecision::Allow),
+        Some(sample_asset()),
+        Calls::default(),
+    )
+    .oneshot(request(PATH, Some(TOKEN)))
+    .await
+    .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
+    let body = to_bytes(response.into_body(), 4096).await.unwrap();
+    assert_published_example(&body, "/api/v1/tenants/{tenant_id}/assets/{asset_id}");
 }
