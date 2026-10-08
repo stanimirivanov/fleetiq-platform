@@ -1,0 +1,9 @@
+name: "after"
+in: "query"
+required: false
+description: "Exclusive stable binding ID cursor from next_after; repeat the same times and limit."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Exclusive cursor."

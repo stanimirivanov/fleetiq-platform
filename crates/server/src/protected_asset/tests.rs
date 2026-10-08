@@ -510,10 +510,8 @@ async fn configured_route_reads_only_an_asset_with_current_postgres_grant(
 
 #[tokio::test]
 async fn asset_catalogue_responses_match_published_examples() {
-    let contract: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../../contracts/http/fleetiq-v1-ui-baseline.openapi.json"
-    ))
-    .unwrap();
+    let contract: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../contracts/http/dist/openapi.json")).unwrap();
     let responses = &contract["paths"]["/api/v1/tenants/{tenant_id}/assets"]["get"]["responses"];
     let router = router(
         Some(actor()),

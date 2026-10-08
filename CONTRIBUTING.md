@@ -161,6 +161,19 @@ cargo test --workspace --all-features --locked
 cargo doc --workspace --no-deps --locked
 ```
 
+When changing the published HTTP contract, use the [OpenAPI maintenance
+skill](.agents/skills/openapi/SKILL.md), then run:
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm lint:openapi
+pnpm bundle:openapi
+pnpm check:openapi
+```
+
+Commit the regenerated standalone bundle. The CI OpenAPI job checks the modular
+source and confirms that the committed bundle is byte-for-byte current.
+
 CI applies the full migration chain before compiling SQLx queries. A skipped
 database-backed test is not passing evidence. Narrow crate or test commands are
 useful during development but do not replace the applicable workspace gate.

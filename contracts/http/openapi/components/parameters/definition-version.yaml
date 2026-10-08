@@ -1,0 +1,8 @@
+name: "version"
+in: "path"
+required: true
+description: "Exact immutable definition version; a positive u32 decimal integer."
+schema:
+  type: "integer"
+  minimum: 1
+  maximum: 4294967295

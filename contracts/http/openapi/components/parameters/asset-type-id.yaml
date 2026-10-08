@@ -1,0 +1,9 @@
+name: "type_id"
+in: "path"
+required: true
+description: "Exact asset-type definition ID."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Exact asset-type definition ID."

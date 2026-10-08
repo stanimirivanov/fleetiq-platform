@@ -1,0 +1,17 @@
+description: "Read one pinned asset-type definition"
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/AssetTypeDefinition.yaml"
+    example:
+      id: "generic.power-system"
+      version: 2
+      name: "Power system"
+      supported_properties:
+        - id: "thermal.temperature"
+          version: 1
+        - id: "electrical.voltage"
+          version: 3

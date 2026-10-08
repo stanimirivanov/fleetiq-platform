@@ -1,0 +1,9 @@
+name: "tenant_id"
+in: "path"
+required: true
+description: "Tenant selected for the current metadata.read authorization check."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Tenant identity."

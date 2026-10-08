@@ -1,0 +1,20 @@
+type: "object"
+required:
+  - "id"
+  - "tenant_id"
+  - "name"
+  - "asset_type"
+properties:
+  id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+  tenant_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+  name:
+    type: "string"
+    minLength: 1
+  asset_type:
+    $ref: "./AssetTypeRef.yaml"

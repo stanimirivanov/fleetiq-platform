@@ -1,0 +1,23 @@
+type: "object"
+required:
+  - "kind"
+  - "authority"
+  - "value"
+properties:
+  kind:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Identifier namespace, such as manufacturer.serial-number."
+  authority:
+    type:
+      - "string"
+      - "null"
+    minLength: 1
+    maxLength: 128
+    description: "Optional issuing authority within this tenant-owned namespace."
+  value:
+    type: "string"
+    minLength: 1
+    description: "External identifier value; no kind is assumed universal."
+description: "Tenant-owned typed external identifier."

@@ -1,0 +1,9 @@
+name: "property_id"
+in: "path"
+required: true
+description: "Exact property definition ID."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Exact property definition ID."

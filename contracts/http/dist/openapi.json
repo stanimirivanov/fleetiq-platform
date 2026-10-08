@@ -10,6 +10,7 @@
       "url": "/"
     }
   ],
+  "security": [],
   "paths": {
     "/api/v1": {
       "get": {
@@ -18,18 +19,7 @@
         "security": [],
         "responses": {
           "200": {
-            "description": "The active product API major version.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiDescription"
-                },
-                "example": {
-                  "service": "FleetIQ",
-                  "version": "v1"
-                }
-              }
-            }
+            "$ref": "#/components/responses/getApiVersion-200"
           }
         }
       }
@@ -46,73 +36,18 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "The tenant selected for the current authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            }
+            "$ref": "#/components/parameters/catalogue-tenant-id"
           },
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Maximum asset summaries returned.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50
-            }
+            "$ref": "#/components/parameters/asset-list-limit"
           },
           {
-            "name": "after",
-            "in": "query",
-            "required": false,
-            "description": "Exclusive asset-ID cursor from a previous page.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128
-            }
+            "$ref": "#/components/parameters/asset-list-after"
           }
         ],
         "responses": {
           "200": {
-            "description": "Bounded asset summaries. An empty catalogue returns an empty array and a null cursor.",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetPage"
-                },
-                "example": {
-                  "assets": [
-                    {
-                      "id": "asset-1",
-                      "tenant_id": "tenant-a",
-                      "name": "Primary machine",
-                      "asset_type": {
-                        "id": "generic.machine",
-                        "version": 1
-                      }
-                    }
-                  ],
-                  "next_after": null
-                }
-              }
-            }
+            "$ref": "#/components/responses/listAssets-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -141,65 +76,15 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "Tenant selected for the current metadata.read authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Tenant identity."
-            }
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
           },
           {
-            "name": "asset_id",
-            "in": "path",
-            "required": true,
-            "description": "Exact internal asset ID.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Exact internal asset ID."
-            }
+            "$ref": "#/components/parameters/exact-asset-id"
           }
         ],
         "responses": {
           "200": {
-            "description": "Read one authorized tenant asset",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Asset"
-                },
-                "example": {
-                  "id": "asset-1",
-                  "tenant_id": "tenant-a",
-                  "name": "Primary machine",
-                  "asset_type": {
-                    "id": "generic.machine",
-                    "version": 1
-                  },
-                  "external_identifiers": [
-                    {
-                      "kind": "manufacturer.serial-number",
-                      "authority": "maker-a",
-                      "value": "SN-100"
-                    }
-                  ]
-                }
-              }
-            }
+            "$ref": "#/components/responses/getAsset-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -231,119 +116,27 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "Tenant selected for the current metadata.read authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Tenant identity."
-            }
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
           },
           {
-            "name": "asset_id",
-            "in": "path",
-            "required": true,
-            "description": "Asset whose incoming and outgoing edges are queried.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Asset whose incoming and outgoing edges are queried."
-            }
+            "$ref": "#/components/parameters/relationship-asset-id"
           },
           {
-            "name": "effective_at_ms",
-            "in": "query",
-            "required": true,
-            "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open.",
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open."
-            }
+            "$ref": "#/components/parameters/effective-at-ms"
           },
           {
-            "name": "known_at_ms",
-            "in": "query",
-            "required": true,
-            "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot.",
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot."
-            }
+            "$ref": "#/components/parameters/known-at-ms"
           },
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Maximum records returned on one page; defaults to 50.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50
-            }
+            "$ref": "#/components/parameters/snapshot-limit"
           },
           {
-            "name": "after",
-            "in": "query",
-            "required": false,
-            "description": "Exclusive stable relationship ID cursor from next_after; repeat the same times and limit.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Exclusive cursor."
-            }
+            "$ref": "#/components/parameters/relationship-after"
           }
         ],
         "responses": {
           "200": {
-            "description": "Read a bounded relationship snapshot involving one asset",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RelationshipSnapshot"
-                },
-                "example": {
-                  "asset_id": "assembly-a",
-                  "effective_at_ms": 1500,
-                  "known_at_ms": 2500,
-                  "relationships": [
-                    {
-                      "id": "relationship-1",
-                      "tenant_id": "tenant-a",
-                      "revision": "1",
-                      "recorded_at_ms": 2000,
-                      "relationship_type": {
-                        "id": "physical.contains",
-                        "version": 1
-                      },
-                      "source_asset_id": "assembly-a",
-                      "target_asset_id": "component-b",
-                      "effective_interval": {
-                        "start_ms": 1000,
-                        "end_ms": 3000
-                      }
-                    }
-                  ],
-                  "next_after": null
-                }
-              }
-            }
+            "$ref": "#/components/responses/listAssetRelationships-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -375,125 +168,27 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "Tenant selected for the current metadata.read authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Tenant identity."
-            }
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
           },
           {
-            "name": "asset_id",
-            "in": "path",
-            "required": true,
-            "description": "Asset targeted by the selected bindings.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Asset targeted by the selected bindings."
-            }
+            "$ref": "#/components/parameters/target-binding-asset-id"
           },
           {
-            "name": "effective_at_ms",
-            "in": "query",
-            "required": true,
-            "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open.",
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open."
-            }
+            "$ref": "#/components/parameters/effective-at-ms"
           },
           {
-            "name": "known_at_ms",
-            "in": "query",
-            "required": true,
-            "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot.",
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot."
-            }
+            "$ref": "#/components/parameters/known-at-ms"
           },
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Maximum records returned on one page; defaults to 50.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50
-            }
+            "$ref": "#/components/parameters/snapshot-limit"
           },
           {
-            "name": "after",
-            "in": "query",
-            "required": false,
-            "description": "Exclusive stable binding ID cursor from next_after; repeat the same times and limit.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Exclusive cursor."
-            }
+            "$ref": "#/components/parameters/binding-after"
           }
         ],
         "responses": {
           "200": {
-            "description": "Read a bounded signal-binding snapshot targeting one asset",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetBindingSnapshot"
-                },
-                "example": {
-                  "asset_id": "power-system-1",
-                  "effective_at_ms": 1500,
-                  "known_at_ms": 2500,
-                  "bindings": [
-                    {
-                      "id": "binding-1",
-                      "tenant_id": "tenant-a",
-                      "revision": "1",
-                      "recorded_at_ms": 2000,
-                      "source": {
-                        "device_asset_id": "gateway-1",
-                        "endpoint_id": "can-primary",
-                        "signal_id": "bus.voltage"
-                      },
-                      "target": {
-                        "asset_id": "power-system-1",
-                        "property": {
-                          "id": "electrical.voltage",
-                          "version": 1
-                        }
-                      },
-                      "effective_interval": {
-                        "start_ms": 1000,
-                        "end_ms": 3000
-                      }
-                    }
-                  ],
-                  "next_after": null
-                }
-              }
-            }
+            "$ref": "#/components/responses/listAssetSignalBindings-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -525,153 +220,33 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "Tenant selected for the current metadata.read authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Tenant identity."
-            }
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
           },
           {
-            "name": "device_asset_id",
-            "in": "query",
-            "required": true,
-            "description": "Communication-device asset ID.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Communication-device asset ID."
-            }
+            "$ref": "#/components/parameters/device-asset-id"
           },
           {
-            "name": "endpoint_id",
-            "in": "query",
-            "required": true,
-            "description": "Device endpoint ID.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Device endpoint ID."
-            }
+            "$ref": "#/components/parameters/endpoint-id"
           },
           {
-            "name": "signal_id",
-            "in": "query",
-            "required": true,
-            "description": "Decoded source signal ID.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Decoded source signal ID."
-            }
+            "$ref": "#/components/parameters/signal-id"
           },
           {
-            "name": "effective_at_ms",
-            "in": "query",
-            "required": true,
-            "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open.",
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open."
-            }
+            "$ref": "#/components/parameters/effective-at-ms"
           },
           {
-            "name": "known_at_ms",
-            "in": "query",
-            "required": true,
-            "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot.",
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot."
-            }
+            "$ref": "#/components/parameters/known-at-ms"
           },
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "description": "Maximum records returned on one page; defaults to 50.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 50
-            }
+            "$ref": "#/components/parameters/snapshot-limit"
           },
           {
-            "name": "after",
-            "in": "query",
-            "required": false,
-            "description": "Exclusive stable binding ID cursor from next_after; repeat the same times and limit.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Exclusive cursor."
-            }
+            "$ref": "#/components/parameters/binding-after"
           }
         ],
         "responses": {
           "200": {
-            "description": "Read a bounded signal-binding snapshot for one source signal",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SourceBindingSnapshot"
-                },
-                "example": {
-                  "source": {
-                    "device_asset_id": "gateway-1",
-                    "endpoint_id": "can-primary",
-                    "signal_id": "bus.voltage"
-                  },
-                  "effective_at_ms": 1500,
-                  "known_at_ms": 2500,
-                  "bindings": [
-                    {
-                      "id": "binding-1",
-                      "tenant_id": "tenant-a",
-                      "revision": "1",
-                      "recorded_at_ms": 2000,
-                      "source": {
-                        "device_asset_id": "gateway-1",
-                        "endpoint_id": "can-primary",
-                        "signal_id": "bus.voltage"
-                      },
-                      "target": {
-                        "asset_id": "power-system-1",
-                        "property": {
-                          "id": "electrical.voltage",
-                          "version": 1
-                        }
-                      },
-                      "effective_interval": {
-                        "start_ms": 1000,
-                        "end_ms": 3000
-                      }
-                    }
-                  ],
-                  "next_after": null
-                }
-              }
-            }
+            "$ref": "#/components/responses/listSourceSignalBindings-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -700,75 +275,18 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "Tenant selected for the current metadata.read authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Tenant identity."
-            }
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
           },
           {
-            "name": "type_id",
-            "in": "path",
-            "required": true,
-            "description": "Exact asset-type definition ID.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Exact asset-type definition ID."
-            }
+            "$ref": "#/components/parameters/asset-type-id"
           },
           {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "description": "Exact immutable definition version; a positive u32 decimal integer.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 4294967295
-            }
+            "$ref": "#/components/parameters/definition-version"
           }
         ],
         "responses": {
           "200": {
-            "description": "Read one pinned asset-type definition",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetTypeDefinition"
-                },
-                "example": {
-                  "id": "generic.power-system",
-                  "version": 2,
-                  "name": "Power system",
-                  "supported_properties": [
-                    {
-                      "id": "thermal.temperature",
-                      "version": 1
-                    },
-                    {
-                      "id": "electrical.voltage",
-                      "version": 3
-                    }
-                  ]
-                }
-              }
-            }
+            "$ref": "#/components/responses/getAssetTypeDefinition-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -800,67 +318,18 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "Tenant selected for the current metadata.read authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Tenant identity."
-            }
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
           },
           {
-            "name": "property_id",
-            "in": "path",
-            "required": true,
-            "description": "Exact property definition ID.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Exact property definition ID."
-            }
+            "$ref": "#/components/parameters/property-id"
           },
           {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "description": "Exact immutable definition version; a positive u32 decimal integer.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 4294967295
-            }
+            "$ref": "#/components/parameters/definition-version"
           }
         ],
         "responses": {
           "200": {
-            "description": "Read one pinned property definition",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PropertyDefinition"
-                },
-                "example": {
-                  "id": "thermal.temperature",
-                  "version": 1,
-                  "name": "Air temperature",
-                  "value_kind": "decimal",
-                  "canonical_unit": "Cel"
-                }
-              }
-            }
+            "$ref": "#/components/responses/getPropertyDefinition-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -892,65 +361,18 @@
         ],
         "parameters": [
           {
-            "name": "tenant_id",
-            "in": "path",
-            "required": true,
-            "description": "Tenant selected for the current metadata.read authorization check.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Tenant identity."
-            }
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
           },
           {
-            "name": "type_id",
-            "in": "path",
-            "required": true,
-            "description": "Exact relationship-type definition ID.",
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 128,
-              "description": "Exact relationship-type definition ID."
-            }
+            "$ref": "#/components/parameters/relationship-type-id"
           },
           {
-            "name": "version",
-            "in": "path",
-            "required": true,
-            "description": "Exact immutable definition version; a positive u32 decimal integer.",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 4294967295
-            }
+            "$ref": "#/components/parameters/definition-version"
           }
         ],
         "responses": {
           "200": {
-            "description": "Read one pinned relationship-type definition",
-            "headers": {
-              "Cache-Control": {
-                "description": "Protected responses are not stored by shared or browser caches.",
-                "schema": {
-                  "type": "string",
-                  "const": "no-store"
-                }
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RelationshipTypeDefinition"
-                },
-                "example": {
-                  "id": "generic.tows",
-                  "version": 2,
-                  "name": "Tows"
-                }
-              }
-            }
+            "$ref": "#/components/responses/getRelationshipTypeDefinition-200"
           },
           "400": {
             "$ref": "#/components/responses/InvalidRequest"
@@ -972,13 +394,6 @@
     }
   },
   "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "description": "Current configured workload credential. A browser-safe identity flow is not available yet."
-      }
-    },
     "schemas": {
       "ApiDescription": {
         "type": "object",
@@ -1612,7 +1027,511 @@
         }
       }
     },
+    "parameters": {
+      "catalogue-tenant-id": {
+        "name": "tenant_id",
+        "in": "path",
+        "required": true,
+        "description": "The tenant selected for the current authorization check.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "asset-list-limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Maximum asset summaries returned.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "asset-list-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive asset-ID cursor from a previous page.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "metadata-read-tenant-id": {
+        "name": "tenant_id",
+        "in": "path",
+        "required": true,
+        "description": "Tenant selected for the current metadata.read authorization check.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Tenant identity."
+        }
+      },
+      "exact-asset-id": {
+        "name": "asset_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact internal asset ID.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Exact internal asset ID."
+        }
+      },
+      "relationship-asset-id": {
+        "name": "asset_id",
+        "in": "path",
+        "required": true,
+        "description": "Asset whose incoming and outgoing edges are queried.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Asset whose incoming and outgoing edges are queried."
+        }
+      },
+      "effective-at-ms": {
+        "name": "effective_at_ms",
+        "in": "query",
+        "required": true,
+        "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open.",
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open."
+        }
+      },
+      "known-at-ms": {
+        "name": "known_at_ms",
+        "in": "query",
+        "required": true,
+        "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot.",
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Signed Unix milliseconds through which recorded revisions are known; a correction may change a later snapshot."
+        }
+      },
+      "snapshot-limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Maximum records returned on one page; defaults to 50.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "relationship-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive stable relationship ID cursor from next_after; repeat the same times and limit.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Exclusive cursor."
+        }
+      },
+      "target-binding-asset-id": {
+        "name": "asset_id",
+        "in": "path",
+        "required": true,
+        "description": "Asset targeted by the selected bindings.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Asset targeted by the selected bindings."
+        }
+      },
+      "binding-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive stable binding ID cursor from next_after; repeat the same times and limit.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Exclusive cursor."
+        }
+      },
+      "device-asset-id": {
+        "name": "device_asset_id",
+        "in": "query",
+        "required": true,
+        "description": "Communication-device asset ID.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Communication-device asset ID."
+        }
+      },
+      "endpoint-id": {
+        "name": "endpoint_id",
+        "in": "query",
+        "required": true,
+        "description": "Device endpoint ID.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Device endpoint ID."
+        }
+      },
+      "signal-id": {
+        "name": "signal_id",
+        "in": "query",
+        "required": true,
+        "description": "Decoded source signal ID.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Decoded source signal ID."
+        }
+      },
+      "asset-type-id": {
+        "name": "type_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact asset-type definition ID.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Exact asset-type definition ID."
+        }
+      },
+      "definition-version": {
+        "name": "version",
+        "in": "path",
+        "required": true,
+        "description": "Exact immutable definition version; a positive u32 decimal integer.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
+      "property-id": {
+        "name": "property_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact property definition ID.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Exact property definition ID."
+        }
+      },
+      "relationship-type-id": {
+        "name": "type_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact relationship-type definition ID.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Exact relationship-type definition ID."
+        }
+      }
+    },
     "responses": {
+      "getApiVersion-200": {
+        "description": "The active product API major version.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ApiDescription"
+            },
+            "example": {
+              "service": "FleetIQ",
+              "version": "v1"
+            }
+          }
+        }
+      },
+      "listAssets-200": {
+        "description": "Bounded asset summaries. An empty catalogue returns an empty array and a null cursor.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AssetPage"
+            },
+            "example": {
+              "assets": [
+                {
+                  "id": "asset-1",
+                  "tenant_id": "tenant-a",
+                  "name": "Primary machine",
+                  "asset_type": {
+                    "id": "generic.machine",
+                    "version": 1
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "getAsset-200": {
+        "description": "Read one authorized tenant asset",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Asset"
+            },
+            "example": {
+              "id": "asset-1",
+              "tenant_id": "tenant-a",
+              "name": "Primary machine",
+              "asset_type": {
+                "id": "generic.machine",
+                "version": 1
+              },
+              "external_identifiers": [
+                {
+                  "kind": "manufacturer.serial-number",
+                  "authority": "maker-a",
+                  "value": "SN-100"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "listAssetRelationships-200": {
+        "description": "Read a bounded relationship snapshot involving one asset",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RelationshipSnapshot"
+            },
+            "example": {
+              "asset_id": "assembly-a",
+              "effective_at_ms": 1500,
+              "known_at_ms": 2500,
+              "relationships": [
+                {
+                  "id": "relationship-1",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 2000,
+                  "relationship_type": {
+                    "id": "physical.contains",
+                    "version": 1
+                  },
+                  "source_asset_id": "assembly-a",
+                  "target_asset_id": "component-b",
+                  "effective_interval": {
+                    "start_ms": 1000,
+                    "end_ms": 3000
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "listAssetSignalBindings-200": {
+        "description": "Read a bounded signal-binding snapshot targeting one asset",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AssetBindingSnapshot"
+            },
+            "example": {
+              "asset_id": "power-system-1",
+              "effective_at_ms": 1500,
+              "known_at_ms": 2500,
+              "bindings": [
+                {
+                  "id": "binding-1",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 2000,
+                  "source": {
+                    "device_asset_id": "gateway-1",
+                    "endpoint_id": "can-primary",
+                    "signal_id": "bus.voltage"
+                  },
+                  "target": {
+                    "asset_id": "power-system-1",
+                    "property": {
+                      "id": "electrical.voltage",
+                      "version": 1
+                    }
+                  },
+                  "effective_interval": {
+                    "start_ms": 1000,
+                    "end_ms": 3000
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "listSourceSignalBindings-200": {
+        "description": "Read a bounded signal-binding snapshot for one source signal",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SourceBindingSnapshot"
+            },
+            "example": {
+              "source": {
+                "device_asset_id": "gateway-1",
+                "endpoint_id": "can-primary",
+                "signal_id": "bus.voltage"
+              },
+              "effective_at_ms": 1500,
+              "known_at_ms": 2500,
+              "bindings": [
+                {
+                  "id": "binding-1",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 2000,
+                  "source": {
+                    "device_asset_id": "gateway-1",
+                    "endpoint_id": "can-primary",
+                    "signal_id": "bus.voltage"
+                  },
+                  "target": {
+                    "asset_id": "power-system-1",
+                    "property": {
+                      "id": "electrical.voltage",
+                      "version": 1
+                    }
+                  },
+                  "effective_interval": {
+                    "start_ms": 1000,
+                    "end_ms": 3000
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "getAssetTypeDefinition-200": {
+        "description": "Read one pinned asset-type definition",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AssetTypeDefinition"
+            },
+            "example": {
+              "id": "generic.power-system",
+              "version": 2,
+              "name": "Power system",
+              "supported_properties": [
+                {
+                  "id": "thermal.temperature",
+                  "version": 1
+                },
+                {
+                  "id": "electrical.voltage",
+                  "version": 3
+                }
+              ]
+            }
+          }
+        }
+      },
+      "getPropertyDefinition-200": {
+        "description": "Read one pinned property definition",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PropertyDefinition"
+            },
+            "example": {
+              "id": "thermal.temperature",
+              "version": 1,
+              "name": "Air temperature",
+              "value_kind": "decimal",
+              "canonical_unit": "Cel"
+            }
+          }
+        }
+      },
+      "getRelationshipTypeDefinition-200": {
+        "description": "Read one pinned relationship-type definition",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RelationshipTypeDefinition"
+            },
+            "example": {
+              "id": "generic.tows",
+              "version": 2,
+              "name": "Tows"
+            }
+          }
+        }
+      },
       "InvalidRequest": {
         "description": "Invalid path identifier, definition version, time, limit, cursor, or query.",
         "content": {
@@ -1695,6 +1614,22 @@
             }
           }
         }
+      }
+    },
+    "headers": {
+      "cache-control": {
+        "description": "Protected responses are not stored by shared or browser caches.",
+        "schema": {
+          "type": "string",
+          "const": "no-store"
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Current configured workload credential. A browser-safe identity flow is not available yet."
       }
     }
   }

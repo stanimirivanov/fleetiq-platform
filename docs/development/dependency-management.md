@@ -8,7 +8,9 @@
   yanked packages, and unused or inconsistent workspace dependency declarations.
 - The tools are pinned to `cargo-deny` 0.20.2 and `cargo-machete` 0.9.2. The
   advisory check needs a current RustSec database and network access.
-- Dependabot proposes weekly Cargo, GitHub Actions, and container updates.
+- OpenAPI tooling requires Node.js 22.12 or newer and pins pnpm and Redocly CLI in `package.json`
+  and `pnpm-lock.yaml`; its separate CI job checks the contract bundle.
+- Dependabot proposes weekly Cargo, npm, GitHub Actions, and container updates.
   Review and verify each proposal; an automated update is not an approval.
 
 ## Run the checks
@@ -68,8 +70,8 @@ gate after changing the lockfile.
 
 ## Update proposals
 
-[Dependabot](../../.github/dependabot.yml) checks Cargo manifests and the
-lockfile, GitHub Actions, and the local Docker inputs weekly. It limits open
+[Dependabot](../../.github/dependabot.yml) checks Cargo and npm manifests and the
+lockfiles, GitHub Actions, and the local Docker inputs weekly. It limits open
 version-update PRs so security work and capability changes remain reviewable.
 Each update follows the normal PR gate and must preserve architecture
 boundaries and protocol fixture compatibility.

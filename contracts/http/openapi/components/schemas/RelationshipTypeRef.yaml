@@ -1,0 +1,15 @@
+type: "object"
+required:
+  - "id"
+  - "version"
+properties:
+  id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Relationship-type definition ID."
+  version:
+    type: "integer"
+    minimum: 1
+    maximum: 4294967295
+description: "Exact immutable relationship-type version."

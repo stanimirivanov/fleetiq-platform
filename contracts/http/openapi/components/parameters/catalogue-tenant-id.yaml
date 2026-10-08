@@ -1,0 +1,8 @@
+name: "tenant_id"
+in: "path"
+required: true
+description: "The tenant selected for the current authorization check."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128

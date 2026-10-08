@@ -1,0 +1,11 @@
+type: "object"
+required:
+  - "service"
+  - "version"
+properties:
+  service:
+    type: "string"
+    const: "FleetIQ"
+  version:
+    type: "string"
+    const: "v1"

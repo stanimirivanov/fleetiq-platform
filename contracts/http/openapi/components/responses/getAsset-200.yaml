@@ -1,0 +1,19 @@
+description: "Read one authorized tenant asset"
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/Asset.yaml"
+    example:
+      id: "asset-1"
+      tenant_id: "tenant-a"
+      name: "Primary machine"
+      asset_type:
+        id: "generic.machine"
+        version: 1
+      external_identifiers:
+        - kind: "manufacturer.serial-number"
+          authority: "maker-a"
+          value: "SN-100"

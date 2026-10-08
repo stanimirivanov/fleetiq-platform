@@ -1,0 +1,9 @@
+name: "asset_id"
+in: "path"
+required: true
+description: "Exact internal asset ID."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Exact internal asset ID."

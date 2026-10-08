@@ -1,0 +1,8 @@
+name: "after"
+in: "query"
+required: false
+description: "Exclusive asset-ID cursor from a previous page."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128

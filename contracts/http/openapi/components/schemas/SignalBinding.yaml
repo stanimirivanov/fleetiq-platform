@@ -1,0 +1,36 @@
+type: "object"
+required:
+  - "id"
+  - "tenant_id"
+  - "revision"
+  - "recorded_at_ms"
+  - "source"
+  - "target"
+  - "effective_interval"
+properties:
+  id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Stable signal-binding identity."
+  tenant_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    description: "Owning tenant."
+  revision:
+    type: "string"
+    pattern: "^[1-9][0-9]*$"
+    maxLength: 20
+    description: "Positive u64 revision serialized as decimal text to preserve JavaScript precision."
+  recorded_at_ms:
+    type: "integer"
+    format: "int64"
+    description: "When FleetIQ learned this revision, in signed Unix milliseconds."
+  source:
+    $ref: "./SignalSource.yaml"
+  target:
+    $ref: "./SignalTarget.yaml"
+  effective_interval:
+    $ref: "./EffectiveInterval.yaml"
+description: "One recorded signal-to-asset-property attribution revision."

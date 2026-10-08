@@ -1,0 +1,23 @@
+get:
+  operationId: "getAssetTypeDefinition"
+  summary: "Read one pinned asset-type definition"
+  description: "Read an exact immutable type version. Property references retain definition order and point to exact immutable versions."
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
+    - $ref: "../../components/parameters/asset-type-id.yaml"
+    - $ref: "../../components/parameters/definition-version.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/getAssetTypeDefinition-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/Forbidden.yaml"
+    "404":
+      $ref: "../../components/responses/NotFound.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

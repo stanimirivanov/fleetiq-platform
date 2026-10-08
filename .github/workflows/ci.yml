@@ -36,6 +36,35 @@ jobs:
       - name: Check dependency policy
         run: cargo xtask architecture
 
+  openapi:
+    name: OpenAPI contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: architecture
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@v6.0.4
+        with:
+          version: 12.5.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install locked OpenAPI tools
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint the modular contract and verify the committed bundle
+        run: pnpm check:openapi
+
   supply-chain:
     name: Supply-chain policy
     runs-on: ubuntu-latest

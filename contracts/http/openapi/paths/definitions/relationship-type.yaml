@@ -1,0 +1,23 @@
+get:
+  operationId: "getRelationshipTypeDefinition"
+  summary: "Read one pinned relationship-type definition"
+  description: "Returns the stable name of the exact immutable directed relationship type version."
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
+    - $ref: "../../components/parameters/relationship-type-id.yaml"
+    - $ref: "../../components/parameters/definition-version.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/getRelationshipTypeDefinition-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/Forbidden.yaml"
+    "404":
+      $ref: "../../components/responses/NotFound.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

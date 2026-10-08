@@ -11,7 +11,7 @@ use jsonschema::validator_for;
 use serde_json::{Value, json};
 use tower::ServiceExt;
 
-const SPEC: &str = include_str!("../../../contracts/http/fleetiq-v1-ui-baseline.openapi.json");
+const SPEC: &str = include_str!("../../../contracts/http/dist/openapi.json");
 
 struct PublishedOperation {
     path: &'static str,
@@ -91,11 +91,14 @@ fn contract() -> Result<Value, serde_json::Error> {
     serde_json::from_str(SPEC)
 }
 
-fn resolve_response<'a>(contract: &'a Value, response: &'a Value) -> &'a Value {
-    response["$ref"].as_str().map_or(response, |reference| {
+fn resolve_component<'a>(contract: &'a Value, component: &'a Value) -> &'a Value {
+    component["$ref"].as_str().map_or(component, |reference| {
+        let pointer = reference
+            .strip_prefix('#')
+            .expect("bundled references must be local");
         contract
-            .pointer(reference.trim_start_matches('#'))
-            .expect("response reference must resolve")
+            .pointer(pointer)
+            .expect("component reference must resolve")
     })
 }
 
@@ -124,7 +127,11 @@ fn assert_references_resolve(contract: &Value, value: &Value) {
 }
 
 fn success_example<'a>(contract: &'a Value, path: &str) -> &'a Value {
-    &contract["paths"][path]["get"]["responses"]["200"]["content"]["application/json"]["example"]
+    let response = resolve_component(
+        contract,
+        &contract["paths"][path]["get"]["responses"]["200"],
+    );
+    &response["content"]["application/json"]["example"]
 }
 
 fn validate_component_example(
@@ -185,9 +192,10 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
             for status in ["400", "401", "403", "500"] {
                 assert!(responses.contains_key(status), "{} {status}", expected.path);
             }
+            let success = resolve_component(&contract, &operation["responses"]["200"]);
+            let cache_control = resolve_component(&contract, &success["headers"]["Cache-Control"]);
             assert_eq!(
-                operation["responses"]["200"]["headers"]["Cache-Control"]["schema"]["const"],
-                "no-store",
+                cache_control["schema"]["const"], "no-store",
                 "{}",
                 expected.path
             );
@@ -196,9 +204,12 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
             assert!(responses.contains_key("404"), "{}", expected.path);
         }
         if expected.snapshot {
-            let parameters = operation["parameters"]
+            let parameters: Vec<_> = operation["parameters"]
                 .as_array()
-                .expect("snapshot parameters");
+                .expect("snapshot parameters")
+                .iter()
+                .map(|parameter| resolve_component(&contract, parameter))
+                .collect();
             for name in ["effective_at_ms", "known_at_ms"] {
                 assert!(
                     parameters.iter().any(|parameter| parameter["name"] == name
@@ -247,7 +258,7 @@ fn published_examples_satisfy_their_response_schemas() -> Result<(), Box<dyn Err
             .as_object()
             .expect("documented operation must have responses");
         for (status, response) in responses {
-            let response = resolve_response(&contract, response);
+            let response = resolve_component(&contract, response);
             let media = if status == "200" {
                 "application/json"
             } else {

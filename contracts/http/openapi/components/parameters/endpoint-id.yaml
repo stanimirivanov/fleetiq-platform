@@ -1,0 +1,9 @@
+name: "endpoint_id"
+in: "query"
+required: true
+description: "Device endpoint ID."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  description: "Device endpoint ID."

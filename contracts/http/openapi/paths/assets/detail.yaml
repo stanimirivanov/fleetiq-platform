@@ -1,0 +1,22 @@
+get:
+  operationId: "getAsset"
+  summary: "Read one authorized tenant asset"
+  description: "Returns asset identity, its exact pinned asset-type version, and tenant-owned typed external identifiers. A missing asset returns 404."
+  security:
+    - bearerAuth: []
+  parameters:
+    - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
+    - $ref: "../../components/parameters/exact-asset-id.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/getAsset-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/Forbidden.yaml"
+    "404":
+      $ref: "../../components/responses/NotFound.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

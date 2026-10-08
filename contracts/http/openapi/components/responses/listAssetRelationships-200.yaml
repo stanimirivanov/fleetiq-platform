@@ -1,0 +1,26 @@
+description: "Read a bounded relationship snapshot involving one asset"
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/RelationshipSnapshot.yaml"
+    example:
+      asset_id: "assembly-a"
+      effective_at_ms: 1500
+      known_at_ms: 2500
+      relationships:
+        - id: "relationship-1"
+          tenant_id: "tenant-a"
+          revision: "1"
+          recorded_at_ms: 2000
+          relationship_type:
+            id: "physical.contains"
+            version: 1
+          source_asset_id: "assembly-a"
+          target_asset_id: "component-b"
+          effective_interval:
+            start_ms: 1000
+            end_ms: 3000
+      next_after: null

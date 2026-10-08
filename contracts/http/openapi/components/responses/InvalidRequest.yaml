@@ -1,0 +1,9 @@
+description: "Invalid path identifier, definition version, time, limit, cursor, or query."
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:invalid-request"
+      title: "Invalid request"
+      status: 400

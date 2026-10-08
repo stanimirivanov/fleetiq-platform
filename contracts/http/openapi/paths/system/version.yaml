@@ -1,0 +1,7 @@
+get:
+  operationId: "getApiVersion"
+  summary: "Discover the active API major version"
+  security: []
+  responses:
+    "200":
+      $ref: "../../components/responses/getApiVersion-200.yaml"

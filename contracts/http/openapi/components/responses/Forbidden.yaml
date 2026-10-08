@@ -1,0 +1,9 @@
+description: "The actor has no current metadata.read grant for this tenant."
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:forbidden"
+      title: "Access denied"
+      status: 403

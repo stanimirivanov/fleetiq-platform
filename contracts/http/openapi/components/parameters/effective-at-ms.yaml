@@ -1,0 +1,8 @@
+name: "effective_at_ms"
+in: "query"
+required: true
+description: "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open."
+schema:
+  type: "integer"
+  format: "int64"
+  description: "Signed Unix milliseconds when the physical relationship or binding must apply. Intervals are half-open."
