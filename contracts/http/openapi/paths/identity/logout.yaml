@@ -1,0 +1,23 @@
+post:
+  operationId: "endOperatorSession"
+  summary: "Sign out the current browser"
+  description: "Requires exact configured Origin and X-FleetIQ-CSRF: 1. Deletes the stored session and browser-bound pending login attempts, then clears cookies; success is idempotent when no session is present. Existing in-flight reads may complete."
+  security: []
+  parameters:
+    -
+      $ref: "../../components/parameters/browser-origin.yaml"
+    -
+      $ref: "../../components/parameters/browser-csrf.yaml"
+  responses:
+    "204":
+      $ref: "../../components/responses/endOperatorSession-204.yaml"
+    "401":
+      $ref: "../../components/responses/BrowserUnauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/Forbidden.yaml"
+      description: "The configured Origin or X-FleetIQ-CSRF header is absent, duplicated, or invalid."
+    "405":
+      $ref: "../../components/responses/BrowserMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
+

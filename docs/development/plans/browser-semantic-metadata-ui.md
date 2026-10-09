@@ -33,16 +33,19 @@ separate backend read models and contracts.
 
 ## Ordered pull-request slices
 
-1. **Publish semantic metadata reads (this backend PR, M04).** Add exact
+1. **Publish semantic metadata reads (completed, M04).** Add exact
    asset, pinned asset-type/property/relationship-type definitions, asset
    relationship snapshots, and target/source signal-binding snapshots to the
    OpenAPI UI subset. Include response examples, schema and in-process
    compatibility checks, and current-state/client-consumption guidance.
-2. **Establish browser-safe identity (backend prerequisite).** Select the
-   trusted browser deployment and sign-in/session strategy, map each operator
-   to an actor, and enforce current tenant grants on every read. Review
-   credential handling, origin/CORS or cookie/CSRF policy, revocation,
-   unauthorized behavior, and cross-tenant isolation before enabling live UX.
+2. **Establish browser-safe identity (completed, M04).** Implement
+   provider-neutral OIDC authorization-code login with S256 PKCE, browser-bound
+   one-use state, PostgreSQL sessions, and secure host-only cookies. Resolve
+   pre-provisioned operators and enforce current actor mappings and tenant
+   grants on every protected read. Include origin/CSRF-protected logout,
+   expiry cleanup, safe 401/403 responses, and the approved exact dependency
+   exception guards. See [ADR 0095](../../adr/0095-authenticate-browser-operators-with-oidc-sessions.md)
+   and the [browser identity guide](../../operations/browser-identity.md).
 3. **Connect FleetIQ UX metadata views.** Pin an exact merged contract commit,
    regenerate Effect v4 transport code, implement an interruptible validated
    live adapter, and connect catalogue/detail/registry screens to authorized
@@ -71,6 +74,10 @@ revocation, and cross-tenant negative tests. The UX slice needs production and
 development browser journeys, contract validation, and proof that its
 production bundle contains no sample payload or workload secret.
 
-The identity provider, hosting topology, and operator session mechanism are
-not yet selected. Resolve them before slice 2; do not substitute a
-development-only secret-bearing proxy for a production browser identity.
+The selected strategy is provider-neutral OIDC with the UI and API under one
+HTTPS public origin and server-managed sessions. The exact provider is configured
+at deployment. Browser identity is implemented and verified with signed-token
+fixtures, real PostgreSQL, and HTTP authentication and authorization journeys.
+Qualification of a deployed customer provider and HTTPS edge remains separate.
+Connected UX and its guide remain outstanding. Never substitute a development
+workload-secret proxy for operator authentication.

@@ -1,0 +1,7 @@
+name: "X-FleetIQ-CSRF"
+in: "header"
+required: true
+description: "Same-origin custom header; the server does not enable credentialed CORS. Duplicates are rejected."
+schema:
+  type: "string"
+  const: "1"

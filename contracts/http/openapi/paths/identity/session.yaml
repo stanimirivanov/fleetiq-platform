@@ -1,0 +1,17 @@
+get:
+  operationId: "getOperatorSession"
+  summary: "Read the current operator session"
+  description: "Revalidates session expiry and the current external-identity mapping to the actor established at login. Returns no provider claims, tokens, or tenant grants."
+  security:
+    -
+      cookieAuth: []
+  responses:
+    "200":
+      $ref: "../../components/responses/getOperatorSession-200.yaml"
+    "401":
+      $ref: "../../components/responses/BrowserUnauthenticated.yaml"
+    "405":
+      $ref: "../../components/responses/BrowserMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
+

@@ -27,7 +27,7 @@ When running Rust processes on the host, start PostgreSQL by itself:
 
 ```powershell
 docker compose -f deploy/local/compose.yaml up -d postgres
-$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
+$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@127.0.0.1:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
 $env:FLEETIQ_BIND_ADDRESS = "127.0.0.1:8080"
@@ -53,6 +53,11 @@ not modify the database volume or container-side configuration.
 string when a developer intentionally targets another database on the Compose
 network.
 
+On Windows, unexpectedly slow SQLx startup or test database setup can result
+from `localhost` trying IPv6 `::1` before falling back to Compose's published
+IPv4 port. Use `127.0.0.1` in the host-side `DATABASE_URL` to avoid that delay;
+keep the same port, database, credentials, and database settings.
+
 The server requires `DATABASE_URL`, applies the embedded migration chain before
 binding its listener, and defaults `FLEETIQ_BIND_ADDRESS` to
 `127.0.0.1:8080`. Explicitly running migrations remains useful for SQLx
@@ -62,7 +67,10 @@ safe and idempotent.
 The protected asset, communication-device, asset-type, property,
 relationship-type, exact relationship-revision, exact signal-binding-revision,
 bounded asset-relationship snapshot, and bounded source-binding snapshot
-queries require all three HTTP bearer identity variables, a provisioned actor,
+queries support the configured workload bearer or provider-neutral OIDC browser
+sessions. The [browser identity procedure](../operations/browser-identity.md)
+defines the five optional OIDC settings, same-origin HTTPS, and session behavior.
+Workload mode requires all three HTTP bearer identity variables, a provisioned actor,
 and a current tenant `metadata.read` grant. See the
 [protected asset query procedure](../operations/asset-query.md),
 [device query procedure](../operations/device-query.md),

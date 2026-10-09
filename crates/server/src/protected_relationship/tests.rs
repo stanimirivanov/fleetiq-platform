@@ -414,7 +414,13 @@ async fn configured_query_reads_exact_revision_with_current_postgres_grant(
         .bearer_identity()
         .expect("configured credential")
         .clone();
-    let router = postgres_relationship_router(pool.clone(), bearer);
+    let router = postgres_relationship_router(
+        pool.clone(),
+        fleetiq_access::CallerAuthenticationService::new(
+            crate::bearer_authentication::ConfiguredBearerAuthenticator::new(bearer),
+            fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
+        ),
+    );
     let snapshot = router.clone().oneshot(request(
         "/api/v1/tenants/tenant-a/assets/assembly-a/relationships?effective_at_ms=1500&known_at_ms=5000",
         Some(TOKEN),

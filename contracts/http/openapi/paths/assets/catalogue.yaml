@@ -1,9 +1,10 @@
 get:
   operationId: "listAssets"
   summary: "List one authorized tenant's assets in stable ID order"
-  description: "The configured bearer identity must have a current metadata.read grant for the selected tenant. The route is absent without complete bearer configuration. A cursor traversal is not a cross-request snapshot."
+  description: "The authenticated operator or configured workload identity must have current metadata.read access for the selected tenant. The route is absent without complete browser or workload identity configuration. A cursor traversal is not a cross-request snapshot."
   security:
     - bearerAuth: []
+    - cookieAuth: []
   parameters:
     - $ref: "../../components/parameters/catalogue-tenant-id.yaml"
     - $ref: "../../components/parameters/asset-list-limit.yaml"

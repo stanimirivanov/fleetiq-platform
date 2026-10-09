@@ -1,0 +1,15 @@
+get:
+  operationId: "beginOperatorLogin"
+  summary: "Start operator sign-in"
+  description: "Creates a short-lived bound OIDC authorization-code attempt. Browser identity must be configured. No request-selected issuer, client, callback, or return URL is supported."
+  security: []
+  responses:
+    "303":
+      $ref: "../../components/responses/beginOperatorLogin-303.yaml"
+    "401":
+      $ref: "../../components/responses/BrowserUnauthenticated.yaml"
+    "405":
+      $ref: "../../components/responses/BrowserMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
+

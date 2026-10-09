@@ -4,6 +4,7 @@ get:
   description: "Returns the stable name of the exact immutable directed relationship type version."
   security:
     - bearerAuth: []
+    - cookieAuth: []
   parameters:
     - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
     - $ref: "../../components/parameters/relationship-type-id.yaml"

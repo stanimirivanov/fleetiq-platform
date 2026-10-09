@@ -4,6 +4,7 @@ get:
   description: "The latest revision known at known_at_ms is selected, then tested at effective_at_ms. Results are bounded pages ordered by stable ID. A cursor traversal is not a cross-request database snapshot; repeat the same times and limit on the next page. Both directed source and target roles are returned. The asset must exist in the current catalogue; only edges are bitemporal."
   security:
     - bearerAuth: []
+    - cookieAuth: []
   parameters:
     - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
     - $ref: "../../components/parameters/relationship-asset-id.yaml"

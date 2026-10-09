@@ -168,7 +168,8 @@ fn component_from_wit(source: &str, world_name: &str) -> Vec<u8> {
         .select_world(&[package], Some(world_name))
         .expect("test world exists");
     let mut module = dummy_module(&resolve, world, ManglingAndAbi::Standard32);
-    embed_component_metadata(&mut module, &resolve, world, StringEncoding::UTF8)
+    // Preserve the fixtures' existing WIT names; canonical naming is opt-in.
+    embed_component_metadata(&mut module, &resolve, world, StringEncoding::UTF8, false)
         .expect("component metadata can be embedded");
     ComponentEncoder::default()
         .module(&module)

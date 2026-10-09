@@ -31,4 +31,4 @@ Keep path items about HTTP behavior. Never add an inline schema longer than 15 Y
 2. From the repository root run `pnpm install --frozen-lockfile`, `pnpm lint:openapi`, then `pnpm bundle:openapi`. Commit the regenerated `dist/openapi.json`.
 3. Run `pnpm check:openapi` to verify lint and byte-for-byte bundle freshness. Run the applicable Rust contract tests and repository gate from [CONTRIBUTING.md](../../../CONTRIBUTING.md#verification).
 
-The configured workload bearer is server-side; publishing an endpoint in this contract does not make it safe for direct browser use.
+The configured workload bearer is server-side; browser clients use the documented OIDC session mode under one HTTPS origin. Publishing a route alone does not qualify its deployment.

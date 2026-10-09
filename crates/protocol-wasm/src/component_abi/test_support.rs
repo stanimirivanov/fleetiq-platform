@@ -64,7 +64,8 @@ fn component(fixture: Fixture) -> Vec<u8> {
     let world = resolve
         .select_world(&[package], Some("protocol-package"))
         .expect("protocol-package world exists");
-    embed_component_metadata(&mut module, &resolve, world, StringEncoding::UTF8)
+    // Preserve the fixtures' existing WIT names; canonical naming is opt-in.
+    embed_component_metadata(&mut module, &resolve, world, StringEncoding::UTF8, false)
         .expect("component metadata can be embedded");
     ComponentEncoder::default()
         .module(&module)

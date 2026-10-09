@@ -10,31 +10,22 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
-use fleetiq_access::{
-    ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
-    TenantAccessPolicy, TenantAuthorizationService,
-};
+use fleetiq_access::{TenantAccessPolicy, TenantAuthorizationService};
 use fleetiq_domain::{Asset, AssetId, TenantId};
 use fleetiq_metadata::{
     AssetApplicationService, AssetCatalogueEntry, AssetPageQuery, AssetRepository,
 };
-use fleetiq_postgres::{
-    PostgresActorIdentityResolver, PostgresAssetRepository, PostgresTenantAccessPolicy,
-};
+use fleetiq_postgres::{PostgresAssetRepository, PostgresTenantAccessPolicy};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::{
-    bearer_authentication::ConfiguredBearerAuthenticator,
-    config::BearerIdentityConfig,
-    protected_request::{
-        BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store, problem,
-        protected_method_not_allowed,
-    },
+use crate::protected_request::{
+    BAD_REQUEST, INTERNAL, NOT_FOUND, RequestAuthenticator, authenticate, authorize_metadata_read,
+    no_store, problem, protected_method_not_allowed,
 };
 
-struct AssetQueryState<A, R, P, Q> {
-    authentication: CallerAuthenticationService<A, R>,
+struct AssetQueryState<A, P, Q> {
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     assets: AssetApplicationService<Q>,
 }
@@ -44,14 +35,13 @@ struct AssetQueryState<A, R, P, Q> {
 /// The selected tenant is authorized for every request before the repository
 /// receives it. This function is generic only to permit in-process HTTP tests
 /// with deterministic adapters; the process uses PostgreSQL adapters below.
-fn asset_router<A, R, P, Q>(
-    authentication: CallerAuthenticationService<A, R>,
+fn asset_router<A, P, Q>(
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     assets: AssetApplicationService<Q>,
 ) -> Router
 where
-    A: ExternalIdentityAuthenticator<Credential = String> + 'static,
-    R: ActorIdentityResolver + 'static,
+    A: RequestAuthenticator + 'static,
     P: TenantAccessPolicy + 'static,
     Q: AssetRepository + 'static,
 {
@@ -63,11 +53,11 @@ where
     Router::new()
         .route(
             "/api/v1/tenants/{tenant_id}/assets",
-            get(get_asset_page::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_asset_page::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .route(
             "/api/v1/tenants/{tenant_id}/assets/{asset_id}",
-            get(get_asset::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_asset::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .with_state(state)
 }
@@ -107,15 +97,14 @@ impl<'a> From<&'a AssetCatalogueEntry> for AssetSummaryResponse<'a> {
     }
 }
 
-async fn get_asset_page<A, R, P, Q>(
-    State(state): State<Arc<AssetQueryState<A, R, P, Q>>>,
+async fn get_asset_page<A, P, Q>(
+    State(state): State<Arc<AssetQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<String>, PathRejection>,
     parameters: Result<Query<AssetPageParameters>, QueryRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: AssetRepository,
 {
@@ -165,26 +154,25 @@ where
     }
 }
 
-/// Binds the protected route to credential validation and current PostgreSQL policy.
-pub(crate) fn postgres_asset_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
+/// Binds the protected route to HTTP authentication and current PostgreSQL policy.
+pub(crate) fn postgres_asset_router<A: RequestAuthenticator + 'static>(
+    pool: PgPool,
+    authentication: A,
+) -> Router {
     asset_router(
-        CallerAuthenticationService::new(
-            ConfiguredBearerAuthenticator::new(bearer),
-            PostgresActorIdentityResolver::new(pool.clone()),
-        ),
+        authentication,
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone())),
         AssetApplicationService::new(PostgresAssetRepository::new(pool)),
     )
 }
 
-async fn get_asset<A, R, P, Q>(
-    State(state): State<Arc<AssetQueryState<A, R, P, Q>>>,
+async fn get_asset<A, P, Q>(
+    State(state): State<Arc<AssetQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String)>, PathRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: AssetRepository,
 {
@@ -259,5 +247,9 @@ struct ExternalIdentifierResponse<'a> {
     value: &'a str,
 }
 
+#[cfg(test)]
+use crate::bearer_authentication::ConfiguredBearerAuthenticator;
+#[cfg(test)]
+use fleetiq_access::CallerAuthenticationService;
 #[cfg(test)]
 mod tests;

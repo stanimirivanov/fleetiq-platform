@@ -1,11 +1,13 @@
 //! Backend composition root, HTTP health surface, and protected metadata queries for `FleetIQ`.
 //!
 //! The crate owns process configuration, PostgreSQL startup, migrations,
-//! transport binding, and graceful shutdown. Configured-credential asset,
-//! device, and definition queries use current tenant policy and metadata lookup.
+//! transport binding, and graceful shutdown. Browser sessions or configured
+//! workload credentials authenticate metadata queries against current identity
+//! mappings and tenant policy.
 
 mod bearer_authentication;
 mod bootstrap;
+mod browser_identity;
 mod command;
 mod config;
 #[cfg(test)]
@@ -26,6 +28,7 @@ pub use bootstrap::{
     PlatformBootstrapCommandError, PlatformBootstrapConfig, PlatformBootstrapConfigError,
     bootstrap_platform_operator,
 };
+pub use browser_identity::{BrowserIdentityConfig, BrowserIdentityConfigError};
 pub use command::{ProcessCommand, ProcessCommandError};
 pub use config::{ServerConfig, ServerConfigError};
 use fleetiq_postgres::MIGRATOR;
@@ -45,7 +48,7 @@ use tokio::net::TcpListener;
 /// # Errors
 ///
 /// Returns [`ServerError`] when PostgreSQL connection or migration, listener
-/// binding, or HTTP serving fails.
+/// binding, trusted OIDC discovery, or HTTP serving fails.
 pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
     let pool = PgPoolOptions::new()
         .connect(config.database_url())
@@ -53,42 +56,89 @@ pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
         .map_err(ServerError::DatabaseConnection)?;
     MIGRATOR.run(&pool).await.map_err(ServerError::Migration)?;
 
+    let application = application_router(pool.clone(), &config).await?;
     let listener = TcpListener::bind(config.bind_address())
         .await
         .map_err(ServerError::Listener)?;
-    let application = application_router(pool.clone(), &config);
+    // JoinSet owns cancellation: dropping run() aborts the worker instead of
+    // detaching a task that retains the PostgreSQL pool. Normal shutdown also
+    // joins the aborted worker before closing database connections.
+    let mut cleanup = tokio::task::JoinSet::new();
+    if config.browser_identity().is_some() {
+        let repository = fleetiq_postgres::PostgresBrowserIdentityRepository::new(pool.clone());
+        cleanup.spawn(async move {
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+            loop {
+                interval.tick().await;
+                let Ok(now) = browser_identity::now() else {
+                    continue;
+                };
+                if repository.delete_expired(now).await.is_err() {
+                    eprintln!("expired browser authentication records could not be removed");
+                }
+            }
+        });
+    }
     let serving = axum::serve(listener, application).with_graceful_shutdown(shutdown_signal());
     let result = serving.await.map_err(ServerError::Serving);
+    cleanup.shutdown().await;
     pool.close().await;
     result
 }
 
-fn application_router(pool: PgPool, config: &ServerConfig) -> Router {
+/// Selects one HTTP authentication mode at the composition boundary.
+async fn application_router(pool: PgPool, config: &ServerConfig) -> Result<Router, ServerError> {
     let mut router = Router::new().merge(health_router(pool.clone()));
-    if let Some(bearer) = config.bearer_identity() {
+    if let Some(browser) = config.browser_identity() {
+        let provider = browser_identity::OidcClient::discover(browser.clone())
+            .await
+            .map_err(|_| ServerError::BrowserIdentityStartup)?;
         router = router
-            .merge(protected_asset::postgres_asset_router(
+            .merge(metadata_router(
                 pool.clone(),
-                bearer.clone(),
+                browser_identity::BrowserRequestAuthenticator::new(pool.clone(), browser),
             ))
-            .merge(protected_definitions::postgres_definition_router(
-                pool.clone(),
-                bearer.clone(),
-            ))
-            .merge(protected_device::postgres_device_router(
-                pool.clone(),
-                bearer.clone(),
-            ))
-            .merge(protected_relationship::postgres_relationship_router(
-                pool.clone(),
-                bearer.clone(),
-            ))
-            .merge(protected_signal_binding::postgres_signal_binding_router(
+            .merge(browser_identity::postgres_browser_router(
                 pool,
-                bearer.clone(),
+                browser.clone(),
+                provider,
             ));
+    } else if let Some(bearer) = config.bearer_identity() {
+        let authentication = fleetiq_access::CallerAuthenticationService::new(
+            bearer_authentication::ConfiguredBearerAuthenticator::new(bearer.clone()),
+            fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
+        );
+        router = router.merge(metadata_router(pool, authentication));
     }
-    router.merge(api_router())
+    Ok(router.merge(api_router()))
+}
+
+/// Gives every metadata route the same authentication strategy and current policy.
+fn metadata_router<A>(pool: PgPool, authentication: A) -> Router
+where
+    A: protected_request::RequestAuthenticator + Clone + 'static,
+{
+    Router::new()
+        .merge(protected_asset::postgres_asset_router(
+            pool.clone(),
+            authentication.clone(),
+        ))
+        .merge(protected_definitions::postgres_definition_router(
+            pool.clone(),
+            authentication.clone(),
+        ))
+        .merge(protected_device::postgres_device_router(
+            pool.clone(),
+            authentication.clone(),
+        ))
+        .merge(protected_relationship::postgres_relationship_router(
+            pool.clone(),
+            authentication.clone(),
+        ))
+        .merge(protected_signal_binding::postgres_signal_binding_router(
+            pool,
+            authentication,
+        ))
 }
 
 async fn shutdown_signal() {
@@ -132,6 +182,8 @@ pub enum ServerError {
     DatabaseConnection(sqlx::Error),
     /// The embedded PostgreSQL migration chain could not be applied.
     Migration(sqlx::migrate::MigrateError),
+    /// Trusted OIDC discovery or HTTP-client setup failed before serving.
+    BrowserIdentityStartup,
     /// The configured network listener could not be bound.
     Listener(io::Error),
     /// The HTTP server terminated with an I/O failure.
@@ -147,6 +199,9 @@ impl fmt::Display for ServerError {
             Self::Migration(error) => {
                 write!(formatter, "failed to apply PostgreSQL migrations: {error}")
             }
+            Self::BrowserIdentityStartup => {
+                formatter.write_str("browser identity provider could not be initialized")
+            }
             Self::Listener(error) => write!(formatter, "failed to bind HTTP listener: {error}"),
             Self::Serving(error) => write!(formatter, "HTTP server failed: {error}"),
         }
@@ -157,6 +212,7 @@ impl Error for ServerError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::DatabaseConnection(error) => Some(error),
+            Self::BrowserIdentityStartup => None,
             Self::Migration(error) => Some(error),
             Self::Listener(error) | Self::Serving(error) => Some(error),
         }
@@ -189,7 +245,7 @@ mod tests {
             "/api/v1/tenants/tenant-a/relationships/relationship-1/revisions/1",
             "/api/v1/tenants/tenant-a/signal-bindings/binding-1/revisions/1",
         ];
-        let unconfigured = application_router(pool.clone(), &base);
+        let unconfigured = application_router(pool.clone(), &base).await.unwrap();
         for path in paths {
             let response = unconfigured
                 .clone()
@@ -202,7 +258,7 @@ mod tests {
         let configured = base
             .with_bearer_identity("a".repeat(64), "workload", "reader")
             .expect("valid bearer identity");
-        let router = application_router(pool, &configured);
+        let router = application_router(pool, &configured).await.unwrap();
         for path in paths {
             let response = router
                 .clone()

@@ -1,0 +1,8 @@
+name: "state"
+in: "query"
+required: true
+description: "Exact one-use authorization state bound to the login cookie in this browser."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 512

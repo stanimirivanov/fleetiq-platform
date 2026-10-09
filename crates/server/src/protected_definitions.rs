@@ -7,33 +7,24 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
-use fleetiq_access::{
-    ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
-    TenantAccessPolicy, TenantAuthorizationService,
-};
+use fleetiq_access::{TenantAccessPolicy, TenantAuthorizationService};
 use fleetiq_domain::{
     AssetTypeDefinition, AssetTypeId, AssetTypeRef, DefinitionVersion, PropertyDefinition,
     PropertyDefinitionId, PropertyDefinitionRef, PropertyValueKind, RelationshipTypeDefinition,
     RelationshipTypeId, RelationshipTypeRef, TenantId, UnitId,
 };
 use fleetiq_metadata::{DefinitionApplicationService, DefinitionRepository};
-use fleetiq_postgres::{
-    PostgresActorIdentityResolver, PostgresDefinitionRepository, PostgresTenantAccessPolicy,
-};
+use fleetiq_postgres::{PostgresDefinitionRepository, PostgresTenantAccessPolicy};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::{
-    bearer_authentication::ConfiguredBearerAuthenticator,
-    config::BearerIdentityConfig,
-    protected_request::{
-        BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store, problem,
-        protected_method_not_allowed,
-    },
+use crate::protected_request::{
+    BAD_REQUEST, INTERNAL, NOT_FOUND, RequestAuthenticator, authenticate, authorize_metadata_read,
+    no_store, problem, protected_method_not_allowed,
 };
 
-struct DefinitionQueryState<A, R, P, Q> {
-    authentication: CallerAuthenticationService<A, R>,
+struct DefinitionQueryState<A, P, Q> {
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     definitions: DefinitionApplicationService<Q>,
 }
@@ -42,14 +33,13 @@ struct DefinitionQueryState<A, R, P, Q> {
 ///
 /// The requested version is validated before use. The definition repository
 /// receives tenant scope solely through consumed `ReadMetadata` evidence.
-fn definition_router<A, R, P, Q>(
-    authentication: CallerAuthenticationService<A, R>,
+fn definition_router<A, P, Q>(
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     definitions: DefinitionApplicationService<Q>,
 ) -> Router
 where
-    A: ExternalIdentityAuthenticator<Credential = String> + 'static,
-    R: ActorIdentityResolver + 'static,
+    A: RequestAuthenticator + 'static,
     P: TenantAccessPolicy + 'static,
     Q: DefinitionRepository + 'static,
 {
@@ -61,39 +51,38 @@ where
     Router::new()
         .route(
             "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions/{version}",
-            get(get_asset_type::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_asset_type::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .route(
             "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}",
-            get(get_property::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_property::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .route(
             "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions/{version}",
-            get(get_relationship_type::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_relationship_type::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .with_state(state)
 }
 
-/// Wires the configured credential and PostgreSQL adapters to definition lookup.
-pub(crate) fn postgres_definition_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
+/// Wires the HTTP authentication and PostgreSQL adapters to definition lookup.
+pub(crate) fn postgres_definition_router<A: RequestAuthenticator + 'static>(
+    pool: PgPool,
+    authentication: A,
+) -> Router {
     definition_router(
-        CallerAuthenticationService::new(
-            ConfiguredBearerAuthenticator::new(bearer),
-            PostgresActorIdentityResolver::new(pool.clone()),
-        ),
+        authentication,
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone())),
         DefinitionApplicationService::new(PostgresDefinitionRepository::new(pool)),
     )
 }
 
-async fn get_asset_type<A, R, P, Q>(
-    State(state): State<Arc<DefinitionQueryState<A, R, P, Q>>>,
+async fn get_asset_type<A, P, Q>(
+    State(state): State<Arc<DefinitionQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String, String)>, PathRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: DefinitionRepository,
 {
@@ -129,14 +118,13 @@ where
     }
 }
 
-async fn get_property<A, R, P, Q>(
-    State(state): State<Arc<DefinitionQueryState<A, R, P, Q>>>,
+async fn get_property<A, P, Q>(
+    State(state): State<Arc<DefinitionQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String, String)>, PathRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: DefinitionRepository,
 {
@@ -170,14 +158,13 @@ where
     }
 }
 
-async fn get_relationship_type<A, R, P, Q>(
-    State(state): State<Arc<DefinitionQueryState<A, R, P, Q>>>,
+async fn get_relationship_type<A, P, Q>(
+    State(state): State<Arc<DefinitionQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String, String)>, PathRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: DefinitionRepository,
 {
@@ -303,5 +290,9 @@ impl<'a> From<&'a RelationshipTypeDefinition> for RelationshipTypeResponse<'a> {
     }
 }
 
+#[cfg(test)]
+use crate::bearer_authentication::ConfiguredBearerAuthenticator;
+#[cfg(test)]
+use fleetiq_access::CallerAuthenticationService;
 #[cfg(test)]
 mod tests;

@@ -1,0 +1,8 @@
+name: "code"
+in: "query"
+required: false
+description: "Provider authorization code. Required on successful callback; omitted when the provider returns error."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 4096

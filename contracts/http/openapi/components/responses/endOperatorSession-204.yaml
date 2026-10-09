@@ -1,0 +1,11 @@
+description: "The session was revoked if present, bound pending login attempts were removed, and both browser cookies were cleared. Logout is idempotent without a session."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Referrer-Policy:
+    $ref: "../headers/referrer-policy.yaml"
+  Set-Cookie:
+    description: "Clears __Host-fleetiq-session and __Host-fleetiq-login with Max-Age=0."
+    schema:
+      type: "string"
+

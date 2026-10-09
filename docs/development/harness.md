@@ -71,7 +71,7 @@ applicable acceptance check before handoff.
 | Command or sensor | What it proves | Tier and dependencies |
 |:--|:--|:--|
 | `cargo xtask repository` | Local Markdown links and anchors, long-document TL;DR policy, ADR and milestone indexes, and issue or pull request template structure satisfy mechanical repository policy | T1; checked-out repository and Rust toolchain |
-| `cargo xtask architecture` | Workspace packages and direct internal dependencies match the reviewed capability policy | T1; Cargo metadata, no database |
+| `cargo xtask architecture` | Workspace packages and direct internal dependencies match capability policy; the approved OIDC/RSA exception retains its exact locked graph | T1; Cargo metadata and lockfile, no database |
 | `pnpm check:openapi` | Modular OpenAPI syntax, references, registrations, inline schema size, and committed bundle freshness | T1 for HTTP contract changes; pinned Node.js and locked pnpm dependencies, no database |
 | `cargo deny check` | Locked dependencies satisfy RustSec advisory, license, source, and ban policy | T2; pinned CLI and network access to the advisory database |
 | `cargo machete --with-metadata --skip-target-dir` | No unused direct dependency remains in a workspace manifest | T2; pinned CLI and Cargo metadata; reported findings require review |

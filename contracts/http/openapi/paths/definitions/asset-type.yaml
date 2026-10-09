@@ -4,6 +4,7 @@ get:
   description: "Read an exact immutable type version. Property references retain definition order and point to exact immutable versions."
   security:
     - bearerAuth: []
+    - cookieAuth: []
   parameters:
     - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
     - $ref: "../../components/parameters/asset-type-id.yaml"

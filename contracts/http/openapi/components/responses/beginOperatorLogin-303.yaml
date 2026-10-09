@@ -1,0 +1,14 @@
+description: "A five-minute browser-bound login attempt was persisted. Navigate to the configured provider authorization URL."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Referrer-Policy:
+    $ref: "../headers/referrer-policy.yaml"
+  Location:
+    description: "Configured HTTPS provider authorization URL with code flow, PKCE S256, state, and nonce."
+    schema:
+      type: "string"
+  Set-Cookie:
+    description: "Secure, HttpOnly, SameSite=Lax, Path=/ cookies without Domain; callback may emit multiple Set-Cookie fields."
+    schema:
+      type: "string"

@@ -191,7 +191,13 @@ async fn configured_property_query_reads_pinned_version_and_current_postgres_gra
         .bearer_identity()
         .expect("configured credential")
         .clone();
-    let router = postgres_definition_router(pool.clone(), bearer);
+    let router = postgres_definition_router(
+        pool.clone(),
+        fleetiq_access::CallerAuthenticationService::new(
+            crate::bearer_authentication::ConfiguredBearerAuthenticator::new(bearer),
+            fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
+        ),
+    );
     let response = router
         .clone()
         .oneshot(request(PROPERTY_PATH, Some(TOKEN)))

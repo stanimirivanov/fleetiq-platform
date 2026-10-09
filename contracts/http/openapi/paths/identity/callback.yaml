@@ -1,0 +1,24 @@
+get:
+  operationId: "completeOperatorLogin"
+  summary: "Complete operator sign-in"
+  description: "Requires __Host-fleetiq-login from the initiating browser. Atomically consumes the matching state once before code exchange, validates signed provider identity and resolves a provisioned active actor. Provider roles or email never provision access."
+  security: []
+  parameters:
+    -
+      $ref: "../../components/parameters/oidc-code.yaml"
+    -
+      $ref: "../../components/parameters/oidc-state.yaml"
+    -
+      $ref: "../../components/parameters/oidc-error.yaml"
+  responses:
+    "303":
+      $ref: "../../components/responses/completeOperatorLogin-303.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/BrowserUnauthenticated.yaml"
+    "405":
+      $ref: "../../components/responses/BrowserMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
+

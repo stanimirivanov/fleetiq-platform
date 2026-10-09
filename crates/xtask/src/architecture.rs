@@ -1,5 +1,6 @@
 mod model;
 mod policy;
+mod security_exception;
 
 #[cfg(test)]
 mod tests;
@@ -76,6 +77,9 @@ pub(crate) fn check() -> Result<ArchitectureReport, ArchitectureCheckError> {
     if !policy_violations.is_empty() {
         return Err(ArchitectureCheckError::Policy(policy_violations));
     }
+
+    security_exception::check(&PathBuf::from(WORKSPACE_MANIFEST).with_file_name("Cargo.lock"))
+        .map_err(|violation| ArchitectureCheckError::Policy(vec![violation]))?;
 
     let metadata = load_metadata().map_err(ArchitectureCheckError::Metadata)?;
     if let Some(violation) = protocol_fixture_version_violation(&metadata) {

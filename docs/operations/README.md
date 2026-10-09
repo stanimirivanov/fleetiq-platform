@@ -8,6 +8,9 @@ restore, and incident runbooks will be added when those capabilities exist.
 
 ## Available procedures
 
+- [Browser operator identity](browser-identity.md) — configure provider-neutral
+  OIDC, same-origin HTTPS, operator mapping, sessions, and logout.
+
 - [Bootstrap the first platform operator](platform-bootstrap.md) — initialize
   the installation's first internal platform authority through the one-shot
   process command.

@@ -1,8 +1,8 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.2"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes are mounted only when bearer identity is configured; the current single-principal workload credential is not a browser login mechanism."
+  version: "1.0.0-baseline.3"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; every read checks current identity and tenant metadata.read policy."
 servers:
   - url: "/"
 security: []
@@ -25,6 +25,14 @@ paths:
     $ref: "./paths/definitions/property.yaml"
   "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions/{version}":
     $ref: "./paths/definitions/relationship-type.yaml"
+  "/api/v1/auth/login":
+    $ref: "./paths/identity/login.yaml"
+  "/api/v1/auth/callback":
+    $ref: "./paths/identity/callback.yaml"
+  "/api/v1/auth/session":
+    $ref: "./paths/identity/session.yaml"
+  "/api/v1/auth/logout":
+    $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
     ApiDescription:
@@ -67,6 +75,8 @@ components:
       $ref: "./components/schemas/PropertyDefinition.yaml"
     RelationshipTypeDefinition:
       $ref: "./components/schemas/RelationshipTypeDefinition.yaml"
+    OperatorSession:
+      $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
     catalogue-tenant-id:
       $ref: "./components/parameters/catalogue-tenant-id.yaml"
@@ -106,6 +116,16 @@ components:
       $ref: "./components/parameters/property-id.yaml"
     relationship-type-id:
       $ref: "./components/parameters/relationship-type-id.yaml"
+    oidc-code:
+      $ref: "./components/parameters/oidc-code.yaml"
+    oidc-state:
+      $ref: "./components/parameters/oidc-state.yaml"
+    oidc-error:
+      $ref: "./components/parameters/oidc-error.yaml"
+    browser-origin:
+      $ref: "./components/parameters/browser-origin.yaml"
+    browser-csrf:
+      $ref: "./components/parameters/browser-csrf.yaml"
   responses:
     getApiVersion-200:
       $ref: "./components/responses/getApiVersion-200.yaml"
@@ -135,9 +155,25 @@ components:
       $ref: "./components/responses/InternalError.yaml"
     NotFound:
       $ref: "./components/responses/NotFound.yaml"
+    BrowserMethodNotAllowed:
+      $ref: "./components/responses/BrowserMethodNotAllowed.yaml"
+    BrowserUnauthenticated:
+      $ref: "./components/responses/BrowserUnauthenticated.yaml"
+    getOperatorSession-200:
+      $ref: "./components/responses/getOperatorSession-200.yaml"
+    beginOperatorLogin-303:
+      $ref: "./components/responses/beginOperatorLogin-303.yaml"
+    completeOperatorLogin-303:
+      $ref: "./components/responses/completeOperatorLogin-303.yaml"
+    endOperatorSession-204:
+      $ref: "./components/responses/endOperatorSession-204.yaml"
   headers:
     cache-control:
       $ref: "./components/headers/cache-control.yaml"
+    referrer-policy:
+      $ref: "./components/headers/referrer-policy.yaml"
   securitySchemes:
     bearerAuth:
       $ref: "./components/security-schemes/bearerAuth.yaml"
+    cookieAuth:
+      $ref: "./components/security-schemes/cookieAuth.yaml"

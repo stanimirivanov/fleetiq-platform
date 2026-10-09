@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO identity.browser_sessions\n                (credential_digest, provider_digest, authority_id, subject, actor_id, expires_at_ms)\n            VALUES ($1, $2, $3, $4, $5, $6)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3655889acb464996ac4649b079c6e51cc8bbdc8d911ddb43fcb58d58eed772a3"
+}

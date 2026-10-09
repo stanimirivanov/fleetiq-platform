@@ -1,0 +1,20 @@
+description: "The method is unsupported for this browser authentication endpoint. Consult Allow for supported methods."
+headers:
+  Allow:
+    schema:
+      type: "string"
+      enum:
+        - "GET, HEAD"
+        - "POST"
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Referrer-Policy:
+    $ref: "../headers/referrer-policy.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:method-not-allowed"
+      title: "Method not allowed"
+      status: 405

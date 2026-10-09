@@ -9,6 +9,11 @@ rust-version.workspace = true
 
 [dependencies]
 axum.workspace = true
+cookie.workspace = true
+getrandom.workspace = true
+openidconnect.workspace = true
+sha2.workspace = true
+url.workspace = true
 fleetiq-access = { path = "../access" }
 fleetiq-domain = { path = "../domain" }
 fleetiq-identity = { path = "../identity" }

@@ -1,0 +1,14 @@
+description: "A registered operator authenticated. A fresh session replaces the previous credential; the login cookie is cleared."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Referrer-Policy:
+    $ref: "../headers/referrer-policy.yaml"
+  Location:
+    description: "Fixed same-origin destination /, without user-selected return targets."
+    schema:
+      type: "string"
+  Set-Cookie:
+    description: "Secure, HttpOnly, SameSite=Lax, Path=/ cookies without Domain; callback may emit multiple Set-Cookie fields."
+    schema:
+      type: "string"

@@ -1,0 +1,7 @@
+name: "Origin"
+in: "header"
+required: true
+description: "Must exactly equal the configured HTTPS public UI/API origin. Missing, duplicate, null, and other origins are rejected."
+schema:
+  type: "string"
+example: "https://fleet.example.com"

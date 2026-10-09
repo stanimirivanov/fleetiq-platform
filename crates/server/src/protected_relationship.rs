@@ -12,32 +12,23 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
-use fleetiq_access::{
-    ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
-    TenantAccessPolicy, TenantAuthorizationService,
-};
+use fleetiq_access::{TenantAccessPolicy, TenantAuthorizationService};
 use fleetiq_domain::{AssetId, AssetRelationship, AssetRelationshipId, TenantId, UnixTimeMillis};
 use fleetiq_metadata::{
     RelationshipApplicationService, RelationshipRepository, RelationshipSnapshotPageQuery,
     RelationshipSnapshotQuery,
 };
-use fleetiq_postgres::{
-    PostgresActorIdentityResolver, PostgresRelationshipRepository, PostgresTenantAccessPolicy,
-};
+use fleetiq_postgres::{PostgresRelationshipRepository, PostgresTenantAccessPolicy};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::{
-    bearer_authentication::ConfiguredBearerAuthenticator,
-    config::BearerIdentityConfig,
-    protected_request::{
-        BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store,
-        parse_record_revision, problem, protected_method_not_allowed,
-    },
+use crate::protected_request::{
+    BAD_REQUEST, INTERNAL, NOT_FOUND, RequestAuthenticator, authenticate, authorize_metadata_read,
+    no_store, parse_record_revision, problem, protected_method_not_allowed,
 };
 
-struct RelationshipQueryState<A, R, P, Q> {
-    authentication: CallerAuthenticationService<A, R>,
+struct RelationshipQueryState<A, P, Q> {
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     relationships: RelationshipApplicationService<Q>,
 }
@@ -46,14 +37,13 @@ struct RelationshipQueryState<A, R, P, Q> {
 ///
 /// The relationship service derives tenant scope from consumed authorization
 /// evidence; path data cannot provide a repository tenant independently.
-fn relationship_router<A, R, P, Q>(
-    authentication: CallerAuthenticationService<A, R>,
+fn relationship_router<A, P, Q>(
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     relationships: RelationshipApplicationService<Q>,
 ) -> Router
 where
-    A: ExternalIdentityAuthenticator<Credential = String> + 'static,
-    R: ActorIdentityResolver + 'static,
+    A: RequestAuthenticator + 'static,
     P: TenantAccessPolicy + 'static,
     Q: RelationshipRepository + 'static,
 {
@@ -65,11 +55,11 @@ where
     Router::new()
         .route(
             "/api/v1/tenants/{tenant_id}/assets/{asset_id}/relationships",
-            get(get_asset_snapshot::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_asset_snapshot::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .route(
             "/api/v1/tenants/{tenant_id}/relationships/{relationship_id}/revisions/{revision}",
-            get(get_revision::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_revision::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .with_state(state)
 }
@@ -92,15 +82,14 @@ struct SnapshotResponse<'a> {
     next_after: Option<&'a str>,
 }
 
-async fn get_asset_snapshot<A, R, P, Q>(
-    State(state): State<Arc<RelationshipQueryState<A, R, P, Q>>>,
+async fn get_asset_snapshot<A, P, Q>(
+    State(state): State<Arc<RelationshipQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String)>, PathRejection>,
     parameters: Result<Query<SnapshotParameters>, QueryRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: RelationshipRepository,
 {
@@ -162,26 +151,25 @@ where
     }
 }
 
-/// Binds the configured credential and current PostgreSQL policy to both reads.
-pub(crate) fn postgres_relationship_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
+/// Binds the HTTP authentication and current PostgreSQL policy to both reads.
+pub(crate) fn postgres_relationship_router<A: RequestAuthenticator + 'static>(
+    pool: PgPool,
+    authentication: A,
+) -> Router {
     relationship_router(
-        CallerAuthenticationService::new(
-            ConfiguredBearerAuthenticator::new(bearer),
-            PostgresActorIdentityResolver::new(pool.clone()),
-        ),
+        authentication,
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone())),
         RelationshipApplicationService::new(PostgresRelationshipRepository::new(pool)),
     )
 }
 
-async fn get_revision<A, R, P, Q>(
-    State(state): State<Arc<RelationshipQueryState<A, R, P, Q>>>,
+async fn get_revision<A, P, Q>(
+    State(state): State<Arc<RelationshipQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String, String)>, PathRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: RelationshipRepository,
 {
@@ -267,5 +255,9 @@ struct EffectiveIntervalResponse {
     end_ms: Option<i64>,
 }
 
+#[cfg(test)]
+use crate::bearer_authentication::ConfiguredBearerAuthenticator;
+#[cfg(test)]
+use fleetiq_access::CallerAuthenticationService;
 #[cfg(test)]
 mod tests;
