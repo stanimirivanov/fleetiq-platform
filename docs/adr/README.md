@@ -105,3 +105,4 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.
+| [0095](0095-authenticate-browser-operators-with-oidc-sessions.md) | Provider-neutral OIDC and same-origin browser operator sessions |

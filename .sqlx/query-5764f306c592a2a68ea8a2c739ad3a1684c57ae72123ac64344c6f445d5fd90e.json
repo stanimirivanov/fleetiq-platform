@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH expired_attempts AS (\n                DELETE FROM identity.browser_login_attempts WHERE expires_at_ms <= $1\n            )\n            DELETE FROM identity.browser_sessions WHERE expires_at_ms <= $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5764f306c592a2a68ea8a2c739ad3a1684c57ae72123ac64344c6f445d5fd90e"
+}

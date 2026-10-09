@@ -511,7 +511,13 @@ async fn configured_query_reads_exact_revision_and_checks_current_postgres_grant
         .bearer_identity()
         .expect("configured credential")
         .clone();
-    let router = postgres_signal_binding_router(pool.clone(), bearer);
+    let router = postgres_signal_binding_router(
+        pool.clone(),
+        fleetiq_access::CallerAuthenticationService::new(
+            crate::bearer_authentication::ConfiguredBearerAuthenticator::new(bearer),
+            fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
+        ),
+    );
     let target_early = router
         .clone()
         .oneshot(request(TARGET_PATH, Some(TOKEN)))

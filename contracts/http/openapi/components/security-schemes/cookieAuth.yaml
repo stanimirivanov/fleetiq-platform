@@ -1,0 +1,4 @@
+type: "apiKey"
+in: "cookie"
+name: "__Host-fleetiq-session"
+description: "Opaque Secure, HttpOnly, SameSite=Lax, host-only session cookie. Available only in configured browser OIDC mode; workload bearer and browser modes are mutually exclusive."

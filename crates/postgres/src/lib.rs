@@ -5,6 +5,7 @@
 
 mod access;
 mod action_codec;
+mod browser_identity_repository;
 mod error;
 mod history;
 mod identity;
@@ -15,6 +16,9 @@ pub use access::{
     PostgresActorIdentityResolver, PostgresActorIdentityResolverError,
     PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError, PostgresTenantAccessPolicy,
     PostgresTenantAccessPolicyError,
+};
+pub use browser_identity_repository::{
+    BrowserLoginAttempt, BrowserSession, PostgresBrowserIdentityRepository,
 };
 pub use error::PostgresRepositoryError;
 pub use history::{

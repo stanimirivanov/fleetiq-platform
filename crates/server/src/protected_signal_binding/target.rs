@@ -11,7 +11,7 @@ use axum::{
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
 };
-use fleetiq_access::{ActorIdentityResolver, ExternalIdentityAuthenticator, TenantAccessPolicy};
+use fleetiq_access::TenantAccessPolicy;
 use fleetiq_domain::{AssetId, SignalBindingId, TenantId, UnixTimeMillis};
 use fleetiq_metadata::{
     SignalBindingRepository, SignalBindingSnapshotPageQuery, SignalBindingSnapshotQuery,
@@ -19,7 +19,8 @@ use fleetiq_metadata::{
 use serde::{Deserialize, Serialize};
 
 use crate::protected_request::{
-    BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store, problem,
+    BAD_REQUEST, INTERNAL, NOT_FOUND, RequestAuthenticator, authenticate, authorize_metadata_read,
+    no_store, problem,
 };
 
 use super::{SignalBindingQueryState, SignalBindingResponse};
@@ -42,15 +43,14 @@ struct TargetSnapshotResponse<'a> {
     next_after: Option<&'a str>,
 }
 
-pub(super) async fn get_target_snapshot<A, R, P, Q>(
-    State(state): State<Arc<SignalBindingQueryState<A, R, P, Q>>>,
+pub(super) async fn get_target_snapshot<A, P, Q>(
+    State(state): State<Arc<SignalBindingQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String)>, PathRejection>,
     parameters: Result<Query<TargetSnapshotParameters>, QueryRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: SignalBindingRepository,
 {

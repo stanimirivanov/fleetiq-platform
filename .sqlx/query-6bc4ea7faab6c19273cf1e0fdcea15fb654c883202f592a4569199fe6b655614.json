@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT credential_digest, provider_digest, authority_id, subject, actor_id, expires_at_ms\n            FROM identity.browser_sessions\n            WHERE credential_digest = $1 AND expires_at_ms > $2\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "credential_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_sessions",
+            "name": "credential_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "provider_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_sessions",
+            "name": "provider_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "authority_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_sessions",
+            "name": "authority_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "subject",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_sessions",
+            "name": "subject"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_sessions",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "expires_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_sessions",
+            "name": "expires_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6bc4ea7faab6c19273cf1e0fdcea15fb654c883202f592a4569199fe6b655614"
+}

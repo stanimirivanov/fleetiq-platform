@@ -4,6 +4,7 @@ get:
   description: "Returns asset identity, its exact pinned asset-type version, and tenant-owned typed external identifiers. A missing asset returns 404."
   security:
     - bearerAuth: []
+    - cookieAuth: []
   parameters:
     - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
     - $ref: "../../components/parameters/exact-asset-id.yaml"

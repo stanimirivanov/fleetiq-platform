@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.2",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes are mounted only when bearer identity is configured; the current single-principal workload credential is not a browser login mechanism."
+    "version": "1.0.0-baseline.3",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; every read checks current identity and tenant metadata.read policy."
   },
   "servers": [
     {
@@ -28,10 +28,13 @@
       "get": {
         "operationId": "listAssets",
         "summary": "List one authorized tenant's assets in stable ID order",
-        "description": "The configured bearer identity must have a current metadata.read grant for the selected tenant. The route is absent without complete bearer configuration. A cursor traversal is not a cross-request snapshot.",
+        "description": "The authenticated operator or configured workload identity must have current metadata.read access for the selected tenant. The route is absent without complete browser or workload identity configuration. A cursor traversal is not a cross-request snapshot.",
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -72,6 +75,9 @@
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -112,6 +118,9 @@
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -164,6 +173,9 @@
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -216,6 +228,9 @@
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -271,6 +286,9 @@
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -314,6 +332,9 @@
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -357,6 +378,9 @@
         "security": [
           {
             "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -385,6 +409,124 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "get": {
+        "operationId": "beginOperatorLogin",
+        "summary": "Start operator sign-in",
+        "description": "Creates a short-lived bound OIDC authorization-code attempt. Browser identity must be configured. No request-selected issuer, client, callback, or return URL is supported.",
+        "security": [],
+        "responses": {
+          "303": {
+            "$ref": "#/components/responses/beginOperatorLogin-303"
+          },
+          "401": {
+            "$ref": "#/components/responses/BrowserUnauthenticated"
+          },
+          "405": {
+            "$ref": "#/components/responses/BrowserMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/callback": {
+      "get": {
+        "operationId": "completeOperatorLogin",
+        "summary": "Complete operator sign-in",
+        "description": "Requires __Host-fleetiq-login from the initiating browser. Atomically consumes the matching state once before code exchange, validates signed provider identity and resolves a provisioned active actor. Provider roles or email never provision access.",
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/oidc-code"
+          },
+          {
+            "$ref": "#/components/parameters/oidc-state"
+          },
+          {
+            "$ref": "#/components/parameters/oidc-error"
+          }
+        ],
+        "responses": {
+          "303": {
+            "$ref": "#/components/responses/completeOperatorLogin-303"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/BrowserUnauthenticated"
+          },
+          "405": {
+            "$ref": "#/components/responses/BrowserMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/session": {
+      "get": {
+        "operationId": "getOperatorSession",
+        "summary": "Read the current operator session",
+        "description": "Revalidates session expiry and the current external-identity mapping to the actor established at login. Returns no provider claims, tokens, or tenant grants.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/getOperatorSession-200"
+          },
+          "401": {
+            "$ref": "#/components/responses/BrowserUnauthenticated"
+          },
+          "405": {
+            "$ref": "#/components/responses/BrowserMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "endOperatorSession",
+        "summary": "Sign out the current browser",
+        "description": "Requires exact configured Origin and X-FleetIQ-CSRF: 1. Deletes the stored session and browser-bound pending login attempts, then clears cookies; success is idempotent when no session is present. Existing in-flight reads may complete.",
+        "security": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/browser-origin"
+          },
+          {
+            "$ref": "#/components/parameters/browser-csrf"
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/endOperatorSession-204"
+          },
+          "401": {
+            "$ref": "#/components/responses/BrowserUnauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden",
+            "description": "The configured Origin or X-FleetIQ-CSRF header is absent, duplicated, or invalid."
+          },
+          "405": {
+            "$ref": "#/components/responses/BrowserMethodNotAllowed"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -1025,6 +1167,27 @@
             "minLength": 1
           }
         }
+      },
+      "OperatorSession": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "actor_id",
+          "expires_at_ms"
+        ],
+        "properties": {
+          "actor_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Internal actor established at sign-in, with its current identity mapping revalidated."
+          },
+          "expires_at_ms": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "description": "Absolute expiry in Unix epoch milliseconds; no sliding renewal."
+          }
+        }
       }
     },
     "parameters": {
@@ -1249,6 +1412,57 @@
           "minLength": 1,
           "maxLength": 128,
           "description": "Exact relationship-type definition ID."
+        }
+      },
+      "oidc-code": {
+        "name": "code",
+        "in": "query",
+        "required": false,
+        "description": "Provider authorization code. Required on successful callback; omitted when the provider returns error.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "oidc-state": {
+        "name": "state",
+        "in": "query",
+        "required": true,
+        "description": "Exact one-use authorization state bound to the login cookie in this browser.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "oidc-error": {
+        "name": "error",
+        "in": "query",
+        "required": false,
+        "description": "Provider rejection. A valid bound login attempt is consumed before returning generic unauthorized.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "browser-origin": {
+        "name": "Origin",
+        "in": "header",
+        "required": true,
+        "description": "Must exactly equal the configured HTTPS public UI/API origin. Missing, duplicate, null, and other origins are rejected.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "https://fleet.example.com"
+      },
+      "browser-csrf": {
+        "name": "X-FleetIQ-CSRF",
+        "in": "header",
+        "required": true,
+        "description": "Same-origin custom header; the server does not enable credentialed CORS. Duplicates are rejected.",
+        "schema": {
+          "type": "string",
+          "const": "1"
         }
       }
     },
@@ -1548,7 +1762,7 @@
         }
       },
       "Unauthenticated": {
-        "description": "A bearer credential was absent or rejected.",
+        "description": "The selected authentication mode rejected missing, invalid, expired, or unregistered credentials. WWW-Authenticate is emitted only for configured workload bearer mode.",
         "headers": {
           "WWW-Authenticate": {
             "schema": {
@@ -1614,6 +1828,146 @@
             }
           }
         }
+      },
+      "BrowserMethodNotAllowed": {
+        "description": "The method is unsupported for this browser authentication endpoint. Consult Allow for supported methods.",
+        "headers": {
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "GET, HEAD",
+                "POST"
+              ]
+            }
+          },
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Referrer-Policy": {
+            "$ref": "#/components/headers/referrer-policy"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "BrowserUnauthenticated": {
+        "description": "The browser credential or login attempt is absent, invalid, expired, or no longer registered. API reads do not redirect to sign-in.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Referrer-Policy": {
+            "$ref": "#/components/headers/referrer-policy"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:unauthorized",
+              "title": "Authentication required",
+              "status": 401
+            }
+          }
+        }
+      },
+      "getOperatorSession-200": {
+        "description": "The current authenticated operator session. No provider token, external subject, or tenant grant is returned.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Referrer-Policy": {
+            "$ref": "#/components/headers/referrer-policy"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OperatorSession"
+            },
+            "example": {
+              "actor_id": "operator-a",
+              "expires_at_ms": 1791540000000
+            }
+          }
+        }
+      },
+      "beginOperatorLogin-303": {
+        "description": "A five-minute browser-bound login attempt was persisted. Navigate to the configured provider authorization URL.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Referrer-Policy": {
+            "$ref": "#/components/headers/referrer-policy"
+          },
+          "Location": {
+            "description": "Configured HTTPS provider authorization URL with code flow, PKCE S256, state, and nonce.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "Set-Cookie": {
+            "description": "Secure, HttpOnly, SameSite=Lax, Path=/ cookies without Domain; callback may emit multiple Set-Cookie fields.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "completeOperatorLogin-303": {
+        "description": "A registered operator authenticated. A fresh session replaces the previous credential; the login cookie is cleared.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Referrer-Policy": {
+            "$ref": "#/components/headers/referrer-policy"
+          },
+          "Location": {
+            "description": "Fixed same-origin destination /, without user-selected return targets.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "Set-Cookie": {
+            "description": "Secure, HttpOnly, SameSite=Lax, Path=/ cookies without Domain; callback may emit multiple Set-Cookie fields.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "endOperatorSession-204": {
+        "description": "The session was revoked if present, bound pending login attempts were removed, and both browser cookies were cleared. Logout is idempotent without a session.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Referrer-Policy": {
+            "$ref": "#/components/headers/referrer-policy"
+          },
+          "Set-Cookie": {
+            "description": "Clears __Host-fleetiq-session and __Host-fleetiq-login with Max-Age=0.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
       }
     },
     "headers": {
@@ -1623,6 +1977,13 @@
           "type": "string",
           "const": "no-store"
         }
+      },
+      "referrer-policy": {
+        "description": "Authentication responses prevent authorization code or state disclosure through referrers.",
+        "schema": {
+          "type": "string",
+          "const": "no-referrer"
+        }
       }
     },
     "securitySchemes": {
@@ -1630,6 +1991,12 @@
         "type": "http",
         "scheme": "bearer",
         "description": "Current configured workload credential. A browser-safe identity flow is not available yet."
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-fleetiq-session",
+        "description": "Opaque Secure, HttpOnly, SameSite=Lax, host-only session cookie. Available only in configured browser OIDC mode; workload bearer and browser modes are mutually exclusive."
       }
     }
   }

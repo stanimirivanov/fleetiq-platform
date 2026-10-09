@@ -85,3 +85,18 @@ updates with the `wat` fixture compiler for joint review. The parser's
 `fleetiq-protocol-wasm` fixture suite passes and the resolved `wasmparser`
 and `wasm-encoder` versions have been reviewed. These dependencies build test
 fixtures; they do not change the production protocol package contract.
+
+## Browser identity dependencies
+
+The OIDC boundary uses openidconnect for protocol and ID-token verification,
+reqwest/rustls through its supported HTTP adapter, cookie for parsing and cookie
+attributes, OS getrandom for opaque credentials, and the existing SHA-256
+implementation for credential lookup digests. It does not implement JWT crypto
+or an identity provider. Version-scoped TLS license entries and the approved
+verification-only RSA advisory assessment are documented in
+[the dependency review](plans/browser-identity-dependency-review.md).
+
+The approved RSA exception is enforced by cargo-deny's supported wrapper/version
+bans and the architecture check's exact lockfile sensor, including prereleases
+and package sources. Keep both guards with the exception. The harness uses the
+maintained TOML parser; no parser or crypto dependency enters the domain crates.

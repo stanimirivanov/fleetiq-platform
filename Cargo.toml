@@ -27,6 +27,10 @@ rust-version = "1.98.1"
 [workspace.dependencies]
 axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"] }
 bigdecimal = { version = "0.4.0", default-features = false }
+cookie = { version = "0.18.1", default-features = false }
+getrandom = "0.4.3"
+openidconnect = { version = "4.0.1", default-features = false, features = ["reqwest", "rustls-tls"] }
+url = { version = "2.5.7", default-features = false }
 cargo_metadata = { version = "0.23.1", default-features = false }
 percent-encoding = "2.3.2"
 pulldown-cmark = { version = "0.13.0", default-features = false }
@@ -35,7 +39,8 @@ serde_json = { version = "1.0.151", default-features = false, features = ["std"]
 sqlx = { version = "0.9.0", default-features = false, features = ["bigdecimal", "macros", "migrate", "postgres", "runtime-tokio"] }
 sha2 = { version = "0.11.0", default-features = false }
 subtle = { version = "2.6.1", default-features = false }
-tokio = { version = "~1.53", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal"] }
+tokio = { version = "~1.53", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
+toml = { version = "0.9.12", default-features = false, features = ["parse", "serde", "std"] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
 wasmtime = { version = "49.0.2", default-features = false, features = ["anyhow", "component-model", "cranelift", "runtime", "std"] }
 

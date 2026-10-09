@@ -49,11 +49,24 @@
 - A backend-owned OpenAPI 3.1 UI baseline documents version discovery,
   bounded asset catalogue and exact asset reads, pinned semantic definitions,
   and bounded relationship and signal-binding snapshots. It remains a partial
-  contract: browser-safe authentication, live semantic state, and other
-  protected routes are not yet described.
-- Further business APIs, identity-provider integration, authorization administration
-  APIs, device transport listeners, operator UI, archival storage, and
+  contract: live semantic state and some
+  protected routes are not yet described. Browser OIDC login and operator
+  sessions are now included in the additive baseline.
+- Further business APIs, identity-provider qualification, authorization
+  administration APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
+
+## Browser operator authentication
+
+Provider-neutral OIDC authorization-code login and same-origin server sessions
+are implemented. The backend validates signed identity tokens, resolves an
+already provisioned actor, stores opaque credential digests in PostgreSQL, and
+rechecks current actor mapping and tenant grants for every metadata read.
+Cookie, expiry, callback replay, origin/CSRF, trust-domain reconfiguration, and
+rollback policies are in the
+[browser identity procedure](../operations/browser-identity.md).
+The UX connection remains the next slice; this backend boundary does not
+qualify a customer provider or a public production deployment.
 
 ## Semantic metadata foundation
 
@@ -331,19 +344,19 @@ consume exact `ReadMetadata` evidence and derive repository tenant scope from
 that evidence, so callers cannot independently select a tenant. Neither action
 implies the other.
 
-One configured opaque bearer credential authenticates a single external
+In workload mode, one configured opaque bearer credential authenticates a single external
 identity for exact asset and bounded tenant asset catalogue reads, the exact
 asset's nested `/device` resource, exact asset-type, property-definition, and
 relationship-type lookup, exact recorded relationship-revision lookup,
 exact recorded signal-binding-revision lookup, a bounded asset-relationship
 snapshot, a bounded source-binding snapshot, and a bounded target-asset binding
-snapshot. The process mounts those routes only when the token, authority, and
+snapshot. In that mode, the process mounts those routes only when the token, authority, and
 subject are configured together. The
 current actor mapping and exact `metadata.read` tenant grant are checked on
-every request before the metadata repository is called. A production identity
-provider, multi-principal login, membership or
-role model, administration transport, generalized authentication middleware,
-and audit HTTP API remain future work. See the
+every request before the metadata repository is called. Browser mode instead
+uses the provider-neutral operator sessions described above. Customer provider
+and deployment qualification, membership or role models, administration
+transport, and the audit HTTP API remain future work. See the
 [protected asset query procedure](../operations/asset-query.md),
 [device query procedure](../operations/device-query.md),
 [asset-type query procedure](../operations/asset-type-query.md),

@@ -7,29 +7,20 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
-use fleetiq_access::{
-    ActorIdentityResolver, CallerAuthenticationService, ExternalIdentityAuthenticator,
-    TenantAccessPolicy, TenantAuthorizationService,
-};
+use fleetiq_access::{TenantAccessPolicy, TenantAuthorizationService};
 use fleetiq_domain::{AssetId, CommunicationDevice, TenantId};
 use fleetiq_metadata::{DeviceApplicationService, DeviceRepository};
-use fleetiq_postgres::{
-    PostgresActorIdentityResolver, PostgresDeviceRepository, PostgresTenantAccessPolicy,
-};
+use fleetiq_postgres::{PostgresDeviceRepository, PostgresTenantAccessPolicy};
 use serde::Serialize;
 use sqlx::PgPool;
 
-use crate::{
-    bearer_authentication::ConfiguredBearerAuthenticator,
-    config::BearerIdentityConfig,
-    protected_request::{
-        BAD_REQUEST, INTERNAL, NOT_FOUND, authenticate, authorize_metadata_read, no_store, problem,
-        protected_method_not_allowed,
-    },
+use crate::protected_request::{
+    BAD_REQUEST, INTERNAL, NOT_FOUND, RequestAuthenticator, authenticate, authorize_metadata_read,
+    no_store, problem, protected_method_not_allowed,
 };
 
-struct DeviceQueryState<A, R, P, Q> {
-    authentication: CallerAuthenticationService<A, R>,
+struct DeviceQueryState<A, P, Q> {
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     devices: DeviceApplicationService<Q>,
 }
@@ -39,14 +30,13 @@ struct DeviceQueryState<A, R, P, Q> {
 /// A device is an asset's communication capability, not a second asset
 /// identity. The handler uses the same per-request authentication and current
 /// metadata-read policy as the asset route.
-fn device_router<A, R, P, Q>(
-    authentication: CallerAuthenticationService<A, R>,
+fn device_router<A, P, Q>(
+    authentication: A,
     authorization: TenantAuthorizationService<P>,
     devices: DeviceApplicationService<Q>,
 ) -> Router
 where
-    A: ExternalIdentityAuthenticator<Credential = String> + 'static,
-    R: ActorIdentityResolver + 'static,
+    A: RequestAuthenticator + 'static,
     P: TenantAccessPolicy + 'static,
     Q: DeviceRepository + 'static,
 {
@@ -58,31 +48,30 @@ where
     Router::new()
         .route(
             "/api/v1/tenants/{tenant_id}/assets/{asset_id}/device",
-            get(get_device::<A, R, P, Q>).fallback(protected_method_not_allowed),
+            get(get_device::<A, P, Q>).fallback(protected_method_not_allowed),
         )
         .with_state(state)
 }
 
-/// Wires the configured credential and PostgreSQL adapters to device lookup.
-pub(crate) fn postgres_device_router(pool: PgPool, bearer: BearerIdentityConfig) -> Router {
+/// Wires the HTTP authentication and PostgreSQL adapters to device lookup.
+pub(crate) fn postgres_device_router<A: RequestAuthenticator + 'static>(
+    pool: PgPool,
+    authentication: A,
+) -> Router {
     device_router(
-        CallerAuthenticationService::new(
-            ConfiguredBearerAuthenticator::new(bearer),
-            PostgresActorIdentityResolver::new(pool.clone()),
-        ),
+        authentication,
         TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone())),
         DeviceApplicationService::new(PostgresDeviceRepository::new(pool)),
     )
 }
 
-async fn get_device<A, R, P, Q>(
-    State(state): State<Arc<DeviceQueryState<A, R, P, Q>>>,
+async fn get_device<A, P, Q>(
+    State(state): State<Arc<DeviceQueryState<A, P, Q>>>,
     headers: HeaderMap,
     path: Result<Path<(String, String)>, PathRejection>,
 ) -> Response
 where
-    A: ExternalIdentityAuthenticator<Credential = String>,
-    R: ActorIdentityResolver,
+    A: RequestAuthenticator,
     P: TenantAccessPolicy,
     Q: DeviceRepository,
 {
@@ -143,5 +132,9 @@ struct DeviceEndpointResponse<'a> {
     name: &'a str,
 }
 
+#[cfg(test)]
+use crate::bearer_authentication::ConfiguredBearerAuthenticator;
+#[cfg(test)]
+use fleetiq_access::CallerAuthenticationService;
 #[cfg(test)]
 mod tests;

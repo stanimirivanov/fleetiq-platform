@@ -2,6 +2,8 @@ use std::{env, error::Error, fmt, net::SocketAddr};
 
 use fleetiq_domain::{ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId};
 
+use crate::browser_identity::{BrowserIdentityConfig, BrowserIdentityConfigError};
+
 const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1:8080";
 const BEARER_TOKEN: &str = "FLEETIQ_HTTP_BEARER_TOKEN";
 const BEARER_AUTHORITY: &str = "FLEETIQ_HTTP_IDENTITY_AUTHORITY";
@@ -47,6 +49,7 @@ pub struct ServerConfig {
     database_url: String,
     bind_address: SocketAddr,
     bearer_identity: Option<BearerIdentityConfig>,
+    browser_identity: Option<BrowserIdentityConfig>,
 }
 
 impl ServerConfig {
@@ -54,8 +57,9 @@ impl ServerConfig {
     ///
     /// `DATABASE_URL` is required. `FLEETIQ_BIND_ADDRESS` defaults to
     /// `127.0.0.1:8080`, keeping an unconfigured development server local.
-    /// Protected metadata queries are enabled only when all three HTTP bearer
-    /// identity values are present and valid.
+    /// Protected metadata queries require a complete configured workload
+    /// identity or the five browser OIDC values, never both. Browser mode
+    /// requires an HTTPS public origin and provider issuer.
     ///
     /// # Errors
     ///
@@ -83,6 +87,30 @@ impl ServerConfig {
                 config = config.with_bearer_identity(token, authority, subject)?;
             }
             _ => return Err(ServerConfigError::IncompleteBearerIdentity),
+        }
+        let browser_values = [
+            optional_environment("FLEETIQ_BROWSER_ORIGIN")?,
+            optional_environment("FLEETIQ_OIDC_ISSUER")?,
+            optional_environment("FLEETIQ_OIDC_CLIENT_ID")?,
+            optional_environment("FLEETIQ_OIDC_CLIENT_SECRET")?,
+            optional_environment("FLEETIQ_OIDC_IDENTITY_AUTHORITY")?,
+        ];
+        match browser_values {
+            [None, None, None, None, None] => {}
+            [
+                Some(origin),
+                Some(issuer),
+                Some(client_id),
+                Some(secret),
+                Some(authority),
+            ] => {
+                let browser = BrowserIdentityConfig::from_values(
+                    &origin, &issuer, &client_id, &secret, &authority,
+                )
+                .map_err(ServerConfigError::BrowserIdentity)?;
+                config = config.with_browser_identity(browser)?;
+            }
+            _ => return Err(ServerConfigError::IncompleteBrowserIdentity),
         }
         Ok(config)
     }
@@ -117,6 +145,7 @@ impl ServerConfig {
             database_url,
             bind_address,
             bearer_identity: None,
+            browser_identity: None,
         })
     }
 
@@ -132,6 +161,9 @@ impl ServerConfig {
         authority: impl Into<String>,
         subject: impl Into<String>,
     ) -> Result<Self, ServerConfigError> {
+        if self.browser_identity.is_some() {
+            return Err(ServerConfigError::AmbiguousHttpIdentity);
+        }
         let token = token.as_ref().as_bytes();
         let token: [u8; 64] = token
             .try_into()
@@ -148,6 +180,30 @@ impl ServerConfig {
             external_identity: ExternalIdentity::new(authority, subject),
         });
         Ok(self)
+    }
+
+    /// Enables provider-neutral browser login and same-origin operator sessions.
+    ///
+    /// Browser and workload modes are mutually exclusive on a listener. This
+    /// prevents browser requests from falling back to a configured principal.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ServerConfigError::AmbiguousHttpIdentity`] if a workload
+    /// bearer identity was already configured.
+    pub fn with_browser_identity(
+        mut self,
+        browser: BrowserIdentityConfig,
+    ) -> Result<Self, ServerConfigError> {
+        if self.bearer_identity.is_some() {
+            return Err(ServerConfigError::AmbiguousHttpIdentity);
+        }
+        self.browser_identity = Some(browser);
+        Ok(self)
+    }
+
+    pub(crate) fn browser_identity(&self) -> Option<&BrowserIdentityConfig> {
+        self.browser_identity.as_ref()
     }
 
     pub(crate) fn database_url(&self) -> &str {
@@ -171,6 +227,7 @@ impl fmt::Debug for ServerConfig {
             .field("database_url", &"[REDACTED]")
             .field("bind_address", &self.bind_address)
             .field("bearer_identity", &self.bearer_identity)
+            .field("browser_identity", &self.browser_identity)
             .finish()
     }
 }
@@ -196,6 +253,12 @@ pub enum ServerConfigError {
     InvalidBearerToken,
     /// The configured authority or subject violates its domain invariant.
     InvalidBearerIdentity,
+    /// Some browser identity environment values are missing.
+    IncompleteBrowserIdentity,
+    /// Browser and configured workload authentication were enabled together.
+    AmbiguousHttpIdentity,
+    /// Browser identity configuration violates its security invariants.
+    BrowserIdentity(BrowserIdentityConfigError),
     /// The HTTP listener value is not a valid socket address.
     InvalidBindAddress {
         /// Rejected non-secret configuration value.
@@ -225,6 +288,9 @@ impl fmt::Display for ServerConfigError {
                 formatter.write_str("HTTP bearer token must be 64 hexadecimal characters")
             }
             Self::InvalidBearerIdentity => formatter.write_str("HTTP bearer identity is invalid"),
+            Self::IncompleteBrowserIdentity => formatter.write_str("browser origin, OIDC issuer, client ID, client secret, and authority must be configured together"),
+            Self::AmbiguousHttpIdentity => formatter.write_str("browser and configured workload identity modes are mutually exclusive"),
+            Self::BrowserIdentity(error) => error.fmt(formatter),
             Self::InvalidBindAddress { value, .. } => {
                 write!(formatter, "FLEETIQ_BIND_ADDRESS is invalid: {value}")
             }
@@ -236,12 +302,15 @@ impl Error for ServerConfigError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::InvalidBindAddress { source, .. } => Some(source),
+            Self::BrowserIdentity(source) => Some(source),
             Self::MissingEnvironment { .. }
             | Self::NonUnicodeEnvironment { .. }
             | Self::EmptyDatabaseUrl
             | Self::IncompleteBearerIdentity
             | Self::InvalidBearerToken
-            | Self::InvalidBearerIdentity => None,
+            | Self::InvalidBearerIdentity
+            | Self::IncompleteBrowserIdentity
+            | Self::AmbiguousHttpIdentity => None,
         }
     }
 }
@@ -310,5 +379,31 @@ mod tests {
         assert!(!debug.contains(&"a".repeat(64)));
         assert!(!debug.contains("private-subject"));
         assert!(configured.bearer_identity().is_some());
+    }
+
+    #[test]
+    fn browser_and_workload_modes_cannot_be_enabled_together() {
+        let browser = BrowserIdentityConfig::from_values(
+            "https://fleet.example",
+            "https://identity.example",
+            "client",
+            "secret",
+            "workforce",
+        )
+        .unwrap();
+        let base = ServerConfig::from_values("postgres://localhost/test", "127.0.0.1:0").unwrap();
+        assert!(matches!(
+            base.clone()
+                .with_bearer_identity("a".repeat(64), "workload", "reader")
+                .unwrap()
+                .with_browser_identity(browser.clone()),
+            Err(ServerConfigError::AmbiguousHttpIdentity)
+        ));
+        assert!(matches!(
+            base.with_browser_identity(browser)
+                .unwrap()
+                .with_bearer_identity("a".repeat(64), "workload", "reader"),
+            Err(ServerConfigError::AmbiguousHttpIdentity)
+        ));
     }
 }

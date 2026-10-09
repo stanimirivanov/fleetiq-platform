@@ -15,7 +15,7 @@ without committing to premature services or specialized databases.
 flowchart TB
     Operators[Operators and administrators]
     Devices[Telemetry devices and gateways]
-    Identity[Identity provider - planned]
+    Identity[Configured OIDC provider]
     Credential[Configured bearer credential]
     FleetIQ[FleetIQ platform]
     Database[(PostgreSQL)]
@@ -32,9 +32,11 @@ flowchart TB
 The current repository composes its backend foundation into one executable
 process. The access policy boundary separates authenticated actors,
 selected tenants, and per-action policy decisions. PostgreSQL persists internal
-actors and exact grants and evaluates current policy without a cache; identity-
-provider integration remains planned. Configured-credential exact asset,
-bounded tenant asset catalogue, device, asset-type, property-definition,
+actors and exact grants and evaluates current policy without a cache. The server
+provides provider-neutral OIDC login and same-origin operator sessions. Each session retains its original actor and trust-domain binding;
+current identity and tenant grants are checked on every read. See the
+[browser identity procedure](../operations/browser-identity.md). Protected exact
+asset, bounded tenant asset catalogue, device, asset-type, property-definition,
 relationship-type, exact relationship-revision,
 exact signal-binding-revision, bounded asset-relationship snapshot, bounded
 source-binding snapshot, and bounded target-asset binding snapshot queries join
@@ -55,7 +57,7 @@ application arrive in later milestones.
 
 ```mermaid
 flowchart LR
-    Request[Protected metadata GET with bearer credential]
+    Request[Protected metadata GET with selected credential]
     Validator[Credential validation]
     Resolver[Exact external identity to actor]
     Policy[Current tenant metadata.read grant]
@@ -64,6 +66,35 @@ flowchart LR
 
     Request --> Validator --> Resolver --> Policy --> Service --> Store
 ```
+
+## Browser identity boundary
+
+```mermaid
+sequenceDiagram
+    participant Browser as Browser (same HTTPS origin)
+    participant Server as FleetIQ server
+    participant Provider as Configured OIDC issuer
+    participant DB as PostgreSQL
+    Browser->>Server: GET /api/v1/auth/login
+    Server->>DB: Store browser-bound one-use attempt
+    Server-->>Browser: 303 + protected login cookie
+    Browser->>Provider: Authorization request + PKCE S256
+    Provider-->>Browser: Redirect with code and state
+    Browser->>Server: Callback + login cookie
+    Server->>DB: Atomically consume bound attempt
+    Server->>Provider: Exchange code; discover keys and verify identity
+    Server->>DB: Resolve active actor and store opaque session digest
+    Server-->>Browser: 303 / + protected session cookie
+    Browser->>Server: Metadata GET + session cookie
+    Server->>DB: Session expiry/trust binding + current actor mapping
+    Server->>DB: Current exact tenant metadata.read grant
+    Server-->>Browser: Metadata or bounded 401/403 problem
+```
+
+The server holds all provider credentials. The browser has no OAuth token or
+workload secret. Login and sessions bind the configured issuer/client/authority;
+secret rotation alone does not invalidate sessions. See
+[ADR 0095](../adr/0095-authenticate-browser-operators-with-oidc-sessions.md).
 
 ## Capability flow
 

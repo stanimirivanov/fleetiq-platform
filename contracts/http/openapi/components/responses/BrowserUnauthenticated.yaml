@@ -1,0 +1,14 @@
+description: "The browser credential or login attempt is absent, invalid, expired, or no longer registered. API reads do not redirect to sign-in."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Referrer-Policy:
+    $ref: "../headers/referrer-policy.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:unauthorized"
+      title: "Authentication required"
+      status: 401

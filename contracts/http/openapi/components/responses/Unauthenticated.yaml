@@ -1,4 +1,4 @@
-description: "A bearer credential was absent or rejected."
+description: "The selected authentication mode rejected missing, invalid, expired, or unregistered credentials. WWW-Authenticate is emitted only for configured workload bearer mode."
 headers:
   WWW-Authenticate:
     schema:

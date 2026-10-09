@@ -3,7 +3,16 @@
 
 [advisories]
 # The RustSec database is fetched on each check. A newly disclosed vulnerability
-# must fail CI; no advisories are ignored by default.
+# must fail CI unless an exact, explicitly approved exception applies.
+# Approved by the project owner on 2026-10-09 for this exact parent only.
+# Owner: browser identity maintainers. Public verification; no RSA private-key
+# operations. Re-review before private-key use or dependency changes; remove
+# when upstream is patched or this path is replaced. Full assessment:
+# docs/development/plans/browser-identity-dependency-review.md
+ignore = [
+    { id = "RUSTSEC-2023-0071", reason = "OIDC adapter performs public-key verification only; no RSA private-key operations or keys" },
+]
+
 unmaintained = "workspace"
 unsound = "all"
 yanked = "deny"
@@ -14,6 +23,17 @@ yanked = "deny"
 multiple-versions = "warn"
 wildcards = "deny"
 allow-wildcard-paths = true
+
+# cargo-deny 0.20.2 has no advisories.ignore.allow. Its supported wrapper
+# rule enforces the approved RSA parent; version bans cover stable releases.
+# The architecture lockfile sensor also covers prereleases, exact versions,
+# package sources and duplicate records. Keep these rules with the advisory
+# exception and remove them together after a reviewed replacement or fix.
+deny = [
+    { crate = "rsa", wrappers = ["openidconnect"], reason = "Only the reviewed OIDC verifier may depend on RSA; see browser-identity-dependency-review.md" },
+    { crate = "openidconnect:<4.0.1", reason = "OIDC versions outside 4.0.1 need a new RSA exposure review" },
+    { crate = "openidconnect:>4.0.1", reason = "OIDC versions outside 4.0.1 need a new RSA exposure review" },
+]
 
 [bans.workspace-dependencies]
 duplicates = "deny"
@@ -43,6 +63,14 @@ allow = [
 # this crate or a suitable schema validator avoids it.
 exceptions = [
     { crate = "borrow-or-share@0.2.4", allow = ["MIT-0"] },
+    # Provider HTTPS verification uses rustls/ring. These exact ISC-licensed
+    # implementations are permissive dependencies, not a global license change.
+    # Owner: browser identity maintainers; remove on replacement/version review.
+    { crate = "ring@0.17.14", allow = ["ISC"] },
+    { crate = "rustls-webpki@0.103.15", allow = ["ISC"] },
+    { crate = "untrusted@0.9.0", allow = ["ISC"] },
+    # Mozilla-derived public trust-anchor data uses this permissive data license.
+    { crate = "webpki-roots@1.0.9", allow = ["CDLA-Permissive-2.0"] },
 ]
 [sources]
 unknown-registry = "deny"

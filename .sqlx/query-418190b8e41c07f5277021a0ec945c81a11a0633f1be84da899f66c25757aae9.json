@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM identity.browser_login_attempts WHERE browser_digest = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "418190b8e41c07f5277021a0ec945c81a11a0633f1be84da899f66c25757aae9"
+}

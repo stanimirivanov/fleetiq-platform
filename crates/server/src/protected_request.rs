@@ -20,8 +20,10 @@ pub(crate) const INTERNAL: &str = "urn:fleetiq:problem:internal-error";
 const UNAUTHORIZED: &str = "urn:fleetiq:problem:unauthorized";
 
 /// Bounded transport outcomes from the shared protected-read boundary.
+#[derive(Debug)]
 pub(crate) enum ProtectedRequestError {
     Unauthorized,
+    BrowserUnauthorized,
     Forbidden,
     Internal,
 }
@@ -30,6 +32,11 @@ impl IntoResponse for ProtectedRequestError {
     fn into_response(self) -> Response {
         match self {
             Self::Unauthorized => challenge(),
+            Self::BrowserUnauthorized => problem(
+                StatusCode::UNAUTHORIZED,
+                UNAUTHORIZED,
+                "Authentication required",
+            ),
             Self::Forbidden => problem(StatusCode::FORBIDDEN, FORBIDDEN, "Access denied"),
             Self::Internal => problem(
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -40,27 +47,46 @@ impl IntoResponse for ProtectedRequestError {
     }
 }
 
-/// Validates the bearer credential before any caller-selected ID reaches policy.
-pub(crate) async fn authenticate<A, R>(
-    headers: &HeaderMap,
-    service: &CallerAuthenticationService<A, R>,
-) -> Result<AuthenticatedActor, ProtectedRequestError>
+/// Authenticates HTTP credentials without coupling metadata handlers to a login strategy.
+///
+/// Implementations return evidence only after validating possession and the
+/// current external-identity mapping. Browser sessions additionally bind that
+/// mapping to the actor who established the session.
+pub(crate) trait RequestAuthenticator: Send + Sync {
+    fn authenticate<'a>(
+        &'a self,
+        headers: &'a HeaderMap,
+    ) -> impl Future<Output = Result<AuthenticatedActor, ProtectedRequestError>> + Send + 'a;
+}
+
+impl<A, R> RequestAuthenticator for CallerAuthenticationService<A, R>
 where
     A: ExternalIdentityAuthenticator<Credential = String>,
     R: ActorIdentityResolver,
 {
-    let Some(credential) = bearer_credential(headers) else {
-        return Err(ProtectedRequestError::Unauthorized);
-    };
-    match service.authenticate(&credential).await {
-        Ok(actor) => Ok(actor),
-        Err(CallerAuthenticationError::Rejected | CallerAuthenticationError::Unregistered) => {
-            Err(ProtectedRequestError::Unauthorized)
-        }
-        Err(
-            CallerAuthenticationError::Authenticator(_) | CallerAuthenticationError::Resolver(_),
-        ) => Err(ProtectedRequestError::Internal),
+    async fn authenticate(
+        &self,
+        headers: &HeaderMap,
+    ) -> Result<AuthenticatedActor, ProtectedRequestError> {
+        let credential = bearer_credential(headers).ok_or(ProtectedRequestError::Unauthorized)?;
+        self.authenticate(&credential)
+            .await
+            .map_err(|error| match error {
+                CallerAuthenticationError::Rejected | CallerAuthenticationError::Unregistered => {
+                    ProtectedRequestError::Unauthorized
+                }
+                CallerAuthenticationError::Authenticator(_)
+                | CallerAuthenticationError::Resolver(_) => ProtectedRequestError::Internal,
+            })
     }
+}
+
+/// Establishes caller evidence before parsing tenant or resource identifiers.
+pub(crate) async fn authenticate<A: RequestAuthenticator>(
+    headers: &HeaderMap,
+    service: &A,
+) -> Result<AuthenticatedActor, ProtectedRequestError> {
+    service.authenticate(headers).await
 }
 
 /// Checks the current exact metadata-read grant and returns consumable evidence.

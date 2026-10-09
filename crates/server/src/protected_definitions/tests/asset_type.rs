@@ -136,7 +136,13 @@ async fn configured_asset_type_query_uses_exact_version_and_current_postgres_gra
         .bearer_identity()
         .expect("configured credential")
         .clone();
-    let router = postgres_definition_router(pool.clone(), bearer);
+    let router = postgres_definition_router(
+        pool.clone(),
+        fleetiq_access::CallerAuthenticationService::new(
+            crate::bearer_authentication::ConfiguredBearerAuthenticator::new(bearer),
+            fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
+        ),
+    );
     let response = router.clone().oneshot(request(PATH, Some(TOKEN))).await?;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(to_bytes(response.into_body(), 2048).await?, EXPECTED_JSON);

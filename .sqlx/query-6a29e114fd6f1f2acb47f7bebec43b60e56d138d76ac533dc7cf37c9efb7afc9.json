@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM identity.browser_login_attempts\n            WHERE state_digest = $1 AND browser_digest = $2 AND expires_at_ms > $3\n            RETURNING state_digest, provider_digest, browser_digest, pkce_verifier, nonce, expires_at_ms\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "state_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_login_attempts",
+            "name": "state_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "provider_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_login_attempts",
+            "name": "provider_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "browser_digest",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_login_attempts",
+            "name": "browser_digest"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "pkce_verifier",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_login_attempts",
+            "name": "pkce_verifier"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "nonce",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_login_attempts",
+            "name": "nonce"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "expires_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "identity.browser_login_attempts",
+            "name": "expires_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6a29e114fd6f1f2acb47f7bebec43b60e56d138d76ac533dc7cf37c9efb7afc9"
+}

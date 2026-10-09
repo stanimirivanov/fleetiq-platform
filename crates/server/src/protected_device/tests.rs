@@ -304,7 +304,13 @@ async fn configured_device_query_uses_current_postgres_grant(
         .bearer_identity()
         .expect("configured credential")
         .clone();
-    let router = postgres_device_router(pool.clone(), bearer);
+    let router = postgres_device_router(
+        pool.clone(),
+        fleetiq_access::CallerAuthenticationService::new(
+            crate::bearer_authentication::ConfiguredBearerAuthenticator::new(bearer),
+            fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
+        ),
+    );
     let response = router.clone().oneshot(request(PATH, Some(TOKEN))).await?;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(

@@ -157,7 +157,11 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
     let paths = contract["paths"]
         .as_object()
         .expect("published paths must be an object");
-    assert_eq!(paths.len(), OPERATIONS.len(), "review every published path");
+    assert_eq!(
+        paths.len(),
+        OPERATIONS.len() + 4,
+        "review every published path"
+    );
     let mut ids = HashSet::new();
     for expected in OPERATIONS {
         let path_item = paths
@@ -176,7 +180,7 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
         assert_eq!(
             operation["security"],
             if expected.protected {
-                json!([{ "bearerAuth": [] }])
+                json!([{ "bearerAuth": [] }, { "cookieAuth": [] }])
             } else {
                 json!([])
             },
@@ -358,5 +362,64 @@ async fn discovery_response_matches_published_example() -> Result<(), Box<dyn Er
     let actual: Value = serde_json::from_slice(&to_bytes(response.into_body(), 1024).await?)?;
     let contract = contract()?;
     assert_eq!(&actual, success_example(&contract, "/api/v1"));
+    Ok(())
+}
+
+#[test]
+fn operator_identity_operations_publish_the_complete_browser_boundary() -> Result<(), Box<dyn Error>>
+{
+    let contract = contract()?;
+    for (name, method, id, success) in [
+        ("login", "get", "beginOperatorLogin", "303"),
+        ("callback", "get", "completeOperatorLogin", "303"),
+        ("session", "get", "getOperatorSession", "200"),
+        ("logout", "post", "endOperatorSession", "204"),
+    ] {
+        let operation = &contract["paths"][format!("/api/v1/auth/{name}")][method];
+        assert_eq!(operation["operationId"], id);
+        assert!(operation["responses"].get(success).is_some());
+        let response = resolve_component(&contract, &operation["responses"][success]);
+        let cache = resolve_component(&contract, &response["headers"]["Cache-Control"]);
+        assert_eq!(cache["schema"]["const"], "no-store");
+        let policy = resolve_component(&contract, &response["headers"]["Referrer-Policy"]);
+        assert_eq!(policy["schema"]["const"], "no-referrer");
+        assert_eq!(
+            operation["security"],
+            if name == "session" {
+                json!([{ "cookieAuth": [] }])
+            } else {
+                json!([])
+            }
+        );
+    }
+    let cookie = &contract["components"]["securitySchemes"]["cookieAuth"];
+    assert_eq!(cookie["in"], "cookie");
+    assert_eq!(cookie["name"], "__Host-fleetiq-session");
+    let session = resolve_component(
+        &contract,
+        &contract["paths"]["/api/v1/auth/session"]["get"]["responses"]["200"],
+    );
+    let schema = &session["content"]["application/json"]["schema"];
+    assert_eq!(schema["$ref"], "#/components/schemas/OperatorSession");
+    assert!(validate_component_example(
+        &contract,
+        "OperatorSession",
+        &session["content"]["application/json"]["example"]
+    )?);
+    let logout = &contract["paths"]["/api/v1/auth/logout"]["post"];
+    let parameters: Vec<_> = logout["parameters"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| resolve_component(&contract, p))
+        .collect();
+    assert!(
+        parameters
+            .iter()
+            .any(|p| p["name"] == "Origin" && p["required"] == true)
+    );
+    assert!(parameters.iter().any(|p| p["name"] == "X-FleetIQ-CSRF"
+        && p["schema"]["const"] == "1"
+        && p["required"] == true));
     Ok(())
 }

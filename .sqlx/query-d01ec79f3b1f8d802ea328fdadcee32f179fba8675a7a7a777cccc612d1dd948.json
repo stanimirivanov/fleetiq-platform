@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM identity.browser_sessions WHERE credential_digest = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d01ec79f3b1f8d802ea328fdadcee32f179fba8675a7a7a777cccc612d1dd948"
+}

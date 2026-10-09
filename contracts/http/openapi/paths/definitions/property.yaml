@@ -4,6 +4,7 @@ get:
   description: "Read the exact value kind and optional canonical unit; this endpoint performs no measurement conversion."
   security:
     - bearerAuth: []
+    - cookieAuth: []
   parameters:
     - $ref: "../../components/parameters/metadata-read-tenant-id.yaml"
     - $ref: "../../components/parameters/property-id.yaml"

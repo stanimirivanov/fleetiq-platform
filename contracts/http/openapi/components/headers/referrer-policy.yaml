@@ -1,0 +1,4 @@
+description: "Authentication responses prevent authorization code or state disclosure through referrers."
+schema:
+  type: "string"
+  const: "no-referrer"

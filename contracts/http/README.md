@@ -6,9 +6,10 @@ The backend owns this partial OpenAPI 3.1 description of `/api/v1`. It
 publishes version discovery, bounded asset catalogue and exact asset reads,
 pinned semantic definitions, and bounded bitemporal relationship and
 signal-binding snapshots. Other implemented routes remain outside this
-client-facing subset. Protected reads still use a configured workload bearer
-and current tenant `metadata.read` access; that credential is not browser
-authentication.
+client-facing subset. The additive baseline includes operator OIDC login,
+callback, session discovery, and sign-out. Protected reads use either browser
+cookies or configured workload bearer plus current tenant `metadata.read` access;
+a server listener selects exactly one mode.
 
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
@@ -20,8 +21,9 @@ checks both together. `info.version` tracks revisions of this documented
 subset; the path major version remains v1.
 
 The current configured bearer is a temporary server-side adapter for one
-principal. Browser and mobile production login require a separate approved
-identity integration. Never embed the workload credential in a web or mobile
+principal. The [browser identity boundary](../../docs/operations/browser-identity.md) uses
+provider-neutral OIDC and same-origin server sessions. Native mobile identity
+remains separate. Never embed the workload credential in a web or mobile
 client.
 
 Relationship snapshots are scoped to one asset. Target-binding snapshots are
@@ -38,8 +40,8 @@ server compatibility tests, and client-consumption plan in the same change.
 A frontend should pin an exact merged backend commit or released artifact,
 regenerate transport types, validate unknown payloads at its feature boundary,
 and keep sample mode visibly separate from live data. Pinning this expanded
-contract allows typed mock-driven UI work; production browser reads remain
-unconfigured until browser-safe identity and authorization are delivered.
+contract allows typed mock-driven UI work; connected UI activation requires a qualified OIDC deployment, provisioned
+operators, and the frontend connection slice.
 
 From the repository root, run `pnpm lint:openapi` to lint the modular source,
 `pnpm bundle:openapi` to regenerate the committed standalone JSON, and

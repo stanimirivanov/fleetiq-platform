@@ -1,0 +1,6 @@
+name: "error"
+in: "query"
+required: false
+description: "Provider rejection. A valid bound login attempt is consumed before returning generic unauthorized."
+schema:
+  type: "string"

@@ -1,0 +1,8 @@
+# OAuth navigation succeeds with 303, not a JSON 2xx envelope. Keep the rule
+# enabled for every other operation and never add fake success responses.
+openapi/paths/identity/login.yaml:
+  operation-2xx-response:
+    - '#/get/responses'
+openapi/paths/identity/callback.yaml:
+  operation-2xx-response:
+    - '#/get/responses'

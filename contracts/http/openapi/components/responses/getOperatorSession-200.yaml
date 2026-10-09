@@ -1,0 +1,13 @@
+description: "The current authenticated operator session. No provider token, external subject, or tenant grant is returned."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Referrer-Policy:
+    $ref: "../headers/referrer-policy.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/OperatorSession.yaml"
+    example:
+      actor_id: "operator-a"
+      expires_at_ms: 1791540000000

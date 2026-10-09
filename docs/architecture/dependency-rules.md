@@ -53,6 +53,12 @@ workspace package path. Registry dependencies and nonmember path dependencies
 do not define edges in this graph; review them under the dependency criteria in
 the engineering standards.
 
+The architecture check also validates the exact locked OIDC/RSA packages and
+consumer edge for the approved verification-only advisory exception, including
+prereleases and inactive targets. Its [dependency review](../development/plans/browser-identity-dependency-review.md)
+records the approved scope and removal conditions. The supply-chain ban policy
+provides an additional direct-consumer guard.
+
 Exact dependency review supplements the directional model:
 
 - domain and contract crates do not import application or infrastructure;
