@@ -1153,6 +1153,7 @@ dependencies = [
  "cargo_metadata",
  "percent-encoding",
  "pulldown-cmark",
+ "serde_json",
  "toml",
 ]
 

@@ -95,6 +95,24 @@ supported PostgreSQL version:
 cargo sqlx prepare --workspace -- --all-targets --all-features
 ```
 
+## History and secret protection
+
+Install the reviewed detector once, fetch trusted remote history, and use the
+[harness protection guide](harness-protection.md) for the exact scan scope, base
+selection, and safe correction workflow:
+
+```powershell
+git fetch origin
+node scripts/install-gitleaks.mjs
+cargo xtask migrations --base origin/main
+cargo xtask secrets --base origin/main
+cargo xtask secrets --fixtures
+```
+
+These checks require Git history and the pinned scanner, with no PostgreSQL.
+They are part of the canonical acceptance gate; missing prerequisites are never
+a pass.
+
 ## Quality gate
 
 Start with the fast structural checks:
@@ -132,6 +150,7 @@ policy, and advisory-data requirements.
 
 - [Engineering standards](engineering-standards.md)
 - [Coding harness and feedback tiers](harness.md)
+- [Published history and secret protection](harness-protection.md)
 - [Harness hardening execution plan](plans/harness-hardening.md)
 - [Dependency management and supply-chain gate](dependency-management.md)
 - [SQL migration criteria](sql-migrations.md)

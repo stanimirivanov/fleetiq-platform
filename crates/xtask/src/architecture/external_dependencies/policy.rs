@@ -141,6 +141,7 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
             "cargo_metadata",
             "percent-encoding",
             "pulldown-cmark",
+            "serde_json",
             "toml",
         ],
         development: NONE,

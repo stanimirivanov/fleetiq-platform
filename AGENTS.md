@@ -25,6 +25,8 @@ that apply.
 4. Read [SQL migration criteria](docs/development/sql-migrations.md) before
    changing persistence.
 5. Use repository-pinned tools. A skipped or unavailable check is not a pass.
+   The [harness protection guide](docs/development/harness-protection.md) defines
+   trusted-base migration checks, redacted secret scanning, and policy review.
 6. For published HTTP contract changes, read the [OpenAPI maintenance
    skill](.agents/skills/openapi/SKILL.md) and run the OpenAPI checks.
 

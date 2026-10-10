@@ -1,0 +1,22 @@
+# Repository policy owner. Required Code Owner approval and required status checks
+# require GitHub rulesets and an independent authorized owner/team for owner-
+# authored PRs; this file alone only routes review. See harness-protection.md.
+/.github/ @stanimirivanov
+/.agents/ @stanimirivanov
+/.cargo/ @stanimirivanov
+/crates/xtask/ @stanimirivanov
+/scripts/ @stanimirivanov
+/Cargo.toml @stanimirivanov
+/Cargo.lock @stanimirivanov
+/deny.toml @stanimirivanov
+/.gitleaks* @stanimirivanov
+/.gitattributes @stanimirivanov
+/migrations/ @stanimirivanov
+/AGENTS.md @stanimirivanov
+/CONTRIBUTING.md @stanimirivanov
+/SECURITY.md @stanimirivanov
+/docs/development/harness.md @stanimirivanov
+/docs/development/harness-protection.md @stanimirivanov
+/docs/development/dependency-management.md @stanimirivanov
+/docs/development/sql-migrations.md @stanimirivanov
+/docs/architecture/dependency-rules.md @stanimirivanov

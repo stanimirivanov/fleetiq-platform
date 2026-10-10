@@ -22,13 +22,35 @@ jobs:
   architecture:
     name: Architecture policy
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
+    env:
+      # The event supplies the trusted published base. Do not infer HEAD^ from
+      # the synthetic PR merge or silently accept a missing/zero push base.
+      HARNESS_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
 
     steps:
       - name: Check out source
         uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install Node.js for the checksummed scanner installer
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Install pinned Gitleaks with SHA-256 verification
+        run: node scripts/install-gitleaks.mjs
+
+      - name: Check published migration immutability
+        run: cargo xtask migrations --base "$HARNESS_BASE"
+
+      - name: Scan reviewable files and incoming history with redacted findings
+        run: cargo xtask secrets --base "$HARNESS_BASE"
+
+      - name: Verify real scanner failure and suppression fixtures
+        run: cargo xtask secrets --fixtures
 
       - name: Check repository policy
         run: cargo xtask repository

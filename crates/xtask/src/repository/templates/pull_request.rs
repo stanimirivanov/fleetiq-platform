@@ -41,9 +41,12 @@ const PULL_REQUEST_MARKERS: [(&str, &str); 13] = [
     ),
 ];
 
-const REQUIRED_VERIFICATION_COMMANDS: [&str; 9] = [
+const REQUIRED_VERIFICATION_COMMANDS: [&str; 12] = [
     "cargo xtask repository",
     "cargo xtask architecture",
+    "cargo xtask migrations --base origin/main",
+    "cargo xtask secrets --base origin/main",
+    "cargo xtask secrets --fixtures",
     "cargo deny check",
     "cargo machete --with-metadata --skip-target-dir",
     "cargo fmt --all --check",

@@ -12,6 +12,8 @@
   advisory check needs a current RustSec database and network access.
 - OpenAPI tooling requires Node.js 22.12 or newer and pins pnpm and Redocly CLI in `package.json`
   and `pnpm-lock.yaml`; its separate CI job checks the contract bundle.
+- Secret protection uses checksum-verified Gitleaks 8.30.1; its exact version
+  and exception policy are maintained with the [protection guide](harness-protection.md).
 - Dependabot proposes weekly Cargo, npm, GitHub Actions, and container updates.
   Review and verify each proposal; an automated update is not an approval.
 
@@ -91,6 +93,24 @@ updates with the `wat` fixture compiler for joint review. The parser's
 `fleetiq-protocol-wasm` fixture suite passes and the resolved `wasmparser`
 and `wasm-encoder` versions have been reviewed. These dependencies build test
 fixtures; they do not change the production protocol package contract.
+
+## Secret detector tooling
+
+Gitleaks is an external development tool rather than a Rust production library.
+`node scripts/install-gitleaks.mjs` installs official 8.30.1 archives after
+verifying reviewed platform-specific SHA-256 digests. The Rust wrapper rejects
+other versions; update both pins together in a dedicated reviewed change and
+run `cargo xtask secrets --fixtures` plus the current/base-qualified scan.
+The upstream project is feature-complete and maintains fixes; a reviewed pin
+still requires monitoring releases and maintenance status.
+
+The wrapper uses the existing maintained TOML parser to validate exact scanner
+policy and the existing workspace serde_json dependency to parse detector
+reports safely. serde_json gains only a direct xtask tooling ownership edge;
+the lockfile adds no package version or production edge. Neither parser is
+reimplemented. Exact nonproduction scanner exceptions and missing-tool handling
+are defined in [harness protection](harness-protection.md), separately from
+RustSec advisory exceptions.
 
 ## Browser identity dependencies
 

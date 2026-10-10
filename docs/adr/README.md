@@ -104,6 +104,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0095](0095-authenticate-browser-operators-with-oidc-sessions.md) | Provider-neutral OIDC and same-origin browser operator sessions |
 | [0096](0096-enforce-external-dependency-ownership-and-lint-inheritance.md) | Exact external dependency ownership, nonmember path rejection, and shared lint inheritance |
 
+| [0097](0097-protect-published-history-and-sensitive-artifacts.md) | Trusted-base migration immutability, pinned redacted secret detection, and policy ownership |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

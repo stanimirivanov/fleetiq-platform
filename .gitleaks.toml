@@ -1,0 +1,18 @@
+# Wrapper-only policy: cargo xtask secrets interprets exact exceptions itself.
+# Never pass this file directly to Gitleaks; native global AND handling is wider.
+# Default rules remain active. Never add broad directory, commit, or baseline ignores.
+# Nonproduction exceptions require an exact path AND exact synthetic secret, an
+# owner, a reason, and a review trigger; see docs/development/harness-protection.md.
+title = "FleetIQ secret scanning"
+
+[extend]
+useDefault = true
+
+# This exact public Ed25519 fixture creates signed adversarial OIDC responses.
+# Escaped PEM delimiters keep the exception definition from looking like a key.
+[[allowlists]]
+description = "Owner: FleetIQ identity maintainers; Reason: deterministic public signing fixture for adversarial OIDC tests, never a deployment credential; Review trigger: fixture key replacement or OIDC signing-test redesign"
+condition = "AND"
+regexTarget = "secret"
+paths = ['^crates[/\\]server[/\\]src[/\\]browser_identity[/\\]provider[/\\]tests\.rs$']
+regexes = ['^\-\-\-\-\-BEGIN PRIVATE KEY\-\-\-\-\-\\nMC4CAQAwBQYDK2VwBCIEICWeYPLxoZKHZlQ6rkBi11E9JwchynXtljATLqym/XS9\\n\-\-\-\-\-END PRIVATE KEY\-\-\-\-\-$']
