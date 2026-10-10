@@ -1,5 +1,7 @@
 //! Exact repository command shapes; rejected arguments are never echoed.
 
+use crate::verification::Group;
+
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Command {
     Architecture,
@@ -7,6 +9,9 @@ pub(super) enum Command {
     Migrations { base: String },
     Secrets { base: Option<String> },
     SecretFixtures,
+    VerifyList,
+    VerifyCi { write: bool },
+    Verify { group: Group, base: Option<String> },
     Help,
 }
 
@@ -25,6 +30,19 @@ pub(super) fn parse(arguments: impl IntoIterator<Item = String>) -> Result<Comma
             base: Some((*base).to_owned()),
         }),
         ["secrets", "--fixtures"] => Ok(Command::SecretFixtures),
+        ["verify", "--list"] => Ok(Command::VerifyList),
+        ["verify", "--check-ci"] => Ok(Command::VerifyCi { write: false }),
+        ["verify", "--write-ci"] => Ok(Command::VerifyCi { write: true }),
+        ["verify", "--group", group] => Group::parse(group)
+            .map(|group| Command::Verify { group, base: None })
+            .ok_or(()),
+        ["verify", "--group", group, "--base", base] if valid_base(base) => Group::parse(group)
+            .filter(|group| matches!(group, Group::Architecture | Group::Acceptance))
+            .map(|group| Command::Verify {
+                group,
+                base: Some((*base).to_owned()),
+            })
+            .ok_or(()),
         _ => Err(()),
     }
 }
@@ -35,7 +53,7 @@ fn valid_base(base: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{Command, parse};
+    use super::{Command, Group, parse};
 
     fn arguments(values: &[&str]) -> Vec<String> {
         values.iter().map(|value| (*value).to_owned()).collect()
@@ -62,6 +80,29 @@ mod tests {
                 },
             ),
             (vec!["secrets", "--fixtures"], Command::SecretFixtures),
+            (vec!["verify", "--list"], Command::VerifyList),
+            (
+                vec!["verify", "--check-ci"],
+                Command::VerifyCi { write: false },
+            ),
+            (
+                vec!["verify", "--write-ci"],
+                Command::VerifyCi { write: true },
+            ),
+            (
+                vec!["verify", "--group", "rust"],
+                Command::Verify {
+                    group: Group::Rust,
+                    base: None,
+                },
+            ),
+            (
+                vec!["verify", "--group", "architecture", "--base", "origin/main"],
+                Command::Verify {
+                    group: Group::Architecture,
+                    base: Some("origin/main".to_owned()),
+                },
+            ),
         ] {
             assert_eq!(parse(arguments(&input)), Ok(expected));
         }
@@ -81,6 +122,13 @@ mod tests {
             vec!["help", "extra"],
             vec!["repository", "extra"],
             vec!["architecture", "extra"],
+            vec!["verify"],
+            vec!["verify", "--group", "anything"],
+            vec!["verify", "--group", "rust", "--base", "--all"],
+            vec!["verify", "--list", "extra"],
+            vec!["verify", "--group", "rust", "--base", "origin/main"],
+            vec!["verify", "--group", "rust", "--command", "echo"],
+            vec!["verify", "--group", "rust", "--output", "anywhere"],
         ] {
             assert_eq!(parse(arguments(&input)), Err(()));
         }

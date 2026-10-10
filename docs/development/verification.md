@@ -1,0 +1,196 @@
+# Reproducible verification and evidence
+
+## TL;DR
+
+- `cargo xtask verify --list` prints the authoritative check inventory; it runs
+  no acceptance checks.
+- `cargo xtask verify --group acceptance --base origin/main` coordinates the
+  unchanged twelve-command Rust acceptance gate.
+- Focused groups support fast feedback. Passing a focused group is not a
+  complete acceptance result, and contract or Compose checks may also apply.
+- Missing prerequisites produce **not run** and a nonzero group exit. A started
+  command returning an unsuccessful status produces **failed**.
+- Reports under ignored `target/verification/` contain metadata, never process
+  output, credentials, connection strings, or environment dumps. Ordinary tool
+  output remains on the console and needs the same care as a direct invocation.
+- Configure tools and PostgreSQL yourself. The runner installs nothing, applies
+  no migrations, and infers no database health from `DATABASE_URL`.
+
+## Authority and scope
+
+[CONTRIBUTING.md](../../CONTRIBUTING.md#verification) owns which checks are
+required. The executable [catalogue](../../crates/xtask/src/verification/catalogue.rs)
+owns command arguments, groups, outcomes, tool versions, prerequisites, and
+acceptance membership. Contributor and PR-template acceptance command lists
+are checked against that catalogue. The runner compares the complete checked-in
+CI workflow with its rendered reviewed template, including inventory-owned group
+commands and tool versions. Accidental omissions, disabled checks, or conditional
+changes cannot silently create a different local or CI gate.
+
+The runner coordinates existing tools; it adds no alternative test framework or
+new business policy. Each check remains individually runnable for investigation.
+Execution uses fixed program and argument vectors. Repository-owned xtask checks
+launch the current compiled xtask with the equivalent task arguments, avoiding
+recursive Cargo rebuilds of the executable that Windows has locked. Other checks
+invoke their inventoried tools directly. Child tools do not inherit Cargo run's
+launcher package metadata; that metadata otherwise changes cargo-machete's
+argument interpretation. Toolchain, jobserver, and database configuration remain
+available to the checks. Reports name this execution adapter and
+record its actual argument vector alongside the canonical contributor command.
+Trusted base references are
+resolved to ancestor commit IDs before being passed to the history checks.
+Rejected CLI input is not echoed, and arbitrary command or output-path options
+are not supported.
+
+This catalogue and its sensors remain reviewable repository policy. Incoming
+code can change them; they cannot certify their own integrity. CODEOWNERS routes
+review, while required independent approval and required status checks depend
+on externally configured GitHub protections. Those settings remain unverified;
+see [harness protection](harness-protection.md#ownership-merge-controls-and-maintenance).
+
+## Select an explicit group
+
+List all check metadata with `cargo xtask verify --list`. The output is JSON for
+inspection; it is not a result report. Run a group from the repository root:
+
+| Group | Command | Selected checks |
+|:--|:--|:--|
+| Architecture | `cargo xtask verify --group architecture --base origin/main` | Repository policy, architecture policy, migration immutability, current/index/incoming secret scan, real scanner fixtures, and xtask sensor tests |
+| Supply chain | `cargo xtask verify --group supply-chain` | cargo-deny and cargo-machete |
+| Rust | `cargo xtask verify --group rust` | Formatting, SQLx metadata, workspace Clippy, workspace tests, and rustdoc |
+| OpenAPI | `cargo xtask verify --group openapi` | Modular contract linting, reference and extraction rules, and committed bundle freshness |
+| Acceptance | `cargo xtask verify --group acceptance --base origin/main` | Exactly the twelve canonical acceptance checks in contributor-policy order |
+
+Scope is explicit; the runner does not guess from changed files. Acceptance
+includes scanner fixtures, but focused xtask sensor tests and OpenAPI remain
+separate inventory entries. The CI architecture group runs the sensor tests,
+and the full workspace test command also includes them.
+
+A selected group's success says only that all selected checks passed. When the
+published HTTP contract changes, the OpenAPI group is also required. Deployment,
+configuration, startup, readiness, or container changes still require the
+existing Compose smoke checks. The runner does not absorb those operational
+checks or claim that a twelve-command acceptance run proves production
+readiness. Use the [harness tiers](harness.md#cost-and-timing-tiers) and the
+canonical workflow to determine the complete applicable gate.
+
+## Prepare prerequisites
+
+The inventory reports the required versions. Rust is pinned to 1.98.1, Gitleaks
+to 8.30.1, cargo-deny to 0.20.2, cargo-machete to 0.9.2, SQLx CLI to 0.9.0, and
+pnpm to 12.5.1. Node.js uses the reviewed major version 24; Git must be installed.
+The runner probes versions and records only numeric version tokens. An
+unavailable or unsupported tool is a blocker, not a passing check. Tool
+installation remains explicit in the [development guide](README.md),
+[dependency management guide](dependency-management.md), and
+[scanner installation guide](harness-protection.md#commands-and-prerequisites).
+
+For architecture or acceptance, supply a current trusted published base with
+`--base`. Fetch the latest history before using `origin/main`. CI provides the
+PR event base or push predecessor SHA; do not select an older ancestor to hide
+published changes. The runner records the resolved ID rather than the caller's
+free-form reference. Missing, unrelated, or unavailable history blocks the
+checks that need it. Base freshness remains the caller's responsibility.
+
+For database-backed checks, `DATABASE_URL` must be nonempty and point to fully
+migrated PostgreSQL 18.6. **`SQLX_OFFLINE` must be unset**, including values such
+as `false`: online acceptance must not substitute cached query descriptions for
+schema checking. Use the setup and migration instructions in the
+[development guide](README.md#local-setup). The runner checks only these
+configuration conditions. It does not contact PostgreSQL during preflight,
+validate its version, verify migrations, or assert readiness. The actual SQLx,
+Clippy, tests, and rustdoc commands establish their own results.
+
+For OpenAPI, install the locked dependencies explicitly with
+`pnpm install --frozen-lockfile`. The runner requires the installed tools and
+pinned Node/pnpm versions; the contract checker remains the authority for the
+contract and bundle.
+
+cargo-deny needs current advisory data and may use the network. Other commands
+may also need already installed dependencies or a usable service. The runner
+cannot reliably distinguish a policy finding from every operational error
+inside a started tool. A nonzero started command is **failed**, including an
+advisory-fetch failure; explain the operational blocker when reporting it and
+rerun when available. This status never implies that a security review ran to
+completion or found a vulnerability.
+
+## Execution and result semantics
+
+Checks run in inventory order. A blocked or failed check does not prevent
+independent later checks from producing evidence. The runner adds no automatic
+retries, setup commands, package downloads, database migrations, or skip-to-pass
+behavior. Underlying tools retain their ordinary behavior, including Cargo
+resolution and advisory downloads. Executed Rust commands receive the same
+warnings-as-errors environment as CI.
+
+| Result | Meaning | Evidence |
+|:--|:--|:--|
+| Passed | The selected command started and returned success | Exit code zero and elapsed time |
+| Failed | The command started and returned failure or was terminated | Numeric exit code when available; null for termination without a code |
+| Not run | A required condition blocked execution, or the process could not start | Safe blocker description; no invented exit code or executed arguments |
+
+The group exits unsuccessfully if any selected check failed or did not run.
+Failure to create fresh evidence also fails the invocation. `complete_pass`
+means all checks in that explicit group passed; it is not an acceptance claim
+for a focused group. A failed check keeps its first observed result until a
+separate invocation is run. Do not rewrite a previous report to hide failure.
+
+## Evidence and privacy
+
+Each invocation creates a distinct JSON file under ignored
+`target/verification/`. Names identify the group, process, and timestamp; reports
+are created afresh rather than overwriting stale results. The owned evidence
+parents must be directories and may not redirect through a symlink or Windows
+junction. There is no caller-selected artifact destination.
+
+A report contains its schema version, selected group, complete-pass flag,
+starting and ending Git HEAD and dirty-state observations, a run-level blocker
+when source or CI consistency fails, resolved trusted
+base, safe tool-version observations, fixed check metadata, execution arguments
+with the resolved base, result, exit code where meaningful, and elapsed time.
+It contains no captured stdout/stderr, raw version-probe output, command errors,
+file contents, database credentials, connection URLs, or environment dumps.
+The existing secret sensor separately retains its redacted diagnostics.
+
+Ordinary check output is inherited by the console. It is not appended to JSON,
+but terminal recording and CI logs may persist it outside this artifact policy.
+Do not paste logs containing credentials, customer data, or production telemetry
+into issues. Investigate a failed command using the safe location or structured
+error supplied by the underlying tool, and sanitize any necessary shared detail.
+
+HEAD and dirty-state observations are context, not content hashes or an
+attestation. Two dirty trees can have the same observations, and files can
+change during execution. A report does not prove that the current tree equals
+the verified tree, that all tools examined every byte, or that policy is
+independently trusted. Avoid concurrent edits during final verification,
+review the resulting diff, and rerun affected checks after a change. A detected
+HEAD or clean/dirty transition, unavailable final Git state, or changed CI wiring
+fails the group; changes within an already-dirty tree remain a documented limit. CI artifact
+handling and retention remain governed by the workflow and GitHub settings.
+
+## CI and contributor handoff
+
+CI invokes the same architecture, supply-chain, Rust, and OpenAPI groups after
+its explicit prerequisite setup. Existing job names and the full applicable
+gates remain in place; Compose smoke verification retains its own job.
+
+The reviewed [workflow template](../../.github/ci.yml.template) owns setup,
+services, permissions, artifact handling, and cleanup. Catalogue placeholders
+supply group commands and pinned tool versions. `cargo xtask verify --check-ci`
+compares the entire rendered document with the checked-in workflow, normalizing
+LF/CRLF line endings. This checks repository wiring, not external GitHub behavior
+or merge protections. Every group performs the same preflight comparison.
+
+For an intentional CI policy change, edit the template or catalogue, review the
+policy diff, then explicitly run `cargo xtask verify --write-ci`. Commit the
+regenerated workflow and run `--check-ci`. Ordinary verification never regenerates
+or silently repairs stale policy. A mutable template can itself weaken a gate,
+so matching generated content never replaces independent policy review.
+
+At handoff, report the repository, milestone, issue content, assumptions, and
+**passed / failed / not run** evidence using the
+[completion policy](../../CONTRIBUTING.md#completion-report). Reference the
+selected group and report when useful. Name any missing prerequisite and the
+remaining risk; a passing architecture report cannot replace unavailable
+PostgreSQL-backed verification. A fresh local report does not establish that CI
+or protected-branch settings passed.

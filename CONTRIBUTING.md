@@ -23,6 +23,7 @@ optional choice.
 | Concise tool-facing working agreement | [AGENTS.md](AGENTS.md) |
 | Progressive task-to-document routing | [documentation map](docs/README.md) |
 | Harness tiers and executable feedback | [coding harness](docs/development/harness.md) |
+| Executable check inventory, runner groups, and safe result evidence | [verification guide](docs/development/verification.md) |
 | Rust, architecture, tests, and operations | [engineering standards](docs/development/engineering-standards.md) |
 | Direct dependency ownership and workspace lint policy | [dependency rules](docs/architecture/dependency-rules.md) |
 | PostgreSQL schemas and migrations | [SQL migration criteria](docs/development/sql-migrations.md) |
@@ -196,8 +197,11 @@ The supply-chain checks require the pinned `cargo-deny` and `cargo-machete`
 versions from the [dependency management guide](docs/development/dependency-management.md).
 `cargo deny check` fetches the current RustSec advisory database. Run both
 checks on the locked workspace before the database-backed gate; CI runs them in
-a separate job. A tool download or advisory-database failure is **not run**,
-not a passing dependency review.
+a separate job. A prerequisite that blocks execution is **not run**. A started
+command that fails, including an advisory-database fetch failure, is **failed**;
+report the operational blocker and incomplete review rather than assuming a
+policy finding. Neither result is a passing dependency review. See the
+[verification guide](docs/development/verification.md#execution-and-result-semantics).
 
 Regenerate `.sqlx` with the same workspace, target, and feature arguments after
 changing a migration or checked query. The committed descriptions let image
@@ -213,7 +217,16 @@ T0 task routing through T3 service-backed and explicitly requested specialist
 checks. Local Compose smoke verification is required when deployment,
 configuration, startup, readiness, or container behavior changes. The
 supply-chain commands above remain required; record their exact evidence.
-There is no additional aggregate runner beyond the documented commands.
+
+The [authoritative inventory and runner](docs/development/verification.md)
+coordinate these ordinary commands with `cargo xtask verify --group acceptance --base origin/main`; the exact twelve-command gate above is unchanged.
+`cargo xtask verify --list` prints inventory metadata without running checks.
+Focused architecture, supply-chain, Rust, and OpenAPI groups provide explicit
+scope and fresh ignored metadata-only evidence. Passing a focused group does
+not replace acceptance or additional applicable contract and Compose checks.
+Prepare prerequisites explicitly; online database checks require `SQLX_OFFLINE`
+to be unset. CI wiring is checked against a reviewed workflow template and the
+same inventory; matching policy does not attest its independent integrity.
 
 ## Documentation
 

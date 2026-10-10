@@ -10,7 +10,8 @@
 - Run PostgreSQL for SQLx-checked queries and the complete Rust acceptance
   gate.
 - Use the [coding harness](harness.md) to select the applicable feedback tier
-  and report unavailable checks honestly.
+  and the [verification runner](verification.md) for explicit scope and safe
+  passed/failed/not-run evidence.
 
 ## Local setup
 
@@ -123,7 +124,10 @@ cargo xtask architecture
 ```
 
 Then run the complete database-backed Rust gate from
-[CONTRIBUTING.md](../../CONTRIBUTING.md#verification). Its commands include:
+[CONTRIBUTING.md](../../CONTRIBUTING.md#verification). The
+[verification runner](verification.md) coordinates that unchanged acceptance
+gate and writes fresh metadata-only reports. Focused groups do not replace the
+full gate. Its Rust commands include:
 
 ```powershell
 cargo fmt --all --check
@@ -135,7 +139,8 @@ cargo doc --workspace --no-deps --locked
 
 SQLx macros connect to `DATABASE_URL` during compilation. Apply every migration
 before running SQLx preparation, Clippy, tests, or documentation builds that
-compile checked queries.
+compile checked queries. Unset `SQLX_OFFLINE` for online acceptance; cached image
+builds and online verification have different purposes.
 
 The repository and architecture commands need no database. The repository
 command validates mechanical documentation and template policy. The
@@ -150,6 +155,7 @@ policy, and advisory-data requirements.
 
 - [Engineering standards](engineering-standards.md)
 - [Coding harness and feedback tiers](harness.md)
+- [Reproducible verification and safe evidence](verification.md)
 - [Published history and secret protection](harness-protection.md)
 - [Harness hardening execution plan](plans/harness-hardening.md)
 - [Dependency management and supply-chain gate](dependency-management.md)

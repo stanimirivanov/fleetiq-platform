@@ -6,8 +6,9 @@ Status: active. Close the audited gaps in three stages: dependency ownership,
 published-history and secret protection, then reproducible verification and
 recovery evidence. Deliver independently reviewable pull requests. The first
 two slices enforce dependency ownership, lint inheritance, migration
-immutability, and pinned secret detection. Verification coordination and recovery
-remain planned; external merge protection remains unverified.
+immutability, and pinned secret detection. Verification coordination is now
+implemented with local harness verification; scoped context/lifecycle and runtime recovery
+remain separate planned slices. External merge protection remains unverified.
 
 ## Outcome and invariants
 
@@ -30,7 +31,9 @@ belong to the agent runtime and CI identity.
 |:--|:--|:--|:--|
 | 1. Dependency ownership | Exact direct external edges per member and kind, rejected nonmember paths and root source overrides, shared lint inheritance, bypass fixtures in early CI | M01 - Decisions and Contracts | Implemented; structural and harness checks verified locally |
 | 2. Published history and sensitive artifacts | Base-revision migration immutability sensor, pinned redacted secret scanning, explicit handling of policy changes and scanner exceptions | M01 - Decisions and Contracts | Implemented; local verification recorded below; external merge settings unverified |
-| 3. Verification and recovery | Reproducible check inventory and evidence, scoped context/lifecycle reconciliation, cross-platform sensor tests, runtime outage/recovery evidence and calibrated performance budgets | M01 - Decisions and Contracts for harness work; M08 - Production Readiness for runtime qualification | Planned; split into coherent PRs before implementation |
+| 3a. Verification inventory and evidence | Authoritative commands and versions, explicit groups, honest metadata-only reports, and reviewed CI generation without weakening acceptance | M01 - Decisions and Contracts | Implemented; local evidence below; PostgreSQL gate unavailable; ADR 0098 remains proposed |
+| 3b. Scoped context and sensor resilience | Task-justified scoped guidance, evidence-based ADR lifecycle reconciliation, OpenAPI bypass fixtures, and cross-platform sensor coverage | M01 - Decisions and Contracts | Planned; independently reviewable follow-up |
+| 3c. Runtime recovery qualification | Service outage/recovery smoke evidence, measured load baselines, and later calibrated performance budgets | M08 - Production Readiness | Planned; baseline measurement precedes blocking thresholds |
 
 ### Stage 1: dependency ownership
 
@@ -78,19 +81,65 @@ unreadable inputs, ignored fingerprints/inline suppressions, and novel values
 inside an exactly excepted fixture file. Prove incoming history detects a secret
 subsequently removed. Preserve complete Rust/database and supply-chain gates.
 
-### Stage 3: verification and recovery
+### Stage 3a: verification inventory and evidence
 
-Define one authoritative check inventory with scope, prerequisites, exact tool
-versions, outputs, and passed/failed/not-run evidence. Keep the canonical Rust
-gate intact and test any runner against missing prerequisites and failing
-commands. Reconcile ADR lifecycle using explicit approval/history evidence;
-passing tests alone do not turn a proposal into an accepted decision.
+Implement one Rust-owned catalogue within the existing xtask tooling crate:
+fixed command arguments, explicit groups, expected outcomes, tool versions,
+prerequisites, and acceptance membership. Keep the twelve canonical acceptance
+commands and their order intact. Add `cargo xtask verify` to coordinate ordinary
+commands and write fresh ignored metadata-only evidence. Missing prerequisites
+and process-start failures are not run; unsuccessful started commands are failed,
+including operational failures whose underlying cause needs diagnosis. Neither
+can become a successful review. Continue independent checks without retries.
 
-Add scoped guidance where repeated tasks justify it, cross-platform fixtures,
-and OpenAPI sensor bypass tests. Extend runtime smoke scenarios to service
-outage and recovery with useful bounded failure evidence. Measure stable load
-baselines before proposing blocking performance thresholds. Separate harness
-coordination from M08 runtime qualification so each PR proves one outcome.
+Compare contributor and PR-template acceptance commands with the catalogue.
+Generate CI from a reviewed template plus catalogue-owned group and version
+placeholders, then compare the entire workflow during verification. Ordinary
+checks never silently regenerate stale policy. CODEOWNERS and external review
+protection remain necessary because both the inventory and template are mutable
+policy. Record safe versions, explicit group scope, trusted base, source HEAD and
+dirty-state observations, elapsed time, and result; persist no raw tool output,
+connection URL, credential, or environment dump. Source observations are context,
+not content hashes or certificates.
+
+The [verification guide](../verification.md) documents setup, scope, failures,
+privacy, and limits. [ADR 0098](../../adr/0098-coordinate-reproducible-verification-and-evidence.md)
+remains proposed pending explicit human review. Passing tests does not accept a
+durable decision. This slice changes no runtime contract or production behavior.
+
+Acceptance: complete inventory and unchanged acceptance order; positive and
+negative CI/template drift fixtures; missing/wrong tools, missing database
+configuration, offline-mode refusal, command failure/start failure, continued
+independent execution, fresh evidence, and redirected-path rejection. Run the
+actual focused groups and applicable full gate; record results after verification.
+
+### Stage 3b: scoped context and sensor resilience
+
+Add scoped guidance only where repeated tasks justify it. Reconcile ADR lifecycle
+using explicit approval and history evidence rather than guessing from passing
+checks or implemented code. Extend OpenAPI sensors with bypass fixtures and
+cross-platform repository-sensor coverage. Keep guidance progressively routed
+and pair each deterministic rule with useful positive and negative evidence.
+Deliver this as a separate M01 slice; do not combine it with runtime qualification.
+
+Acceptance: scoped rules have demonstrated owning tasks and canonical routes;
+lifecycle changes identify real approval/history evidence; added sensor fixtures
+prove malformed and bypassing inputs fail on their supported platforms while
+valid inputs remain accepted.
+
+### Stage 3c: runtime recovery qualification
+
+Extend runtime smoke scenarios to service outage and recovery with bounded,
+useful failure evidence. Measure stable load baselines before proposing blocking
+performance thresholds. Record environment, repeatability, recovery conditions,
+and observation limits. This M08 slice belongs to production-readiness
+qualification rather than development-command coordination. Calibrate and review
+budgets only after measurements are stable; do not invent acceptance thresholds
+from unqualified local timings.
+
+Acceptance: outage and recovery behavior is observable under controlled failures;
+failure evidence is bounded and useful; repeatable baseline measurements support
+any subsequently proposed performance budget.
 
 ## Compatibility, rollout, and rollback
 
@@ -148,6 +197,36 @@ The PostgreSQL-backed workspace gate remains not run for the prerequisites
 reported above. Required external merge settings remain unverified, and the
 single routed owner needs an independent authorized owner/team before mandatory
 Code Owner review can cover that owner's PRs.
+
+Local stage-3a evidence on 10 October 2026: all 188 Windows xtask tests passed
+with no failures or ignored cases. Four additional Unix-only sensor regressions
+require Linux CI. Repository policy passed for 141 Markdown documents;
+architecture policy retained 16 members, 41 internal and 34 external dependency
+edges, and 16 inherited lint policies. The history check retained all 28
+published migrations with zero additions against
+bc1c64012b146a04eec38d08b5f81f62c2910477 (origin/main).
+The real scanner passed eight bypass scenarios and scanned 749 reviewable files
+plus raw index and incoming history. The local incoming range is empty because
+this implementation remains uncommitted; history fixtures prove removed
+incoming secrets are detected.
+
+Complete workflow comparison, formatting, focused all-target xtask Clippy with
+warnings denied, focused rustdoc, pinned supply-chain checks, and the actual
+OpenAPI group passed. Existing duplicate-version warnings remain advisory;
+the existing two Redocly suppressions are unchanged. Real runs exposed and
+corrected Windows nested executable rebuild failures and Cargo launcher
+metadata leaking into cargo-machete's argument parser. The compiled-task adapter,
+context isolation, and version compatibility have regression coverage.
+
+The final acceptance report recorded eight passed, zero failed, and four
+not-run checks; its exit was nonzero as required for incomplete acceptance.
+DATABASE_URL remains unset, so SQLx metadata, workspace Clippy, workspace tests,
+and workspace rustdoc were not run. No Docker executable is exposed in this
+session. CI must still verify the PostgreSQL-backed gate; Compose runtime
+qualification is unchanged. No production code, migration, contract, dependency
+version, or lockfile changed. Metadata reports remain ignored and do not attest
+dirty-file contents, frozen advisory data, policy integrity, or external merge
+controls. ADR 0098 remains proposed for human review.
 
 Module cohesion, broad security completeness, model capability reduction,
 customer-specific behavior, and production service objectives remain review or

@@ -11,8 +11,10 @@
 - Run `pnpm check:openapi` for changes to the published HTTP contract.
 - Run the complete PostgreSQL-backed Rust gate before handoff; use Compose
   checks when deployment or runtime behavior changes.
-- Run the documented supply-chain commands and report every unavailable check
-  as not run with its blocker and residual risk.
+- Use the [verification inventory and runner](verification.md) for explicit group
+  scope and safe evidence; a focused group never replaces acceptance.
+- Report blocked execution as not run and an unsuccessful started command as
+  failed, with its blocker and residual risk.
 - Turn recurring review findings into clearer guidance, an early deterministic
   sensor, a behavioral test, or an explicit owned exception.
 
@@ -55,6 +57,7 @@ cannot run.
 | [Dependency rules](../architecture/dependency-rules.md) | Package roles, exact internal/external ownership, and shared lint inheritance | Crate or direct dependency changes |
 | [Engineering standards](engineering-standards.md) | Rust design, tests, documentation, security, and operations | Implementation work |
 | [Harness protection](harness-protection.md) | Trusted bases, immutable SQL history, secret detector scope, exceptions, and policy ownership | History, scanner, or policy changes |
+| [Reproducible verification](verification.md) | Authoritative command inventory, explicit runner groups, prerequisites, safe evidence, and reviewed CI generation | Verification, CI, or result-reporting changes |
 | [SQL migration criteria](sql-migrations.md) | Persisted-data invariants and migration verification | Database work |
 | [OpenAPI maintenance skill](../../.agents/skills/openapi/SKILL.md) | Modular HTTP contract layout, references, registration, and bundle workflow | Published HTTP contract work |
 | [Operations index](../operations/README.md) | Installation and runtime procedures | Deployment or operational work |
@@ -69,7 +72,11 @@ entry points.
 ## Feedback sensors
 
 Contributors may run a focused test while editing, but must run every
-applicable acceptance check before handoff.
+applicable acceptance check before handoff. The following table explains sensor
+purpose; the [executable catalogue](../../crates/xtask/src/verification/catalogue.rs)
+is authoritative for command arguments, grouping, versions, and prerequisites.
+The [verification guide](verification.md) defines runner scope and honest
+metadata-only evidence.
 
 | Command or sensor | What it proves | Tier and dependencies |
 |:--|:--|:--|
@@ -87,6 +94,8 @@ applicable acceptance check before handoff.
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | Workspace code passes the configured Rust static analysis | T2; migrated PostgreSQL for checked queries |
 | `cargo test --workspace --all-features --locked` | Unit and integration behavior passes with the committed dependency graph | T2; migrated PostgreSQL for database tests |
 | `cargo doc --workspace --no-deps --locked` | Public documentation builds with workspace rustdoc lints | T2; migrated PostgreSQL for checked queries |
+| `cargo xtask verify --check-ci` | The complete checked-in CI workflow matches its reviewed template and inventory-owned commands and tool versions | T1; repository policy files; also performed before each runner group |
+| `cargo xtask verify --group acceptance --base origin/main` | Coordinates every canonical acceptance command and records selected-scope results without treating blocked execution as success | T1/T2; all inventory prerequisites; focused groups have smaller explicit scope |
 | Local Compose smoke checks | The container builds, starts, reports health, preserves isolation, and stops cleanly | T3; Docker with Compose and free configured host ports |
 
 The T2 commands, order, and unavailable-check protocol are canonical in
@@ -175,8 +184,9 @@ remaining gaps and delivery order. Implemented dependency ownership and lint
 inheritance, migration immutability, and pinned secret scanning are blocking
 sensors. See [harness protection](harness-protection.md) for explicit trusted-base
 selection, bootstrap scope, and external review requirements. Reproducible
-verification coordination, recovery evidence, and calibrated performance
-budgets remain planned.
+verification coordination is implemented and locally verified; [its guide](verification.md) preserves the exact acceptance gate.
+Scoped context/lifecycle reconciliation, further bypass fixtures, recovery
+evidence, and calibrated performance budgets remain later slices.
 
 ## Extending the harness
 

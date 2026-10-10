@@ -1,0 +1,147 @@
+//! Exact generated-workflow verification without a second YAML interpreter.
+//!
+//! The reviewed template owns setup, service, permission, and cleanup semantics.
+//! The catalogue supplies runner groups and CLI versions. Comparing the entire
+//! rendered document rejects disabled, conditional, or commented-out checks as
+//! well as changed commands; matching selected YAML-looking lines would not.
+
+#[cfg(test)]
+mod tests;
+
+use std::{fs, path::Path};
+
+use super::catalogue::{Group, Tool};
+
+const TEMPLATE: &str = ".github/ci.yml.template";
+const WORKFLOW: &str = ".github/workflows/ci.yml";
+
+/// Verifies the checked-in workflow matches its reviewed template and inventory.
+pub(crate) fn check(root: &Path) -> Result<(), String> {
+    let expected = render(&read_regular(root, TEMPLATE)?)?;
+    check_document(&read_regular(root, WORKFLOW)?, &expected)
+}
+
+/// Explicitly regenerates the workflow after an intentional policy update.
+///
+/// Ordinary verification never calls this function or rewrites stale content.
+pub(crate) fn write(root: &Path) -> Result<(), String> {
+    let expected = render(&read_regular(root, TEMPLATE)?)?;
+    // Requiring an existing regular destination avoids following a symlink or
+    // creating a second workflow when the reviewed CI entry point is missing.
+    let actual = read_regular(root, WORKFLOW)?;
+    if actual == expected {
+        return Ok(());
+    }
+    fs::write(root.join(WORKFLOW), expected)
+        .map_err(|error| format!("cannot write {WORKFLOW}: {}", error.kind()))
+}
+
+fn read_regular(root: &Path, relative: &str) -> Result<String, String> {
+    let mut candidate = root.to_path_buf();
+    for component in Path::new(relative).components() {
+        candidate.push(component);
+        let metadata = fs::symlink_metadata(&candidate)
+            .map_err(|error| format!("cannot read {relative}: {}", error.kind()))?;
+        if metadata.file_type().is_symlink() || redirected(&metadata) {
+            return Err(format!("{relative} must not use a symlink or junction"));
+        }
+    }
+    if !candidate.is_file() {
+        return Err(format!("{relative} must be a regular file"));
+    }
+    fs::read_to_string(candidate)
+        .map_err(|error| format!("cannot read {relative} as UTF-8: {}", error.kind()))
+}
+
+// Windows directory junctions can redirect a regular-looking policy path.
+#[cfg(windows)]
+fn redirected(metadata: &fs::Metadata) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    metadata.file_attributes() & 0x400 != 0
+}
+
+#[cfg(not(windows))]
+fn redirected(_: &fs::Metadata) -> bool {
+    false
+}
+fn normalize(document: &str) -> Result<String, String> {
+    let normalized = document.replace("\r\n", "\n");
+    if normalized.contains('\r') {
+        return Err(
+            "CI policy requires LF or CRLF line endings, without bare carriage returns".into(),
+        );
+    }
+    Ok(normalized)
+}
+
+fn render(template: &str) -> Result<String, String> {
+    let mut result = normalize(template)?;
+    for group in [
+        Group::Architecture,
+        Group::SupplyChain,
+        Group::Rust,
+        Group::Openapi,
+    ] {
+        let token = format!("@verify:{}@", group.name());
+        let mut invocation = format!("cargo xtask verify --group {}", group.name());
+        if group == Group::Architecture {
+            invocation.push_str(" --base \"$HARNESS_BASE\"");
+        }
+        replace_token(&mut result, &token, &invocation, 1)?;
+    }
+    for (name, tool, count) in [
+        ("deny", Tool::Deny, 1),
+        ("machete", Tool::Machete, 1),
+        ("sqlx", Tool::Sqlx, 1),
+        ("pnpm", Tool::Pnpm, 1),
+        ("node", Tool::Node, 2),
+    ] {
+        replace_token(
+            &mut result,
+            &format!("@tool:{name}@"),
+            tool.expected(),
+            count,
+        )?;
+    }
+    if result.contains("@verify:") || result.contains("@tool:") {
+        return Err(format!(
+            "{TEMPLATE} contains an unknown verification placeholder"
+        ));
+    }
+    Ok(result)
+}
+
+fn replace_token(
+    document: &mut String,
+    token: &str,
+    replacement: &str,
+    expected_count: usize,
+) -> Result<(), String> {
+    if document.matches(token).count() != expected_count {
+        return Err(format!(
+            "{TEMPLATE} requires exactly {expected_count} occurrences of {token}"
+        ));
+    }
+    *document = document.replace(token, replacement);
+    Ok(())
+}
+
+fn check_document(actual: &str, expected: &str) -> Result<(), String> {
+    let actual = normalize(actual)?;
+    if actual == expected {
+        return Ok(());
+    }
+    let line = actual
+        .lines()
+        .zip(expected.lines())
+        .position(|(left, right)| left != right)
+        .map_or_else(
+            || actual.lines().count().min(expected.lines().count()) + 1,
+            |index| index + 1,
+        );
+    Err(format!(
+        "{WORKFLOW}:{line} differs from the reviewed template and verification catalogue; \
+         review policy changes, then run cargo xtask verify --write-ci; \
+         policy: docs/development/verification.md"
+    ))
+}

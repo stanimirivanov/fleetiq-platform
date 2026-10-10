@@ -16,7 +16,7 @@ pub(super) struct Entry {
     pub(super) object: String,
 }
 
-pub(super) fn resolve_base(root: &Path, base: &str) -> Result<String, MigrationCheckError> {
+pub(crate) fn resolve_base(root: &Path, base: &str) -> Result<String, MigrationCheckError> {
     let object = format!("{base}^{{commit}}");
     let output = run(
         root,
@@ -164,7 +164,7 @@ pub(super) fn parse_blobs(
     Ok(blobs)
 }
 
-pub(super) fn command(root: &Path) -> Command {
+pub(crate) fn command(root: &Path) -> Command {
     let mut command = Command::new("git");
     command.current_dir(root);
     // Trust only the caller-selected checkout when a sandbox or container user

@@ -34,10 +34,14 @@ cargo machete --with-metadata --skip-target-dir
 ```
 
 `cargo-deny` checks the complete locked dependency graph against `deny.toml`.
-It fetches the current RustSec advisory database. A network or database-fetch
-failure means the check did not run; report that condition and rerun when the
-database is available. CI runs the commands in a separate `Supply-chain
-policy` job after the repository and architecture checks.
+It fetches the current RustSec advisory database. If a prerequisite prevents the
+command from starting, record **not run**. If the started command fails to fetch
+the database, record **failed** with the operational blocker and incomplete
+review; that status is neither a passing review nor proof of a vulnerability.
+Rerun when advisory data is available. The
+[verification runner](verification.md) preserves these statuses. CI runs the
+same supply-chain group in a separate `Supply-chain policy` job after the
+repository and architecture checks.
 
 `cargo-machete` is a fast heuristic for unused direct dependencies. Its
 metadata mode resolves renamed packages and target-specific declarations, but
