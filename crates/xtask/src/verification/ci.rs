@@ -10,7 +10,7 @@ mod tests;
 
 use std::{fs, path::Path};
 
-use super::catalogue::{Group, Tool};
+use super::catalogue::{CHECKS, Group, Tool};
 
 const TEMPLATE: &str = ".github/ci.yml.template";
 const WORKFLOW: &str = ".github/workflows/ci.yml";
@@ -87,14 +87,24 @@ fn render(template: &str) -> Result<String, String> {
         if group == Group::Architecture {
             invocation.push_str(" --base \"$HARNESS_BASE\"");
         }
-        replace_token(&mut result, &token, &invocation, 1)?;
+        let count = if group == Group::Openapi { 2 } else { 1 };
+        replace_token(&mut result, &token, &invocation, count)?;
+    }
+    // Supplemental Windows steps use existing inventory commands rather than
+    // maintaining a second command list or pretending to run the full gate.
+    for id in ["repository", "architecture", "sensor-tests"] {
+        let check = CHECKS
+            .iter()
+            .find(|check| check.id == id)
+            .ok_or_else(|| format!("verification catalogue is missing {id}"))?;
+        replace_token(&mut result, &format!("@check:{id}@"), check.command, 1)?;
     }
     for (name, tool, count) in [
         ("deny", Tool::Deny, 1),
         ("machete", Tool::Machete, 1),
         ("sqlx", Tool::Sqlx, 1),
-        ("pnpm", Tool::Pnpm, 1),
-        ("node", Tool::Node, 2),
+        ("pnpm", Tool::Pnpm, 2),
+        ("node", Tool::Node, 3),
     ] {
         replace_token(
             &mut result,
@@ -103,7 +113,7 @@ fn render(template: &str) -> Result<String, String> {
             count,
         )?;
     }
-    if result.contains("@verify:") || result.contains("@tool:") {
+    if result.contains("@verify:") || result.contains("@tool:") || result.contains("@check:") {
         return Err(format!(
             "{TEMPLATE} contains an unknown verification placeholder"
         ));

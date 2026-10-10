@@ -2,7 +2,12 @@
 
 ## Status
 
-Proposed, 30 September 2026.
+Accepted, 30 September 2026.
+
+Acceptance reconciled from the approved architecture and harness sequence and
+merged PR #192, commit `891fa6a5d8ea0fc9099f10877590f2e0054de5d0`.
+This records merge evidence; it does not claim independently enforced review
+settings or infer acceptance from passing tests.
 
 Supersedes: none. Superseded by: none.
 

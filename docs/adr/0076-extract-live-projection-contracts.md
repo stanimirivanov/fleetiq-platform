@@ -2,7 +2,12 @@
 
 ## Status
 
-Proposed, 1 October 2026.
+Accepted, 1 October 2026.
+
+Acceptance reconciled from the approved architecture and harness sequence and
+merged PR #208, commit `31244168bf5ac19da1bec73223ab8fbb0d955372`.
+This records merge evidence; it does not claim independently enforced review
+settings or infer acceptance from passing tests.
 
 Supersedes: ADR 0008 (crate placement only). Superseded by: none.
 

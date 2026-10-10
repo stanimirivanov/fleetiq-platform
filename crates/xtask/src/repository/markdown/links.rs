@@ -22,7 +22,7 @@ fn validate_link(
     if destination.is_empty() {
         return None;
     }
-    if is_machine_absolute(destination) {
+    if is_machine_absolute(destination) || is_escaped_drive_absolute(destination) {
         return Some(violation(
             document,
             link.line,
@@ -45,6 +45,17 @@ fn validate_link(
         (Ok(path), Ok(fragment)) => (path, fragment),
         (Err(violation), _) | (_, Err(violation)) => return Some(violation),
     };
+
+    // Percent escapes must not turn a forbidden machine path into a local
+    // filename on Unix or a differently resolved drive path on Windows.
+    if is_machine_absolute(&decoded_path) {
+        return Some(violation(
+            document,
+            link.line,
+            destination,
+            "local Markdown destinations cannot use machine-specific absolute paths",
+        ));
+    }
 
     let relative_target = if decoded_path.is_empty() {
         PathBuf::from(&document.relative_path)
@@ -176,6 +187,20 @@ fn is_machine_absolute(destination: &str) -> bool {
             && bytes[0].is_ascii_alphabetic()
             && bytes[1] == b':'
             && matches!(bytes[2], b'/' | b'\\'))
+}
+
+// A drive letter otherwise resembles a valid URI scheme. Decode only its
+// escaped first separator before the external-URI early exit; arbitrary external
+// destinations retain their existing unvalidated percent-encoding semantics.
+fn is_escaped_drive_absolute(destination: &str) -> bool {
+    let bytes = destination.as_bytes();
+    bytes.len() >= 3
+        && bytes[0].is_ascii_alphabetic()
+        && bytes[1] == b':'
+        && bytes[2] == b'%'
+        && percent_decode_str(&destination[2..])
+            .next()
+            .is_some_and(|byte| matches!(byte, b'/' | b'\\'))
 }
 
 fn resolve_relative_path(source: &str, destination: &str) -> Result<PathBuf, String> {

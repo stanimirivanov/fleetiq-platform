@@ -272,18 +272,55 @@ fn published_symlink_is_rejected_without_reading_its_target() {
     fixture.rejects("ordinary non-executable SQL file");
 }
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 #[test]
 fn substituted_migration_directory_is_rejected() {
-    use std::os::unix::fs::symlink;
     let fixture = Fixture::new();
+    fixture
+        .check()
+        .expect("ordinary migration directories pass");
+    let original_bytes = fs::read(fixture.root.join(FIRST)).unwrap();
     fs::rename(
         fixture.root.join("migrations"),
         fixture.root.join("original"),
     )
-    .expect("fixture directory can be renamed");
-    symlink("original", fixture.root.join("migrations")).expect("fixture symlink can be created");
+    .expect("owned fixture directory can be renamed");
+    let link = fixture.root.join("migrations");
+    let target = fixture.root.join("original");
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(&target, &link).expect("fixture symlink can be created");
+    #[cfg(windows)]
+    {
+        let status = Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(&link)
+            .arg(&target)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .expect("junction fixture creation executes");
+        assert!(status.success(), "junction setup must succeed, never skip");
+    }
+    let _redirect = MigrationDirectoryLink(link);
     fixture.rejects("must be a real directory");
+    assert_eq!(
+        fs::read(target.join("0001_foundation.sql")).unwrap(),
+        original_bytes,
+        "rejecting the redirect preserves its target"
+    );
+}
+
+#[cfg(any(unix, windows))]
+struct MigrationDirectoryLink(PathBuf);
+
+#[cfg(any(unix, windows))]
+impl Drop for MigrationDirectoryLink {
+    fn drop(&mut self) {
+        #[cfg(unix)]
+        fs::remove_file(&self.0).expect("remove only the owned migration symlink");
+        #[cfg(windows)]
+        fs::remove_dir(&self.0).expect("remove only the owned migration junction");
+    }
 }
 
 #[test]

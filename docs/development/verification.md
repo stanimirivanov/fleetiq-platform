@@ -64,7 +64,10 @@ inspection; it is not a result report. Run a group from the repository root:
 Scope is explicit; the runner does not guess from changed files. Acceptance
 includes scanner fixtures, but focused xtask sensor tests and OpenAPI remain
 separate inventory entries. The CI architecture group runs the sensor tests,
-and the full workspace test command also includes them.
+and the full workspace test command also includes them. The Windows harness
+job also runs the inventoried repository, architecture, and sensor-test commands,
+followed by the same OpenAPI group. Its extra coverage does not replace the
+Linux, PostgreSQL-backed, or Compose gates.
 
 A selected group's success says only that all selected checks passed. When the
 published HTTP contract changes, the OpenAPI group is also required. Deployment,
@@ -171,7 +174,13 @@ handling and retention remain governed by the workflow and GitHub settings.
 ## CI and contributor handoff
 
 CI invokes the same architecture, supply-chain, Rust, and OpenAPI groups after
-its explicit prerequisite setup. Existing job names and the full applicable
+its explicit prerequisite setup. The additional `Windows harness sensors` job
+executes the existing inventory-owned repository, architecture, and sensor-test
+commands on Windows, and the same OpenAPI group with its Node fixtures. Windows
+junction cases and Unix symlink cases run on their actual platforms without
+silently skipping a failed fixture setup. The Windows JSON artifact covers only
+its OpenAPI group; Rust fixture results remain in the step output and job status.
+This extra job requires no database and changes no acceptance membership. Existing job names and the full applicable
 gates remain in place; Compose smoke verification retains its own job.
 
 The reviewed [workflow template](../../.github/ci.yml.template) owns setup,
@@ -179,7 +188,9 @@ services, permissions, artifact handling, and cleanup. Catalogue placeholders
 supply group commands and pinned tool versions. `cargo xtask verify --check-ci`
 compares the entire rendered document with the checked-in workflow, normalizing
 LF/CRLF line endings. This checks repository wiring, not external GitHub behavior
-or merge protections. Every group performs the same preflight comparison.
+or merge protections. The new `Windows harness sensors` status also needs explicit
+administrator review when configuring required checks; adding a job does not
+make it required for merge. Every group performs the same preflight comparison.
 
 For an intentional CI policy change, edit the template or catalogue, review the
 policy diff, then explicitly run `cargo xtask verify --write-ci`. Commit the

@@ -57,6 +57,52 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  harness-windows:
+    name: Windows harness sensors
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          version: 12.5.1
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - name: Install locked OpenAPI tools
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify repository routing and documentation
+        run: cargo xtask repository
+
+      - name: Verify workspace architecture
+        run: cargo xtask architecture
+
+      - name: Exercise Windows repository sensor fixtures
+        run: cargo test -p fleetiq-xtask --locked
+
+      - name: Run authoritative OpenAPI verification on Windows
+        run: cargo xtask verify --group openapi
+
+      - name: Publish Windows OpenAPI verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-windows-openapi
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
+
   openapi:
     name: OpenAPI contract
     runs-on: ubuntu-latest

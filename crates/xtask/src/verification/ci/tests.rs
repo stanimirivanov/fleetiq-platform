@@ -188,3 +188,79 @@ fn policy_file_symlinks_are_rejected_without_reading_or_overwriting_targets() {
     assert!(super::write(&fixture.0).is_err());
     assert_eq!(fs::read(target).unwrap(), original);
 }
+
+#[test]
+fn windows_sensor_coverage_cannot_be_disabled_or_replaced() {
+    let expected = generated();
+    assert!(expected.contains("name: Windows harness sensors"));
+    assert!(expected.contains("runs-on: windows-latest"));
+    for changed in [
+        expected.replace("runs-on: windows-latest", "runs-on: ubuntu-latest"),
+        expected.replace(
+            "        run: cargo test -p fleetiq-xtask --locked",
+            "        run: cargo --version",
+        ),
+        expected.replace(
+            "      - name: Exercise Windows repository sensor fixtures",
+            "      - name: Exercise Windows repository sensor fixtures\n        if: false",
+        ),
+    ] {
+        assert_ne!(changed, expected);
+        assert!(check_document(&changed, &expected).is_err());
+    }
+}
+
+#[cfg(any(unix, windows))]
+#[test]
+fn redirected_policy_parent_cannot_be_read_or_regenerated() {
+    let fixture = Fixture::new();
+    let outside = Fixture::new();
+    check(&fixture.0).expect("ordinary policy files are accepted");
+    let template_before = fs::read(outside.0.join(TEMPLATE)).unwrap();
+    let workflow_before = fs::read(outside.0.join(super::WORKFLOW)).unwrap();
+
+    for relative in [super::WORKFLOW, TEMPLATE] {
+        fs::remove_file(fixture.0.join(relative)).unwrap();
+    }
+    fs::remove_dir(fixture.0.join(".github").join("workflows")).unwrap();
+    fs::remove_dir(fixture.0.join(".github")).unwrap();
+    let link = fixture.0.join(".github");
+    let target = outside.0.join(".github");
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(&target, &link).unwrap();
+    #[cfg(windows)]
+    {
+        let status = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(&link)
+            .arg(&target)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .unwrap();
+        assert!(status.success(), "policy junction setup must succeed");
+    }
+    // Remove only this owned redirect before either fixture's cleanup runs.
+    let _redirect = PolicyParentLink(link);
+    let error = check(&fixture.0).expect_err("redirected policy fails closed");
+    assert!(error.contains("symlink or junction"));
+    assert!(super::write(&fixture.0).is_err());
+    assert_eq!(fs::read(outside.0.join(TEMPLATE)).unwrap(), template_before);
+    assert_eq!(
+        fs::read(outside.0.join(super::WORKFLOW)).unwrap(),
+        workflow_before
+    );
+}
+
+#[cfg(any(unix, windows))]
+struct PolicyParentLink(std::path::PathBuf);
+
+#[cfg(any(unix, windows))]
+impl Drop for PolicyParentLink {
+    fn drop(&mut self) {
+        #[cfg(unix)]
+        fs::remove_file(&self.0).expect("remove only the owned policy symlink");
+        #[cfg(windows)]
+        fs::remove_dir(&self.0).expect("remove only the owned policy junction");
+    }
+}

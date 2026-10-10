@@ -2,13 +2,13 @@
 
 ## TL;DR
 
-Status: active. Close the audited gaps in three stages: dependency ownership,
-published-history and secret protection, then reproducible verification and
-recovery evidence. Deliver independently reviewable pull requests. The first
-two slices enforce dependency ownership, lint inheritance, migration
-immutability, and pinned secret detection. Verification coordination is now
-implemented with local harness verification; scoped context/lifecycle and runtime recovery
-remain separate planned slices. External merge protection remains unverified.
+The four M01 implementation slices (stages 1, 2, 3a, and 3b) are complete with
+local evidence below. They enforce dependency ownership, published history and
+secret protection, verification coordination, scoped guidance, and resilient
+contract and cross-platform sensors. PostgreSQL-backed acceptance, Linux/Windows
+CI runs, and external merge protection remain unverified. Runtime recovery
+qualification
+(stage 3c) remains a separate planned M08 slice.
 
 ## Outcome and invariants
 
@@ -31,8 +31,8 @@ belong to the agent runtime and CI identity.
 |:--|:--|:--|:--|
 | 1. Dependency ownership | Exact direct external edges per member and kind, rejected nonmember paths and root source overrides, shared lint inheritance, bypass fixtures in early CI | M01 - Decisions and Contracts | Implemented; structural and harness checks verified locally |
 | 2. Published history and sensitive artifacts | Base-revision migration immutability sensor, pinned redacted secret scanning, explicit handling of policy changes and scanner exceptions | M01 - Decisions and Contracts | Implemented; local verification recorded below; external merge settings unverified |
-| 3a. Verification inventory and evidence | Authoritative commands and versions, explicit groups, honest metadata-only reports, and reviewed CI generation without weakening acceptance | M01 - Decisions and Contracts | Implemented; local evidence below; PostgreSQL gate unavailable; ADR 0098 remains proposed |
-| 3b. Scoped context and sensor resilience | Task-justified scoped guidance, evidence-based ADR lifecycle reconciliation, OpenAPI bypass fixtures, and cross-platform sensor coverage | M01 - Decisions and Contracts | Planned; independently reviewable follow-up |
+| 3a. Verification inventory and evidence | Authoritative commands and versions, explicit groups, honest metadata-only reports, and reviewed CI generation without weakening acceptance | M01 - Decisions and Contracts | Implemented; local evidence below; ADR 0098 accepted after merged PR #267; PostgreSQL gate still requires CI |
+| 3b. Scoped context and sensor resilience | Task-justified scoped guidance, evidence-based ADR lifecycle reconciliation, OpenAPI bypass fixtures, and cross-platform sensor coverage | M01 - Decisions and Contracts | Implemented; local evidence below; Linux/Windows CI and external merge settings await verification |
 | 3c. Runtime recovery qualification | Service outage/recovery smoke evidence, measured load baselines, and later calibrated performance budgets | M08 - Production Readiness | Planned; baseline measurement precedes blocking thresholds |
 
 ### Stage 1: dependency ownership
@@ -104,8 +104,9 @@ not content hashes or certificates.
 
 The [verification guide](../verification.md) documents setup, scope, failures,
 privacy, and limits. [ADR 0098](../../adr/0098-coordinate-reproducible-verification-and-evidence.md)
-remains proposed pending explicit human review. Passing tests does not accept a
-durable decision. This slice changes no runtime contract or production behavior.
+was proposed at implementation handoff and was accepted following the approved
+plan and reviewed merge of PR #267 on 10 October 2026. Passing tests alone do not
+accept a durable decision. This slice changes no runtime contract or production behavior.
 
 Acceptance: complete inventory and unchanged acceptance order; positive and
 negative CI/template drift fixtures; missing/wrong tools, missing database
@@ -115,17 +116,36 @@ actual focused groups and applicable full gate; record results after verificatio
 
 ### Stage 3b: scoped context and sensor resilience
 
-Add scoped guidance only where repeated tasks justify it. Reconcile ADR lifecycle
-using explicit approval and history evidence rather than guessing from passing
-checks or implemented code. Extend OpenAPI sensors with bypass fixtures and
-cross-platform repository-sensor coverage. Keep guidance progressively routed
-and pair each deterministic rule with useful positive and negative evidence.
-Deliver this as a separate M01 slice; do not combine it with runtime qualification.
+Add scoped guidance only where repeated tasks justify it. The xtask and HTTP
+contract agreements route to canonical policy; a repository sensor requires their
+visible Markdown routes and rejects hidden substitutes. Presence and navigation
+are deterministic; accuracy, task suitability, and permissions remain review
+concerns. Extend portable Markdown checks for encoded machine paths and prove
+redirect rejection using actual Windows junctions and Unix symlinks.
+
+Use Redocly's existing public parsed-document API for modular OpenAPI ownership,
+reference placement, parameter extraction, and expanded schema budgets. Pair
+negative bypass fixtures with valid YAML and opaque example payloads; JSON data
+must not be mistaken for contract structure. Preserve the two exact reviewed
+OAuth suppressions and fail unsuppressed on new ignore entries. Bundle checks
+clean temporary output on success and failure without rewriting committed bytes.
+
+Run the existing inventoried repository, architecture, sensor-test, and OpenAPI
+commands in an additional Windows CI job. Keep Linux, PostgreSQL, supply-chain,
+and Compose gates and the canonical acceptance membership unchanged. CI
+comparison rejects removed or replaced Windows coverage. The added status must
+still be reviewed by an administrator when configuring required merge checks.
+
+Reconcile ADRs 0068-0078 and 0098 using the approved sequence and their exact
+merged PRs and commit IDs. Change lifecycle metadata, preserving historical
+decisions. Merge history does not establish independent reviewer approval or
+external protection settings, and passing checks cannot accept an ADR.
 
 Acceptance: scoped rules have demonstrated owning tasks and canonical routes;
 lifecycle changes identify real approval/history evidence; added sensor fixtures
 prove malformed and bypassing inputs fail on their supported platforms while
-valid inputs remain accepted.
+valid inputs remain accepted. Deliver this as a separate M01 slice; do not combine
+it with runtime qualification.
 
 ### Stage 3c: runtime recovery qualification
 
@@ -226,7 +246,42 @@ session. CI must still verify the PostgreSQL-backed gate; Compose runtime
 qualification is unchanged. No production code, migration, contract, dependency
 version, or lockfile changed. Metadata reports remain ignored and do not attest
 dirty-file contents, frozen advisory data, policy integrity, or external merge
-controls. ADR 0098 remains proposed for human review.
+controls. ADR 0098 was proposed at this handoff and subsequently accepted using
+the reviewed merge of PR #267 as approval evidence.
+
+Local stage-3b evidence on 10 October 2026: all 209 Windows xtask tests passed
+with zero failures or ignored cases. The actual OpenAPI group passed 58 Node
+regressions, source lint, and byte-exact bundle freshness. The two existing OAuth
+suppressions remain unchanged. Live fixtures exposed and corrected false
+positives for opaque JSON payload fields and a parameter-category bypass; the
+supported Redocly resolver/type metadata preserves normative validators and
+missing real reference failures. No parser dependency or new suppression was
+added. Windows junction fixtures run on the real filesystem; Unix-only cases
+still require Linux CI.
+
+Repository policy passed for 143 Markdown documents. Architecture policy retains
+16 members, 41 internal and 34 external edges, and 16 inherited lint policies.
+Complete CI comparison, formatting, focused all-target xtask Clippy with warnings
+denied, focused rustdoc, and the official OpenAPI skill validator passed. The
+acceptance coordinator recorded eight passed, zero failed, and four not-run
+checks with a nonzero exit for incomplete acceptance. Pinned supply-chain checks
+and all eight real Gitleaks bypass scenarios passed; existing duplicate-version
+warnings remain advisory. Current working files, raw index, and incoming history
+were scanned; the incoming range remains empty while this slice is uncommitted.
+The history check preserved all 28 migrations with zero additions against
+`d61c887f4ddafbba0bc3cd9babbc68797404f6d9` (`origin/main`).
+
+SQLx metadata, full workspace Clippy, tests, and rustdoc were not run because
+`DATABASE_URL` is unset. These focused harness results do not replace the
+PostgreSQL-backed acceptance gate. GitHub Linux/Windows execution, required
+status checks, and independent Code Owner protection remain unverified; the
+new Windows job alone does not make its status merge-required. No production
+code, modular source schema, committed bundle, migration, dependency version,
+lockfile, or canonical acceptance membership changed. ADR lifecycle updates
+cite the exact merged PRs and commits while preserving historical decisions.
+Reports remain ignored context metadata rather than policy or content attestations.
+M01 harness implementation is complete; stage-3c runtime recovery and measured
+load qualification remain planned M08 work.
 
 Module cohesion, broad security completeness, model capability reduction,
 customer-specific behavior, and production service objectives remain review or

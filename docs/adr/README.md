@@ -12,7 +12,10 @@ decision. The architecture pages describe the current system.
 1. Copy [`0000-template.md`](0000-template.md) to the next zero-padded number
    and a short kebab-case title.
 2. Use status `Proposed` while the decision is under review.
-3. Change it to `Accepted` when the change is approved.
+3. Change it to `Accepted` when the change is approved. When reconciling a
+   proposed record, name the actual human approval or reviewed merge evidence
+   in its status section. Implemented code, passing tests, or authorization to
+   start work alone do not accept an architectural decision.
 4. Use `Superseded by ADR NNNN` when a later decision replaces it, and record
    the reciprocal `Supersedes` reference in that later record. A later ADR may
    use a qualified `Supersedes` reference for a scoped refinement that does not
@@ -105,7 +108,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0096](0096-enforce-external-dependency-ownership-and-lint-inheritance.md) | Exact external dependency ownership, nonmember path rejection, and shared lint inheritance |
 
 | [0097](0097-protect-published-history-and-sensitive-artifacts.md) | Trusted-base migration immutability, pinned redacted secret detection, and policy ownership |
-| [0098](0098-coordinate-reproducible-verification-and-evidence.md) | Proposed: authoritative verification inventory, explicit groups, reviewed CI generation, and metadata-only result evidence |
+| [0098](0098-coordinate-reproducible-verification-and-evidence.md) | Authoritative verification inventory, explicit groups, reviewed CI generation, and metadata-only result evidence |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

@@ -143,6 +143,194 @@ fn rejects_incorrect_case_and_repository_escape() {
 }
 
 #[test]
+fn percent_encoding_cannot_disguise_machine_absolute_destinations() {
+    for destination in [
+        "%43%3A%2FSource%2Fguide.md",
+        "C:%2FSource%2Fguide.md",
+        "C:%5CSource%5Cguide.md",
+        "c:%2fSource%2fguide.md",
+        "%43%3A%5CSource%5Cguide.md",
+        "%66ile%3A%2F%2F%2Ftmp%2Fguide.md",
+    ] {
+        let fixture = Fixture::new();
+        fixture.write("README.md", &format!("# Home\n\n[guide]({destination})\n"));
+        let repository = load(fixture.path()).expect("fixture should load");
+
+        let violations = check_links(&repository);
+
+        assert_eq!(violations.len(), 1, "{destination}");
+        assert!(
+            violations[0]
+                .message
+                .contains("machine-specific absolute paths"),
+            "{destination}: {}",
+            violations[0].message
+        );
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn percent_encoded_drive_paths_cannot_be_accepted_as_unix_local_names() {
+    let fixture = Fixture::new();
+    fixture.write(
+        "README.md",
+        "# Home\n\n[drive](%43%3A%2FSource%2Fguide.md)\n",
+    );
+    // Unix allows this name. The same document must still reject a Windows
+    // absolute destination so that policy cannot vary with the checking host.
+    fixture.write("C:/Source/guide.md", "# Guide\n");
+    let repository = load(fixture.path()).expect("fixture should load");
+
+    let violations = check_links(&repository);
+
+    assert_eq!(violations.len(), 1);
+    assert!(
+        violations[0]
+            .message
+            .contains("machine-specific absolute paths")
+    );
+}
+
+#[test]
+fn external_destinations_retain_their_existing_unvalidated_encoding_semantics() {
+    let fixture = Fixture::new();
+    fixture.write(
+        "README.md",
+        "# Home\n\n[http](https://example.invalid/guide%20notes)\n\
+         [external percent](https://example.invalid/invalid%)\n\
+         [external UTF-8](https://example.invalid/%FF)\n\
+         [network](//example.invalid/invalid%2)\n\
+         [custom](custom://example.invalid/invalid%)\n\
+         [email](mailto:operator@example.invalid)\n",
+    );
+    let repository = load(fixture.path()).expect("fixture should load");
+
+    assert!(check_links(&repository).is_empty());
+}
+
+#[test]
+fn percent_encoded_local_paths_preserve_casing_and_validate_escapes() {
+    let fixture = Fixture::new();
+    fixture.write(
+        "README.md",
+        "# Home\n\n[valid](docs/Guide%20Notes.md#available)\n\
+         [case](docs/guide%20Notes.md#available)\n\
+         [escape](%2E%2E/outside.md)\n\
+         [incomplete](docs/Guide%2.md)\n\
+         [utf8](docs/%FF.md)\n",
+    );
+    fixture.write("docs/Guide Notes.md", "# Guide\n\n## Available\n");
+    let repository = load(fixture.path()).expect("fixture should load");
+
+    let violations = check_links(&repository);
+
+    assert_eq!(violations.len(), 4);
+    for message in [
+        "incorrect case",
+        "escapes the repository root",
+        "incomplete percent escape",
+        "invalid percent-encoded UTF-8",
+    ] {
+        assert!(violations.iter().any(|item| item.message.contains(message)));
+    }
+}
+
+#[cfg(any(unix, windows))]
+#[test]
+fn directory_links_preserve_valid_targets_and_detect_broken_anchors() {
+    let fixture = Fixture::new();
+    fixture.write(
+        "README.md",
+        "# Home\n\n[valid](vendor/guide-link/guide.md#available)\n\
+         [broken](vendor/guide-link/guide.md#missing)\n",
+    );
+    fixture.write("docs/guide.md", "# Guide\n\n## Available\n");
+    fs::create_dir(fixture.path().join("vendor")).expect("fixture directory should be created");
+    let _link = DirectoryLink::new(
+        fixture.path().join("vendor").join("guide-link"),
+        &fixture.path().join("docs"),
+    );
+    let repository = load(fixture.path()).expect("fixture should load");
+
+    let violations = check_links(&repository);
+
+    assert_eq!(violations.len(), 1);
+    assert!(violations[0].message.contains("#missing"));
+}
+
+#[cfg(any(unix, windows))]
+#[test]
+fn directory_links_cannot_escape_the_repository_root() {
+    let fixture = Fixture::new();
+    let outside = Fixture::new();
+    fixture.write(
+        "README.md",
+        "# Home\n\n[escape](vendor/guide-link/guide.md#available)\n",
+    );
+    outside.write("guide.md", "# Guide\n\n## Available\n");
+    fs::create_dir(fixture.path().join("vendor")).expect("fixture directory should be created");
+    let _link = DirectoryLink::new(
+        fixture.path().join("vendor").join("guide-link"),
+        outside.path(),
+    );
+    let repository = load(fixture.path()).expect("fixture should load");
+
+    let violations = check_links(&repository);
+
+    assert_eq!(violations.len(), 1);
+    assert!(
+        violations[0]
+            .message
+            .contains("resolves outside the repository root")
+    );
+    assert_eq!(
+        fs::read_to_string(outside.path().join("guide.md")).expect("outside target is untouched"),
+        "# Guide\n\n## Available\n"
+    );
+}
+
+// Directory junctions exercise the Windows redirection boundary without requiring
+// symbolic-link privileges. Both platforms fail fixture creation rather than skip.
+#[cfg(any(unix, windows))]
+struct DirectoryLink(PathBuf);
+
+#[cfg(any(unix, windows))]
+impl DirectoryLink {
+    fn new(link: PathBuf, target: &Path) -> Self {
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(target, &link)
+            .expect("fixture directory symlink should be created");
+        #[cfg(windows)]
+        {
+            let status = std::process::Command::new("cmd")
+                .args(["/C", "mklink", "/J"])
+                .arg(&link)
+                .arg(target)
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .status()
+                .expect("junction fixture creation should execute");
+            assert!(
+                status.success(),
+                "junction fixture must be created rather than skipped"
+            );
+        }
+        Self(link)
+    }
+}
+
+#[cfg(any(unix, windows))]
+impl Drop for DirectoryLink {
+    fn drop(&mut self) {
+        #[cfg(unix)]
+        fs::remove_file(&self.0).expect("fixture directory symlink should be removed");
+        #[cfg(windows)]
+        fs::remove_dir(&self.0).expect("fixture directory junction should be removed");
+    }
+}
+
+#[test]
 fn tldr_threshold_and_policy_guides_are_enforced_with_exemptions() {
     let fixture = Fixture::new();
     fixture.write("long.md", &format!("# Long\n\n{}\n", "word ".repeat(800)));

@@ -13,6 +13,11 @@
 /.gitattributes @stanimirivanov
 /migrations/ @stanimirivanov
 /AGENTS.md @stanimirivanov
+/contracts/http/AGENTS.md @stanimirivanov
+/contracts/http/redocly.yaml @stanimirivanov
+/contracts/http/.redocly.lint-ignore.yaml @stanimirivanov
+/package.json @stanimirivanov
+/pnpm-lock.yaml @stanimirivanov
 /CONTRIBUTING.md @stanimirivanov
 /SECURITY.md @stanimirivanov
 /docs/development/harness.md @stanimirivanov

@@ -69,6 +69,27 @@ Guidance should state intent, boundaries, and where its claims are verified.
 Keep each normative rule in one canonical document and link to it from concise
 entry points.
 
+## Scoped guidance
+
+Two directory agreements serve demonstrated recurring tasks:
+[repository sensor work](../../crates/xtask/AGENTS.md), exercised in PRs #263,
+#265, and #267, and [modular HTTP contract work](../../contracts/http/AGENTS.md).
+They route to existing canonical guidance instead of copying the full working
+agreement into every crate. Root policy still applies. Add another scope only
+when repeated work exposes a distinct context or workflow; change the routing
+sensor and its fixtures with that deliberate policy addition.
+
+`cargo xtask repository` requires both scoped files and their canonical rendered
+links, plus routes from the documentation map. Those three route sources use
+plain Markdown: non-comment raw HTML is rejected to avoid guessing whether an
+HTML container hides a link. Author comments are permitted but do not satisfy a
+route. Fences, images, empty links, and unused reference definitions cannot
+stand in for a visible link. Other documents retain their existing HTML policy.
+
+The sensor checks presence and navigation. Semantic accuracy, task suitability,
+ADR approval, and actual agent permissions remain review concerns; a guide
+cannot grant tools or certify its own correctness.
+
 ## Feedback sensors
 
 Contributors may run a focused test while editing, but must run every
@@ -85,8 +106,8 @@ metadata-only evidence.
 | `cargo xtask migrations --base origin/main` | Published SQL blobs match the working tree and index; additions have unique forward versions | T1; explicit trusted ancestor base and Git history, no database |
 | `cargo xtask secrets --base origin/main` | Reviewable files, staged content, and incoming commits satisfy current and available published detector policies | T1; Git history and pinned Gitleaks, no database |
 | `cargo xtask secrets --fixtures` | Real pinned detector rejects tested suppression bypasses and detects staged and removed incoming secrets | T1; Git and pinned Gitleaks, runs in early CI |
-| `cargo test -p fleetiq-xtask --locked` | Repository sensors reject tested bypasses and malformed inputs as well as accepting valid policy | T1 when changing sensors; runs in the early CI architecture job; no database |
-| `pnpm check:openapi` | Modular OpenAPI syntax, references, registrations, inline schema size, and committed bundle freshness | T1 for HTTP contract changes; pinned Node.js and locked pnpm dependencies, no database |
+| `cargo test -p fleetiq-xtask --locked` | Repository sensors reject tested bypasses and malformed inputs as well as accepting valid policy | T1 when changing sensors; Linux architecture and Windows harness jobs; no database |
+| `pnpm check:openapi` | Parsed modular OpenAPI policy, positive and bypass fixtures, and committed bundle freshness | T1 for HTTP contract changes; locked tools; Linux OpenAPI and Windows harness jobs, no database |
 | `cargo deny check` | Locked dependencies satisfy RustSec advisory, license, source, and ban policy | T2; pinned CLI and network access to the advisory database |
 | `cargo machete --with-metadata --skip-target-dir` | No unused direct dependency remains in a workspace manifest | T2; pinned CLI and Cargo metadata; reported findings require review |
 | `cargo fmt --all --check` | Rust formatting is stable without changing files | T2; Rust toolchain |
@@ -111,8 +132,11 @@ repository root and reports all violations in stable path and line order. It
 checks these mechanical rules without network access:
 
 - repository-local Markdown destinations use exact path capitalization and stay
-  inside the repository; fragments on Markdown targets name an existing
+  inside the repository; machine-specific absolute paths are rejected before
+  and after percent decoding, and fragments on Markdown targets name an existing
   GitHub-style heading anchor;
+- the two task-scoped agreements and documentation map retain the canonical
+  visible routes described in [scoped guidance](#scoped-guidance);
 - a long document begins its level-two sections with `## TL;DR` under the
   criteria in [CONTRIBUTING.md](../../CONTRIBUTING.md#documentation); ADRs and
   GitHub issue or pull request templates remain exempt because their headings
@@ -185,8 +209,10 @@ inheritance, migration immutability, and pinned secret scanning are blocking
 sensors. See [harness protection](harness-protection.md) for explicit trusted-base
 selection, bootstrap scope, and external review requirements. Reproducible
 verification coordination is implemented and locally verified; [its guide](verification.md) preserves the exact acceptance gate.
-Scoped context/lifecycle reconciliation, further bypass fixtures, recovery
-evidence, and calibrated performance budgets remain later slices.
+Scoped guidance, evidence-based ADR lifecycle reconciliation, and additional
+OpenAPI and cross-platform bypass fixtures complete the M01 implementation.
+Runtime recovery evidence and measured performance qualification remain M08 work.
+External merge controls still require administrator verification.
 
 ## Extending the harness
 

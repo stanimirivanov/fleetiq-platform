@@ -237,6 +237,12 @@ long when it has at least 800 words, more than five second-level sections, or is
 an architecture, security, migration, operational, or end-to-end guide.
 ADRs and issue or pull request templates are exempt because their fixed
 headings implement their formats. Their structure is validated separately.
+The two [scoped agreements](docs/development/harness.md#scoped-guidance) and the
+documentation map retain visible canonical links in plain Markdown; comment,
+fenced, image-only, and unused reference-definition links do not supply routes.
+This narrow routing rule is checked by `cargo xtask repository`; it does not
+replace review of guidance meaning or ADR approval evidence.
+
 Mechanically checked issue and pull-request prompts, required ADR headings,
 lifecycle metadata and index entries, and milestone indexes and boundaries use
 plain Markdown. Raw HTML comments may provide author guidance, but raw HTML
