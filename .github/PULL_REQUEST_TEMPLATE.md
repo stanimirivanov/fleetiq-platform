@@ -34,6 +34,9 @@
 |:--|:--|:--|
 | `cargo xtask repository` | | |
 | `cargo xtask architecture` | | |
+| `cargo xtask migrations --base origin/main` | | |
+| `cargo xtask secrets --base origin/main` | | |
+| `cargo xtask secrets --fixtures` | | |
 | `cargo deny check` | | |
 | `cargo machete --with-metadata --skip-target-dir` | | |
 | `cargo fmt --all --check` | | |

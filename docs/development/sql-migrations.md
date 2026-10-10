@@ -3,7 +3,8 @@
 ## TL;DR
 
 - Migrations are the source of truth for persisted FleetIQ models and become
-  immutable after reaching `main`.
+  immutable after reaching `main`; `cargo xtask migrations --base origin/main`
+  mechanically checks published bytes against a trusted base.
 - Keep each migration focused, tenant-safe, forward-compatible, and explicit
   about domain invariants, ownership, mutability, and operational risk.
 - Document schemas for reviewers and database operators, not only for SQL
@@ -30,6 +31,27 @@ the reader to infer business rules from application code.
   recovery for changes that can affect an existing production data set.
 - Keep migrations transactional. Isolate and explain any PostgreSQL operation
   that cannot run in the migration transaction.
+
+## Published-history gate
+
+Run `cargo xtask migrations --base origin/main` after fetching a current trusted
+remote base. CI uses the pull request base SHA or the main-push previous SHA,
+with complete history. Missing, unrelated, or empty migration baselines fail;
+there is no automatic fallback that treats existing history as new.
+
+The sensor compares each published migration's exact Git blob with both the
+index and working file. Staging an edit and then restoring only the working file
+still fails. Published files cannot change, disappear, become symlinks, or be
+renamed. SQL checkouts use LF under `.gitattributes`; even a comment or line-ending
+change changes SQLx checksums and must become a new forward migration.
+
+New migrations are flat files named `<version>_<lowercase_snake_case>.sql` with
+at least four version digits and a positive signed-64-bit-compatible numeric
+version. New versions must be unique and greater than the published high-water
+mark; gaps are permitted. Untracked new migrations are checked before staging.
+This gate protects history and ordering, not SQL correctness: the full empty and
+upgrade database tests and SQLx gate remain required. See [harness protection](harness-protection.md)
+for baseline selection, failure recovery, and policy ownership.
 
 ## Schema design
 

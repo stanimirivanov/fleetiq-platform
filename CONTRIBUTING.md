@@ -152,6 +152,9 @@ pointing to the fully migrated supported PostgreSQL database:
 ```powershell
 cargo xtask repository
 cargo xtask architecture
+cargo xtask migrations --base origin/main
+cargo xtask secrets --base origin/main
+cargo xtask secrets --fixtures
 cargo deny check
 cargo machete --with-metadata --skip-target-dir
 cargo fmt --all --check
@@ -160,6 +163,14 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace --all-features --locked
 cargo doc --workspace --no-deps --locked
 ```
+
+The history and secret checks require a current trusted base and the pinned
+scanner. Fetch the latest remote history before selecting `origin/main`; for a
+PR or pushed revision, record the exact event base SHA used by CI. Do not choose
+an older base to hide already-published changes. Install the checksummed scanner
+with `node scripts/install-gitleaks.mjs`. See [harness protection](docs/development/harness-protection.md)
+for installation, scan scope, fixture checks, policy ownership, and failure
+handling. Missing tools, unavailable bases, or scan failures cannot be skipped.
 
 When changing the published HTTP contract, use the [OpenAPI maintenance
 skill](.agents/skills/openapi/SKILL.md), then run:
@@ -261,6 +272,14 @@ reliable feedback loop:
 3. Add a focused behavioral test or fixture for an observable regression.
 4. When automation would be noisy, record an explicit exception, owner, and
    review trigger.
+
+Harness policy and scanner exceptions require review by the owners in
+[CODEOWNERS](.github/CODEOWNERS). Keep policy changes explicit in the PR;
+prefer a dedicated harness PR when weakening or excepting an existing gate.
+Agents must not add baselines, ignore files, inline suppressions, or detector
+exclusions simply to make a feature pass. GitHub rulesets must require Code
+Owner approval and the relevant status checks; those settings are external to
+this repository and must be verified by a repository administrator.
 
 Sensors must produce actionable diagnostics, stay deterministic, and link to
 the policy they enforce. They must not silently rewrite expected content,

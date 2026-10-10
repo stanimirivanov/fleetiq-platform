@@ -69,5 +69,14 @@ FleetIQ specifically requires:
 - authenticated, authorized, and auditable device commands before commands are
   enabled outside controlled development.
 
+Before publication, run the pinned redacted scanner over reviewable files and
+incoming commit history. Follow [harness protection](docs/development/harness-protection.md)
+for exact commands, scope, exceptions, and handling a finding. Removing a secret
+from the final tree does not remove exposure from Git history; rotate or revoke
+any genuine credential and handle remediation privately. Scanner exceptions
+apply only to reviewed synthetic fixtures with an exact scope, owner, reason,
+and review trigger. A passing scan is not proof that every secret format or
+runtime disclosure is covered.
+
 See the [architecture](docs/architecture/README.md), [engineering standards](docs/development/engineering-standards.md),
 and [contributor workflow](CONTRIBUTING.md).

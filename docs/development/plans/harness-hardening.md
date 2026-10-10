@@ -5,8 +5,9 @@
 Status: active. Close the audited gaps in three stages: dependency ownership,
 published-history and secret protection, then reproducible verification and
 recovery evidence. Deliver independently reviewable pull requests. The first
-slice implements external ownership and lint inheritance; later stages remain
-planned and must not be reported as enforced.
+two slices enforce dependency ownership, lint inheritance, migration
+immutability, and pinned secret detection. Verification coordination and recovery
+remain planned; external merge protection remains unverified.
 
 ## Outcome and invariants
 
@@ -28,7 +29,7 @@ belong to the agent runtime and CI identity.
 | Stage | Scope | Milestone | State |
 |:--|:--|:--|:--|
 | 1. Dependency ownership | Exact direct external edges per member and kind, rejected nonmember paths and root source overrides, shared lint inheritance, bypass fixtures in early CI | M01 - Decisions and Contracts | Implemented; structural and harness checks verified locally |
-| 2. Published history and sensitive artifacts | Base-revision migration immutability sensor, pinned redacted secret scanning, explicit handling of policy changes and scanner exceptions | M01 - Decisions and Contracts | Planned |
+| 2. Published history and sensitive artifacts | Base-revision migration immutability sensor, pinned redacted secret scanning, explicit handling of policy changes and scanner exceptions | M01 - Decisions and Contracts | Implemented; local verification recorded below; external merge settings unverified |
 | 3. Verification and recovery | Reproducible check inventory and evidence, scoped context/lifecycle reconciliation, cross-platform sensor tests, runtime outage/recovery evidence and calibrated performance budgets | M01 - Decisions and Contracts for harness work; M08 - Production Readiness for runtime qualification | Planned; split into coherent PRs before implementation |
 
 ### Stage 1: dependency ownership
@@ -50,16 +51,32 @@ database jobs in CI.
 
 ### Stage 2: published history and sensitive artifacts
 
-Compare migrations against an explicit trusted base revision. Reject changes,
-renames, and deletions of published migration bytes while permitting new ordered
-migrations. Cover local and pull-request base selection and missing-history
-failures; do not treat lack of a base as permission to skip the check.
+Add `cargo xtask migrations --base REV` with byte comparisons against a trusted
+published base, the index, and working files. Fail closed on missing/invalid
+history and malformed inventories; allow only unique forward additions. Add
+`cargo xtask secrets [--base REV]` with checksum-verified Gitleaks 8.30.1,
+reviewable-file snapshots, staged scans, incoming-history scans, exact synthetic
+exceptions applied privately by the wrapper, and metadata-only diagnostics.
+Real fixtures exposed upstream global-allowlist and fingerprint-ignore bypasses;
+default-only detection, exact in-memory equality, raw index snapshots, and bare
+history scans now protect these boundaries. Run the real detector bypass suite
+in the early CI job alongside xtask regression tests. See
+[ADR 0097](../../adr/0097-protect-published-history-and-sensitive-artifacts.md)
+and the canonical [harness protection guide](../harness-protection.md).
 
-Add a maintained pinned secret scanner with redacted diagnostics. Define local
-and CI commands, fixtures, reviewed narrow exceptions, and baseline handling.
-Review policy changes independently so an agent cannot silently weaken the
-sensor alongside its feature. Confirm ownership and repository branch rules;
-checked-in documentation alone cannot enforce merge permissions.
+CI uses full history and event-owned base selection. Current and trusted-base
+scanner policy both apply when published policy exists. The initial addition
+bootstraps scanning of current/index/incoming content and does not claim all
+legacy history is clean. CODEOWNERS routes policy review; required owner
+approval, stale-approval dismissal, and required GitHub status checks need
+administrator verification. These external settings could not be verified and
+must not be reported as enforced by a file or local sensor.
+
+Acceptance: reject published content changes/deletions/renames, staged changes
+hidden by restored working files, invalid versions or bases, policy widening,
+unreadable inputs, ignored fingerprints/inline suppressions, and novel values
+inside an exactly excepted fixture file. Prove incoming history detects a secret
+subsequently removed. Preserve complete Rust/database and supply-chain gates.
 
 ### Stage 3: verification and recovery
 
@@ -109,6 +126,28 @@ rustdoc) were not run locally: `DATABASE_URL` is unset and no Docker executable
 is exposed in this session. Focused harness checks do not substitute for that
 acceptance gate; CI must still verify database compatibility and the wider
 workspace. No production code, dependency graph, lockfile, or migration changed.
+
+Local stage-2 evidence on 10 October 2026: 159 Windows xtask tests passed,
+including 25 migration and 15 secret-policy cases. Three additional Unix-only
+symlink/filename regressions require CI. The real checksum-verified Gitleaks
+8.30.1 detector passed eight bypass scenarios. The actual repository scan passed
+for 738 reviewable working files plus raw index and incoming history; the
+published-history check verified 28 immutable migrations and zero additions
+against `a1e09f0685abd6add53752850c14afdb22c86052` (`origin/main`). The local
+incoming range is empty because the implementation is not committed yet; the
+positive history fixtures prove removed incoming secrets are detected.
+
+Repository policy passed for 139 Markdown documents; architecture policy passed
+for 16 members, 41 internal and 34 external edges, and 16 inherited lint policies.
+Formatting, focused all-target xtask Clippy with warnings denied, focused rustdoc,
+installer syntax, cargo-deny 0.20.2, and cargo-machete 0.9.2 passed. Existing
+duplicate-version supply-chain warnings remain advisory. Final independent
+read-only review found no remaining actionable issue. serde_json adds one direct
+tooling edge and one lockfile reference, with no new versions or production edge.
+The PostgreSQL-backed workspace gate remains not run for the prerequisites
+reported above. Required external merge settings remain unverified, and the
+single routed owner needs an independent authorized owner/team before mandatory
+Code Owner review can cover that owner's PRs.
 
 Module cohesion, broad security completeness, model capability reduction,
 customer-specific behavior, and production service objectives remain review or

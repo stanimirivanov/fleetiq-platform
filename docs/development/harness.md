@@ -6,6 +6,8 @@
   the task.
 - Run `cargo xtask repository` and `cargo xtask architecture` for immediate,
   database-independent structural feedback.
+- Protect published migrations and scan reviewable files and incoming commits
+  using the [trusted-base checks](harness-protection.md).
 - Run `pnpm check:openapi` for changes to the published HTTP contract.
 - Run the complete PostgreSQL-backed Rust gate before handoff; use Compose
   checks when deployment or runtime behavior changes.
@@ -32,7 +34,7 @@ in [CONTRIBUTING.md](../../CONTRIBUTING.md), the engineering rules in
 | Tier | Intended timing | Current FleetIQ feedback |
 |:--|:--|:--|
 | T0 — route | Before editing | Read-only task routing through [the documentation map](../README.md), then relevant architecture and ADR sources. |
-| T1 — structure | During editing | `cargo xtask repository` and `cargo xtask architecture`; deterministic and independent of PostgreSQL or network once the toolchain and dependencies are available. |
+| T1 — structure | During editing | `cargo xtask repository` and `cargo xtask architecture`; plus trusted-base migration and secret checks; no PostgreSQL, with Git history and the pinned scanner required for protection checks. |
 | T2 — Rust and supply-chain acceptance | Before handoff or pull request | Pinned supply-chain checks, formatting, SQLx metadata, Clippy, workspace tests, and rustdoc; database checks require fully migrated supported PostgreSQL. |
 | T3 — specialized | When an affected boundary requires it | Local Compose build, health, isolation, and shutdown checks; additional explicitly requested fuzz, performance, security, or platform-specific checks. |
 
@@ -52,6 +54,7 @@ cannot run.
 | [Architecture overview](../architecture/README.md) | System boundaries, information flow, trust, and ownership | Code or boundary changes |
 | [Dependency rules](../architecture/dependency-rules.md) | Package roles, exact internal/external ownership, and shared lint inheritance | Crate or direct dependency changes |
 | [Engineering standards](engineering-standards.md) | Rust design, tests, documentation, security, and operations | Implementation work |
+| [Harness protection](harness-protection.md) | Trusted bases, immutable SQL history, secret detector scope, exceptions, and policy ownership | History, scanner, or policy changes |
 | [SQL migration criteria](sql-migrations.md) | Persisted-data invariants and migration verification | Database work |
 | [OpenAPI maintenance skill](../../.agents/skills/openapi/SKILL.md) | Modular HTTP contract layout, references, registration, and bundle workflow | Published HTTP contract work |
 | [Operations index](../operations/README.md) | Installation and runtime procedures | Deployment or operational work |
@@ -72,6 +75,9 @@ applicable acceptance check before handoff.
 |:--|:--|:--|
 | `cargo xtask repository` | Local Markdown links and anchors, long-document TL;DR policy, ADR and milestone indexes, and issue or pull request template structure satisfy mechanical repository policy | T1; checked-out repository and Rust toolchain |
 | `cargo xtask architecture` | Workspace roles, direct internal/external dependencies, and lint inheritance match exact policy; nonmember paths and root source overrides are rejected; the approved OIDC/RSA exception retains its exact locked graph | T1; Cargo metadata and lockfile, no database |
+| `cargo xtask migrations --base origin/main` | Published SQL blobs match the working tree and index; additions have unique forward versions | T1; explicit trusted ancestor base and Git history, no database |
+| `cargo xtask secrets --base origin/main` | Reviewable files, staged content, and incoming commits satisfy current and available published detector policies | T1; Git history and pinned Gitleaks, no database |
+| `cargo xtask secrets --fixtures` | Real pinned detector rejects tested suppression bypasses and detects staged and removed incoming secrets | T1; Git and pinned Gitleaks, runs in early CI |
 | `cargo test -p fleetiq-xtask --locked` | Repository sensors reject tested bypasses and malformed inputs as well as accepting valid policy | T1 when changing sensors; runs in the early CI architecture job; no database |
 | `pnpm check:openapi` | Modular OpenAPI syntax, references, registrations, inline schema size, and committed bundle freshness | T1 for HTTP contract changes; pinned Node.js and locked pnpm dependencies, no database |
 | `cargo deny check` | Locked dependencies satisfy RustSec advisory, license, source, and ban policy | T2; pinned CLI and network access to the advisory database |
@@ -166,8 +172,11 @@ durable decisions.
 
 The approved [harness hardening plan](plans/harness-hardening.md) records the
 remaining gaps and delivery order. Implemented dependency ownership and lint
-inheritance are blocking sensors. Migration immutability, secret scanning,
-verification coordination, and calibrated performance budgets remain planned.
+inheritance, migration immutability, and pinned secret scanning are blocking
+sensors. See [harness protection](harness-protection.md) for explicit trusted-base
+selection, bootstrap scope, and external review requirements. Reproducible
+verification coordination, recovery evidence, and calibrated performance
+budgets remain planned.
 
 ## Extending the harness
 
