@@ -132,6 +132,7 @@ policy, and advisory-data requirements.
 
 - [Engineering standards](engineering-standards.md)
 - [Coding harness and feedback tiers](harness.md)
+- [Harness hardening execution plan](plans/harness-hardening.md)
 - [Dependency management and supply-chain gate](dependency-management.md)
 - [SQL migration criteria](sql-migrations.md)
 - [Current implementation state](current-state.md)

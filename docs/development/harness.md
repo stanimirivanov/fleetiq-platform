@@ -9,8 +9,8 @@
 - Run `pnpm check:openapi` for changes to the published HTTP contract.
 - Run the complete PostgreSQL-backed Rust gate before handoff; use Compose
   checks when deployment or runtime behavior changes.
-- Report every unavailable check as not run with its blocker and residual
-  risk. The repository does not yet claim a canonical supply-chain aggregate.
+- Run the documented supply-chain commands and report every unavailable check
+  as not run with its blocker and residual risk.
 - Turn recurring review findings into clearer guidance, an early deterministic
   sensor, a behavioral test, or an explicit owned exception.
 
@@ -33,8 +33,8 @@ in [CONTRIBUTING.md](../../CONTRIBUTING.md), the engineering rules in
 |:--|:--|:--|
 | T0 — route | Before editing | Read-only task routing through [the documentation map](../README.md), then relevant architecture and ADR sources. |
 | T1 — structure | During editing | `cargo xtask repository` and `cargo xtask architecture`; deterministic and independent of PostgreSQL or network once the toolchain and dependencies are available. |
-| T2 — Rust acceptance | Before handoff or pull request | Formatting, SQLx metadata, Clippy, workspace tests, and rustdoc against a fully migrated supported PostgreSQL database. |
-| T3 — specialized | When an affected boundary requires it | Local Compose build, health, isolation, and shutdown checks; explicitly requested security, license, fuzz, performance, or platform-specific checks. |
+| T2 — Rust and supply-chain acceptance | Before handoff or pull request | Pinned supply-chain checks, formatting, SQLx metadata, Clippy, workspace tests, and rustdoc; database checks require fully migrated supported PostgreSQL. |
+| T3 — specialized | When an affected boundary requires it | Local Compose build, health, isolation, and shutdown checks; additional explicitly requested fuzz, performance, security, or platform-specific checks. |
 
 A tier describes cost and timing, not permission to skip an applicable check.
 Follow the constrained-environment reporting rules in
@@ -50,7 +50,7 @@ cannot run.
 | [Documentation map](../README.md) | Progressive task-to-source routing | Every task |
 | [Product scope](../product/README.md) | Users, vocabulary, outcomes, and non-goals | Product behavior or terminology changes |
 | [Architecture overview](../architecture/README.md) | System boundaries, information flow, trust, and ownership | Code or boundary changes |
-| [Dependency rules](../architecture/dependency-rules.md) | Allowed workspace package classifications and edges | Crate or direct dependency changes |
+| [Dependency rules](../architecture/dependency-rules.md) | Package roles, exact internal/external ownership, and shared lint inheritance | Crate or direct dependency changes |
 | [Engineering standards](engineering-standards.md) | Rust design, tests, documentation, security, and operations | Implementation work |
 | [SQL migration criteria](sql-migrations.md) | Persisted-data invariants and migration verification | Database work |
 | [OpenAPI maintenance skill](../../.agents/skills/openapi/SKILL.md) | Modular HTTP contract layout, references, registration, and bundle workflow | Published HTTP contract work |
@@ -71,7 +71,8 @@ applicable acceptance check before handoff.
 | Command or sensor | What it proves | Tier and dependencies |
 |:--|:--|:--|
 | `cargo xtask repository` | Local Markdown links and anchors, long-document TL;DR policy, ADR and milestone indexes, and issue or pull request template structure satisfy mechanical repository policy | T1; checked-out repository and Rust toolchain |
-| `cargo xtask architecture` | Workspace packages and direct internal dependencies match capability policy; the approved OIDC/RSA exception retains its exact locked graph | T1; Cargo metadata and lockfile, no database |
+| `cargo xtask architecture` | Workspace roles, direct internal/external dependencies, and lint inheritance match exact policy; nonmember paths and root source overrides are rejected; the approved OIDC/RSA exception retains its exact locked graph | T1; Cargo metadata and lockfile, no database |
+| `cargo test -p fleetiq-xtask --locked` | Repository sensors reject tested bypasses and malformed inputs as well as accepting valid policy | T1 when changing sensors; runs in the early CI architecture job; no database |
 | `pnpm check:openapi` | Modular OpenAPI syntax, references, registrations, inline schema size, and committed bundle freshness | T1 for HTTP contract changes; pinned Node.js and locked pnpm dependencies, no database |
 | `cargo deny check` | Locked dependencies satisfy RustSec advisory, license, source, and ban policy | T2; pinned CLI and network access to the advisory database |
 | `cargo machete --with-metadata --skip-target-dir` | No unused direct dependency remains in a workspace manifest | T2; pinned CLI and Cargo metadata; reported findings require review |
@@ -162,6 +163,11 @@ discovery that changes the sequence. Each slice remains independently
 reviewable and leaves the repository buildable. GitHub issues and milestones
 remain authoritative for delivery state, and ADRs remain authoritative for
 durable decisions.
+
+The approved [harness hardening plan](plans/harness-hardening.md) records the
+remaining gaps and delivery order. Implemented dependency ownership and lint
+inheritance are blocking sensors. Migration immutability, secret scanning,
+verification coordination, and calibrated performance budgets remain planned.
 
 ## Extending the harness
 

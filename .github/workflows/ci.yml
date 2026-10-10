@@ -33,8 +33,11 @@ jobs:
       - name: Check repository policy
         run: cargo xtask repository
 
-      - name: Check dependency policy
+      - name: Check dependency ownership and lint inheritance
         run: cargo xtask architecture
+
+      - name: Test repository sensors and bypass fixtures
+        run: cargo test -p fleetiq-xtask --locked
 
   openapi:
     name: OpenAPI contract

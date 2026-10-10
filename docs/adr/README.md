@@ -101,8 +101,9 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0092](0092-process-exact-durable-decoded-observation.md) | Exact tenant-scoped durable observation lookup followed by semantic history processing |
 | [0093](0093-read-exact-semantic-interpretation.md) | Exact tenant-scoped semantic history read with immutable source and binding provenance |
 | [0094](0094-page-observation-interpretations.md) | Bounded keyset page of one decoded output's immutable semantic interpretations |
+| [0095](0095-authenticate-browser-operators-with-oidc-sessions.md) | Provider-neutral OIDC and same-origin browser operator sessions |
+| [0096](0096-enforce-external-dependency-ownership-and-lint-inheritance.md) | Exact external dependency ownership, nonmember path rejection, and shared lint inheritance |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.
-| [0095](0095-authenticate-browser-operators-with-oidc-sessions.md) | Provider-neutral OIDC and same-origin browser operator sessions |

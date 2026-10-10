@@ -5,8 +5,13 @@ fn current_workspace_matches_the_declared_policy() {
     let metadata = load_metadata().expect("workspace metadata should load");
     let graph = graph_from_metadata(&metadata).expect("workspace dependency kinds should be known");
     assert!(protocol_fixture_version_violation(&metadata).is_none());
+    source_overrides::check(metadata.workspace_root.as_std_path())
+        .expect("repository source overrides should not bypass declared ownership");
 
     validate_graph(&graph).expect("workspace dependencies should match the architecture policy");
+    external_dependencies::check(&metadata)
+        .expect("external dependencies should have approved owners");
+    lint_inheritance::check(&metadata).expect("every workspace member should inherit shared lints");
     assert!(
         graph
             .dependencies
