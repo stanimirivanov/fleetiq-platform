@@ -1,0 +1,214 @@
+# Generated from .github/ci.yml.template and the Rust verification catalogue.
+# Edit the template or catalogue, then run cargo xtask verify --write-ci.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+
+jobs:
+  architecture:
+    name: Architecture policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # The event supplies the trusted published base. Do not infer HEAD^ from
+      # the synthetic PR merge or silently accept a missing/zero push base.
+      HARNESS_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install Node.js for the checksummed scanner installer
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '@tool:node@'
+
+      - name: Install pinned Gitleaks with SHA-256 verification
+        run: node scripts/install-gitleaks.mjs
+
+      - name: Run authoritative architecture verification
+        run: @verify:architecture@
+
+      - name: Publish architecture verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-architecture
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  openapi:
+    name: OpenAPI contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: architecture
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@v6.1.0
+        with:
+          version: @tool:pnpm@
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '@tool:node@'
+          cache: pnpm
+
+      - name: Install locked OpenAPI tools
+        run: pnpm install --frozen-lockfile
+
+      - name: Run authoritative OpenAPI verification
+        run: @verify:openapi@
+
+      - name: Publish OpenAPI verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-openapi
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  supply-chain:
+    name: Supply-chain policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: architecture
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install pinned dependency tools
+        run: |
+          cargo install cargo-deny --version @tool:deny@ --locked
+          cargo install cargo-machete --version @tool:machete@ --locked
+
+      - name: Run authoritative supply-chain verification
+        run: @verify:supply-chain@
+
+      - name: Publish supply-chain verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-supply-chain
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  rust:
+    name: Rust quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: architecture
+
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.23
+        env:
+          POSTGRES_DB: fleetiq
+          POSTGRES_USER: fleetiq
+          POSTGRES_PASSWORD: fleetiq-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fleetiq -d fleetiq"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Show toolchain
+        run: |
+          rustc --version
+          cargo --version
+
+      - name: Install pinned SQLx CLI
+        run: >-
+          cargo install sqlx-cli --version @tool:sqlx@ --locked --debug
+          --no-default-features --features rustls,postgres
+
+      - name: Apply metadata schema for checked queries
+        run: |
+          for migration in migrations/*.sql; do
+            psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --file "$migration"
+          done
+
+      - name: Run authoritative Rust verification
+        run: @verify:rust@
+
+      - name: Publish Rust verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-rust
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  local-compose:
+    name: Local Compose smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: architecture
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build and start the local stack
+        run: docker compose -f deploy/local/compose.yaml up --build --wait
+
+      - name: Verify the backend health surface
+        run: |
+          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:58080/health/live
+          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:58080/health/ready
+
+      - name: Verify backend isolation and graceful shutdown
+        run: |
+          server_id="$(docker compose -f deploy/local/compose.yaml ps --quiet server)"
+          test "$(docker inspect --format '{{.Config.User}}' "$server_id")" = "10001:10001"
+          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$server_id")" = "true"
+          test "$(docker inspect --format '{{json .HostConfig.CapDrop}}' "$server_id")" = '["ALL"]'
+          test "$(docker inspect --format '{{json .HostConfig.SecurityOpt}}' "$server_id")" = '["no-new-privileges:true"]'
+          docker compose -f deploy/local/compose.yaml stop server
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$server_id")" = "0"
+
+      - name: Stop the local stack
+        if: always()
+        run: docker compose -f deploy/local/compose.yaml down --volumes

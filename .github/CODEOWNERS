@@ -17,6 +17,7 @@
 /SECURITY.md @stanimirivanov
 /docs/development/harness.md @stanimirivanov
 /docs/development/harness-protection.md @stanimirivanov
+/docs/development/verification.md @stanimirivanov
 /docs/development/dependency-management.md @stanimirivanov
 /docs/development/sql-migrations.md @stanimirivanov
 /docs/architecture/dependency-rules.md @stanimirivanov

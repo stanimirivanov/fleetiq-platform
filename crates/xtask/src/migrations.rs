@@ -4,7 +4,7 @@
 //! working tree, never normalizes SQL bytes, and cannot replace schema execution
 //! or an operator's deployment review.
 
-mod git;
+pub(crate) mod git;
 mod inventory;
 
 #[cfg(test)]

@@ -41,21 +41,6 @@ const PULL_REQUEST_MARKERS: [(&str, &str); 13] = [
     ),
 ];
 
-const REQUIRED_VERIFICATION_COMMANDS: [&str; 12] = [
-    "cargo xtask repository",
-    "cargo xtask architecture",
-    "cargo xtask migrations --base origin/main",
-    "cargo xtask secrets --base origin/main",
-    "cargo xtask secrets --fixtures",
-    "cargo deny check",
-    "cargo machete --with-metadata --skip-target-dir",
-    "cargo fmt --all --check",
-    "cargo sqlx prepare --check --workspace -- --all-targets --all-features",
-    "cargo clippy --workspace --all-targets --all-features -- -D warnings",
-    "cargo test --workspace --all-features --locked",
-    "cargo doc --workspace --no-deps --locked",
-];
-
 const PULL_REQUEST_CHECKLIST: [&str; 9] = [
     "- [ ] One coherent capability; unrelated changes are excluded.",
     "- [ ] Repository policy and architecture checks pass.",
@@ -116,9 +101,9 @@ pub(super) fn check(repository: &Repository) -> Vec<Violation> {
     violations.extend(review_checklist_violations(template));
 
     if let Some(policy) = repository.document(CONTRIBUTING) {
-        let required_commands: Vec<_> = REQUIRED_VERIFICATION_COMMANDS
-            .iter()
-            .map(ToString::to_string)
+        let required_commands: Vec<_> = crate::verification::Group::Acceptance
+            .checks()
+            .map(|check| check.command.to_owned())
             .collect();
         let canonical_commands = fenced_commands_under_heading(policy, "Verification");
         if canonical_commands != required_commands {

@@ -5,6 +5,7 @@ mod cli;
 mod migrations;
 mod repository;
 mod secrets;
+mod verification;
 
 use std::{env, process::ExitCode};
 
@@ -15,6 +16,23 @@ fn main() -> ExitCode {
         Ok(cli::Command::Migrations { base }) => run_migration_check(&base),
         Ok(cli::Command::Secrets { base }) => run_secrets_check(base.as_deref()),
         Ok(cli::Command::SecretFixtures) => run_secret_fixtures(),
+        Ok(cli::Command::VerifyList) => verification_result(verification::list()),
+        Ok(cli::Command::VerifyCi { write }) => {
+            let root = std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."));
+            verification_result(if write {
+                verification::ci::write(root)
+            } else {
+                verification::ci::check(root)
+            })
+        }
+        Ok(cli::Command::Verify { group, base }) => {
+            let root = std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."));
+            match verification::run(root, group, base.as_deref()) {
+                Ok(true) => ExitCode::SUCCESS,
+                Ok(false) => ExitCode::FAILURE,
+                Err(error) => verification_result(Err(error)),
+            }
+        }
         Ok(cli::Command::Help) => {
             print_usage();
             ExitCode::SUCCESS
@@ -126,6 +144,21 @@ fn print_usage() {
            cargo xtask repository             Verify documentation and repository policy\n\
            cargo xtask migrations --base REV  Protect published migrations\n\
            cargo xtask secrets [--base REV]   Scan files, index, and optional incoming history\n\
-           cargo xtask secrets --fixtures     Verify the pinned detector against bypasses"
+           cargo xtask secrets --fixtures     Verify the pinned detector against bypasses\n\
+           cargo xtask verify --list          List commands, prerequisites, and tool pins\n\
+           cargo xtask verify --group GROUP [--base REV]  Run a group and record evidence\n\
+           cargo xtask verify --check-ci      Check generated CI wiring\n\
+           cargo xtask verify --write-ci      Regenerate CI from reviewed template\n\n\
+         Groups: architecture, supply-chain, rust, openapi, acceptance"
     );
+}
+
+fn verification_result(result: Result<(), String>) -> ExitCode {
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("verification task failed:\n{error}");
+            ExitCode::FAILURE
+        }
+    }
 }

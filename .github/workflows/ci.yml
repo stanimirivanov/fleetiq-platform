@@ -1,3 +1,5 @@
+# Generated from .github/ci.yml.template and the Rust verification catalogue.
+# Edit the template or catalogue, then run cargo xtask verify --write-ci.
 name: CI
 
 on:
@@ -43,23 +45,17 @@ jobs:
       - name: Install pinned Gitleaks with SHA-256 verification
         run: node scripts/install-gitleaks.mjs
 
-      - name: Check published migration immutability
-        run: cargo xtask migrations --base "$HARNESS_BASE"
+      - name: Run authoritative architecture verification
+        run: cargo xtask verify --group architecture --base "$HARNESS_BASE"
 
-      - name: Scan reviewable files and incoming history with redacted findings
-        run: cargo xtask secrets --base "$HARNESS_BASE"
-
-      - name: Verify real scanner failure and suppression fixtures
-        run: cargo xtask secrets --fixtures
-
-      - name: Check repository policy
-        run: cargo xtask repository
-
-      - name: Check dependency ownership and lint inheritance
-        run: cargo xtask architecture
-
-      - name: Test repository sensors and bypass fixtures
-        run: cargo test -p fleetiq-xtask --locked
+      - name: Publish architecture verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-architecture
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
 
   openapi:
     name: OpenAPI contract
@@ -87,8 +83,17 @@ jobs:
       - name: Install locked OpenAPI tools
         run: pnpm install --frozen-lockfile
 
-      - name: Lint the modular contract and verify the committed bundle
-        run: pnpm check:openapi
+      - name: Run authoritative OpenAPI verification
+        run: cargo xtask verify --group openapi
+
+      - name: Publish OpenAPI verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-openapi
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
 
   supply-chain:
     name: Supply-chain policy
@@ -107,11 +112,17 @@ jobs:
           cargo install cargo-deny --version 0.20.2 --locked
           cargo install cargo-machete --version 0.9.2 --locked
 
-      - name: Check advisories, licenses, sources, and dependency policy
-        run: cargo deny check
+      - name: Run authoritative supply-chain verification
+        run: cargo xtask verify --group supply-chain
 
-      - name: Check unused direct dependencies
-        run: cargo machete --with-metadata --skip-target-dir
+      - name: Publish supply-chain verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-supply-chain
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
 
   rust:
     name: Rust quality gate
@@ -156,20 +167,17 @@ jobs:
             psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --file "$migration"
           done
 
-      - name: Check formatting
-        run: cargo fmt --all --check
+      - name: Run authoritative Rust verification
+        run: cargo xtask verify --group rust
 
-      - name: Check SQLx offline query metadata
-        run: cargo sqlx prepare --check --workspace -- --all-targets --all-features
-
-      - name: Lint
-        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-
-      - name: Test
-        run: cargo test --workspace --all-features --locked
-
-      - name: Check documentation
-        run: cargo doc --workspace --no-deps --locked
+      - name: Publish Rust verification evidence
+        if: always()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: harness-rust
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
 
   local-compose:
     name: Local Compose smoke test
