@@ -30,6 +30,10 @@ that apply.
 6. For published HTTP contract changes, read the [OpenAPI maintenance
    skill](.agents/skills/openapi/SKILL.md) and run the OpenAPI checks.
 
+For recurring harness work, read the scoped [xtask agreement](crates/xtask/AGENTS.md).
+For published HTTP work, read the scoped [contract agreement](contracts/http/AGENTS.md).
+These entry points route to canonical policy; load the scope that owns the task.
+
 If code, documentation, and an accepted ADR disagree, correct an obvious local
 error or propose a superseding ADR. Do not silently choose one source.
 

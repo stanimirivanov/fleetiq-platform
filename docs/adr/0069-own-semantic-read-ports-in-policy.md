@@ -2,7 +2,12 @@
 
 ## Status
 
-Proposed, 30 September 2026.
+Accepted, 30 September 2026.
+
+Acceptance reconciled from the approved architecture and harness sequence and
+merged PR #189, commit `c7b44c03758a0e901400d5e52933c9eb20cbde0d`.
+This records merge evidence; it does not claim independently enforced review
+settings or infer acceptance from passing tests.
 
 Supersedes: ADR 0003 (blanket adapter placement only). Superseded by: none.
 

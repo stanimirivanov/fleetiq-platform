@@ -2,12 +2,12 @@
 
 ## Status
 
-Proposed, 10 October 2026.
+Accepted, 10 October 2026.
 
-This durable harness choice awaits human review. Authorization to implement it
-and passing checks do not establish architectural acceptance; record approval
-through the repository's normal review and merge process before changing this
-status.
+Accepted through the approved harness hardening plan and the normal review and
+merge process for PR #267, commit
+`d61c887f4ddafbba0bc3cd9babbc68797404f6d9`. Verification results establish
+implementation evidence; human approval and merge establish decision acceptance.
 
 ## Context
 
@@ -115,4 +115,4 @@ process success, failure, and start failure; continued independent execution;
 no invented exit code for termination; fresh report creation and redirected-path
 rejection; and drift between the catalogue, templates, contributor guide, and CI.
 Run focused harness checks and the complete applicable gate, reporting unavailable
-checks honestly. Passing these checks does not change this ADR's proposed status.
+checks honestly. Passing these checks alone does not establish architectural acceptance.

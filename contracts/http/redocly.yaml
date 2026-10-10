@@ -1,3 +1,10 @@
+plugins:
+  - ../../scripts/openapi/redocly-plugin.mjs
+
+# Singular examples are literal payloads; named Example Object references resolve.
+resolve:
+  doNotResolveExamples: true
+
 extends:
   - minimal
 
@@ -6,3 +13,4 @@ rules:
   no-ambiguous-paths: error
   operation-operationId: error
   operation-parameters-unique: error
+  fleetiq/layout: error

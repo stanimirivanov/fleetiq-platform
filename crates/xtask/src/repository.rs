@@ -1,6 +1,7 @@
 mod adr;
 mod markdown;
 mod milestones;
+mod scopes;
 mod templates;
 
 #[cfg(test)]
@@ -123,6 +124,7 @@ fn check_at(root: &Path) -> Result<RepositoryReport, RepositoryCheckError> {
     violations.extend(adr::check(&repository));
     violations.extend(milestones::check(&repository));
     violations.extend(templates::check(&repository));
+    violations.extend(scopes::check(&repository));
     violations.sort_by(|left, right| {
         (&left.path, left.line, left.rule, &left.message).cmp(&(
             &right.path,
