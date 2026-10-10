@@ -1,6 +1,9 @@
+mod external_dependencies;
+mod lint_inheritance;
 mod model;
 mod policy;
 mod security_exception;
+mod source_overrides;
 
 #[cfg(test)]
 mod tests;
@@ -22,6 +25,8 @@ const WORKSPACE_MANIFEST: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../Car
 pub(crate) struct ArchitectureReport {
     package_count: usize,
     dependency_count: usize,
+    external_dependency_count: usize,
+    lint_inheritance_count: usize,
     temporary_exceptions: Vec<AppliedException>,
 }
 
@@ -32,6 +37,14 @@ impl ArchitectureReport {
 
     pub(crate) const fn dependency_count(&self) -> usize {
         self.dependency_count
+    }
+
+    pub(crate) const fn external_dependency_count(&self) -> usize {
+        self.external_dependency_count
+    }
+
+    pub(crate) const fn lint_inheritance_count(&self) -> usize {
+        self.lint_inheritance_count
     }
 
     pub(crate) fn temporary_exceptions(&self) -> &[AppliedException] {
@@ -71,14 +84,21 @@ impl Error for ArchitectureCheckError {
     }
 }
 
-/// Checks every direct dependency between workspace packages.
+/// Checks direct dependency ownership and lint inheritance for every workspace package.
 pub(crate) fn check() -> Result<ArchitectureReport, ArchitectureCheckError> {
     let policy_violations = validate_policy();
     if !policy_violations.is_empty() {
         return Err(ArchitectureCheckError::Policy(policy_violations));
     }
 
-    security_exception::check(&PathBuf::from(WORKSPACE_MANIFEST).with_file_name("Cargo.lock"))
+    let workspace_manifest = PathBuf::from(WORKSPACE_MANIFEST);
+    source_overrides::check(
+        workspace_manifest
+            .parent()
+            .expect("the workspace manifest has a parent directory"),
+    )
+    .map_err(ArchitectureCheckError::Policy)?;
+    security_exception::check(&workspace_manifest.with_file_name("Cargo.lock"))
         .map_err(|violation| ArchitectureCheckError::Policy(vec![violation]))?;
 
     let metadata = load_metadata().map_err(ArchitectureCheckError::Metadata)?;
@@ -86,7 +106,12 @@ pub(crate) fn check() -> Result<ArchitectureReport, ArchitectureCheckError> {
         return Err(ArchitectureCheckError::Policy(vec![violation]));
     }
     let graph = graph_from_metadata(&metadata)?;
-    validate_graph(&graph)
+    let mut report = validate_graph(&graph)?;
+    report.external_dependency_count =
+        external_dependencies::check(&metadata).map_err(ArchitectureCheckError::Policy)?;
+    report.lint_inheritance_count =
+        lint_inheritance::check(&metadata).map_err(ArchitectureCheckError::Policy)?;
+    Ok(report)
 }
 
 /// Keeps the fixture parser and encoder on the same WIT model release.
@@ -146,6 +171,11 @@ fn load_metadata() -> Result<Metadata, cargo_metadata::Error> {
     let mut command = MetadataCommand::new();
     command
         .manifest_path(PathBuf::from(WORKSPACE_MANIFEST))
+        .current_dir(
+            PathBuf::from(WORKSPACE_MANIFEST)
+                .parent()
+                .expect("the workspace manifest has a parent directory"),
+        )
         .no_deps()
         .other_options(vec!["--locked".to_owned()]);
     command.exec()
@@ -331,6 +361,8 @@ fn validate_graph(graph: &WorkspaceGraph) -> Result<ArchitectureReport, Architec
     Ok(ArchitectureReport {
         package_count: graph.packages.len(),
         dependency_count: graph.dependencies.len(),
+        external_dependency_count: 0,
+        lint_inheritance_count: 0,
         temporary_exceptions: TEMPORARY_EXCEPTIONS
             .iter()
             .map(AppliedException::from_policy)

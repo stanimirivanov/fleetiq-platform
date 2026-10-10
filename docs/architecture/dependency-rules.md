@@ -3,7 +3,8 @@
 ## TL;DR
 
 - Run `cargo xtask architecture` after changing a Cargo manifest.
-- Every workspace package and direct internal dependency is explicit policy.
+- Every workspace package and direct dependency has an explicit owner and kind.
+- Reject nonmember path dependencies; all members inherit workspace lints.
 - Normal, development, and build dependencies are checked separately.
 - Semantic policy owns its read ports; PostgreSQL adapts them without a
   policy-to-application dependency.
@@ -36,22 +37,69 @@ contracts and use cases directly while one backend process composes them.
 
 ## Enforced policy
 
-The exact policy in `crates/xtask/src/architecture/policy.rs` covers every
-direct dependency between workspace members. The checker reads Cargo's
-normalized metadata and distinguishes normal, development, and build edges. It
-rejects:
+The [internal policy](../../crates/xtask/src/architecture/policy.rs) records exact
+edges between workspace members. The [external policy](../../crates/xtask/src/architecture/external_dependencies/policy.rs)
+records every member's approved direct third-party packages by canonical name
+and normal, development, or build kind, including an explicit empty list when
+none are needed. `cargo xtask architecture` reads Cargo's normalized metadata.
+It rejects:
 
 - a new workspace package without a role and dependency policy;
 - a policy entry whose package was removed;
-- a direct internal dependency absent from the allowlist;
-- a stale allowance after a dependency is removed; and
-- a cycle in the production dependency graph.
+- a direct internal or external dependency absent from its exact allowlist;
+- duplicate, invalid, or stale rules after a dependency is removed;
+- any direct path dependency outside the selected workspace members;
+- root manifest/config source overrides that bypass declared ownership;
+- a cycle in the production internal dependency policy; and
+- a member without `[lints] workspace = true`, including local replacements,
+  unreadable manifests, and malformed TOML.
 
-Optional and target-specific workspace dependencies are included even when they
-are inactive on the current host. Renamed dependencies are identified by their
-workspace package path. Registry dependencies and nonmember path dependencies
-do not define edges in this graph; review them under the dependency criteria in
-the engineering standards.
+Optional and target-specific declarations are included even when inactive on
+this host. Cargo's canonical names identify renamed external dependencies;
+workspace paths identify internal packages. A registry package with the same
+name as a workspace member is still external. Approval of a registry dependency
+never authorizes replacing it with an excluded helper or vendored path. Add a
+local helper as a classified workspace member, or first propose a separate
+reviewed decision and narrow sensor change.
+
+Declaration-only metadata does not expose resolved `[patch]` substitutions.
+The sensor therefore also rejects nonempty root manifest `[patch]`/`[replace]`
+and root `.cargo/config.toml` or legacy `.cargo/config` `paths`, `[patch]`, and
+`[source]` replacement settings. An override requires a separately reviewed
+policy and sensor change; there are no approved overrides today. These guards
+cover repository-root inputs, not parent/user Cargo configuration, environment,
+or command-line overrides. Run the documented gates from the repository root
+with trusted tool configuration; Cargo metadata also runs from that root.
+
+## Third-party ownership and lint inheritance
+
+Owning a dependency means that the package's current responsibility needs it.
+For example, `bigdecimal` implements domain value arithmetic; SQLx belongs to
+PostgreSQL persistence and server wiring, Wasmtime to the protocol adapter, and
+HTTP/OIDC libraries to the server. Inner application crates use Tokio only in
+tests today. These examples explain current policy; they do not grant every
+crate with the same role the same dependencies.
+
+A development allowance does not authorize normal or build use. Multiple target
+or feature declarations of the same owning package, dependency, and kind form
+one ownership edge. Version and feature changes keep that edge but still need
+dependency review. Ownership approval does not approve a source, version,
+license, or advisory exception. `cargo deny check` owns those supply-chain
+questions, and `cargo machete` checks suspected unused declarations.
+
+Every member must inherit the root Rust and Clippy configuration:
+
+```toml
+[lints]
+workspace = true
+```
+
+Package-local replacement lint tables are rejected. Narrow source-level lint
+exceptions still need a recorded reason under the engineering standards. The
+sensor guarantees inheritance; it does not prove that the workspace lint values
+or source-level exceptions are sufficient. Cargo validates complete manifest
+semantics; the maintained TOML parser reads the lint and source-override
+declarations omitted from Cargo metadata. See [ADR 0096](../adr/0096-enforce-external-dependency-ownership-and-lint-inheritance.md).
 
 The architecture check also validates the exact locked OIDC/RSA packages and
 consumer edge for the approved verification-only advisory exception, including
@@ -168,18 +216,25 @@ When a task changes a manifest:
 1. identify the capability and role that require the dependency;
 2. confirm the dependency points toward stable domain or policy meaning, or is
    confined to an adapter, composition root, test, or repository tool;
-3. update the exact policy in the same pull request;
+3. update the exact internal or external policy in the same pull request, using
+   the canonical Cargo package name and precise dependency kind; remove stale
+   rules when removing a dependency, and preserve workspace lint inheritance;
 4. record third-party features, license, maintenance and security status,
    alternatives, and exit path when applicable; and
-5. run `cargo xtask architecture` and the complete quality gate.
+5. run `cargo xtask architecture` and the complete quality gate; when changing
+   the sensor or its policy model, also run `cargo test -p fleetiq-xtask --locked`.
 
-A temporary exception requires an accepted decision, a concrete removal task,
-and a diagnostic that remains visible on successful checks. An exception is not
-a general permission for other dependencies between the same roles.
+A temporary exception requires an accepted decision, an owner, a reason, a
+concrete removal task and review trigger, and a diagnostic that remains visible
+on successful checks. Nonmember paths have no exception mechanism today; adding
+one requires a separately reviewed decision and tested sensor change. An
+exception is not a general permission for other dependencies between the same
+roles.
 
 ## Related decisions
 
 - [Capability dependency enforcement](../adr/0066-enforce-capability-dependency-policy.md)
+- [External ownership and lint inheritance](../adr/0096-enforce-external-dependency-ownership-and-lint-inheritance.md)
 - [Explicit semantic resolution](../adr/0003-explicit-semantic-resolution.md)
 - [Semantic read-port ownership](../adr/0069-own-semantic-read-ports-in-policy.md)
 - [Access policy ownership](../adr/0070-extract-access-policy-boundary.md)

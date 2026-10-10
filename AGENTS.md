@@ -45,6 +45,9 @@ error or propose a superseding ADR. Do not silently choose one source.
 
 ## Architecture and Rust
 
+- For Cargo changes, follow the [dependency rules](docs/architecture/dependency-rules.md):
+  direct dependencies require an approved owner and kind, nonmember paths are
+  rejected, and every member inherits workspace lints. Run the architecture sensor.
 - Dependencies point inward. Domain crates do not depend on SQLx, Wasmtime,
   transports, brokers, web frameworks, or vendors.
 - Protocol decoding identifies source observations; semantic binding attributes

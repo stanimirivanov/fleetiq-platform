@@ -44,9 +44,14 @@ fn run_architecture_check() -> ExitCode {
     match architecture::check() {
         Ok(report) => {
             println!(
-                "architecture policy passed for {} workspace packages and {} internal dependencies",
+                concat!(
+                    "architecture policy passed for {} workspace packages, {} internal dependencies, ",
+                    "{} external dependencies, and {} inherited lint policies"
+                ),
                 report.package_count(),
-                report.dependency_count()
+                report.dependency_count(),
+                report.external_dependency_count(),
+                report.lint_inheritance_count()
             );
             for exception in report.temporary_exceptions() {
                 println!("temporary exception: {exception}");
@@ -64,7 +69,7 @@ fn print_usage() {
     eprintln!(
         "FleetIQ repository tasks\n\n\
          Usage:\n\
-           cargo xtask architecture    Verify workspace dependency policy\n\
+           cargo xtask architecture    Verify dependency ownership and inherited lint policy\n\
            cargo xtask repository      Verify documentation and repository policy"
     );
 }

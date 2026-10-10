@@ -2,6 +2,8 @@
 
 ## TL;DR
 
+- `cargo xtask architecture` checks direct dependency ownership and inherited
+  workspace lints before supply-chain review; it rejects nonmember paths.
 - The locked Cargo workspace must pass `cargo deny check` and
   `cargo machete --with-metadata --skip-target-dir` before handoff.
 - `deny.toml` rejects known vulnerabilities, unapproved licenses and sources,
@@ -51,8 +53,12 @@ test, and CI environments. Unpublished FleetIQ crates are excluded from this
 third-party license policy. Duplicate transitive versions are warnings for
 review; they can be required by unrelated upstream version constraints.
 Duplicate external workspace dependency declarations and unused workspace
-declarations are errors. Local path edges remain explicit and are checked by
-`cargo xtask architecture`.
+declarations are errors. `cargo xtask architecture` independently checks exact
+owning packages and normal, development, or build kinds for both internal and
+third-party dependencies. It rejects nonmember paths, root source overrides,
+and missing workspace lint inheritance. See the canonical [dependency rules](../architecture/dependency-rules.md)
+for policy updates; approval of ownership never approves a supply-chain source
+or advisory exception.
 
 Do not suppress a new advisory or widen the license/source allowlist merely to
 make the gate green. Record the affected package, advisory or license, actual

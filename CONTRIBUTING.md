@@ -24,7 +24,7 @@ optional choice.
 | Progressive task-to-document routing | [documentation map](docs/README.md) |
 | Harness tiers and executable feedback | [coding harness](docs/development/harness.md) |
 | Rust, architecture, tests, and operations | [engineering standards](docs/development/engineering-standards.md) |
-| Direct workspace dependency policy | [dependency rules](docs/architecture/dependency-rules.md) |
+| Direct dependency ownership and workspace lint policy | [dependency rules](docs/architecture/dependency-rules.md) |
 | PostgreSQL schemas and migrations | [SQL migration criteria](docs/development/sql-migrations.md) |
 | Current runtime and capability inventory | [current state](docs/development/current-state.md) |
 | Durable architecture choices | [ADRs](docs/adr/README.md) |
@@ -201,9 +201,8 @@ The [coding harness](docs/development/harness.md) classifies these checks from
 T0 task routing through T3 service-backed and explicitly requested specialist
 checks. Local Compose smoke verification is required when deployment,
 configuration, startup, readiness, or container behavior changes. The
-repository does not yet define a canonical supply-chain aggregate; record any
-explicitly requested vulnerability or license command exactly rather than
-implying an undocumented gate exists.
+supply-chain commands above remain required; record their exact evidence.
+There is no additional aggregate runner beyond the documented commands.
 
 ## Documentation
 

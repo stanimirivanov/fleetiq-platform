@@ -38,7 +38,7 @@ product scope and relevant architecture page.
 | HTTP response contract, client generation, or fixtures | [Backend-owned HTTP contract](../contracts/http/README.md), [OpenAPI maintenance skill](../.agents/skills/openapi/SKILL.md), [HTTP versioning ADR](adr/0048-establish-versioned-http-api-boundary.md) | Server contract tests and relevant protected-route tests |
 | Bootstrap, deployment, readiness, or local runtime behavior | [Operations index](operations/README.md), [development guide](development/README.md) | [Platform bootstrap](operations/platform-bootstrap.md), Compose smoke checks |
 | Build, CI, repository policy, agent guidance, or developer experience | [Coding harness](development/harness.md), [development guide](development/README.md) | `cargo xtask repository`, `cargo xtask architecture` |
-| Dependency additions, advisories, licenses, sources, or update proposals | [Dependency management](development/dependency-management.md), [engineering standards](development/engineering-standards.md) | `cargo deny check`, `cargo machete --with-metadata --skip-target-dir` |
+| Dependency additions, advisories, licenses, sources, or update proposals | [Dependency rules](architecture/dependency-rules.md), [dependency management](development/dependency-management.md) | `cargo xtask architecture`, `cargo deny check`, `cargo machete --with-metadata --skip-target-dir` |
 | Milestone or issue planning | [Milestones](roadmap/milestones.md), [CONTRIBUTING.md](../CONTRIBUTING.md) | Relevant product and architecture sources |
 | Vulnerability reporting or security-sensitive behavior | [Security policy](../SECURITY.md) | Relevant architecture and ADRs |
 
