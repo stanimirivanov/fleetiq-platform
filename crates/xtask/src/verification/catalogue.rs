@@ -307,7 +307,7 @@ pub(crate) static CHECKS: &[Check] = &[
         command: "pnpm check:openapi",
         outcome: "Modular contract linting and byte-for-byte committed bundle consistency",
         prerequisites: &[Prerequisite::OpenapiDependencies],
-        tools: &[Tool::Node, Tool::Pnpm],
+        tools: &[Tool::Node, Tool::Pnpm, Tool::Git],
         acceptance: false,
     },
 ];

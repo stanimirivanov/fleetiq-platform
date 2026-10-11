@@ -49,6 +49,15 @@ From the repository root, run `pnpm lint:openapi` to lint the modular source,
 the bundle at compile time; generate it before running those tests after a
 source edit.
 
+Bundle freshness compares exact bytes. The generated `dist/openapi.json` uses LF,
+and [the repository attributes](../../.gitattributes) preserve those bytes on
+Windows and Unix checkouts, including Git's `core.autocrlf=true` setting. Keep an
+explicit checkout policy for generated artifacts compared byte for byte; do not
+normalize their contents during verification. Regenerate with
+`pnpm bundle:openapi` if an older working copy retains CRLF. The regression suite
+requires Git and exercises fresh disposable checkouts under Windows-style and
+LF-preserving settings, alongside rejection of noncanonical bundle bytes.
+
 OpenAPI 3.1 uses JSON Schema 2020-12 for Schema Objects. Contract tests
 validate examples against their schemas and compare covered examples with
 in-process HTTP responses. They do not prove every undocumented route, every

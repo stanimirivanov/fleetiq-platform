@@ -4,3 +4,6 @@
 *.toml text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# Preserve byte-compared generated output across Windows and Unix checkouts.
+/contracts/http/dist/openapi.json text eol=lf
