@@ -90,7 +90,7 @@ test('ambient Redocly CLI arguments cannot skip the repository rule or redirect 
   assert.deepEqual(environment, { PATH: 'synthetic-path', REDOCLY_TELEMETRY: 'off', REDOCLY_SUPPRESS_UPDATE_NOTICE: 'true' });
 });
 
-function checkoutFixture(context, autocrlf) {
+function checkoutFixture(context, autocrlf, policy = readFileSync(join(repositoryRoot, '.gitattributes'))) {
   const sample = fixture(context);
   const repository = join(sample.root, 'source-repository');
   const checkout = join(sample.root, `checkout-${autocrlf}`);
@@ -121,11 +121,12 @@ function checkoutFixture(context, autocrlf) {
     const result = spawnSync('git', [...settings, ...args], { cwd: sample.root, env: environment, encoding: 'utf8', timeout: 20_000 });
     assert.equal(result.error, undefined, result.error?.message);
     assert.equal(result.status, 0, `Disposable Git fixture setup failed: ${result.stdout}${result.stderr}`);
+    return result.stdout;
   };
   git(['-c', 'core.autocrlf=input', 'init', '--initial-branch=main', repository]);
   const contractDirectory = join(repository, 'contracts/http/dist');
   mkdirSync(contractDirectory, { recursive: true });
-  writeFileSync(join(repository, '.gitattributes'), readFileSync(join(repositoryRoot, '.gitattributes')));
+  writeFileSync(join(repository, '.gitattributes'), policy);
   writeFileSync(join(contractDirectory, 'openapi.json'), sample.bytes);
   const control = Buffer.from('Synthetic checkout control\nSecond control line\n');
   writeFileSync(join(repository, 'control.txt'), control);
@@ -134,31 +135,61 @@ function checkoutFixture(context, autocrlf) {
   // --no-checkout ensures the first materialization uses the policy under test;
   // --no-hardlinks keeps every object file within this fixture independently owned.
   git(['clone', '--no-checkout', '--no-hardlinks', '--', repository, checkout]);
+  // Reset only this disposable control's eol attribute. A repository-wide LF
+  // policy must still protect the artifact while the control exercises autocrlf.
+  mkdirSync(join(checkout, '.git/info'), { recursive: true });
+  writeFileSync(join(checkout, '.git/info/attributes'), '/control.txt text !eol\n');
   git(['-c', `core.autocrlf=${autocrlf}`, '-C', checkout, 'checkout', '--force', 'HEAD']);
-  return { ...sample, checkout, control };
+  const effective = git(['-C', checkout, 'check-attr', '-z', 'text', 'eol', '--', 'control.txt', 'contracts/http/dist/openapi.json']).split('\0');
+  assert.deepEqual(effective.slice(0, 6), ['control.txt', 'text', 'set', 'control.txt', 'eol', 'unspecified']);
+  const expectedControl = autocrlf === 'true' ? Buffer.from(control.toString('utf8').replaceAll('\n', '\r\n')) : control;
+  // An ineffective checkout or a lingering LF override must fail setup rather
+  // than let the artifact assertion pass without exercising conversion.
+  assert.deepEqual(readFileSync(join(checkout, 'control.txt')), expectedControl);
+  const committed = join(checkout, 'contracts/http/dist/openapi.json');
+  return {
+    ...sample,
+    checkout,
+    artifactEol: effective[11],
+    checkCheckout() {
+      return checkBundle({
+        source: join(checkout, 'synthetic-source.yaml'),
+        config: join(checkout, 'synthetic-config.yaml'),
+        committed,
+        temporaryParent: sample.temporaryParent,
+        run: (args) => writeFileSync(outputPath(args), sample.bytes),
+      });
+    },
+  };
 }
 
-for (const autocrlf of ['true', 'input']) {
-  test(`fresh Git checkout keeps canonical JSON under core.autocrlf=${autocrlf}`, (context) => {
-    const sample = checkoutFixture(context, autocrlf);
-    const control = readFileSync(join(sample.checkout, 'control.txt'));
-    const expectedControl = autocrlf === 'true' ? Buffer.from(sample.control.toString('utf8').replaceAll('\n', '\r\n')) : sample.control;
-    // This control proves that conversion is active; a global setting or an
-    // ineffective checkout cannot produce a misleading passing JSON assertion.
-    assert.deepEqual(control, expectedControl);
-    const committed = join(sample.checkout, 'contracts/http/dist/openapi.json');
-    assert.deepEqual(readFileSync(committed), sample.bytes, 'The generated JSON artifact must remain LF even when Git converts ordinary text to CRLF.');
-    checkBundle({
-      source: join(sample.checkout, 'synthetic-source.yaml'),
-      config: join(sample.checkout, 'synthetic-config.yaml'),
-      committed,
-      temporaryParent: sample.temporaryParent,
-      run: (args) => writeFileSync(outputPath(args), sample.bytes),
+for (const [name, policy] of [
+  ['repository policy', undefined],
+  ['narrow artifact LF policy', '* text=auto\n/contracts/http/dist/openapi.json text eol=lf\n'],
+]) {
+  for (const autocrlf of ['true', 'input']) {
+    test(`fresh Git checkout keeps canonical JSON under core.autocrlf=${autocrlf} with ${name}`, (context) => {
+      const sample = checkoutFixture(context, autocrlf, policy);
+      assert.equal(sample.artifactEol, 'lf');
+      const committed = join(sample.checkout, 'contracts/http/dist/openapi.json');
+      assert.deepEqual(readFileSync(committed), sample.bytes, 'The generated JSON artifact must remain LF even when Git converts the isolated control to CRLF.');
+      sample.checkCheckout();
+      assert.deepEqual(readFileSync(committed), sample.bytes);
+      sample.assertClean();
     });
-    assert.deepEqual(readFileSync(committed), sample.bytes);
-    sample.assertClean();
-  });
+  }
 }
+
+test('an unprotected Git checkout fails strict freshness even with the isolated control', (context) => {
+  const sample = checkoutFixture(context, 'true', '* text=auto\n');
+  assert.equal(sample.artifactEol, 'unspecified');
+  const committed = join(sample.checkout, 'contracts/http/dist/openapi.json');
+  const crlf = Buffer.from(sample.bytes.toString('utf8').replaceAll('\n', '\r\n'));
+  assert.deepEqual(readFileSync(committed), crlf);
+  assert.throws(() => sample.checkCheckout(), /bundle is stale/u);
+  assert.deepEqual(readFileSync(committed), crlf);
+  sample.assertClean();
+});
 
 test('a CRLF committed artifact remains stale under the strict byte comparator', (context) => {
   const sample = fixture(context);
