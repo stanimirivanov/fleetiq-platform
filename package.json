@@ -12,6 +12,6 @@
     "test:openapi": "node --test scripts/tests/openapi-layout.test.mjs scripts/tests/openapi-bundle.test.mjs"
   },
   "devDependencies": {
-    "@redocly/cli": "2.58.1"
+    "@redocly/cli": "2.62.1"
   }
 }
