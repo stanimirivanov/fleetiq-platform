@@ -1,5 +1,7 @@
 description: "The selected authentication mode rejected missing, invalid, expired, or unregistered credentials. WWW-Authenticate is emitted only for configured workload bearer mode."
 headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
   WWW-Authenticate:
     schema:
       type: "string"

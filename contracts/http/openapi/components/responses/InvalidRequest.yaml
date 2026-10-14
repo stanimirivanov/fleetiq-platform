@@ -1,4 +1,7 @@
-description: "Invalid path identifier, definition version, time, limit, cursor, or query."
+description: "Invalid path identifier, definition version, time, limit, cursor, query, or command body."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
 content:
   "application/problem+json":
     schema:

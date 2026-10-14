@@ -1,10 +1,11 @@
-//! Backend composition root, HTTP health surface, and protected metadata queries for `FleetIQ`.
+//! Backend composition root, HTTP health surface, and protected identity/metadata operations for `FleetIQ`.
 //!
 //! The crate owns process configuration, PostgreSQL startup, migrations,
 //! transport binding, and graceful shutdown. Browser sessions or configured
-//! workload credentials authenticate metadata queries against current identity
+//! workload credentials authenticate protected operations against current identity
 //! mappings and tenant policy.
 
+mod actor_administration;
 mod bearer_authentication;
 mod bootstrap;
 mod browser_identity;
@@ -14,6 +15,7 @@ mod config;
 mod contract_test_support;
 mod health;
 mod http_api;
+mod mutation_guard;
 mod operator_tenants;
 mod protected_asset;
 mod protected_definitions;
@@ -71,7 +73,7 @@ pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
             loop {
                 interval.tick().await;
-                let Ok(now) = browser_identity::now() else {
+                let Ok(now) = protected_request::now() else {
                     continue;
                 };
                 if repository.delete_expired(now).await.is_err() {
@@ -95,9 +97,12 @@ async fn application_router(pool: PgPool, config: &ServerConfig) -> Result<Route
             .await
             .map_err(|_| ServerError::BrowserIdentityStartup)?;
         router = router
-            .merge(protected_read_router(
+            .merge(protected_application_router(
                 pool.clone(),
                 browser_identity::BrowserRequestAuthenticator::new(pool.clone(), browser),
+                mutation_guard::MutationGuard::Browser {
+                    public_origin: browser.public_origin().to_owned(),
+                },
             ))
             .merge(browser_identity::postgres_browser_router(
                 pool,
@@ -109,17 +114,30 @@ async fn application_router(pool: PgPool, config: &ServerConfig) -> Result<Route
             bearer_authentication::ConfiguredBearerAuthenticator::new(bearer.clone()),
             fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
         );
-        router = router.merge(protected_read_router(pool, authentication));
+        router = router.merge(protected_application_router(
+            pool,
+            authentication,
+            mutation_guard::MutationGuard::Workload,
+        ));
     }
     Ok(router.merge(api_router()))
 }
 
-/// Composes protected reads with one authentication strategy and fresh policy.
-fn protected_read_router<A>(pool: PgPool, authentication: A) -> Router
+/// Composes protected operations with one authentication strategy and fresh policy.
+fn protected_application_router<A>(
+    pool: PgPool,
+    authentication: A,
+    mutation: mutation_guard::MutationGuard,
+) -> Router
 where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(actor_administration::postgres_actor_administration_router(
+            pool.clone(),
+            authentication.clone(),
+            mutation,
+        ))
         .merge(operator_tenants::postgres_operator_tenants_router(
             pool.clone(),
             authentication.clone(),
@@ -243,6 +261,8 @@ mod tests {
             .expect("valid base configuration");
         let paths = [
             "/api/v1/me/tenants",
+            "/api/v1/admin/actors",
+            "/api/v1/admin/actor-lifecycle-changes",
             "/api/v1/tenants/tenant-a/assets/asset-1",
             "/api/v1/tenants/tenant-a/assets/asset-1/device",
             "/api/v1/tenants/tenant-a/asset-types/generic.power-system/versions/2",

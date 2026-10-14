@@ -1,0 +1,17 @@
+description: "Current actor catalogue ordered by actor ID; includes deactivated actors."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/ActorCataloguePage.yaml"
+    example:
+      actors:
+        -
+          actor_id: "actor-a"
+          state: "active"
+        -
+          actor_id: "operator-a"
+          state: "active"
+      next_after: null

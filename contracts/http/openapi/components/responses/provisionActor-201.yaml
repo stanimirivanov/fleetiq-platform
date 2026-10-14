@@ -1,0 +1,10 @@
+description: "Actor, exact initial identity and audit created atomically; no access grants are created."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/ProvisionActorResult.yaml"
+    example:
+      outcome: "provisioned"

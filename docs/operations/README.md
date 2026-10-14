@@ -37,3 +37,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   attributions targeting one asset at explicit physical and recorded times.
 
 - [Operator tenant discovery](operator-tenants.md) explains bounded current-access hints.
+
+- [Actor provisioning and lifecycle administration](actor-administration.md)

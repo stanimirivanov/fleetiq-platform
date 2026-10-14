@@ -190,7 +190,7 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
         .expect("published paths must be an object");
     assert_eq!(
         paths.len(),
-        OPERATIONS.len() + 4,
+        OPERATIONS.len() + 4 + 3,
         "review every published path"
     );
     let mut ids = HashSet::new();

@@ -1,0 +1,29 @@
+get:
+  operationId: "listActorLifecycleChanges"
+  summary: "Page immutable actor lifecycle audit"
+  description: "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Descending (recorded_at_ms, change_id) order. Both before cursor parameters must be supplied together. Limit 1..100, default 50. Each page uses current committed history without a traversal snapshot guarantee. External identity subjects are not returned. Unknown query fields are rejected."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      $ref: "../../components/parameters/admin-page-limit.yaml"
+    -
+      $ref: "../../components/parameters/admin-audit-before-time.yaml"
+    -
+      $ref: "../../components/parameters/admin-audit-before-change.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listActorLifecycleChanges-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/AdministrationForbidden.yaml"
+    "405":
+      $ref: "../../components/responses/ActorAuditMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

@@ -1,0 +1,6 @@
+name: "Origin"
+in: "header"
+required: false
+description: "Browser session mode requires exactly one value equal to the configured HTTPS public origin. Workload mode does not require this header."
+schema:
+  type: "string"

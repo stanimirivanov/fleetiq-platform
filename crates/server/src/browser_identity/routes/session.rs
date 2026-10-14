@@ -5,7 +5,7 @@ use std::sync::Arc;
 use axum::{
     Json,
     extract::State,
-    http::{HeaderMap, StatusCode, header},
+    http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
 };
 use serde::Serialize;
@@ -16,7 +16,7 @@ use super::super::{
 };
 use super::{
     BrowserIdentityState, BrowserResponseError, internal, reject_authorization, secure_response,
-    set_cookie, single_header,
+    set_cookie,
 };
 
 #[derive(Serialize)]
@@ -44,13 +44,10 @@ pub(super) async fn logout<P: OidcProvider>(
     headers: HeaderMap,
 ) -> Result<Response, BrowserResponseError> {
     reject_authorization(&headers)?;
-    // A same-origin custom header cannot be sent by a cross-origin form. No
-    // CORS permission is granted; exact Origin is additionally mandatory.
-    if single_header(&headers, header::ORIGIN) != Some(state.config.public_origin())
-        || single_header(&headers, "x-fleetiq-csrf") != Some("1")
-    {
-        return Err(BrowserResponseError::Forbidden);
+    crate::mutation_guard::MutationGuard::Browser {
+        public_origin: state.config.public_origin().to_owned(),
     }
+    .check(&headers)?;
     if let Some(secret) = credential(&headers, SESSION_COOKIE)? {
         state
             .repository

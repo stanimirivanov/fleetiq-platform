@@ -1,0 +1,5 @@
+type: "string"
+minLength: 1
+maxLength: 128
+pattern: "^(?!\\s)(?![\\s\\S]*\\s$)[^\\u0000-\\u001F\\u007F-\\u009F]+$"
+description: "Exact opaque domain identifier; no surrounding whitespace or control characters."

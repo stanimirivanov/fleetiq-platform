@@ -29,6 +29,7 @@ mod platform_access_administration;
 mod platform_access_audit;
 mod platform_bootstrap;
 mod platform_grant_catalog;
+mod recorded_time;
 mod tenant_access_administration;
 mod tenant_access_audit;
 mod tenant_catalog;

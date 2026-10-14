@@ -313,3 +313,58 @@ fn assert_constraint(error: &sqlx::Error, expected: &str) {
         Some(expected)
     );
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn delivery_retries_keep_first_host_time_but_strict_commands_still_compare_time(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    bootstrap_operator(&pool).await?;
+    let service = ActorProvisioningService::new(PostgresActorProvisioning::new(pool.clone()));
+    let delivery = |time| {
+        ActorProvisioningRequest::for_delivery(
+            ActorProvisioningId::new("delivery-a").unwrap(),
+            actor_id("actor-a"),
+            external_identity("workforce", "subject-a"),
+            UnixTimeMillis::new(time),
+        )
+    };
+    let (first, second) = tokio::join!(
+        service.provision(manage_identity(&pool).await?, delivery(1_000)),
+        service.provision(manage_identity(&pool).await?, delivery(2_000))
+    );
+    let outcomes = [first?, second?];
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|outcome| **outcome == ActorProvisioningOutcome::Provisioned)
+            .count(),
+        1
+    );
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|outcome| **outcome == ActorProvisioningOutcome::AlreadyProvisioned)
+            .count(),
+        1
+    );
+    let stored:i64=sqlx::query_scalar("SELECT recorded_at_ms FROM identity.actor_provisionings WHERE provisioning_id='delivery-a'").fetch_one(&pool).await?;
+    assert!([1_000, 2_000].contains(&stored));
+    assert_eq!(
+        service
+            .provision(manage_identity(&pool).await?, delivery(3_000))
+            .await?,
+        ActorProvisioningOutcome::AlreadyProvisioned
+    );
+    assert!(
+        service
+            .provision(
+                manage_identity(&pool).await?,
+                request("delivery-a", "actor-a", "workforce", "subject-a", 3_000)
+            )
+            .await
+            .is_err()
+    );
+    let after:i64=sqlx::query_scalar("SELECT recorded_at_ms FROM identity.actor_provisionings WHERE provisioning_id='delivery-a'").fetch_one(&pool).await?;
+    assert_eq!(stored, after);
+    Ok(())
+}

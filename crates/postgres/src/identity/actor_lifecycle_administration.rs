@@ -103,7 +103,7 @@ async fn resolve_existing(
     if existing.administrator_actor_id != change.administrator_actor_id().as_str()
         || existing.target_actor_id != change.target_actor_id().as_str()
         || existing.change_kind != kind_name(change.kind())
-        || existing.recorded_at_ms != change.recorded_at().get()
+        || !change.accepts_recorded_at(fleetiq_domain::UnixTimeMillis::new(existing.recorded_at_ms))
     {
         return Err(
             PostgresActorLifecycleAdministrationError::IdentityCollision {

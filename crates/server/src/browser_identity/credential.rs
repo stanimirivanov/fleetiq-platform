@@ -1,13 +1,11 @@
 //! Bounded cookie parsing, cryptographic credentials, and host-only cookie policy.
 
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use axum::http::{HeaderMap, header};
 use cookie::{Cookie, SameSite};
-use fleetiq_domain::UnixTimeMillis;
 use sha2::{Digest, Sha256};
 
 use crate::protected_request::ProtectedRequestError;
+pub(super) use crate::protected_request::now;
 
 pub(super) const SESSION_COOKIE: &str = "__Host-fleetiq-session";
 pub(super) const LOGIN_COOKIE: &str = "__Host-fleetiq-login";
@@ -84,15 +82,6 @@ pub(super) fn cookie(name: &'static str, value: String, lifetime_seconds: i64) -
 
 pub(super) fn clear_cookie(name: &'static str) -> String {
     cookie(name, String::new(), 0)
-}
-
-pub(crate) fn now() -> Result<UnixTimeMillis, ProtectedRequestError> {
-    let milliseconds = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|_| ProtectedRequestError::Internal)?
-        .as_millis();
-    let milliseconds = i64::try_from(milliseconds).map_err(|_| ProtectedRequestError::Internal)?;
-    Ok(UnixTimeMillis::new(milliseconds))
 }
 
 /// Binds sessions to one deployed provider trust domain without storing a secret.

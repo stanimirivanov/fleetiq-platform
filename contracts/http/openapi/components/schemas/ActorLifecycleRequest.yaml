@@ -1,0 +1,13 @@
+type: "object"
+additionalProperties: false
+required:
+  - "change_id"
+  - "state"
+properties:
+  change_id:
+    $ref: "./AdministrationIdentifier.yaml"
+  state:
+    type: "string"
+    enum:
+      - "active"
+      - "deactivated"

@@ -1,0 +1,6 @@
+name: "before_change_id"
+in: "query"
+required: false
+description: "Change-ID tie-breaker from next_before; requires before_recorded_at_ms."
+schema:
+  $ref: "../schemas/AdministrationIdentifier.yaml"

@@ -85,12 +85,6 @@ fn reject_authorization(headers: &HeaderMap) -> Result<(), BrowserResponseError>
     Ok(())
 }
 
-fn single_header(headers: &HeaderMap, name: impl axum::http::header::AsHeaderName) -> Option<&str> {
-    let mut values = headers.get_all(name).iter();
-    let value = values.next()?.to_str().ok()?;
-    values.next().is_none().then_some(value)
-}
-
 fn provider_error(error: OidcError) -> BrowserResponseError {
     match error {
         OidcError::Rejected => BrowserResponseError::Unauthorized,

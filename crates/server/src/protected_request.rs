@@ -1,4 +1,4 @@
-//! HTTP-only authentication, authorization, and safe response mapping shared by protected reads.
+//! HTTP-only authentication, authorization, and safe response mapping shared by protected operations.
 
 use axum::{
     http::{HeaderMap, HeaderValue, StatusCode, header},
@@ -19,7 +19,7 @@ pub(crate) const NOT_FOUND: &str = "urn:fleetiq:problem:not-found";
 pub(crate) const INTERNAL: &str = "urn:fleetiq:problem:internal-error";
 const UNAUTHORIZED: &str = "urn:fleetiq:problem:unauthorized";
 
-/// Bounded transport outcomes from the shared protected-read boundary.
+/// Bounded transport outcomes from the shared protected-operation boundary.
 #[derive(Debug)]
 pub(crate) enum ProtectedRequestError {
     Unauthorized,
@@ -47,7 +47,7 @@ impl IntoResponse for ProtectedRequestError {
     }
 }
 
-/// Authenticates HTTP credentials without coupling metadata handlers to a login strategy.
+/// Authenticates HTTP credentials without coupling protected handlers to a login strategy.
 ///
 /// Implementations return evidence only after validating possession and the
 /// current external-identity mapping. Browser sessions additionally bind that
@@ -158,4 +158,14 @@ pub(crate) fn parse_record_revision(value: &str) -> Option<RecordRevision> {
         .parse::<u64>()
         .ok()
         .and_then(|revision| RecordRevision::new(revision).ok())
+}
+
+/// Samples trusted host receipt time; clients never supply persisted audit timestamps.
+pub(crate) fn now() -> Result<fleetiq_domain::UnixTimeMillis, ProtectedRequestError> {
+    let milliseconds = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|_| ProtectedRequestError::Internal)?
+        .as_millis();
+    let milliseconds = i64::try_from(milliseconds).map_err(|_| ProtectedRequestError::Internal)?;
+    Ok(fleetiq_domain::UnixTimeMillis::new(milliseconds))
 }

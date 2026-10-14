@@ -1,4 +1,7 @@
 description: "A safe, bounded server error."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
 content:
   "application/problem+json":
     schema:

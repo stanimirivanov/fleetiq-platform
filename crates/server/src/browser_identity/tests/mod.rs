@@ -1,5 +1,6 @@
 //! Shared fixtures for observable browser authentication workflows.
 
+mod administration;
 mod credential;
 mod discovery;
 mod login;

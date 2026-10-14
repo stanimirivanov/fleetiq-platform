@@ -1,0 +1,10 @@
+description: "Exact business command already provisioned. Original host receipt time is retained."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/ProvisionActorResult.yaml"
+    example:
+      outcome: "already_provisioned"

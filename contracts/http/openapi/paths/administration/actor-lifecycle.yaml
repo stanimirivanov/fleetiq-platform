@@ -1,0 +1,39 @@
+post:
+  operationId: "changeActorLifecycle"
+  summary: "Activate or deactivate an existing actor"
+  description: "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Browser mode additionally requires one exact configured Origin and X-FleetIQ-CSRF: 1; bearer credentials cannot bypass session mode. JSON is bounded to 16 KiB and rejects unknown fields. The client supplies a stable opaque command ID; keep it and all business fields unchanged after an uncertain response. The server derives the administrator and receipt time. Exact retries keep the first committed time and original effect; different content or actor using that ID conflicts. Current authentication and authority are rechecked even on retry. Retains mappings, grants, and history. Deactivation affects subsequent authentication and policy decisions; accepted in-flight work is not cancelled. An already-requested state records a no-change audit. Replaying a command after another state transition returns the original effect without undoing the later transition. Final active identity and platform-access administrators are protected."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      $ref: "../../components/parameters/admin-actor-id.yaml"
+    -
+      $ref: "../../components/parameters/admin-mutation-origin.yaml"
+    -
+      $ref: "../../components/parameters/admin-mutation-csrf.yaml"
+  requestBody:
+    required: true
+    content:
+      "application/json":
+        schema:
+          $ref: "../../components/schemas/ActorLifecycleRequest.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/changeActorLifecycle-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/AdministrationForbidden.yaml"
+    "404":
+      $ref: "../../components/responses/NotFound.yaml"
+    "405":
+      $ref: "../../components/responses/ActorLifecycleMethodNotAllowed.yaml"
+    "409":
+      $ref: "../../components/responses/IdentityConflict.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

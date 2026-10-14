@@ -1,0 +1,9 @@
+name: "limit"
+in: "query"
+required: false
+description: "Maximum entries per independently current page."
+schema:
+  type: "integer"
+  minimum: 1
+  maximum: 100
+  default: 50
