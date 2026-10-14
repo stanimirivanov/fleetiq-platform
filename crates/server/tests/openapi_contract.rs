@@ -94,6 +94,40 @@ const OPERATIONS: &[PublishedOperation] = &[
     },
 ];
 
+// Explicitly reviewed outside the metadata GET table. Feature-owned contract
+// suites validate their payloads; this table prevents unreviewed paths/methods
+// or duplicate operation IDs from slipping past the global inventory guard.
+const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
+    ("/api/v1/auth/login", &[("get", "beginOperatorLogin")]),
+    ("/api/v1/auth/callback", &[("get", "completeOperatorLogin")]),
+    ("/api/v1/auth/session", &[("get", "getOperatorSession")]),
+    ("/api/v1/auth/logout", &[("post", "endOperatorSession")]),
+    (
+        "/api/v1/admin/actors",
+        &[("get", "listActors"), ("post", "provisionActor")],
+    ),
+    (
+        "/api/v1/admin/actors/{actor_id}/lifecycle",
+        &[("post", "changeActorLifecycle")],
+    ),
+    (
+        "/api/v1/admin/actor-lifecycle-changes",
+        &[("get", "listActorLifecycleChanges")],
+    ),
+    (
+        "/api/v1/admin/actors/{actor_id}/external-identities",
+        &[("get", "listActorExternalIdentities")],
+    ),
+    (
+        "/api/v1/admin/actors/{actor_id}/external-identity-changes",
+        &[("post", "changeExternalIdentity")],
+    ),
+    (
+        "/api/v1/admin/external-identity-changes",
+        &[("get", "listExternalIdentityChanges")],
+    ),
+];
+
 fn contract() -> Result<Value, serde_json::Error> {
     serde_json::from_str(SPEC)
 }
@@ -179,6 +213,24 @@ fn assert_protected_responses(
     );
 }
 
+fn assert_additional_paths(
+    paths: &serde_json::Map<String, Value>,
+    ids: &mut HashSet<&'static str>,
+) {
+    for (path, operations) in ADDITIONAL_PATHS {
+        let path_item = paths.get(*path).expect("every reviewed path must exist");
+        assert_eq!(
+            path_item.as_object().unwrap().len(),
+            operations.len(),
+            "{path} has unreviewed path fields or methods"
+        );
+        for (method, id) in *operations {
+            assert_eq!(path_item[method]["operationId"], *id, "{path} {method}");
+            assert!(ids.insert(*id), "duplicate operation ID: {id}");
+        }
+    }
+}
+
 #[test]
 fn published_operations_have_stable_security_and_request_contracts() -> Result<(), Box<dyn Error>> {
     let contract = contract()?;
@@ -190,7 +242,7 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
         .expect("published paths must be an object");
     assert_eq!(
         paths.len(),
-        OPERATIONS.len() + 4 + 3,
+        OPERATIONS.len() + ADDITIONAL_PATHS.len(),
         "review every published path"
     );
     let mut ids = HashSet::new();
@@ -269,6 +321,8 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
             );
         }
     }
+
+    assert_additional_paths(paths, &mut ids);
     assert_eq!(
         contract["components"]["securitySchemes"]["bearerAuth"]["scheme"],
         "bearer"

@@ -29,6 +29,8 @@ impl ExternalIdentityAdministrationRepository for PostgresExternalIdentityAdmini
     /// and appends immutable audit evidence in one transaction. The global lock
     /// makes change identities deterministic across target actors and prevents
     /// concurrent detach commands from removing an actor's final identities.
+    /// Resolve existing audit before mutation: delivery retries return the original
+    /// effect and receipt time without reapplying an earlier mapping state.
     async fn apply(
         &self,
         change: &ExternalIdentityChange,
@@ -115,7 +117,7 @@ async fn resolve_existing(
         || existing.authority_id != identity.authority_id().as_str()
         || existing.subject != identity.subject().as_str()
         || existing.change_kind != kind_name(change.kind())
-        || existing.recorded_at_ms != change.recorded_at().get()
+        || !change.accepts_recorded_at(fleetiq_domain::UnixTimeMillis::new(existing.recorded_at_ms))
     {
         return Err(
             PostgresExternalIdentityAdministrationError::IdentityCollision {

@@ -1,0 +1,34 @@
+post:
+  operationId: changeExternalIdentity
+  summary: "Attach or detach one exact external identity"
+  description: "Requires fresh authentication and exact current platform identity.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact subjects, credentials, and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1; Authorization cannot bypass browser mode. JSON is limited to 16 KiB and rejects unknown fields. The server derives administrator and receipt time; clients keep the command ID, target, kind, authority, and subject unchanged after an uncertain result. The first committed time and effect survive retries without reapplying an old mapping state. Reusing the ID with different business content or administrator returns 409. Attach/detach is ensure-present/ensure-absent; a new command for an already satisfied state records state_changed false. An identity assigned to another actor conflicts for either operation and is never implicitly rebound. Detach of the actor's final identity conflicts. Missing target actors return 404. Replacement requires attaching a new mapping before explicitly detaching the old. No provider user creation or grant change. Detaching the current login invalidates that session on its next authentication; an uncertain result must be recovered through another registered identity with current authority."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/admin-actor-id.yaml
+    - $ref: ../../components/parameters/admin-mutation-origin.yaml
+    - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/ExternalIdentityChangeRequest.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/changeExternalIdentity-200.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/AdministrationForbidden.yaml
+    "404":
+      $ref: ../../components/responses/NotFound.yaml
+    "405":
+      $ref: ../../components/responses/ActorLifecycleMethodNotAllowed.yaml
+    "409":
+      $ref: ../../components/responses/ExternalIdentityConflict.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml

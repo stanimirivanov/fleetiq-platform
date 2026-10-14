@@ -91,3 +91,37 @@ fn request() -> ExternalIdentityChangeRequest {
 fn actor_id(value: &str) -> ActorId {
     ActorId::new(value).expect("valid actor ID")
 }
+
+#[tokio::test]
+async fn delivery_time_policy_is_explicit_and_command_debug_redacts_subjects() {
+    let repository = RecordingRepository::default();
+    let recorded = repository.changes.clone();
+    let service = ExternalIdentityAdministration::new(repository);
+    let strict = request();
+    let delivery = ExternalIdentityChangeRequest::for_delivery(
+        strict.change_id.clone(),
+        strict.target_actor_id.clone(),
+        strict.external_identity.clone(),
+        strict.kind,
+        UnixTimeMillis::new(2_000),
+    );
+    for input in [strict, delivery] {
+        let diagnostic = format!("{input:?}");
+        assert!(diagnostic.contains("<redacted>"));
+        assert!(!diagnostic.contains("subject-a"));
+        service
+            .apply(authorization::<ManageIdentity>().await, input)
+            .await
+            .unwrap();
+    }
+    let changes = recorded.lock().unwrap();
+    assert!(changes[0].accepts_recorded_at(UnixTimeMillis::new(1_000)));
+    assert!(!changes[0].accepts_recorded_at(UnixTimeMillis::new(2_000)));
+    assert!(changes[1].accepts_recorded_at(UnixTimeMillis::new(1_000)));
+    for change in changes.iter() {
+        let diagnostic = format!("{change:?}");
+        assert!(diagnostic.contains("<redacted>"));
+        assert!(!diagnostic.contains("subject-a"));
+        assert_eq!(change.external_identity().subject().as_str(), "subject-a");
+    }
+}

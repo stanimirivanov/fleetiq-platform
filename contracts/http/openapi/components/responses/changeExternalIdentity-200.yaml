@@ -1,0 +1,9 @@
+description: "Original committed command effect; exact retries do not reapply earlier mapping state."
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ExternalIdentityChangeResult.yaml
+    example: {"outcome":"recorded","state_changed":true}

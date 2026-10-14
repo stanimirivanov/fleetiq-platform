@@ -1,0 +1,11 @@
+type: object
+additionalProperties: false
+required: [change_id, kind, external_identity]
+properties:
+  change_id:
+    $ref: ./AdministrationIdentifier.yaml
+  kind:
+    type: string
+    enum: [attach, detach]
+  external_identity:
+    $ref: ./InitialActorIdentity.yaml

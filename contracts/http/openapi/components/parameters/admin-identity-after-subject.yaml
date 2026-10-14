@@ -1,0 +1,6 @@
+name: after_subject
+in: query
+required: false
+description: Exact exclusive catalogue cursor subject; requires after_authority_id. Use standard URL query encoding, never trim or normalize. Sensitive query data must be excluded from access logs and diagnostics.
+schema:
+  $ref: ../schemas/InitialActorIdentity.yaml#/properties/subject

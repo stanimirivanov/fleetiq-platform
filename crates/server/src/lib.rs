@@ -13,6 +13,7 @@ mod command;
 mod config;
 #[cfg(test)]
 mod contract_test_support;
+mod external_identity_administration;
 mod health;
 mod http_api;
 mod mutation_guard;
@@ -136,8 +137,15 @@ where
         .merge(actor_administration::postgres_actor_administration_router(
             pool.clone(),
             authentication.clone(),
-            mutation,
+            mutation.clone(),
         ))
+        .merge(
+            external_identity_administration::postgres_external_identity_administration_router(
+                pool.clone(),
+                authentication.clone(),
+                mutation,
+            ),
+        )
         .merge(operator_tenants::postgres_operator_tenants_router(
             pool.clone(),
             authentication.clone(),

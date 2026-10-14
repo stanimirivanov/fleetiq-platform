@@ -1,0 +1,9 @@
+description: "Immutable platform-wide attach/detach evidence, newest first by receipt time and change ID. Initial bootstrap and provisioning mappings are separate historical facts."
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ExternalIdentityAuditPage.yaml
+    example: {"changes":[{"change_id":"attach-recovery","administrator_actor_id":"operator-a","target_actor_id":"actor-b","external_identity":{"authority_id":"recovery","subject":" Subject "},"kind":"attach","recorded_at_ms":1000,"state_changed":true}],"next_before":null}
