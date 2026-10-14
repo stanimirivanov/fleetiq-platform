@@ -379,3 +379,76 @@ fn assert_constraint(error: &sqlx::Error, expected: &str) {
         Some(expected)
     );
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn delivery_retries_retain_first_time_and_effect_while_strict_commands_compare_time(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let service =
+        ActorLifecycleAdministration::new(PostgresActorLifecycleAdministration::new(pool.clone()));
+    let delivery = |time| {
+        ActorLifecycleChangeRequest::for_delivery(
+            ActorLifecycleChangeId::new("delivery-a").unwrap(),
+            actor_id("actor-target"),
+            ActorLifecycleChangeKind::Deactivate,
+            UnixTimeMillis::new(time),
+        )
+    };
+    let (first, second) = tokio::join!(
+        service.apply(manage_identity(&pool).await?, delivery(1_000)),
+        service.apply(manage_identity(&pool).await?, delivery(2_000))
+    );
+    let outcomes = [first?, second?];
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|outcome| **outcome
+                == ActorLifecycleChangeOutcome::Recorded(ActorLifecycleChangeEffect::StateChanged))
+            .count(),
+        1
+    );
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|outcome| **outcome
+                == ActorLifecycleChangeOutcome::AlreadyRecorded(
+                    ActorLifecycleChangeEffect::StateChanged
+                ))
+            .count(),
+        1
+    );
+    let stored: i64 = sqlx::query_scalar(
+        "SELECT recorded_at_ms FROM identity.actor_lifecycle_changes WHERE change_id='delivery-a'",
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert!([1_000, 2_000].contains(&stored));
+    assert_eq!(
+        service
+            .apply(manage_identity(&pool).await?, delivery(3_000))
+            .await?,
+        ActorLifecycleChangeOutcome::AlreadyRecorded(ActorLifecycleChangeEffect::StateChanged)
+    );
+    assert!(
+        service
+            .apply(
+                manage_identity(&pool).await?,
+                request(
+                    "delivery-a",
+                    "actor-target",
+                    ActorLifecycleChangeKind::Deactivate,
+                    3_000
+                )
+            )
+            .await
+            .is_err()
+    );
+    let after: i64 = sqlx::query_scalar(
+        "SELECT recorded_at_ms FROM identity.actor_lifecycle_changes WHERE change_id='delivery-a'",
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert_eq!(stored, after);
+    Ok(())
+}

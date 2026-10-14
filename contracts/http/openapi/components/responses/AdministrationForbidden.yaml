@@ -1,0 +1,12 @@
+description: "Missing exact current platform identity.manage authority, or browser mutation origin/CSRF validation failed."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:forbidden"
+      title: "Access denied"
+      status: 403

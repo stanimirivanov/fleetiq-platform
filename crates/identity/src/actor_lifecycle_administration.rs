@@ -2,6 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, ActorLifecycleChangeId, UnixTimeMillis};
 
+use crate::recorded_time::RecordedTime;
 use crate::{AuthorizedPlatform, ManageIdentity};
 
 /// Requested lifecycle state for one stable internal actor.
@@ -19,7 +20,7 @@ pub struct ActorLifecycleChangeRequest {
     change_id: ActorLifecycleChangeId,
     target_actor_id: ActorId,
     kind: ActorLifecycleChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl ActorLifecycleChangeRequest {
@@ -34,7 +35,27 @@ impl ActorLifecycleChangeRequest {
             change_id,
             target_actor_id,
             kind,
-            recorded_at,
+            recorded_at: RecordedTime::Exact(recorded_at),
+        }
+    }
+
+    /// Creates a redeliverable command using the first durable host receipt time.
+    ///
+    /// An adapter supplies the current trusted host time on each delivery. Exact
+    /// command identity, administrator, and business content must still match;
+    /// the winning transaction retains its original time on all retries.
+    /// Use [`Self::new`] when recorded time is part of an immutable upstream command.
+    pub const fn for_delivery(
+        change_id: ActorLifecycleChangeId,
+        target_actor_id: ActorId,
+        kind: ActorLifecycleChangeKind,
+        recorded_at: UnixTimeMillis,
+    ) -> Self {
+        Self {
+            change_id,
+            target_actor_id,
+            kind,
+            recorded_at: RecordedTime::FirstReceipt(recorded_at),
         }
     }
 }
@@ -49,7 +70,7 @@ pub struct ActorLifecycleChange {
     administrator_actor_id: ActorId,
     target_actor_id: ActorId,
     kind: ActorLifecycleChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl ActorLifecycleChange {
@@ -73,9 +94,18 @@ impl ActorLifecycleChange {
         self.kind
     }
 
-    /// Returns the trusted host time recorded for the command.
+    /// Returns the trusted host time proposed for the first durable write.
+    ///
+    /// Delivery retries retain the previously stored time instead of this proposal.
     pub const fn recorded_at(&self) -> UnixTimeMillis {
-        self.recorded_at
+        self.recorded_at.value()
+    }
+
+    /// Tests stored receipt time under this command's explicit retry policy.
+    ///
+    /// Repositories must also compare every command identity and business field.
+    pub fn accepts_recorded_at(&self, stored: UnixTimeMillis) -> bool {
+        self.recorded_at.accepts(stored)
     }
 }
 
@@ -108,6 +138,8 @@ pub trait ActorLifecycleAdministrationRepository: Send + Sync {
     ///
     /// Returns the implementation error when the complete command cannot be
     /// resolved durably. State must never change without its audit evidence.
+    /// Delivery retries retain the first durable time and original effect;
+    /// immutable commands additionally require exact recorded-time equality.
     fn apply<'a>(
         &'a self,
         change: &'a ActorLifecycleChange,

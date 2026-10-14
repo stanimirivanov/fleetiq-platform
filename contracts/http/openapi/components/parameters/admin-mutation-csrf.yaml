@@ -1,0 +1,7 @@
+name: "X-FleetIQ-CSRF"
+in: "header"
+required: false
+description: "Browser session mode requires exactly one value 1. This is a same-origin request marker, not a secret. Workload mode does not require it."
+schema:
+  type: "string"
+  const: "1"

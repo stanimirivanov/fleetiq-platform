@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.4",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations."
+    "version": "1.0.0-baseline.5",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection."
   },
   "servers": [
     {
@@ -12,6 +12,214 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/admin/actors": {
+      "get": {
+        "operationId": "listActors",
+        "summary": "Page the platform actor catalogue",
+        "description": "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Includes active and deactivated actors; ordered ascending by exact actor ID. Limit 1..100, default 50. No cross-request snapshot guarantee; unknown query fields are rejected.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-actor-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listActors-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorCatalogueMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "provisionActor",
+        "summary": "Provision an actor with its first external identity",
+        "description": "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Browser mode additionally requires one exact configured Origin and X-FleetIQ-CSRF: 1; bearer credentials cannot bypass session mode. JSON is bounded to 16 KiB and rejects unknown fields. The client supplies a stable opaque command ID; keep it and all business fields unchanged after an uncertain response. The server derives the administrator and receipt time. Exact retries keep the first committed time and original effect; different content or actor using that ID conflicts. Current authentication and authority are rechecked even on retry. Creates the actor, exact authority/subject mapping, and immutable provisioning evidence atomically, without tenant or platform grants. Identity-provider users must already exist; no invitation is sent.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionActorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/provisionActor-200"
+          },
+          "201": {
+            "$ref": "#/components/responses/provisionActor-201"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorCatalogueMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/IdentityConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/actors/{actor_id}/lifecycle": {
+      "post": {
+        "operationId": "changeActorLifecycle",
+        "summary": "Activate or deactivate an existing actor",
+        "description": "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Browser mode additionally requires one exact configured Origin and X-FleetIQ-CSRF: 1; bearer credentials cannot bypass session mode. JSON is bounded to 16 KiB and rejects unknown fields. The client supplies a stable opaque command ID; keep it and all business fields unchanged after an uncertain response. The server derives the administrator and receipt time. Exact retries keep the first committed time and original effect; different content or actor using that ID conflicts. Current authentication and authority are rechecked even on retry. Retains mappings, grants, and history. Deactivation affects subsequent authentication and policy decisions; accepted in-flight work is not cancelled. An already-requested state records a no-change audit. Replaying a command after another state transition returns the original effect without undoing the later transition. Final active identity and platform-access administrators are protected.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-actor-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActorLifecycleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/changeActorLifecycle-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorLifecycleMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/IdentityConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/actor-lifecycle-changes": {
+      "get": {
+        "operationId": "listActorLifecycleChanges",
+        "summary": "Page immutable actor lifecycle audit",
+        "description": "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Descending (recorded_at_ms, change_id) order. Both before cursor parameters must be supplied together. Limit 1..100, default 50. Each page uses current committed history without a traversal snapshot guarantee. External identity subjects are not returned. Unknown query fields are rejected.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-time"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-change"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listActorLifecycleChanges-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorAuditMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/me/tenants": {
       "get": {
         "operationId": "listOperatorTenants",
@@ -574,6 +782,238 @@
   },
   "components": {
     "schemas": {
+      "AdministrationIdentifier": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^(?!\\s)(?![\\s\\S]*\\s$)[^\\u0000-\\u001F\\u007F-\\u009F]+$",
+        "description": "Exact opaque domain identifier; no surrounding whitespace or control characters."
+      },
+      "InitialActorIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "authority_id",
+          "subject"
+        ],
+        "properties": {
+          "authority_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^(?=[\\s\\S]*\\S)[^\\u0000-\\u001F\\u007F-\\u009F]+$",
+            "description": "Exact case-sensitive opaque subject; never trimmed or normalized. Not a credential."
+          }
+        }
+      },
+      "ProvisionActorRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "provisioning_id",
+          "actor_id",
+          "external_identity"
+        ],
+        "properties": {
+          "provisioning_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "external_identity": {
+            "$ref": "#/components/schemas/InitialActorIdentity"
+          }
+        }
+      },
+      "ProvisionActorResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "provisioned",
+              "already_provisioned"
+            ]
+          }
+        }
+      },
+      "ActorLifecycleRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "state"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "deactivated"
+            ]
+          }
+        }
+      },
+      "ActorLifecycleResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "state_changed"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "already_recorded"
+            ]
+          },
+          "state_changed": {
+            "type": "boolean",
+            "description": "Original durable effect, including on retry; not a claim about current state."
+          }
+        }
+      },
+      "ActorCatalogueEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "actor_id",
+          "state"
+        ],
+        "properties": {
+          "actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "deactivated"
+            ]
+          }
+        }
+      },
+      "ActorCataloguePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "actors",
+          "next_after"
+        ],
+        "properties": {
+          "actors": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ActorCatalogueEntry"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ActorLifecycleAuditCursor": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recorded_at_ms",
+          "change_id"
+        ],
+        "properties": {
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          }
+        }
+      },
+      "ActorLifecycleAuditEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "administrator_actor_id",
+          "target_actor_id",
+          "kind",
+          "recorded_at_ms",
+          "state_changed"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "administrator_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "target_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "activate",
+              "deactivate"
+            ]
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state_changed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ActorLifecycleAuditPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "changes",
+          "next_before"
+        ],
+        "properties": {
+          "changes": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ActorLifecycleAuditEntry"
+            }
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ActorLifecycleAuditCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "TenantAction": {
         "type": "string",
         "description": "An exact granted tenant action; no action implies another.",
@@ -1288,6 +1728,74 @@
       }
     },
     "parameters": {
+      "admin-actor-id": {
+        "name": "actor_id",
+        "in": "path",
+        "required": true,
+        "description": "Stable actor targeted by this lifecycle command.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "admin-page-limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Maximum entries per independently current page.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "admin-actor-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive ascending actor-ID position; not authorization evidence.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "admin-audit-before-time": {
+        "name": "before_recorded_at_ms",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive descending audit position; both before parameters must be supplied together.",
+        "schema": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "admin-audit-before-change": {
+        "name": "before_change_id",
+        "in": "query",
+        "required": false,
+        "description": "Change-ID tie-breaker from next_before; requires before_recorded_at_ms.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "admin-mutation-origin": {
+        "name": "Origin",
+        "in": "header",
+        "required": false,
+        "description": "Browser session mode requires exactly one value equal to the configured HTTPS public origin. Workload mode does not require this header.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "admin-mutation-csrf": {
+        "name": "X-FleetIQ-CSRF",
+        "in": "header",
+        "required": false,
+        "description": "Browser session mode requires exactly one value 1. This is a same-origin request marker, not a secret. Workload mode does not require it.",
+        "schema": {
+          "type": "string",
+          "const": "1"
+        }
+      },
       "operator-tenant-limit": {
         "name": "limit",
         "in": "query",
@@ -1587,6 +2095,235 @@
       }
     },
     "responses": {
+      "listActors-200": {
+        "description": "Current actor catalogue ordered by actor ID; includes deactivated actors.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ActorCataloguePage"
+            },
+            "example": {
+              "actors": [
+                {
+                  "actor_id": "actor-a",
+                  "state": "active"
+                },
+                {
+                  "actor_id": "operator-a",
+                  "state": "active"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "provisionActor-201": {
+        "description": "Actor, exact initial identity and audit created atomically; no access grants are created.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProvisionActorResult"
+            },
+            "example": {
+              "outcome": "provisioned"
+            }
+          }
+        }
+      },
+      "provisionActor-200": {
+        "description": "Exact business command already provisioned. Original host receipt time is retained.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProvisionActorResult"
+            },
+            "example": {
+              "outcome": "already_provisioned"
+            }
+          }
+        }
+      },
+      "changeActorLifecycle-200": {
+        "description": "Command recorded or exactly retried. The original effect is returned without reapplying old state.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ActorLifecycleResult"
+            },
+            "example": {
+              "outcome": "recorded",
+              "state_changed": true
+            }
+          }
+        }
+      },
+      "listActorLifecycleChanges-200": {
+        "description": "Immutable lifecycle commands ordered by descending (recorded_at_ms, change_id).",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ActorLifecycleAuditPage"
+            },
+            "example": {
+              "changes": [
+                {
+                  "change_id": "change-a",
+                  "administrator_actor_id": "operator-a",
+                  "target_actor_id": "actor-a",
+                  "kind": "deactivate",
+                  "recorded_at_ms": 1000,
+                  "state_changed": true
+                }
+              ],
+              "next_before": null
+            }
+          }
+        }
+      },
+      "IdentityConflict": {
+        "description": "Command identity or provisioning identity collides, or deactivation would remove a final active identity or platform-access administrator.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:conflict",
+              "title": "Command conflicts with current identity state",
+              "status": 409
+            }
+          }
+        }
+      },
+      "AdministrationForbidden": {
+        "description": "Missing exact current platform identity.manage authority, or browser mutation origin/CSRF validation failed.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:forbidden",
+              "title": "Access denied",
+              "status": 403
+            }
+          }
+        }
+      },
+      "ActorCatalogueMethodNotAllowed": {
+        "description": "Unsupported method for the actor catalogue.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "GET, HEAD, POST"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "ActorLifecycleMethodNotAllowed": {
+        "description": "Only lifecycle POST is supported.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "POST"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "ActorAuditMethodNotAllowed": {
+        "description": "Only audit GET and HEAD are supported.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "GET, HEAD"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
       "listOperatorTenants-200": {
         "description": "Current caller's bounded tenant access hints. No grants is an empty array and null cursor.",
         "headers": {
@@ -1893,7 +2630,12 @@
         }
       },
       "InvalidRequest": {
-        "description": "Invalid path identifier, definition version, time, limit, cursor, or query.",
+        "description": "Invalid path identifier, definition version, time, limit, cursor, query, or command body.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
         "content": {
           "application/problem+json": {
             "schema": {
@@ -1910,6 +2652,9 @@
       "Unauthenticated": {
         "description": "The selected authentication mode rejected missing, invalid, expired, or unregistered credentials. WWW-Authenticate is emitted only for configured workload bearer mode.",
         "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
           "WWW-Authenticate": {
             "schema": {
               "type": "string",
@@ -1947,6 +2692,11 @@
       },
       "InternalError": {
         "description": "A safe, bounded server error.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
         "content": {
           "application/problem+json": {
             "schema": {
@@ -1962,6 +2712,11 @@
       },
       "NotFound": {
         "description": "The authorized exact resource or required current asset is absent.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
         "content": {
           "application/problem+json": {
             "schema": {

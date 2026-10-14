@@ -1,4 +1,7 @@
 description: "The authorized exact resource or required current asset is absent."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
 content:
   "application/problem+json":
     schema:

@@ -1,0 +1,17 @@
+type: "object"
+additionalProperties: false
+required:
+  - "changes"
+  - "next_before"
+properties:
+  changes:
+    type: "array"
+    maxItems: 100
+    items:
+      $ref: "./ActorLifecycleAuditEntry.yaml"
+  next_before:
+    anyOf:
+      -
+        $ref: "./ActorLifecycleAuditCursor.yaml"
+      -
+        type: "null"

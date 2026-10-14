@@ -1,0 +1,17 @@
+type: "object"
+additionalProperties: false
+required:
+  - "actors"
+  - "next_after"
+properties:
+  actors:
+    type: "array"
+    maxItems: 100
+    items:
+      $ref: "./ActorCatalogueEntry.yaml"
+  next_after:
+    anyOf:
+      -
+        $ref: "./AdministrationIdentifier.yaml"
+      -
+        type: "null"

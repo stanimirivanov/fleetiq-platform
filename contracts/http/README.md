@@ -131,3 +131,10 @@ metadata marks only literal annotation and extension values as nonresolvable;
 existing normative field validators and `no-unresolved-refs` remain enabled.
 Paired live fixtures prove literal data stays intact and missing real references
 still fail. This is a traversal configuration, not an independent schema validator.
+
+Baseline.5 adds actor provisioning, lifecycle administration, the actor catalogue,
+and lifecycle audit under /api/v1/admin. Every operation requires exact current
+platform identity.manage; browser mutations also require exact origin and CSRF
+protection. See the [operating procedure](../../docs/operations/actor-administration.md)
+for command retry and paging semantics. Existing operation IDs and payloads remain
+unchanged.

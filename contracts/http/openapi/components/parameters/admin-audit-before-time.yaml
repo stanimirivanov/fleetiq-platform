@@ -1,0 +1,7 @@
+name: "before_recorded_at_ms"
+in: "query"
+required: false
+description: "Exclusive descending audit position; both before parameters must be supplied together."
+schema:
+  type: "integer"
+  format: "int64"

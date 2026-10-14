@@ -1,0 +1,13 @@
+type: "object"
+additionalProperties: false
+required:
+  - "provisioning_id"
+  - "actor_id"
+  - "external_identity"
+properties:
+  provisioning_id:
+    $ref: "./AdministrationIdentifier.yaml"
+  actor_id:
+    $ref: "./AdministrationIdentifier.yaml"
+  external_identity:
+    $ref: "./InitialActorIdentity.yaml"

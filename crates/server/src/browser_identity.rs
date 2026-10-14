@@ -14,6 +14,5 @@ mod tests;
 
 pub(crate) use authentication::BrowserRequestAuthenticator;
 pub use configuration::{BrowserIdentityConfig, BrowserIdentityConfigError};
-pub(crate) use credential::now;
 pub(crate) use provider::OidcClient;
 pub(crate) use routes::postgres_browser_router;

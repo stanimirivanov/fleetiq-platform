@@ -24,7 +24,7 @@ flowchart TB
     Devices -->|vendor or custom protocols| FleetIQ
     Operators -->|web and API| FleetIQ
     Identity -->|authentication| FleetIQ
-    Credential -->|protected metadata reads| FleetIQ
+    Credential -->|protected operations| FleetIQ
     FleetIQ --> Database
     FleetIQ -.-> Archive
 ```
@@ -66,6 +66,14 @@ flowchart LR
 
     Request --> Validator --> Resolver --> Policy --> Service --> Store
 ```
+
+Actor administration now exposes provisioning, lifecycle commands, the actor
+catalogue, and lifecycle audit through the same configured listener. It consumes
+exact platform identity.manage evidence in the identity capability, independently
+of tenant grants. Browser commands share logout's exact-origin/CSRF guard;
+workload authentication remains a separately selected mode. First-receipt command
+retries retain the original durable audit time and effect. See
+[ADR 0100](../adr/0100-expose-actor-administration-over-http.md).
 
 ## Browser identity boundary
 

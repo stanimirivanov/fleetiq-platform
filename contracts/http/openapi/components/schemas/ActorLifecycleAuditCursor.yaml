@@ -1,0 +1,11 @@
+type: "object"
+additionalProperties: false
+required:
+  - "recorded_at_ms"
+  - "change_id"
+properties:
+  recorded_at_ms:
+    type: "integer"
+    format: "int64"
+  change_id:
+    $ref: "./AdministrationIdentifier.yaml"

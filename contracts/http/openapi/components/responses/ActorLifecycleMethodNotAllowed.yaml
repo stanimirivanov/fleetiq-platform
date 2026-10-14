@@ -1,0 +1,16 @@
+description: "Only lifecycle POST is supported."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Allow:
+    schema:
+      type: "string"
+      const: "POST"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:method-not-allowed"
+      title: "Method not allowed"
+      status: 405

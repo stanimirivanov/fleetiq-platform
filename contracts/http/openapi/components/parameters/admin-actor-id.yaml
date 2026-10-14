@@ -1,0 +1,6 @@
+name: "actor_id"
+in: "path"
+required: true
+description: "Stable actor targeted by this lifecycle command."
+schema:
+  $ref: "../schemas/AdministrationIdentifier.yaml"

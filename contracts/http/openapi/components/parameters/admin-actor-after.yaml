@@ -1,0 +1,6 @@
+name: "after"
+in: "query"
+required: false
+description: "Exclusive ascending actor-ID position; not authorization evidence."
+schema:
+  $ref: "../schemas/AdministrationIdentifier.yaml"

@@ -1,12 +1,18 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.4"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations."
+  version: "1.0.0-baseline.5"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/admin/actors":
+    $ref: "./paths/administration/actors.yaml"
+  "/api/v1/admin/actors/{actor_id}/lifecycle":
+    $ref: "./paths/administration/actor-lifecycle.yaml"
+  "/api/v1/admin/actor-lifecycle-changes":
+    $ref: "./paths/administration/actor-lifecycle-changes.yaml"
   "/api/v1/me/tenants":
     $ref: "./paths/identity/tenants.yaml"
   "/api/v1":
@@ -37,6 +43,28 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    AdministrationIdentifier:
+      $ref: "./components/schemas/AdministrationIdentifier.yaml"
+    InitialActorIdentity:
+      $ref: "./components/schemas/InitialActorIdentity.yaml"
+    ProvisionActorRequest:
+      $ref: "./components/schemas/ProvisionActorRequest.yaml"
+    ProvisionActorResult:
+      $ref: "./components/schemas/ProvisionActorResult.yaml"
+    ActorLifecycleRequest:
+      $ref: "./components/schemas/ActorLifecycleRequest.yaml"
+    ActorLifecycleResult:
+      $ref: "./components/schemas/ActorLifecycleResult.yaml"
+    ActorCatalogueEntry:
+      $ref: "./components/schemas/ActorCatalogueEntry.yaml"
+    ActorCataloguePage:
+      $ref: "./components/schemas/ActorCataloguePage.yaml"
+    ActorLifecycleAuditCursor:
+      $ref: "./components/schemas/ActorLifecycleAuditCursor.yaml"
+    ActorLifecycleAuditEntry:
+      $ref: "./components/schemas/ActorLifecycleAuditEntry.yaml"
+    ActorLifecycleAuditPage:
+      $ref: "./components/schemas/ActorLifecycleAuditPage.yaml"
     TenantAction:
       $ref: "./components/schemas/TenantAction.yaml"
     OperatorTenant:
@@ -86,6 +114,20 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    admin-actor-id:
+      $ref: "./components/parameters/admin-actor-id.yaml"
+    admin-page-limit:
+      $ref: "./components/parameters/admin-page-limit.yaml"
+    admin-actor-after:
+      $ref: "./components/parameters/admin-actor-after.yaml"
+    admin-audit-before-time:
+      $ref: "./components/parameters/admin-audit-before-time.yaml"
+    admin-audit-before-change:
+      $ref: "./components/parameters/admin-audit-before-change.yaml"
+    admin-mutation-origin:
+      $ref: "./components/parameters/admin-mutation-origin.yaml"
+    admin-mutation-csrf:
+      $ref: "./components/parameters/admin-mutation-csrf.yaml"
     operator-tenant-limit:
       $ref: "./components/parameters/operator-tenant-limit.yaml"
     operator-tenant-after:
@@ -139,6 +181,26 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    listActors-200:
+      $ref: "./components/responses/listActors-200.yaml"
+    provisionActor-201:
+      $ref: "./components/responses/provisionActor-201.yaml"
+    provisionActor-200:
+      $ref: "./components/responses/provisionActor-200.yaml"
+    changeActorLifecycle-200:
+      $ref: "./components/responses/changeActorLifecycle-200.yaml"
+    listActorLifecycleChanges-200:
+      $ref: "./components/responses/listActorLifecycleChanges-200.yaml"
+    IdentityConflict:
+      $ref: "./components/responses/IdentityConflict.yaml"
+    AdministrationForbidden:
+      $ref: "./components/responses/AdministrationForbidden.yaml"
+    ActorCatalogueMethodNotAllowed:
+      $ref: "./components/responses/ActorCatalogueMethodNotAllowed.yaml"
+    ActorLifecycleMethodNotAllowed:
+      $ref: "./components/responses/ActorLifecycleMethodNotAllowed.yaml"
+    ActorAuditMethodNotAllowed:
+      $ref: "./components/responses/ActorAuditMethodNotAllowed.yaml"
     listOperatorTenants-200:
       $ref: "./components/responses/listOperatorTenants-200.yaml"
     getApiVersion-200:

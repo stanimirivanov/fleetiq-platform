@@ -112,6 +112,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0099](0099-discover-current-operator-tenant-access.md) | Advisory actor-scoped current tenant and action discovery |
 
+| [0100](0100-expose-actor-administration-over-http.md) | Actor administration HTTP with shared mutation protection and first-receipt retries |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

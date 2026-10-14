@@ -1,0 +1,16 @@
+description: "Only audit GET and HEAD are supported."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+  Allow:
+    schema:
+      type: "string"
+      const: "GET, HEAD"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:method-not-allowed"
+      title: "Method not allowed"
+      status: 405

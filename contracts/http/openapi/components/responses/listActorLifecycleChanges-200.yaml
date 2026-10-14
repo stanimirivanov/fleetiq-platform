@@ -1,0 +1,18 @@
+description: "Immutable lifecycle commands ordered by descending (recorded_at_ms, change_id)."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/ActorLifecycleAuditPage.yaml"
+    example:
+      changes:
+        -
+          change_id: "change-a"
+          administrator_actor_id: "operator-a"
+          target_actor_id: "actor-a"
+          kind: "deactivate"
+          recorded_at_ms: 1000
+          state_changed: true
+      next_before: null

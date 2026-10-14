@@ -18,7 +18,9 @@
   relationship-revision, signal-binding-revision,
   bounded asset-relationship snapshot, bounded source-binding snapshot, and
   bounded target-asset binding snapshot queries use those boundaries;
-  administration remains without an HTTP API. The authenticated caller can
+  actor administration now exposes provisioning, lifecycle, catalogue, and audit
+  HTTP operations; other administration remains without an HTTP API.
+  The authenticated caller can
   discover bounded active tenants and exact current actions through
   [operator tenant discovery](../operations/operator-tenants.md); hints never
   replace independent per-operation authorization.
@@ -54,7 +56,8 @@
   and bounded relationship and signal-binding snapshots. It remains a partial
   contract: live semantic state and some
   protected routes are not yet described. Browser OIDC login and operator
-  sessions are now included in the additive baseline.
+  sessions, tenant discovery, and actor administration are included in the
+  additive baseline.
 - Further business APIs, identity-provider qualification, authorization
   administration APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
@@ -280,6 +283,16 @@ issued typed authorization evidence is not recalled. The same exact identity
 management authorization protects a bounded platform-wide actor catalogue
 ordered by stable actor identity, with explicit active or deactivated current
 state and no external-identity subject disclosure.
+
+Actor provisioning, activation/deactivation, bounded actor catalogue, and bounded
+lifecycle audit now have HTTP administration routes on configured authenticated
+listeners. Each consumes exact current platform identity.manage evidence. Browser
+commands share logout's exact-origin/CSRF guard; HTTP deliveries retain the first
+durable host receipt time, while existing immutable commands keep strict time
+equality. See [ADR 0100](../adr/0100-expose-actor-administration-over-http.md) and
+the [operating procedure](../operations/actor-administration.md). External-identity
+replacement, grants, tenant administration, and administration UI remain separate.
+
 
 Tenant lifecycle administration uses a separate exact
 `tenant.lifecycle.manage` platform action. One transaction activates or

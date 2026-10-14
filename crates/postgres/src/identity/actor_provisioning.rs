@@ -83,7 +83,9 @@ impl ActorProvisioningRepository for PostgresActorProvisioning {
                     && existing.authority_id == identity.authority_id().as_str()
                     && existing.subject == identity.subject().as_str()
                     && existing.provisioner_actor_id == command.provisioner_actor_id().as_str()
-                    && existing.recorded_at_ms == command.recorded_at().get()
+                    && command.accepts_recorded_at(fleetiq_domain::UnixTimeMillis::new(
+                        existing.recorded_at_ms,
+                    ))
                 {
                     transaction.commit().await.map_err(repository_error)?;
                     return Ok(ActorProvisioningOutcome::AlreadyProvisioned);

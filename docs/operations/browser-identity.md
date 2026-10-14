@@ -51,8 +51,12 @@ A valid provider identity without a registered active actor receives generic
 Use a different authority for a different issuer and deliberately provision its
 operator mappings. Changing the configured issuer, client ID, or authority
 invalidates existing attempts and sessions through their stored trust binding.
-Client-secret rotation preserves that binding. This slice adds no public
-identity/grant administration or self-registration endpoint.
+Client-secret rotation preserves that binding. Browser login creates neither
+actors nor grants. Authorized operators can use the protected
+[actor administration endpoints](actor-administration.md) for provisioning and
+lifecycle changes; browser commands require the same exact Origin and
+X-FleetIQ-CSRF marker as logout, plus current platform identity.manage authority.
+Additional identity mappings and grant HTTP administration remain separate.
 
 ## Browser workflow
 
@@ -87,8 +91,8 @@ failure never extends credential validity. Restrict database access to the
 application and administrators.
 
 Actor suspension, mapping unlink/reassignment, tenant suspension, and grant
-revocation affect subsequent reads. Sessions retain the actor established at
-login, so reassignment cannot transfer access. Already accepted in-flight reads
+revocation affect subsequent operations. Sessions retain the actor established at
+login, so reassignment cannot transfer access. Already accepted in-flight operations
 may complete. A callback that consumed its one-use attempt before sign-out may
 also complete and establish a fresh session; this slice does not provide
 cancellation generations for concurrent sign-in. Provider-only account
@@ -108,8 +112,7 @@ These tests do not qualify a deployed customer provider, TLS edge, browser
 deployment, or operator provisioning. Verify those boundaries before production
 use. Configure bounded request sizes and sign-in rate limits at the edge:
 anonymous login persists short-lived attempts, and provider callbacks perform
-network requests. The connected UI and connected operator guide are the next
-plan slices.
+network requests. Deployment qualification remains separate from the controlled test fixtures.
 
 [ADR 0095](../adr/0095-authenticate-browser-operators-with-oidc-sessions.md)
 records the boundary. The maintained

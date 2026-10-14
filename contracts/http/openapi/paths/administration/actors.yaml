@@ -1,0 +1,64 @@
+get:
+  operationId: "listActors"
+  summary: "Page the platform actor catalogue"
+  description: "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Includes active and deactivated actors; ordered ascending by exact actor ID. Limit 1..100, default 50. No cross-request snapshot guarantee; unknown query fields are rejected."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      $ref: "../../components/parameters/admin-page-limit.yaml"
+    -
+      $ref: "../../components/parameters/admin-actor-after.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listActors-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/AdministrationForbidden.yaml"
+    "405":
+      $ref: "../../components/responses/ActorCatalogueMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
+post:
+  operationId: "provisionActor"
+  summary: "Provision an actor with its first external identity"
+  description: "Requires fresh authenticated actor and exact current platform identity.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Browser mode additionally requires one exact configured Origin and X-FleetIQ-CSRF: 1; bearer credentials cannot bypass session mode. JSON is bounded to 16 KiB and rejects unknown fields. The client supplies a stable opaque command ID; keep it and all business fields unchanged after an uncertain response. The server derives the administrator and receipt time. Exact retries keep the first committed time and original effect; different content or actor using that ID conflicts. Current authentication and authority are rechecked even on retry. Creates the actor, exact authority/subject mapping, and immutable provisioning evidence atomically, without tenant or platform grants. Identity-provider users must already exist; no invitation is sent."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      $ref: "../../components/parameters/admin-mutation-origin.yaml"
+    -
+      $ref: "../../components/parameters/admin-mutation-csrf.yaml"
+  requestBody:
+    required: true
+    content:
+      "application/json":
+        schema:
+          $ref: "../../components/schemas/ProvisionActorRequest.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/provisionActor-200.yaml"
+    "201":
+      $ref: "../../components/responses/provisionActor-201.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/AdministrationForbidden.yaml"
+    "405":
+      $ref: "../../components/responses/ActorCatalogueMethodNotAllowed.yaml"
+    "409":
+      $ref: "../../components/responses/IdentityConflict.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
