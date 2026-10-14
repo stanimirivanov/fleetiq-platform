@@ -2,7 +2,7 @@
 
 # Compile with the repository-pinned Rust release. SQLx uses the committed
 # offline query descriptions so an image build never needs database access.
-FROM rust:1.98.1-slim-bookworm AS builder
+FROM rust:1.99.0-slim-bookworm AS builder
 
 WORKDIR /workspace
 
