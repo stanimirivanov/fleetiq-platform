@@ -1,6 +1,6 @@
 # Actor provisioning and lifecycle HTTP slice
 
-Status: Implemented; full acceptance is blocked by existing dependency advisories.
+Status: Implemented and verified.
 Milestone: M02 - Product Foundation.
 
 ## TL;DR
@@ -39,12 +39,11 @@ required. Rollback removes additive routes and retains durable identity data.
 See [ADR 0100](../../adr/0100-expose-actor-administration-over-http.md) and the
 [operating procedure](../../operations/actor-administration.md).
 
-## Acceptance blocker
+## Dependency qualification
 
-The current cargo-deny advisory database rejects the unchanged Cargo.lock entry
-for rustls 0.23.45 with RUSTSEC-2026-0346, RUSTSEC-2026-0347,
-RUSTSEC-2026-0348, and RUSTSEC-2026-0349. Its reported remediation is rustls
-0.23.46 or newer. No dependency, advisory exception, or security policy was
-changed in this feature slice. Qualify the dependency correction separately
-and rerun full acceptance before merging. The handoff records the remaining
-check results without treating the advisory failure as a pass.
+The original acceptance run rejected rustls 0.23.45 with RUSTSEC-2026-0346,
+RUSTSEC-2026-0347, RUSTSEC-2026-0348, and RUSTSEC-2026-0349.
+The follow-up [security patch review](rustls-security-update.md) records the
+minimal update to rustls 0.23.46 and passing supply-chain checks. No advisory
+exception or security policy was changed. The complete online acceptance gate
+now passes after this qualification.
