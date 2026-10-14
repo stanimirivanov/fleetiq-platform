@@ -18,7 +18,10 @@
   relationship-revision, signal-binding-revision,
   bounded asset-relationship snapshot, bounded source-binding snapshot, and
   bounded target-asset binding snapshot queries use those boundaries;
-  administration remains without an HTTP API.
+  administration remains without an HTTP API. The authenticated caller can
+  discover bounded active tenants and exact current actions through
+  [operator tenant discovery](../operations/operator-tenants.md); hints never
+  replace independent per-operation authorization.
 - Asset definitions, assets, relationships, devices, signal bindings, accepted
   messages, decoded results, semantic property changes, and protocol releases
   have PostgreSQL contracts.

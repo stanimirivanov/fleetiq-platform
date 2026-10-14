@@ -110,6 +110,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0097](0097-protect-published-history-and-sensitive-artifacts.md) | Trusted-base migration immutability, pinned redacted secret detection, and policy ownership |
 | [0098](0098-coordinate-reproducible-verification-and-evidence.md) | Authoritative verification inventory, explicit groups, reviewed CI generation, and metadata-only result evidence |
 
+| [0099](0099-discover-current-operator-tenant-access.md) | Advisory actor-scoped current tenant and action discovery |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

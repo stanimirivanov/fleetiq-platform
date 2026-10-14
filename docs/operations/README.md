@@ -35,3 +35,5 @@ restore, and incident runbooks will be added when those capabilities exist.
   attributions from one decoded source at explicit physical and recorded times.
 - [Protected asset-binding snapshot](asset-binding-snapshot.md) — page the
   attributions targeting one asset at explicit physical and recorded times.
+
+- [Operator tenant discovery](operator-tenants.md) explains bounded current-access hints.

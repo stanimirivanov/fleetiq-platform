@@ -10,7 +10,7 @@ use super::{ADR_POLICY, Repository, Violation};
 
 const ADR_DIRECTORY: &str = "docs/adr/";
 const ADR_INDEX: &str = "docs/adr/README.md";
-const LATEST_PUBLISHED_ADR: usize = 98;
+const LATEST_PUBLISHED_ADR: usize = 99;
 
 #[derive(Debug)]
 struct Record {

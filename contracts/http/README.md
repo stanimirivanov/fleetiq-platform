@@ -3,13 +3,15 @@
 ## TL;DR
 
 The backend owns this partial OpenAPI 3.1 description of `/api/v1`. It
-publishes version discovery, bounded asset catalogue and exact asset reads,
+publishes actor-scoped current tenant/action discovery, version discovery, bounded asset catalogue and exact asset reads,
 pinned semantic definitions, and bounded bitemporal relationship and
 signal-binding snapshots. Other implemented routes remain outside this
 client-facing subset. The additive baseline includes operator OIDC login,
-callback, session discovery, and sign-out. Protected reads use either browser
+callback, session discovery, and sign-out. Metadata reads use either browser
 cookies or configured workload bearer plus current tenant `metadata.read` access;
-a server listener selects exactly one mode.
+a server listener selects exactly one mode. Operator discovery uses that same
+authentication boundary and returns only the caller's current active tenant
+grants, without requiring a tenant to be selected first.
 
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components

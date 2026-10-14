@@ -14,6 +14,7 @@ mod config;
 mod contract_test_support;
 mod health;
 mod http_api;
+mod operator_tenants;
 mod protected_asset;
 mod protected_definitions;
 mod protected_device;
@@ -94,7 +95,7 @@ async fn application_router(pool: PgPool, config: &ServerConfig) -> Result<Route
             .await
             .map_err(|_| ServerError::BrowserIdentityStartup)?;
         router = router
-            .merge(metadata_router(
+            .merge(protected_read_router(
                 pool.clone(),
                 browser_identity::BrowserRequestAuthenticator::new(pool.clone(), browser),
             ))
@@ -108,17 +109,21 @@ async fn application_router(pool: PgPool, config: &ServerConfig) -> Result<Route
             bearer_authentication::ConfiguredBearerAuthenticator::new(bearer.clone()),
             fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
         );
-        router = router.merge(metadata_router(pool, authentication));
+        router = router.merge(protected_read_router(pool, authentication));
     }
     Ok(router.merge(api_router()))
 }
 
-/// Gives every metadata route the same authentication strategy and current policy.
-fn metadata_router<A>(pool: PgPool, authentication: A) -> Router
+/// Composes protected reads with one authentication strategy and fresh policy.
+fn protected_read_router<A>(pool: PgPool, authentication: A) -> Router
 where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(operator_tenants::postgres_operator_tenants_router(
+            pool.clone(),
+            authentication.clone(),
+        ))
         .merge(protected_asset::postgres_asset_router(
             pool.clone(),
             authentication.clone(),
@@ -237,6 +242,7 @@ mod tests {
         let base = ServerConfig::from_values("postgres://localhost/test", "127.0.0.1:0")
             .expect("valid base configuration");
         let paths = [
+            "/api/v1/me/tenants",
             "/api/v1/tenants/tenant-a/assets/asset-1",
             "/api/v1/tenants/tenant-a/assets/asset-1/device",
             "/api/v1/tenants/tenant-a/asset-types/generic.power-system/versions/2",
