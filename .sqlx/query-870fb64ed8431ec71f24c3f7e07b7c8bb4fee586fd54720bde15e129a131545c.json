@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT grants.tenant_id,\n                   array_agg(grants.action ORDER BY grants.action) AS \"actions!\"\n            FROM identity.tenant_action_grants AS grants\n            JOIN identity.actors AS actors ON actors.actor_id = grants.actor_id\n            JOIN metadata.tenants AS tenants ON tenants.tenant_id = grants.tenant_id\n            WHERE grants.actor_id = $1 AND actors.is_active AND tenants.is_active\n              AND ($2::text IS NULL OR grants.tenant_id > $2)\n            GROUP BY grants.tenant_id\n            ORDER BY grants.tenant_id ASC\n            LIMIT $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_action_grants",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "actions!",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "870fb64ed8431ec71f24c3f7e07b7c8bb4fee586fd54720bde15e129a131545c"
+}

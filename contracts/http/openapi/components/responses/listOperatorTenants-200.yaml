@@ -1,0 +1,13 @@
+description: "Current caller's bounded tenant access hints. No grants is an empty array and null cursor."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/OperatorTenantPage.yaml"
+    example:
+      tenants:
+        - tenant_id: "tenant-a"
+          actions: ["metadata.read"]
+      next_after: null

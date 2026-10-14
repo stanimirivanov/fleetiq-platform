@@ -168,3 +168,6 @@ policy, and advisory-data requirements.
 Crates use `//!` module documentation as their overview. Add a nearby README
 when a crate needs independent setup, runtime configuration, deployment,
 publication, or an external package-author workflow.
+
+The [operator tenant discovery plan](plans/operator-tenant-discovery.md) records
+the M02 current-access API slice and its verification boundaries.

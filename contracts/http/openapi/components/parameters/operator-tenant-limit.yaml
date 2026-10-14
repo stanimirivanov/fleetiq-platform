@@ -1,0 +1,9 @@
+name: "limit"
+in: "query"
+required: false
+description: "Maximum tenants in this page; action sets are never split across pages."
+schema:
+  type: "integer"
+  minimum: 1
+  maximum: 100
+  default: 50

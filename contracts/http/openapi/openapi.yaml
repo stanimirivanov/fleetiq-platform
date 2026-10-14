@@ -1,12 +1,14 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.3"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; every read checks current identity and tenant metadata.read policy."
+  version: "1.0.0-baseline.4"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity and semantic metadata reads. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/me/tenants":
+    $ref: "./paths/identity/tenants.yaml"
   "/api/v1":
     $ref: "./paths/system/version.yaml"
   "/api/v1/tenants/{tenant_id}/assets":
@@ -35,6 +37,12 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    TenantAction:
+      $ref: "./components/schemas/TenantAction.yaml"
+    OperatorTenant:
+      $ref: "./components/schemas/OperatorTenant.yaml"
+    OperatorTenantPage:
+      $ref: "./components/schemas/OperatorTenantPage.yaml"
     ApiDescription:
       $ref: "./components/schemas/ApiDescription.yaml"
     AssetTypeRef:
@@ -78,6 +86,10 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    operator-tenant-limit:
+      $ref: "./components/parameters/operator-tenant-limit.yaml"
+    operator-tenant-after:
+      $ref: "./components/parameters/operator-tenant-after.yaml"
     catalogue-tenant-id:
       $ref: "./components/parameters/catalogue-tenant-id.yaml"
     asset-list-limit:
@@ -127,6 +139,8 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    listOperatorTenants-200:
+      $ref: "./components/responses/listOperatorTenants-200.yaml"
     getApiVersion-200:
       $ref: "./components/responses/getApiVersion-200.yaml"
     listAssets-200:

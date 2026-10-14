@@ -15,7 +15,7 @@ mod metadata;
 pub use access::{
     PostgresActorIdentityResolver, PostgresActorIdentityResolverError,
     PostgresPlatformAccessPolicy, PostgresPlatformAccessPolicyError, PostgresTenantAccessPolicy,
-    PostgresTenantAccessPolicyError,
+    PostgresTenantAccessPolicyError, PostgresTenantDiscoveryRepository,
 };
 pub use browser_identity_repository::{
     BrowserLoginAttempt, BrowserSession, PostgresBrowserIdentityRepository,

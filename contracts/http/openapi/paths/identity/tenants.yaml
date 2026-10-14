@@ -1,0 +1,19 @@
+get:
+  operationId: "listOperatorTenants"
+  summary: "Discover the caller's currently permitted tenants and actions"
+  description: "Returns only active tenants with explicit current grants for the authenticated active actor. Actions are advisory UI hints, never authorization evidence; every operation rechecks policy. Platform grants imply no tenant access. Order is ascending tenant ID. Pages observe fresh policy independently, without cross-request snapshot guarantees. Missing or inactive browser identities return 401; no grants returns an empty 200 page. Available only with configured browser or workload authentication."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: "../../components/parameters/operator-tenant-limit.yaml"
+    - $ref: "../../components/parameters/operator-tenant-after.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listOperatorTenants-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

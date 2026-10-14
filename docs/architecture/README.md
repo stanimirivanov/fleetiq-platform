@@ -96,6 +96,14 @@ workload secret. Login and sessions bind the configured issuer/client/authority;
 secret rotation alone does not invalidate sessions. See
 [ADR 0095](../adr/0095-authenticate-browser-operators-with-oidc-sessions.md).
 
+## Operator access discovery
+
+The access capability also owns authenticated, actor-scoped tenant discovery.
+Its PostgreSQL adapter loads bounded active tenants and exact grants in one
+statement; no platform catalogue or cached session grant is reused.
+[Discovery results](../operations/operator-tenants.md) are presentation hints,
+while every metadata read still consumes fresh typed authorization evidence.
+
 ## Capability flow
 
 ```mermaid

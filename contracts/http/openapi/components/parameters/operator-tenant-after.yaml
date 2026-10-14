@@ -1,0 +1,8 @@
+name: "after"
+in: "query"
+required: false
+description: "Exclusive tenant-ID cursor returned as next_after. It is only a position, confers no access, and remains usable after the named tenant loses access."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128

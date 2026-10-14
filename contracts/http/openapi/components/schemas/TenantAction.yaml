@@ -1,0 +1,6 @@
+type: "string"
+description: "An exact granted tenant action; no action implies another."
+enum:
+  - "access.manage"
+  - "metadata.manage"
+  - "metadata.read"

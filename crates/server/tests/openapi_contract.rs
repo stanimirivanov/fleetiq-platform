@@ -23,6 +23,13 @@ struct PublishedOperation {
 
 const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
+        path: "/api/v1/me/tenants",
+        id: "listOperatorTenants",
+        protected: true,
+        can_be_missing: false,
+        snapshot: false,
+    },
+    PublishedOperation {
         path: "/api/v1",
         id: "getApiVersion",
         protected: false,
@@ -148,6 +155,30 @@ fn validate_component_example(
     Ok(validator_for(&schema)?.is_valid(example))
 }
 
+fn assert_protected_responses(
+    contract: &Value,
+    responses: &serde_json::Map<String, Value>,
+    expected: &PublishedOperation,
+) {
+    for status in ["400", "401", "403", "500"] {
+        if status == "403" && expected.id == "listOperatorTenants" {
+            assert!(
+                !responses.contains_key(status),
+                "self discovery has no tenant authorization denial"
+            );
+            continue;
+        }
+        assert!(responses.contains_key(status), "{} {status}", expected.path);
+    }
+    let success = resolve_component(contract, &responses["200"]);
+    let cache_control = resolve_component(contract, &success["headers"]["Cache-Control"]);
+    assert_eq!(
+        cache_control["schema"]["const"], "no-store",
+        "{}",
+        expected.path
+    );
+}
+
 #[test]
 fn published_operations_have_stable_security_and_request_contracts() -> Result<(), Box<dyn Error>> {
     let contract = contract()?;
@@ -193,16 +224,7 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
             .expect("each GET must declare responses");
         assert!(responses.contains_key("200"), "{}", expected.path);
         if expected.protected {
-            for status in ["400", "401", "403", "500"] {
-                assert!(responses.contains_key(status), "{} {status}", expected.path);
-            }
-            let success = resolve_component(&contract, &operation["responses"]["200"]);
-            let cache_control = resolve_component(&contract, &success["headers"]["Cache-Control"]);
-            assert_eq!(
-                cache_control["schema"]["const"], "no-store",
-                "{}",
-                expected.path
-            );
+            assert_protected_responses(&contract, responses, expected);
         }
         if expected.can_be_missing {
             assert!(responses.contains_key("404"), "{}", expected.path);
@@ -421,5 +443,56 @@ fn operator_identity_operations_publish_the_complete_browser_boundary() -> Resul
     assert!(parameters.iter().any(|p| p["name"] == "X-FleetIQ-CSRF"
         && p["schema"]["const"] == "1"
         && p["required"] == true));
+    Ok(())
+}
+
+#[test]
+fn discovery_contract_rejects_invented_or_empty_capabilities() -> Result<(), Box<dyn Error>> {
+    let contract = contract()?;
+    let valid =
+        json!({"tenants":[{"tenant_id":"tenant-a","actions":["metadata.read"]}],"next_after":null});
+    assert!(validate_component_example(
+        &contract,
+        "OperatorTenantPage",
+        &valid
+    )?);
+    assert!(validate_component_example(
+        &contract,
+        "OperatorTenantPage",
+        &json!({"tenants":[],"next_after":null})
+    )?);
+    for actions in [
+        json!([]),
+        json!(["platform.access.manage"]),
+        json!(["metadata.read", "metadata.read"]),
+    ] {
+        let mut invalid = valid.clone();
+        invalid["tenants"][0]["actions"] = actions;
+        assert!(!validate_component_example(
+            &contract,
+            "OperatorTenantPage",
+            &invalid
+        )?);
+    }
+    let operation = &contract["paths"]["/api/v1/me/tenants"]["get"];
+    let parameters = operation["parameters"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|parameter| resolve_component(&contract, parameter))
+        .collect::<Vec<_>>();
+    assert_eq!(parameters.len(), 2);
+    let limit = parameters
+        .iter()
+        .find(|parameter| parameter["name"] == "limit")
+        .unwrap();
+    assert_eq!(limit["schema"]["minimum"], 1);
+    assert_eq!(limit["schema"]["maximum"], 100);
+    assert_eq!(limit["schema"]["default"], 50);
+    assert!(
+        parameters
+            .iter()
+            .any(|parameter| parameter["name"] == "after" && parameter["in"] == "query")
+    );
     Ok(())
 }

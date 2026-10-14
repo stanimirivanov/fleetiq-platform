@@ -2,13 +2,19 @@
 //!
 //! This crate owns the consumer-facing identity-resolution and access-policy
 //! ports, the closed action vocabulary, and evidence produced by successful
-//! authentication and authorization. Evidence has no public constructor;
+//! authentication and authorization. Actor-scoped discovery returns advisory
+//! current grants, never reusable authority. Evidence has no public constructor;
 //! adapters supply trusted identity and current policy decisions.
 
 mod actor_identity_resolver;
 mod authorization;
 mod caller_authentication;
 mod platform_authorization;
+mod tenant_discovery;
+pub use tenant_discovery::{
+    DiscoveredTenant, TenantDiscovery, TenantDiscoveryPage, TenantDiscoveryQuery,
+    TenantDiscoveryQueryError, TenantDiscoveryRepository,
+};
 
 pub use actor_identity_resolver::ActorIdentityResolver;
 pub use authorization::{
