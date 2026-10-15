@@ -3,10 +3,13 @@
 //! The reviewed template owns setup, service, permission, and cleanup semantics.
 //! The catalogue supplies runner groups and CLI versions. Comparing the entire
 //! rendered document rejects disabled, conditional, or commented-out checks as
-//! well as changed commands; matching selected YAML-looking lines would not.
+//! well as changed commands. Only major-version action refs are supplied
+//! by the workflow itself; their repositories and locations stay template-owned.
 
 #[cfg(test)]
 mod tests;
+
+mod actions;
 
 use std::{fs, path::Path};
 
@@ -17,18 +20,19 @@ const WORKFLOW: &str = ".github/workflows/ci.yml";
 
 /// Verifies the checked-in workflow matches its reviewed template and inventory.
 pub(crate) fn check(root: &Path) -> Result<(), String> {
-    let expected = render(&read_regular(root, TEMPLATE)?)?;
-    check_document(&read_regular(root, WORKFLOW)?, &expected)
+    let actual = read_regular(root, WORKFLOW)?;
+    let expected = render(&read_regular(root, TEMPLATE)?, &actual)?;
+    check_document(&actual, &expected)
 }
 
 /// Explicitly regenerates the workflow after an intentional policy update.
 ///
 /// Ordinary verification never calls this function or rewrites stale content.
 pub(crate) fn write(root: &Path) -> Result<(), String> {
-    let expected = render(&read_regular(root, TEMPLATE)?)?;
     // Requiring an existing regular destination avoids following a symlink or
     // creating a second workflow when the reviewed CI entry point is missing.
     let actual = read_regular(root, WORKFLOW)?;
+    let expected = render(&read_regular(root, TEMPLATE)?, &actual)?;
     if actual == expected {
         return Ok(());
     }
@@ -74,7 +78,7 @@ fn normalize(document: &str) -> Result<String, String> {
     Ok(normalized)
 }
 
-fn render(template: &str) -> Result<String, String> {
+fn render(template: &str, workflow: &str) -> Result<String, String> {
     let mut result = normalize(template)?;
     for group in [
         Group::Architecture,
@@ -97,7 +101,8 @@ fn render(template: &str) -> Result<String, String> {
             .iter()
             .find(|check| check.id == id)
             .ok_or_else(|| format!("verification catalogue is missing {id}"))?;
-        replace_token(&mut result, &format!("@check:{id}@"), check.command, 1)?;
+        let count = if id == "sensor-tests" { 1 } else { 2 };
+        replace_token(&mut result, &format!("@check:{id}@"), check.command, count)?;
     }
     for (name, tool, count) in [
         ("deny", Tool::Deny, 1),
@@ -113,7 +118,12 @@ fn render(template: &str) -> Result<String, String> {
             count,
         )?;
     }
-    if result.contains("@verify:") || result.contains("@tool:") || result.contains("@check:") {
+    actions::substitute(&mut result, &normalize(workflow)?)?;
+    if result.contains("@verify:")
+        || result.contains("@tool:")
+        || result.contains("@check:")
+        || result.contains("@action:")
+    {
         return Err(format!(
             "{TEMPLATE} contains an unknown verification placeholder"
         ));

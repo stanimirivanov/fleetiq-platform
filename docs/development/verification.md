@@ -24,7 +24,9 @@ owns command arguments, groups, outcomes, tool versions, prerequisites, and
 acceptance membership. Contributor and PR-template acceptance command lists
 are checked against that catalogue. The runner compares the complete checked-in
 CI workflow with its rendered reviewed template, including inventory-owned group
-commands and tool versions. Accidental omissions, disabled checks, or conditional
+commands and tool versions. Immutable action refs are workflow-owned dependency
+metadata, validated and substituted into fixed template slots. Accidental
+omissions, disabled checks, or conditional
 changes cannot silently create a different local or CI gate.
 
 The runner coordinates existing tools; it adds no alternative test framework or
@@ -182,9 +184,14 @@ silently skipping a failed fixture setup. The Windows JSON artifact covers only
 its OpenAPI group; Rust fixture results remain in the step output and job status.
 This extra job requires no database and changes no acceptance membership. Existing job names and the full applicable
 gates remain in place; Compose smoke verification retains its own job.
+The six jobs start independently so a scanner installer or action failure in
+architecture cannot skip Rust, supply-chain, OpenAPI, or Compose evidence.
+Branch protection must require each applicable job; job independence does not
+make an unsuccessful architecture result acceptable.
 
 The reviewed [workflow template](../../.github/ci.yml.template) owns setup,
-services, permissions, artifact handling, and cleanup. Catalogue placeholders
+services, permissions, action repositories and positions, artifact handling, and
+cleanup. Workflow-owned action major tags fill version-free template slots. Catalogue placeholders
 supply group commands and pinned tool versions. `cargo xtask verify --check-ci`
 compares the entire rendered document with the checked-in workflow, normalizing
 LF/CRLF line endings. This checks repository wiring, not external GitHub behavior
@@ -197,6 +204,85 @@ policy diff, then explicitly run `cargo xtask verify --write-ci`. Commit the
 regenerated workflow and run `--check-ci`. Ordinary verification never regenerates
 or silently repairs stale policy. A mutable template can itself weaken a gate,
 so matching generated content never replaces independent policy review.
+
+## CI resilience rules
+
+### Separate policy from dependency metadata
+
+The workflow is the only source of action versions. Each approved action uses
+an `@v<major>` tag, such as `@v7`. The template contains named action slots,
+not a second version list. The sensor validates the approved repository, tag
+shape, and agreement across all uses before rendering those slots. All other
+workflow content remains compared exactly, including permissions, commands,
+conditions, setup inputs, services, and cleanup. No YAML parser or Node process
+is required for this Rust sensor.
+
+A major tag follows compatible action releases without routine workflow edits.
+Review major-version updates and runtime requirements when changing a tag. The
+CI jobs qualify the action code resolved for each run.
+
+An action-only major-version update changes the workflow without editing the
+template or running regeneration. The sensor does not fetch action source or
+prove upstream provenance or compatibility. Review the official action release
+notes and run the applicable checks before merge.
+
+Structural or tool-version changes still update the template or catalogue,
+then explicitly run `cargo xtask verify --write-ci` and `--check-ci`.
+Regeneration preserves the workflow's action tags. Missing, malformed, or
+inconsistent tags fail rather than guessing a ref, downloading an alternative,
+or rolling a Dependabot proposal back. Ordinary checks never repair policy.
+
+### Keep tool setup local to its owner
+
+| Job | Explicit tools and state |
+|:--|:--|
+| Architecture policy | Rust and Git run CI, repository, and architecture policy checks before Node 24 installs checksum-verified Gitleaks |
+| Windows harness sensors / OpenAPI contract | Rust, Git, pinned pnpm, Node 24, and locked local Redocly installation |
+| Supply-chain policy | Rust and the inventoried cargo-deny/cargo-machete versions; no Node or npm setup |
+| Rust quality gate | Repository-selected Rust, SQLx CLI, and migrated PostgreSQL; DATABASE_URL is scoped to this job |
+| Local Compose smoke test | Docker Compose and the separately declared image build tools |
+
+Rust checks must not read Node action outputs, resolve tools through npm/npx,
+or require a package-manager cache hit. JavaScript action implementations use
+their own declared runtime; that does not install Node tooling for Rust commands.
+Each job owns its setup and runs without a `needs` edge to architecture.
+The Rust job applies migrations with its pinned SQLx CLI, the same tool used in
+local setup, rather than an ambient PostgreSQL client from the runner image.
+Jobs select the Ubuntu 26.04 and Windows 2025 image families explicitly;
+GitHub still updates each hosted image within its family.
+Every applicable job remains a required review gate; dependency qualification
+never implies permission to bypass architecture policy.
+
+OpenAPI jobs use `pnpm install --frozen-lockfile` and the local locked CLI.
+Their explicit pnpm cache is keyed by `pnpm-lock.yaml`; implicit npm cache
+detection is disabled. Cache hits must never skip installation or verification.
+Only the package store is cached, not node_modules or acceptance reports.
+There is no GitHub Actions Rust target-directory cache. Adding one requires
+toolchain, target, flags, and lockfile isolation; a broad restore key must not
+turn unqualified artifacts into evidence. Docker BuildKit's existing locked
+build cache remains separate from GitHub Actions caches.
+
+### Diagnose, repair, and qualify
+
+- Run `cargo xtask verify --check-ci` first when investigating workflow drift.
+  A dependency-only update must pass; command or permission drift must fail.
+- Exercise actual filesystem fixtures for pin-only updates and updates combined
+  with disabled checks, altered setup, unapproved owners, or malformed refs.
+- Publish mandatory JSON evidence when the verification step ran, including on
+  failure. If prerequisite setup failed and verification was skipped, do not add
+  a misleading missing-artifact failure; the failed setup still fails the job.
+- Keep command stderr visible and the runner's passed/failed/not-run distinction.
+  Do not dump environment values or credentials for diagnostics.
+- Treat advisory failures independently of action metadata. Patch an affected
+  dependency and qualify its owning adapter; do not add advisory ignores or
+  suppress duplicate-version warnings to hide the failure.
+- Before merge, require the applicable CI jobs on the actual candidate revision.
+  Branch rules and independent owner approval are external controls: this
+  repository cannot certify their settings or prevent an administrator bypass.
+  No local sensor can execute a GitHub-hosted action. The Node 24 patch version
+  and hosted runner images still change within their declared families, so
+  local checks cannot guarantee identical environments or that an upstream
+  action update is behaviorally safe.
 
 At handoff, report the repository, milestone, issue content, assumptions, and
 **passed / failed / not run** evidence using the

@@ -227,6 +227,9 @@ not replace acceptance or additional applicable contract and Compose checks.
 Prepare prerequisites explicitly; online database checks require `SQLX_OFFLINE`
 to be unset. CI wiring is checked against a reviewed workflow template and the
 same inventory; matching policy does not attest its independent integrity.
+Action major-tag updates use the workflow as their only version source; the
+[CI resilience rules](docs/development/verification.md#ci-resilience-rules)
+own tooling isolation, cache inputs, and dependency-versus-policy review.
 
 ## Documentation
 

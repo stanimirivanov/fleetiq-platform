@@ -1,6 +1,6 @@
 # External-identity administration HTTP slice
 
-Status: Implemented; full acceptance is blocked by existing Wasmtime advisories.
+Status: Implemented; original qualification and subsequent runtime patch are recorded below.
 
 ## TL;DR
 
@@ -41,17 +41,23 @@ in routine logs. Rollback retains mappings and immutable history.
 
 ## Acceptance blocker
 
-The current advisory database reports RUSTSEC-2026-0353 through
+The advisory database used for the original 2026-10-14 qualification reported
+RUSTSEC-2026-0353 through
 RUSTSEC-2026-0364 for the unchanged Wasmtime 49.0.2 lockfile entry. Cargo-deny
 reports 49.0.3 as the compatible patched line; the
 [upstream exception-tag advisory](https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-p79w-pv2r-29qp)
-also identifies that fixed release. Cargo.lock and all Cargo manifests are
-unchanged from the fetched main branch.
+also identifies that fixed release. Cargo.lock and all Cargo manifests were
+unchanged by that HTTP slice.
 
 Qualify the runtime patch separately, including Wasm resource/admission tests,
 then rerun full acceptance before merge. This HTTP slice changes no dependency,
 security exception, or advisory policy. A failed advisory check remains failed;
 passing focused or Rust checks does not establish full acceptance.
+
+The CI resilience follow-up on 2026-10-15 raises the runtime minimum and lockfile
+to 49.0.3 without adding an advisory exception; its qualification is separate
+from the original HTTP evidence below. See the
+[runtime patch review](../dependency-management.md#wasmtime-security-patch-qualification).
 
 ## Verification evidence
 

@@ -1,5 +1,6 @@
 # Generated from .github/ci.yml.template and the Rust verification catalogue.
-# Edit the template or catalogue, then run cargo xtask verify --write-ci.
+# Action major-version tags live in .github/workflows/ci.yml; structure/tools come from this template/catalogue.
+# Edit structure via the template and cargo xtask verify --write-ci; update action tags in the workflow.
 name: CI
 
 on:
@@ -16,14 +17,13 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
   RUSTFLAGS: -D warnings
   RUSTDOCFLAGS: -D warnings
 
 jobs:
   architecture:
     name: Architecture policy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     env:
       # The event supplies the trusted published base. Do not infer HEAD^ from
@@ -32,25 +32,36 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Verify CI policy before installing harness tools
+        run: cargo xtask verify --check-ci
+
+      - name: Verify repository policy before auxiliary setup
+        run: cargo xtask repository
+
+      - name: Verify workspace architecture before auxiliary setup
+        run: cargo xtask architecture
+
       - name: Install Node.js for the checksummed scanner installer
-        uses: actions/setup-node@v7.1.0
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
+          package-manager-cache: false
 
       - name: Install pinned Gitleaks with SHA-256 verification
         run: node scripts/install-gitleaks.mjs
 
       - name: Run authoritative architecture verification
+        id: verify
         run: cargo xtask verify --group architecture --base "$HARNESS_BASE"
 
       - name: Publish architecture verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
         with:
           name: harness-architecture
           path: target/verification/*.json
@@ -59,25 +70,27 @@ jobs:
 
   harness-windows:
     name: Windows harness sensors
-    runs-on: windows-latest
+    runs-on: windows-2025
     timeout-minutes: 15
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Install pinned pnpm
-        uses: pnpm/action-setup@v6.1.0
+        uses: pnpm/action-setup@v6
         with:
           version: 12.5.1
 
       - name: Install Node.js
-        uses: actions/setup-node@v7.1.0
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+          package-manager-cache: false
 
       - name: Install locked OpenAPI tools
         run: pnpm install --frozen-lockfile
@@ -92,11 +105,12 @@ jobs:
         run: cargo test -p fleetiq-xtask --locked
 
       - name: Run authoritative OpenAPI verification on Windows
+        id: verify
         run: cargo xtask verify --group openapi
 
       - name: Publish Windows OpenAPI verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
         with:
           name: harness-windows-openapi
           path: target/verification/*.json
@@ -105,36 +119,38 @@ jobs:
 
   openapi:
     name: OpenAPI contract
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
-    needs: architecture
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Install pinned pnpm
-        uses: pnpm/action-setup@v6.1.0
+        uses: pnpm/action-setup@v6
         with:
           version: 12.5.1
 
       - name: Install Node.js
-        uses: actions/setup-node@v7.1.0
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+          package-manager-cache: false
 
       - name: Install locked OpenAPI tools
         run: pnpm install --frozen-lockfile
 
       - name: Run authoritative OpenAPI verification
+        id: verify
         run: cargo xtask verify --group openapi
 
       - name: Publish OpenAPI verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
         with:
           name: harness-openapi
           path: target/verification/*.json
@@ -143,13 +159,12 @@ jobs:
 
   supply-chain:
     name: Supply-chain policy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
-    needs: architecture
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -159,11 +174,12 @@ jobs:
           cargo install cargo-machete --version 0.9.2 --locked
 
       - name: Run authoritative supply-chain verification
+        id: verify
         run: cargo xtask verify --group supply-chain
 
       - name: Publish supply-chain verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
         with:
           name: harness-supply-chain
           path: target/verification/*.json
@@ -172,9 +188,10 @@ jobs:
 
   rust:
     name: Rust quality gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 25
-    needs: architecture
+    env:
+      DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
 
     services:
       postgres:
@@ -193,7 +210,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -208,17 +225,15 @@ jobs:
           --no-default-features --features rustls,postgres
 
       - name: Apply metadata schema for checked queries
-        run: |
-          for migration in migrations/*.sql; do
-            psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --file "$migration"
-          done
+        run: sqlx migrate run --source migrations
 
       - name: Run authoritative Rust verification
+        id: verify
         run: cargo xtask verify --group rust
 
       - name: Publish Rust verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
         with:
           name: harness-rust
           path: target/verification/*.json
@@ -227,13 +242,12 @@ jobs:
 
   local-compose:
     name: Local Compose smoke test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
-    needs: architecture
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
