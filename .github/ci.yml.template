@@ -219,6 +219,29 @@ jobs:
           rustc --version
           cargo --version
 
+      - name: Restore reviewed Rust dependency cache
+        uses: Swatinem/rust-cache@@action:rust-cache@
+        with:
+          prefix-key: fleetiq-rust-v1
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock', '.config/nextest.toml') }}
+          env-vars: RUSTFLAGS RUSTDOCFLAGS CARGO_BUILD_TARGET
+          cache-targets: false
+          cache-directories: |
+            target/debug/.fingerprint
+            target/debug/build
+            target/debug/deps
+          cache-bin: false
+          cache-workspace-crates: false
+          cache-on-failure: false
+          save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+      - name: Install pinned Nextest
+        uses: taiki-e/install-action@@action:nextest-install@
+        with:
+          tool: cargo-nextest@@tool:nextest@
+          checksum: true
+          fallback: none
+
       - name: Install pinned SQLx CLI
         run: >-
           cargo install sqlx-cli --version @tool:sqlx@ --locked --debug

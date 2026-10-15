@@ -175,3 +175,6 @@ the M02 current-access API slice and its verification boundaries.
 [Platform-access HTTP slice](plans/platform-access-administration-http.md) records the next M02 administration delivery and verification.
 
 [Tenant administration HTTP slice](plans/tenant-administration-http.md) records the M02 provisioning/lifecycle delivery and verification.
+
+The [parallel Rust verification plan](plans/parallel-rust-verification.md) records
+bounded Nextest scheduling, complete-suite equivalence and trusted-main build caching.

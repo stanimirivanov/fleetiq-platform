@@ -1,0 +1,26 @@
+# Reviewed execution policy. The verification prerequisite rejects filters,
+# retries, missing resource groups, and undocumented profile overrides.
+nextest-version = "0.9.145"
+
+[profile.default]
+test-threads = 8
+fail-fast = false
+retries = 0
+
+[profile.ci]
+test-threads = 8
+fail-fast = false
+retries = 0
+
+[test-groups]
+postgres = { max-threads = 4 }
+wasmtime = { max-threads = 2 }
+
+# Classify whole adapter packages so future database tests inherit the bound.
+[[profile.default.overrides]]
+filter = 'package(fleetiq-postgres) | package(fleetiq-server)'
+test-group = "postgres"
+
+[[profile.default.overrides]]
+filter = 'package(fleetiq-protocol-wasm)'
+test-group = "wasmtime"

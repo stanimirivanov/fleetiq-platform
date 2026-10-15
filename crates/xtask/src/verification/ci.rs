@@ -40,7 +40,7 @@ pub(crate) fn write(root: &Path) -> Result<(), String> {
         .map_err(|error| format!("cannot write {WORKFLOW}: {}", error.kind()))
 }
 
-fn read_regular(root: &Path, relative: &str) -> Result<String, String> {
+pub(super) fn read_regular(root: &Path, relative: &str) -> Result<String, String> {
     let mut candidate = root.to_path_buf();
     for component in Path::new(relative).components() {
         candidate.push(component);
@@ -110,6 +110,7 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
         ("sqlx", Tool::Sqlx, 1),
         ("pnpm", Tool::Pnpm, 2),
         ("node", Tool::Node, 3),
+        ("nextest", Tool::Nextest, 1),
     ] {
         replace_token(
             &mut result,

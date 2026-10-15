@@ -28,6 +28,7 @@ pub(super) fn probe(root: &Path, tool: Tool) -> Result<String, String> {
         Tool::Deny => ("cargo", &["deny", "--version"]),
         Tool::Machete => ("cargo", &["machete", "--version"]),
         Tool::Sqlx => ("cargo", &["sqlx", "--version"]),
+        Tool::Nextest => ("cargo", &["nextest", "--version"]),
         Tool::Node => ("node", &["--version"]),
         Tool::Pnpm => (program_name("pnpm"), &["--version"]),
     };
@@ -103,6 +104,8 @@ mod tests {
     #[test]
     fn wrong_version_or_untrusted_version_text_cannot_pass_or_enter_report() {
         assert!(version_matches(Tool::Rust, "1.98.1"));
+        assert!(version_matches(Tool::Nextest, "0.9.145"));
+        assert!(!version_matches(Tool::Nextest, "0.9.144"));
         assert!(!version_matches(Tool::Rust, "1.98.0"));
         assert!(version_matches(Tool::Node, "24.18.0"));
         assert!(!version_matches(Tool::Node, "25.0.0"));

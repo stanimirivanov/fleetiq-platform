@@ -5,7 +5,7 @@
 - `cargo xtask verify --list` prints the authoritative check inventory; it runs
   no acceptance checks.
 - `cargo xtask verify --group acceptance --base origin/main` coordinates the
-  unchanged twelve-command Rust acceptance gate.
+  thirteen-command Rust acceptance gate.
 - Focused groups support fast feedback. Passing a focused group is not a
   complete acceptance result, and contract or Compose checks may also apply.
 - Missing prerequisites produce **not run** and a nonzero group exit. A started
@@ -24,13 +24,13 @@ owns command arguments, groups, outcomes, tool versions, prerequisites, and
 acceptance membership. Contributor and PR-template acceptance command lists
 are checked against that catalogue. The runner compares the complete checked-in
 CI workflow with its rendered reviewed template, including inventory-owned group
-commands and tool versions. Immutable action refs are workflow-owned dependency
+commands and tool versions. Action major tags are workflow-owned dependency
 metadata, validated and substituted into fixed template slots. Accidental
 omissions, disabled checks, or conditional
 changes cannot silently create a different local or CI gate.
 
-The runner coordinates existing tools; it adds no alternative test framework or
-new business policy. Each check remains individually runnable for investigation.
+The runner coordinates the inventoried tools, including Nextest for runtime
+test scheduling; it adds no independent test implementation or business policy. Each check remains individually runnable for investigation.
 Execution uses fixed program and argument vectors. Repository-owned xtask checks
 launch the current compiled xtask with the equivalent task arguments, avoiding
 recursive Cargo rebuilds of the executable that Windows has locked. Other checks
@@ -59,14 +59,14 @@ inspection; it is not a result report. Run a group from the repository root:
 |:--|:--|:--|
 | Architecture | `cargo xtask verify --group architecture --base origin/main` | Repository policy, architecture policy, migration immutability, current/index/incoming secret scan, real scanner fixtures, and xtask sensor tests |
 | Supply chain | `cargo xtask verify --group supply-chain` | cargo-deny and cargo-machete |
-| Rust | `cargo xtask verify --group rust` | Formatting, SQLx metadata, workspace Clippy, workspace tests, and rustdoc |
+| Rust | `cargo xtask verify --group rust` | Formatting, SQLx metadata, workspace Clippy, bounded workspace tests, separate doctests, and rustdoc |
 | OpenAPI | `cargo xtask verify --group openapi` | Modular contract linting, reference and extraction rules, and committed bundle freshness |
-| Acceptance | `cargo xtask verify --group acceptance --base origin/main` | Exactly the twelve canonical acceptance checks in contributor-policy order |
+| Acceptance | `cargo xtask verify --group acceptance --base origin/main` | Exactly the thirteen canonical acceptance checks in contributor-policy order |
 
 Scope is explicit; the runner does not guess from changed files. Acceptance
 includes scanner fixtures, but focused xtask sensor tests and OpenAPI remain
 separate inventory entries. The CI architecture group runs the sensor tests,
-and the full workspace test command also includes them. The Windows harness
+and the full workspace Nextest command also includes them. The Windows harness
 job also runs the inventoried repository, architecture, and sensor-test commands,
 followed by the same OpenAPI group. Its extra coverage does not replace the
 Linux, PostgreSQL-backed, or Compose gates.
@@ -75,14 +75,14 @@ A selected group's success says only that all selected checks passed. When the
 published HTTP contract changes, the OpenAPI group is also required. Deployment,
 configuration, startup, readiness, or container changes still require the
 existing Compose smoke checks. The runner does not absorb those operational
-checks or claim that a twelve-command acceptance run proves production
+checks or claim that a thirteen-command acceptance run proves production
 readiness. Use the [harness tiers](harness.md#cost-and-timing-tiers) and the
 canonical workflow to determine the complete applicable gate.
 
 ## Prepare prerequisites
 
 The inventory reports the required versions. Rust is pinned to 1.98.1, Gitleaks
-to 8.30.1, cargo-deny to 0.20.2, cargo-machete to 0.9.2, SQLx CLI to 0.9.0, and
+to 8.30.1, cargo-deny to 0.20.2, cargo-machete to 0.9.2, SQLx CLI to 0.9.0, cargo-nextest to 0.9.145, and
 pnpm to 12.5.1. Node.js uses the reviewed major version 24; Git must be installed.
 The runner probes versions and records only numeric version tokens. An
 unavailable or unsupported tool is a blocker, not a passing check. Tool
@@ -239,7 +239,7 @@ or rolling a Dependabot proposal back. Ordinary checks never repair policy.
 | Architecture policy | Rust and Git run CI, repository, and architecture policy checks before Node 24 installs checksum-verified Gitleaks |
 | Windows harness sensors / OpenAPI contract | Rust, Git, pinned pnpm, Node 24, and locked local Redocly installation |
 | Supply-chain policy | Rust and the inventoried cargo-deny/cargo-machete versions; no Node or npm setup |
-| Rust quality gate | Repository-selected Rust, SQLx CLI, and migrated PostgreSQL; DATABASE_URL is scoped to this job |
+| Rust quality gate | Repository-selected Rust, exact Nextest, SQLx CLI, Rust dependency caching, and migrated PostgreSQL; DATABASE_URL is scoped to this job |
 | Local Compose smoke test | Docker Compose and the separately declared image build tools |
 
 Rust checks must not read Node action outputs, resolve tools through npm/npx,
@@ -257,9 +257,14 @@ OpenAPI jobs use `pnpm install --frozen-lockfile` and the local locked CLI.
 Their explicit pnpm cache is keyed by `pnpm-lock.yaml`; implicit npm cache
 detection is disabled. Cache hits must never skip installation or verification.
 Only the package store is cached, not node_modules or acceptance reports.
-There is no GitHub Actions Rust target-directory cache. Adding one requires
-toolchain, target, flags, and lockfile isolation; a broad restore key must not
-turn unqualified artifacts into evidence. Docker BuildKit's existing locked
+The Rust job uses Swatinem/rust-cache for registries and dependency build artifacts.
+Its Rust environment hash includes toolchain, Cargo manifests/lockfile and configuration;
+explicit inputs additionally isolate OS, architecture, execution policy, flags and target.
+Only explicit debug build, deps and fingerprint directories are cached; whole-target
+caching is disabled, excluding tools, Nextest output and verification reports.
+Workspace crates and installed binaries are excluded. PRs restore, and only successful
+main pushes save. Never cache acceptance reports or treat a cache hit as verification.
+The exact template rejects conditional checks, unreviewed cache inputs and PR cache writes. Docker BuildKit's existing locked
 build cache remains separate from GitHub Actions caches.
 
 ### Diagnose, repair, and qualify
@@ -291,3 +296,38 @@ selected group and report when useful. Name any missing prerequisite and the
 remaining risk; a passing architecture report cannot replace unavailable
 PostgreSQL-backed verification. A fresh local report does not establish that CI
 or protected-branch settings passed.
+
+## Parallel test execution and coverage
+
+The canonical runtime check is `cargo nextest run --workspace --all-features --locked --profile ci`.
+Cargo doctests remain a separate required check: `cargo test --workspace --all-features --locked --doc`.
+Rustdoc generation still runs afterward. The full gate now has thirteen checks;
+no existing acceptance behavior is dropped. Supplemental Windows and architecture
+sensor commands continue to use Cargo and do not require Nextest.
+
+Install the exact local tool with `cargo install cargo-nextest --version 0.9.145 --locked`,
+or use the [official prebuilt release](https://github.com/nextest-rs/nextest/releases/tag/cargo-nextest-0.9.145)
+and verify its published SHA-256 before execution. CI uses taiki-e/install-action
+with an exact version, checksums enabled and fallback disabled. Both new actions
+follow the workflow-owned major-tag policy; neither introduces npm setup.
+
+The reviewed `.config/nextest.toml` sets eight global slots, four shared slots for
+all postgres/server tests and two Wasmtime slots. Every SQLx test retains its
+isolated migrated database; explicit asynchronous races inside tests remain.
+The CI profile inherits the default resource groups. Both profiles disable
+retries and fail-fast; all selected tests run even after failures.
+
+A test prerequisite parses and checks the entire supported execution shape,
+including package classifications. Extra filters, retry rules, scripts, profiles,
+missing groups, malformed input, and symlink/junction redirection fail closed.
+The inventoried test process removes ambient NEXTEST_* options, including retry
+and thread overrides, without printing values or removing database configuration.
+A new database-bearing package must be added to the reviewed group and sensor
+in the same PR. Policy owners review changes; the sensor does not attest itself.
+
+Before changing runners again, reconcile each Cargo test binary's `--list` result
+with Nextest's JSON inventory, including ignored flags, and verify doctests separately.
+Record build versus execution timing and complete failures; never enable automatic
+retries, skip slow tests or increase connection limits to manufacture a speedup.
+Hosted cold and warm cache runs remain the authority for CI performance. See
+[ADR 0104](../adr/0104-bound-parallel-rust-tests-and-cache-dependencies.md).

@@ -10,6 +10,8 @@ const ACTIONS: &[(&str, &str)] = &[
     ("setup-node", "actions/setup-node"),
     ("upload-artifact", "actions/upload-artifact"),
     ("pnpm", "pnpm/action-setup"),
+    ("nextest-install", "taiki-e/install-action"),
+    ("rust-cache", "Swatinem/rust-cache"),
 ];
 
 /// Preserves workflow-owned action references during checking and rendering.
