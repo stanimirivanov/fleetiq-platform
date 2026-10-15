@@ -1,0 +1,24 @@
+get:
+  operationId: listActorPlatformGrants
+  summary: "Page one actor's current platform grants"
+  description: "Requires fresh authentication and exact current platform platform.access.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact credentials and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Ascending exact action-name order, limit 1..100, default 50. Supply after_action from next_after or omit it. Cursors are traversal positions, not authorization or snapshots; revoked cursor grants need not still exist. Missing actors and actors without grants both return an empty terminal page. Inactive actors retain grants but cannot use them. No platform-wide grant enumeration."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/admin-actor-id.yaml
+    - $ref: ../../components/parameters/admin-page-limit.yaml
+    - $ref: ../../components/parameters/admin-platform-after-action.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/listActorPlatformGrants-200.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/AdministrationForbidden.yaml
+    "405":
+      $ref: ../../components/responses/ActorAuditMethodNotAllowed.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml

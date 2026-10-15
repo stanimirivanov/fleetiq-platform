@@ -116,6 +116,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0101](0101-expose-external-identity-administration-over-http.md) | Exact external-identity HTTP administration, bounded mapping/audit pages, and first-receipt retries |
 
+| [0102](0102-expose-platform-access-administration-over-http.md) | Platform-grant HTTP administration with first-receipt retries and active recovery protection |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

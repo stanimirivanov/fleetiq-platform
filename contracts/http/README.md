@@ -144,3 +144,11 @@ and immutable external-identity audit under exact identity.manage authority.
 [The operating procedure](../../docs/operations/external-identity-administration.md)
 explains replacement, first-receipt retry, paired cursors, and subject-safe logging.
 Existing operation IDs and payloads remain unchanged.
+
+## Platform-access administration
+
+Baseline.7 adds exact platform grant/revoke commands, actor-scoped current grants,
+and immutable platform-access audit under fresh platform.access.manage authority.
+See [the operating procedure](../../docs/operations/platform-access-administration.md)
+for delegation, pagination and uncertain self-revocation recovery. Tenant grants
+and administration UI remain separate. Existing baseline.6 payloads are retained.

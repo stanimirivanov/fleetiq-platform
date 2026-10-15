@@ -2,6 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, PlatformAccessChangeId, UnixTimeMillis};
 
+use crate::recorded_time::RecordedTime;
 use crate::{AuthorizedPlatform, ManagePlatformAccess, PlatformAction};
 
 /// Requested mutation of one exact platform action grant.
@@ -20,7 +21,7 @@ pub struct PlatformAccessChangeRequest {
     target_actor_id: ActorId,
     action: PlatformAction,
     kind: PlatformAccessChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl PlatformAccessChangeRequest {
@@ -37,7 +38,27 @@ impl PlatformAccessChangeRequest {
             target_actor_id,
             action,
             kind,
-            recorded_at,
+            recorded_at: RecordedTime::Exact(recorded_at),
+        }
+    }
+
+    /// Creates a redeliverable request retaining the first durable host receipt time.
+    ///
+    /// Identity, authenticated administrator, target, action, and kind must still
+    /// match. Use [`Self::new`] when recorded time is immutable command content.
+    pub const fn for_delivery(
+        change_id: PlatformAccessChangeId,
+        target_actor_id: ActorId,
+        action: PlatformAction,
+        kind: PlatformAccessChangeKind,
+        recorded_at: UnixTimeMillis,
+    ) -> Self {
+        Self {
+            change_id,
+            target_actor_id,
+            action,
+            kind,
+            recorded_at: RecordedTime::FirstReceipt(recorded_at),
         }
     }
 }
@@ -53,7 +74,7 @@ pub struct PlatformAccessChange {
     target_actor_id: ActorId,
     action: PlatformAction,
     kind: PlatformAccessChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl PlatformAccessChange {
@@ -82,9 +103,16 @@ impl PlatformAccessChange {
         self.kind
     }
 
-    /// Returns the trusted host time recorded for the command.
+    /// Returns the proposed host time; redeliveries retain the stored first receipt.
     pub const fn recorded_at(&self) -> UnixTimeMillis {
-        self.recorded_at
+        self.recorded_at.value()
+    }
+
+    /// Checks stored time under the explicit retry policy.
+    ///
+    /// Persistence must also compare every identity and business field.
+    pub fn accepts_recorded_at(&self, stored: UnixTimeMillis) -> bool {
+        self.recorded_at.accepts(stored)
     }
 }
 
@@ -114,7 +142,9 @@ pub trait PlatformAccessAdministrationRepository: Send + Sync {
     /// Applies current grant state and records its audit command atomically.
     ///
     /// Exact retries return [`PlatformAccessChangeOutcome::AlreadyRecorded`].
-    /// Reusing a change identity for different content is an error.
+    /// Reusing a change identity for different content is an error. Delivery retries
+    /// retain the original receipt time and effect without reapplying old state;
+    /// immutable commands also require recorded-time equality.
     ///
     /// # Errors
     ///

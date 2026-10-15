@@ -81,6 +81,13 @@ owns first-receipt retry policy and PostgreSQL retains atomic mapping/audit writ
 subjects are returned only to authorized callers and redacted from command diagnostics.
 See [ADR 0101](../adr/0101-expose-external-identity-administration-over-http.md).
 
+Platform-access HTTP administration consumes distinct exact platform.access.manage
+evidence. It reuses the listener-selected browser guard while composing grant
+commands, actor-scoped current grants and immutable audit separately. The shared
+transaction lock preserves an active recovery administrator and resolves retries
+before mutating current grants. See
+[ADR 0102](../adr/0102-expose-platform-access-administration-over-http.md).
+
 ## Browser identity boundary
 
 ```mermaid
