@@ -115,7 +115,7 @@ metadata-only evidence.
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | Workspace code passes the configured Rust static analysis | T2; migrated PostgreSQL for checked queries |
 | `cargo test --workspace --all-features --locked` | Unit and integration behavior passes with the committed dependency graph | T2; migrated PostgreSQL for database tests |
 | `cargo doc --workspace --no-deps --locked` | Public documentation builds with workspace rustdoc lints | T2; migrated PostgreSQL for checked queries |
-| `cargo xtask verify --check-ci` | The complete checked-in CI workflow matches its reviewed template and inventory-owned commands and tool versions | T1; repository policy files; also performed before each runner group |
+| `cargo xtask verify --check-ci` | Workflow structure and inventoried commands/tools match the template; workflow-owned action SHA pins satisfy repository, format, and consistency rules | T1; repository policy files; also performed before each runner group |
 | `cargo xtask verify --group acceptance --base origin/main` | Coordinates every canonical acceptance command and records selected-scope results without treating blocked execution as success | T1/T2; all inventory prerequisites; focused groups have smaller explicit scope |
 | Local Compose smoke checks | The container builds, starts, reports health, preserves isolation, and stops cleanly | T3; Docker with Compose and free configured host ports |
 

@@ -1,5 +1,6 @@
 # Generated from .github/ci.yml.template and the Rust verification catalogue.
-# Edit the template or catalogue, then run cargo xtask verify --write-ci.
+# Action SHA pins live in .github/workflows/ci.yml; structure/tools come from this template/catalogue.
+# Edit structure via the template and cargo xtask verify --write-ci; Dependabot updates pins.
 name: CI
 
 on:
@@ -16,7 +17,6 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
   RUSTFLAGS: -D warnings
   RUSTDOCFLAGS: -D warnings
 
@@ -32,25 +32,30 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@@action:checkout@
         with:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Verify CI policy before installing harness tools
+        run: cargo xtask verify --check-ci
+
       - name: Install Node.js for the checksummed scanner installer
-        uses: actions/setup-node@v7.0.0
+        uses: actions/setup-node@@action:setup-node@
         with:
           node-version: '@tool:node@'
+          package-manager-cache: false
 
       - name: Install pinned Gitleaks with SHA-256 verification
         run: node scripts/install-gitleaks.mjs
 
       - name: Run authoritative architecture verification
+        id: verify
         run: @verify:architecture@
 
       - name: Publish architecture verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@@action:upload-artifact@
         with:
           name: harness-architecture
           path: target/verification/*.json
@@ -64,20 +69,22 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@@action:checkout@
         with:
           persist-credentials: false
 
       - name: Install pinned pnpm
-        uses: pnpm/action-setup@v6.1.0
+        uses: pnpm/action-setup@@action:pnpm@
         with:
           version: @tool:pnpm@
 
       - name: Install Node.js
-        uses: actions/setup-node@v7.0.0
+        uses: actions/setup-node@@action:setup-node@
         with:
           node-version: '@tool:node@'
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+          package-manager-cache: false
 
       - name: Install locked OpenAPI tools
         run: pnpm install --frozen-lockfile
@@ -92,11 +99,12 @@ jobs:
         run: @check:sensor-tests@
 
       - name: Run authoritative OpenAPI verification on Windows
+        id: verify
         run: @verify:openapi@
 
       - name: Publish Windows OpenAPI verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@@action:upload-artifact@
         with:
           name: harness-windows-openapi
           path: target/verification/*.json
@@ -111,30 +119,33 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@@action:checkout@
         with:
           persist-credentials: false
 
       - name: Install pinned pnpm
-        uses: pnpm/action-setup@v6.1.0
+        uses: pnpm/action-setup@@action:pnpm@
         with:
           version: @tool:pnpm@
 
       - name: Install Node.js
-        uses: actions/setup-node@v7.0.0
+        uses: actions/setup-node@@action:setup-node@
         with:
           node-version: '@tool:node@'
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+          package-manager-cache: false
 
       - name: Install locked OpenAPI tools
         run: pnpm install --frozen-lockfile
 
       - name: Run authoritative OpenAPI verification
+        id: verify
         run: @verify:openapi@
 
       - name: Publish OpenAPI verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@@action:upload-artifact@
         with:
           name: harness-openapi
           path: target/verification/*.json
@@ -149,7 +160,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@@action:checkout@
         with:
           persist-credentials: false
 
@@ -159,11 +170,12 @@ jobs:
           cargo install cargo-machete --version @tool:machete@ --locked
 
       - name: Run authoritative supply-chain verification
+        id: verify
         run: @verify:supply-chain@
 
       - name: Publish supply-chain verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@@action:upload-artifact@
         with:
           name: harness-supply-chain
           path: target/verification/*.json
@@ -175,6 +187,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: architecture
+    env:
+      DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
 
     services:
       postgres:
@@ -193,7 +207,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@@action:checkout@
         with:
           persist-credentials: false
 
@@ -214,11 +228,12 @@ jobs:
           done
 
       - name: Run authoritative Rust verification
+        id: verify
         run: @verify:rust@
 
       - name: Publish Rust verification evidence
-        if: always()
-        uses: actions/upload-artifact@v7.0.2
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@@action:upload-artifact@
         with:
           name: harness-rust
           path: target/verification/*.json
@@ -233,7 +248,7 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@@action:checkout@
         with:
           persist-credentials: false
 

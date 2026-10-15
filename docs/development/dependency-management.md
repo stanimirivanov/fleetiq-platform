@@ -10,7 +10,7 @@
   yanked packages, and unused or inconsistent workspace dependency declarations.
 - The tools are pinned to `cargo-deny` 0.20.2 and `cargo-machete` 0.9.2. The
   advisory check needs a current RustSec database and network access.
-- OpenAPI tooling requires Node.js 22.12 or newer and pins pnpm and Redocly CLI in `package.json`
+- OpenAPI verification requires the inventoried Node.js 24 major and pins pnpm and Redocly CLI in `package.json`
   and `pnpm-lock.yaml`; its separate CI job checks the contract bundle.
 - Secret protection uses checksum-verified Gitleaks 8.30.1; its exact version
   and exception policy are maintained with the [protection guide](harness-protection.md).
@@ -87,6 +87,28 @@ lockfiles, GitHub Actions, and the local Docker inputs weekly. It limits open
 version-update PRs so security work and capability changes remain reviewable.
 Each update follows the normal PR gate and must preserve architecture
 boundaries and protocol fixture compatibility.
+
+
+### GitHub Actions updates
+
+Action pins live only in the workflow as immutable commit SHAs with version
+comments. Dependabot can update those pins without synchronizing a second
+version list in the template. Review their official upstream provenance and
+runtime compatibility, then run the applicable checks. See the canonical
+[CI resilience rules](verification.md#ci-resilience-rules) for pin validation,
+structural regeneration, tooling isolation, and cache policy.
+
+### Wasmtime security patch qualification
+
+The protocol adapter retains the same Wasmtime features and owning layer, with
+the minimum version raised to 49.0.3. The compatible patch and its matching
+Cranelift/internal crates address the advisories reported for 49.0.2; see the
+[upstream release](https://github.com/bytecodealliance/wasmtime/releases/tag/v49.0.3).
+No WASI or network capabilities, new direct dependencies, or advisory exceptions
+are added. Existing protocol admission, fuel, memory, deadline, cancellation,
+and cleanup tests qualify the patch, followed by the full workspace gate.
+Future advisories still fail cargo-deny. Rollback must not restore the vulnerable
+runtime; use a qualified patched successor if a regression is found.
 
 The protocol component fixture parser and encoder (`wit-parser` and
 `wit-component`) must pin the same exact wasm-tools release. The repository
