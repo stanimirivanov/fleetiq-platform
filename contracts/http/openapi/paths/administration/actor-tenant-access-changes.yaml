@@ -1,0 +1,35 @@
+post:
+  operationId: changeTenantAccess
+  summary: "Grant or revoke one exact tenant action"
+  description: "Requires fresh authentication and exact current tenant access.manage authority. Other tenant actions, grants in another tenant and all platform actions never substitute. Suspended tenants deny access. Only mounted on an authenticated listener. Every outcome is no-store; problems redact credentials and database details. Authentication and tenant authorization precede validation of actor, command and query input. A tenant that cannot be authorized returns 403. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1; Authorization cannot bypass browser mode. JSON is limited to 16 KiB and rejects unknown fields. Server derives tenant, administrator and receipt time; clients retain command ID, target, action and kind after uncertain results. IDs are tenant-scoped. Retries preserve first committed time and effect without restoring earlier grant state. Different content or administrator under the same tenant-scoped ID returns 409. Grant/revoke ensures presence/absence; a new already-satisfied command records state_changed false. Missing target actors return 404 with no mutation or audit. An inactive target can retain grants. Existing tenant policy permits self-revocation, including the final tenant administrator; no platform bypass or tenant recovery API is introduced. Self-revocation affects the next decision, so retries may return 403. Previously issued evidence is not recalled."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/admin-tenant-id.yaml
+    - $ref: ../../components/parameters/admin-actor-id.yaml
+    - $ref: ../../components/parameters/admin-mutation-origin.yaml
+    - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/TenantAccessChangeRequest.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/changeTenantAccess-200.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/TenantAccessForbidden.yaml
+    "404":
+      $ref: ../../components/responses/NotFound.yaml
+    "405":
+      $ref: ../../components/responses/ActorLifecycleMethodNotAllowed.yaml
+    "409":
+      $ref: ../../components/responses/TenantAccessConflict.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml

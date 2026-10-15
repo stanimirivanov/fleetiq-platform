@@ -1,0 +1,12 @@
+description: Tenant-scoped command identity names different content or administrator.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:conflict
+      title: Command conflicts with current tenant access state
+      status: 409

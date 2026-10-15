@@ -1,12 +1,18 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.8"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority."
+  version: "1.0.0-baseline.9"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/actors/{actor_id}/grants":
+    $ref: "./paths/administration/actor-tenant-grants.yaml"
+  "/api/v1/tenants/{tenant_id}/actors/{actor_id}/access-changes":
+    $ref: "./paths/administration/actor-tenant-access-changes.yaml"
+  "/api/v1/tenants/{tenant_id}/access-changes":
+    $ref: "./paths/administration/tenant-access-changes.yaml"
   "/api/v1/admin/tenants":
     $ref: "./paths/administration/tenants.yaml"
   "/api/v1/admin/tenants/{tenant_id}/lifecycle":
@@ -61,6 +67,18 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    TenantAccessAuditPage:
+      $ref: "./components/schemas/TenantAccessAuditPage.yaml"
+    TenantAccessAuditEntry:
+      $ref: "./components/schemas/TenantAccessAuditEntry.yaml"
+    TenantAccessAuditCursor:
+      $ref: "./components/schemas/TenantAccessAuditCursor.yaml"
+    TenantGrantCataloguePage:
+      $ref: "./components/schemas/TenantGrantCataloguePage.yaml"
+    TenantAccessChangeResult:
+      $ref: "./components/schemas/TenantAccessChangeResult.yaml"
+    TenantAccessChangeRequest:
+      $ref: "./components/schemas/TenantAccessChangeRequest.yaml"
     ProvisionTenantRequest:
       $ref: "./components/schemas/ProvisionTenantRequest.yaml"
     ProvisionTenantResult:
@@ -176,6 +194,8 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    admin-tenant-after-action:
+      $ref: "./components/parameters/admin-tenant-after-action.yaml"
     admin-tenant-after:
       $ref: "./components/parameters/admin-tenant-after.yaml"
     admin-tenant-id:
@@ -253,6 +273,16 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    listActorTenantGrants-200:
+      $ref: "./components/responses/listActorTenantGrants-200.yaml"
+    listTenantAccessChanges-200:
+      $ref: "./components/responses/listTenantAccessChanges-200.yaml"
+    changeTenantAccess-200:
+      $ref: "./components/responses/changeTenantAccess-200.yaml"
+    TenantAccessConflict:
+      $ref: "./components/responses/TenantAccessConflict.yaml"
+    TenantAccessForbidden:
+      $ref: "./components/responses/TenantAccessForbidden.yaml"
     listTenants-200:
       $ref: "./components/responses/listTenants-200.yaml"
     provisionTenant-200:

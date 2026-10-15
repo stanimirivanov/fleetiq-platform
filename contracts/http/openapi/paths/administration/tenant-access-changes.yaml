@@ -1,0 +1,25 @@
+get:
+  operationId: listTenantAccessChanges
+  summary: "Page immutable tenant access change evidence"
+  description: "Requires fresh authentication and exact current tenant access.manage authority. Other tenant actions, grants in another tenant and all platform actions never substitute. Suspended tenants deny access. Only mounted on an authenticated listener. Every outcome is no-store; problems redact credentials and database details. Authentication and tenant authorization precede validation of actor, command and query input. A tenant that cannot be authorized returns 403. Unknown and duplicate query fields are rejected. Tenant-scoped history in descending (recorded_at_ms, change_id) order, limit 1..100, default 50. Both before_recorded_at_ms and before_change_id are required together. A cursor is not a snapshot. Initial tenant-provisioning grants have separate evidence: this history alone does not reconstruct current grants."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/admin-tenant-id.yaml
+    - $ref: ../../components/parameters/admin-page-limit.yaml
+    - $ref: ../../components/parameters/admin-audit-before-time.yaml
+    - $ref: ../../components/parameters/admin-audit-before-change.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/listTenantAccessChanges-200.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/TenantAccessForbidden.yaml
+    "405":
+      $ref: ../../components/responses/ActorAuditMethodNotAllowed.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml

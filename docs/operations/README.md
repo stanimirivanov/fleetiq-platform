@@ -45,3 +45,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [Platform-access administration](platform-access-administration.md) — exact grant/revoke, current grants, immutable audit, and safe delegation.
 
 - [Tenant provisioning and lifecycle](tenant-administration.md) — provision initial access, activate/suspend, and inspect catalogue and lifecycle audit.
+
+- [Tenant-access administration](tenant-access-administration.md) — exact tenant grant/revoke, current grants, audit and delegation limits.

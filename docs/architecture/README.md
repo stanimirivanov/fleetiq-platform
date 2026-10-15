@@ -95,6 +95,11 @@ before state mutation, and tenant suspension denies fresh tenant access while
 retaining platform recovery. See
 [ADR 0103](../adr/0103-expose-tenant-administration-over-http.md).
 
+Tenant-access HTTP administration consumes exact tenant access.manage evidence,
+with no platform bypass. Identity owns the current-grants port and first-receipt
+command policy; PostgreSQL retains tenant-scoped serialization and atomic audit.
+See [ADR 0105](../adr/0105-expose-tenant-access-administration-over-http.md).
+
 ## Browser identity boundary
 
 ```mermaid

@@ -1,0 +1,10 @@
+type: object
+additionalProperties: false
+required: [outcome, state_changed]
+properties:
+  outcome:
+    type: string
+    enum: [recorded, already_recorded]
+  state_changed:
+    type: boolean
+    description: Original committed grant effect. Read the catalogue for current grant state.

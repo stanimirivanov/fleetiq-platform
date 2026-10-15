@@ -1,0 +1,9 @@
+description: "Original committed effect. Retries retain first receipt time and never restore earlier grant state."
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/TenantAccessChangeResult.yaml
+    example: {"outcome":"recorded","state_changed":true}

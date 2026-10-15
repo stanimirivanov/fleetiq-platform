@@ -161,3 +161,9 @@ exact-origin/CSRF boundary. Provisioning is atomic with initial grants; retries
 retain the original result without undoing subsequent administration.
 See [the operating procedure](../../docs/operations/tenant-administration.md).
 Existing baseline.7 paths and payloads remain unchanged.
+
+Tenant-access administration adds three paths in baseline.9. All require fresh
+exact tenant access.manage; platform authority never substitutes. Current grants,
+atomic grant/revoke and immutable audit remain distinct. See the
+[operator procedure](../../docs/operations/tenant-access-administration.md)
+for retries, pagination, browser guards and final-administrator self-revocation.

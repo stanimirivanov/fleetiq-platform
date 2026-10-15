@@ -33,6 +33,7 @@ mod recorded_time;
 mod tenant_access_administration;
 mod tenant_access_audit;
 mod tenant_catalog;
+mod tenant_grant_catalog;
 mod tenant_lifecycle_administration;
 mod tenant_lifecycle_audit;
 mod tenant_provisioning;
@@ -123,4 +124,10 @@ pub use tenant_lifecycle_audit::{
 pub use tenant_provisioning::{
     TenantProvisioningCommand, TenantProvisioningError, TenantProvisioningOutcome,
     TenantProvisioningRepository, TenantProvisioningRequest, TenantProvisioningService,
+};
+
+pub use tenant_grant_catalog::{
+    TenantGrantCatalog, TenantGrantCatalogCursor, TenantGrantCatalogEntry, TenantGrantCatalogError,
+    TenantGrantCatalogPage, TenantGrantCatalogPageSize, TenantGrantCatalogPageSizeError,
+    TenantGrantCatalogQuery, TenantGrantCatalogRepository,
 };

@@ -1,0 +1,22 @@
+type: object
+additionalProperties: false
+required: [tenant_id, change_id, administrator_actor_id, target_actor_id, action, kind, recorded_at_ms, state_changed]
+properties:
+  tenant_id:
+    $ref: ./AdministrationIdentifier.yaml
+  change_id:
+    $ref: ./AdministrationIdentifier.yaml
+  administrator_actor_id:
+    $ref: ./AdministrationIdentifier.yaml
+  target_actor_id:
+    $ref: ./AdministrationIdentifier.yaml
+  action:
+    $ref: ./TenantAction.yaml
+  kind:
+    type: string
+    enum: [grant, revoke]
+  recorded_at_ms:
+    type: integer
+    format: int64
+  state_changed:
+    type: boolean
