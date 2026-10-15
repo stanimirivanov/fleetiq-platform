@@ -120,6 +120,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0103](0103-expose-tenant-administration-over-http.md) | Tenant provisioning and lifecycle HTTP with distinct platform permissions and safe first-receipt retries |
 
+| [0104](0104-bound-parallel-rust-tests-and-cache-dependencies.md) | Bounded cross-binary Rust tests, explicit doctests, and trusted-main dependency caching |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

@@ -161,7 +161,8 @@ cargo machete --with-metadata --skip-target-dir
 cargo fmt --all --check
 cargo sqlx prepare --check --workspace -- --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-features --locked
+cargo nextest run --workspace --all-features --locked --profile ci
+cargo test --workspace --all-features --locked --doc
 cargo doc --workspace --no-deps --locked
 ```
 
@@ -219,7 +220,7 @@ configuration, startup, readiness, or container behavior changes. The
 supply-chain commands above remain required; record their exact evidence.
 
 The [authoritative inventory and runner](docs/development/verification.md)
-coordinate these ordinary commands with `cargo xtask verify --group acceptance --base origin/main`; the exact twelve-command gate above is unchanged.
+coordinate these ordinary commands with `cargo xtask verify --group acceptance --base origin/main`; the thirteen-command gate above preserves all checks and runs doctests separately.
 `cargo xtask verify --list` prints inventory metadata without running checks.
 Focused architecture, supply-chain, Rust, and OpenAPI groups provide explicit
 scope and fresh ignored metadata-only evidence. Passing a focused group does

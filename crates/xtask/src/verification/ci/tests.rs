@@ -522,3 +522,49 @@ fn shell_literal_action_text_is_opaque_to_dependency_ref_collection() {
         candidate
     );
 }
+
+#[test]
+fn performance_actions_remain_workflow_owned_major_dependencies() {
+    for repository in ["Swatinem/rust-cache", "taiki-e/install-action"] {
+        let fixture = Fixture::new();
+        let original = generated();
+        let prefix = format!("uses: {repository}@");
+        let tag = original
+            .lines()
+            .find_map(|line| line.trim_start().strip_prefix(&prefix))
+            .unwrap();
+        let major = tag.strip_prefix('v').unwrap().parse::<u32>().unwrap() + 1;
+        let changed = original.replace(&format!("{prefix}{tag}"), &format!("{prefix}v{major}"));
+        fs::write(fixture.0.join(super::WORKFLOW), &changed).unwrap();
+        check(&fixture.0).expect("action-only updates preserve reviewed structure");
+        super::write(&fixture.0).unwrap();
+        assert_eq!(
+            fs::read_to_string(fixture.0.join(super::WORKFLOW)).unwrap(),
+            changed
+        );
+    }
+}
+#[test]
+fn caching_and_nextest_cannot_bypass_checks_or_change_reviewed_setup() {
+    let fixture = Fixture::new();
+    let original = generated();
+    for changed in [
+        original.replace("checksum: true","checksum: false"),
+        original.replace("fallback: none","fallback: cargo-install"),
+        original.replace("cargo-nextest@0.9.145","cargo-nextest@0.9.144"),
+        original.replace("cache-bin: false","cache-bin: true"),
+        original.replace("cache-targets: false","cache-targets: true"),
+        original.replace("prefix-key: fleetiq-rust-v1","shared-key: shared"),
+        original.replace("target/debug/deps","target/verification"),
+        original.replace("cache-workspace-crates: false","cache-workspace-crates: true"),
+        original.replace("cache-on-failure: false","cache-on-failure: true"),
+        original.replace("github.event_name == 'push' && github.ref == 'refs/heads/main'","true"),
+        original.replace("'Cargo.lock', '.config/nextest.toml'","'Cargo.toml'"),
+        original.replace("env-vars: RUSTFLAGS RUSTDOCFLAGS CARGO_BUILD_TARGET","env-vars: IGNORED"),
+        original.replace("        id: verify\n        run: cargo xtask verify --group rust","        id: verify\n        if: steps.rust-cache.outputs.cache-hit != 'true'\n        run: cargo xtask verify --group rust"),
+    ] {
+        assert_ne!(changed,original);
+        fs::write(fixture.0.join(super::WORKFLOW),changed).unwrap();
+        assert!(check(&fixture.0).is_err(),"setup weakening must fail");
+    }
+}

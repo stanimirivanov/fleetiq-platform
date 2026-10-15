@@ -113,7 +113,8 @@ metadata-only evidence.
 | `cargo fmt --all --check` | Rust formatting is stable without changing files | T2; Rust toolchain |
 | `cargo sqlx prepare --check --workspace -- --all-targets --all-features` | Checked SQL matches the migrated database and committed `.sqlx` descriptions | T2; SQLx CLI and migrated PostgreSQL |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | Workspace code passes the configured Rust static analysis | T2; migrated PostgreSQL for checked queries |
-| `cargo test --workspace --all-features --locked` | Unit and integration behavior passes with the committed dependency graph | T2; migrated PostgreSQL for database tests |
+| `cargo nextest run --workspace --all-features --locked --profile ci` | Complete unit/integration behavior with bounded database concurrency | T2; migrated PostgreSQL and pinned Nextest |
+| `cargo test --workspace --all-features --locked --doc` | Documentation and compile-fail authorization examples | T2; migrated PostgreSQL |
 | `cargo doc --workspace --no-deps --locked` | Public documentation builds with workspace rustdoc lints | T2; migrated PostgreSQL for checked queries |
 | `cargo xtask verify --check-ci` | Workflow structure and inventoried commands/tools match the template; workflow-owned action major tags satisfy repository, format, and consistency rules | T1; repository policy files; also performed before each runner group |
 | `cargo xtask verify --group acceptance --base origin/main` | Coordinates every canonical acceptance command and records selected-scope results without treating blocked execution as success | T1/T2; all inventory prerequisites; focused groups have smaller explicit scope |

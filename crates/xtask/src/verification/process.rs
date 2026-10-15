@@ -109,6 +109,7 @@ impl Executor for System<'_> {
                     env::var_os("DATABASE_URL").is_some_and(|value| !value.is_empty()),
                     env::var_os("SQLX_OFFLINE").is_some(),
                 )?,
+                Prerequisite::NextestConfiguration => super::nextest::check(self.root)?,
                 Prerequisite::OpenapiDependencies => {
                     if !self.root.join("node_modules/.bin/redocly").is_file() {
                         return Err(
@@ -135,6 +136,11 @@ impl Executor for System<'_> {
                     reason: "compiled xtask executable is unavailable".into(),
                 },
             }
+        } else if check.id == "tests" {
+            let mut command = Command::new(check.program);
+            command.current_dir(self.root).args(&args);
+            super::nextest::isolate(&mut command);
+            execute_command(&mut command)
         } else {
             run_program(self.root, check.program, &args)
         }

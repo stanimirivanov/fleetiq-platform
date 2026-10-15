@@ -4,6 +4,7 @@
 /.github/ @stanimirivanov
 /.agents/ @stanimirivanov
 /.cargo/ @stanimirivanov
+/.config/ @stanimirivanov
 /crates/xtask/ @stanimirivanov
 /scripts/ @stanimirivanov
 /Cargo.toml @stanimirivanov

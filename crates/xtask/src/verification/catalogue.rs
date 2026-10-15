@@ -54,6 +54,7 @@ pub(crate) enum Prerequisite {
     TrustedBase,
     Database,
     OpenapiDependencies,
+    NextestConfiguration,
 }
 
 impl Prerequisite {
@@ -62,6 +63,7 @@ impl Prerequisite {
             Self::TrustedBase => "trusted-base",
             Self::Database => "database",
             Self::OpenapiDependencies => "openapi-dependencies",
+            Self::NextestConfiguration => "nextest-configuration",
         }
     }
 
@@ -70,6 +72,9 @@ impl Prerequisite {
             Self::TrustedBase => "An explicit trusted base resolving to an ancestor commit",
             Self::Database => {
                 "DATABASE_URL for fully migrated PostgreSQL 18.6; the real gates prove schema compatibility"
+            }
+            Self::NextestConfiguration => {
+                "Reviewed complete-suite Nextest profile and resource limits"
             }
             Self::OpenapiDependencies => {
                 "Locked OpenAPI dependencies installed with pnpm install --frozen-lockfile"
@@ -87,6 +92,7 @@ pub(crate) enum Tool {
     Deny,
     Machete,
     Sqlx,
+    Nextest,
     Node,
     Pnpm,
 }
@@ -100,6 +106,7 @@ impl Tool {
             Self::Deny => "cargo-deny",
             Self::Machete => "cargo-machete",
             Self::Sqlx => "sqlx",
+            Self::Nextest => "cargo-nextest",
             Self::Node => "node",
             Self::Pnpm => "pnpm",
         }
@@ -114,6 +121,7 @@ impl Tool {
             Self::Deny => "0.20.2",
             Self::Machete => "0.9.2",
             Self::Sqlx => "0.9.0",
+            Self::Nextest => "0.9.145",
             Self::Node => "24",
             Self::Pnpm => "12.5.1",
         }
@@ -134,7 +142,7 @@ pub(crate) struct Check {
     pub(crate) acceptance: bool,
 }
 
-/// The twelve acceptance checks plus focused sensor tests and `OpenAPI` checks.
+/// The thirteen acceptance checks plus focused sensor tests and `OpenAPI` checks.
 ///
 /// `@base` is an argument placeholder, never accepted as a revision itself.
 /// Supplemental checks remain explicit so focused success cannot imply that
@@ -270,9 +278,28 @@ pub(crate) static CHECKS: &[Check] = &[
         id: "tests",
         group: Group::Rust,
         program: "cargo",
-        args: &["test", "--workspace", "--all-features", "--locked"],
-        command: "cargo test --workspace --all-features --locked",
-        outcome: "Locked workspace behavior including real PostgreSQL integration tests",
+        args: &[
+            "nextest",
+            "run",
+            "--workspace",
+            "--all-features",
+            "--locked",
+            "--profile",
+            "ci",
+        ],
+        command: "cargo nextest run --workspace --all-features --locked --profile ci",
+        outcome: "Complete locked workspace behavior with bounded PostgreSQL concurrency",
+        prerequisites: &[Prerequisite::Database, Prerequisite::NextestConfiguration],
+        tools: &[Tool::Rust, Tool::Nextest],
+        acceptance: true,
+    },
+    Check {
+        id: "doctests",
+        group: Group::Rust,
+        program: "cargo",
+        args: &["test", "--workspace", "--all-features", "--locked", "--doc"],
+        command: "cargo test --workspace --all-features --locked --doc",
+        outcome: "Workspace documentation examples, including compile-fail authorization contracts",
         prerequisites: &[Prerequisite::Database],
         tools: &[Tool::Rust],
         acceptance: true,
@@ -337,7 +364,8 @@ mod tests {
                 "cargo fmt --all --check",
                 "cargo sqlx prepare --check --workspace -- --all-targets --all-features",
                 "cargo clippy --workspace --all-targets --all-features -- -D warnings",
-                "cargo test --workspace --all-features --locked",
+                "cargo nextest run --workspace --all-features --locked --profile ci",
+                "cargo test --workspace --all-features --locked --doc",
                 "cargo doc --workspace --no-deps --locked",
             ]
         );
@@ -345,7 +373,7 @@ mod tests {
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 14);
+        assert_eq!(CHECKS.len(), 15);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [
@@ -420,6 +448,7 @@ mod tests {
         assert_eq!(Tool::Deny.expected(), "0.20.2");
         assert_eq!(Tool::Machete.expected(), "0.9.2");
         assert_eq!(Tool::Sqlx.expected(), "0.9.0");
+        assert_eq!(Tool::Nextest.expected(), "0.9.145");
         assert_eq!(Tool::Pnpm.expected(), "12.5.1");
         assert_eq!(Tool::Node.expected(), "24");
         assert_eq!(Tool::Git.expected(), "installed");

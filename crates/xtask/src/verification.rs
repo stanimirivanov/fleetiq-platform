@@ -6,6 +6,7 @@
 pub(crate) mod catalogue;
 pub(crate) mod ci;
 mod evidence;
+mod nextest;
 mod process;
 mod runner;
 

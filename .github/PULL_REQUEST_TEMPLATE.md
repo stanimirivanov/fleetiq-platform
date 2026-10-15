@@ -42,7 +42,8 @@
 | `cargo fmt --all --check` | | |
 | `cargo sqlx prepare --check --workspace -- --all-targets --all-features` | | |
 | `cargo clippy --workspace --all-targets --all-features -- -D warnings` | | |
-| `cargo test --workspace --all-features --locked` | | |
+| `cargo nextest run --workspace --all-features --locked --profile ci` | | |
+| `cargo test --workspace --all-features --locked --doc` | | |
 | `cargo doc --workspace --no-deps --locked` | | |
 
 Checks not run, blocking conditions, and residual risk:
