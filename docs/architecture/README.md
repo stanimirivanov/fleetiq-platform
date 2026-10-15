@@ -88,6 +88,13 @@ transaction lock preserves an active recovery administrator and resolves retries
 before mutating current grants. See
 [ADR 0102](../adr/0102-expose-platform-access-administration-over-http.md).
 
+Tenant HTTP administration composes provisioning, lifecycle, catalogue and audit
+from the identity capability. Provisioning requires tenant.provision; lifecycle
+and query operations require tenant.lifecycle.manage. First-receipt retries resolve
+before state mutation, and tenant suspension denies fresh tenant access while
+retaining platform recovery. See
+[ADR 0103](../adr/0103-expose-tenant-administration-over-http.md).
+
 ## Browser identity boundary
 
 ```mermaid

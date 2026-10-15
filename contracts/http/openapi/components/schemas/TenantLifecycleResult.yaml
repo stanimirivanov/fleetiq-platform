@@ -1,0 +1,14 @@
+type: "object"
+additionalProperties: false
+required:
+  - "outcome"
+  - "state_changed"
+properties:
+  outcome:
+    type: "string"
+    enum:
+      - "recorded"
+      - "already_recorded"
+  state_changed:
+    type: "boolean"
+    description: "Original durable effect, including on retry; not a claim about current state."

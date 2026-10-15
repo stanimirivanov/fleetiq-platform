@@ -315,3 +315,91 @@ fn assert_constraint(error: &sqlx::Error, expected: &str) {
         Some(expected)
     );
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn delivery_retries_keep_original_time_and_do_not_undo_later_activation(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let service = TenantLifecycleAdministration::new(PostgresTenantLifecycleAdministration::new(
+        pool.clone(),
+    ));
+    let delivery = |time| {
+        TenantLifecycleChangeRequest::for_delivery(
+            TenantLifecycleChangeId::new("delivery-a").unwrap(),
+            tenant_id("tenant-a"),
+            TenantLifecycleChangeKind::Suspend,
+            UnixTimeMillis::new(time),
+        )
+    };
+    let a = manage_tenant_lifecycle(&pool).await?;
+    let b = manage_tenant_lifecycle(&pool).await?;
+    let (a, b) = tokio::join!(
+        service.apply(a, delivery(1000)),
+        service.apply(b, delivery(2000))
+    );
+    let outcomes = [a?, b?];
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| **o
+                == TenantLifecycleChangeOutcome::Recorded(
+                    TenantLifecycleChangeEffect::StateChanged
+                ))
+            .count(),
+        1
+    );
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| **o
+                == TenantLifecycleChangeOutcome::AlreadyRecorded(
+                    TenantLifecycleChangeEffect::StateChanged
+                ))
+            .count(),
+        1
+    );
+    let time = sqlx::query_scalar::<_, i64>(
+        "SELECT recorded_at_ms FROM identity.tenant_lifecycle_changes WHERE change_id='delivery-a'",
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert!([1000, 2000].contains(&time));
+    assert!(matches!(
+        service
+            .apply(
+                manage_tenant_lifecycle(&pool).await?,
+                request(
+                    "delivery-a",
+                    "tenant-a",
+                    TenantLifecycleChangeKind::Suspend,
+                    time + 1
+                )
+            )
+            .await,
+        Err(TenantLifecycleAdministrationError::Repository(
+            PostgresTenantLifecycleAdministrationError::IdentityCollision { .. }
+        ))
+    ));
+    service
+        .apply(
+            manage_tenant_lifecycle(&pool).await?,
+            request(
+                "activate-a",
+                "tenant-a",
+                TenantLifecycleChangeKind::Activate,
+                3000,
+            ),
+        )
+        .await?;
+    assert_eq!(
+        service
+            .apply(manage_tenant_lifecycle(&pool).await?, delivery(4000))
+            .await?,
+        TenantLifecycleChangeOutcome::AlreadyRecorded(TenantLifecycleChangeEffect::StateChanged)
+    );
+    assert!(tenant_authorization(&pool).await.is_ok());
+    assert_eq!(sqlx::query_scalar::<_,i64>("SELECT recorded_at_ms FROM identity.tenant_lifecycle_changes WHERE change_id='delivery-a'").fetch_one(&pool).await?,time);
+    assert_eq!(audit_count(&pool).await?, 2);
+    Ok(())
+}

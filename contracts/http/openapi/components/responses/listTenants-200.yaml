@@ -1,0 +1,13 @@
+description: "Current tenant catalogue ordered by tenant ID; includes suspended tenants."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/TenantCataloguePage.yaml"
+    example:
+      tenants:
+        - tenant_id: "tenant-a"
+          state: "active"
+      next_after: null

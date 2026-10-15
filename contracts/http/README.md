@@ -152,3 +152,12 @@ and immutable platform-access audit under fresh platform.access.manage authority
 See [the operating procedure](../../docs/operations/platform-access-administration.md)
 for delegation, pagination and uncertain self-revocation recovery. Tenant grants
 and administration UI remain separate. Existing baseline.6 payloads are retained.
+
+## Tenant administration
+
+Baseline.8 adds tenant provisioning under tenant.provision and catalogue, lifecycle
+and lifecycle audit under tenant.lifecycle.manage. Browser mutations reuse the
+exact-origin/CSRF boundary. Provisioning is atomic with initial grants; retries
+retain the original result without undoing subsequent administration.
+See [the operating procedure](../../docs/operations/tenant-administration.md).
+Existing baseline.7 paths and payloads remain unchanged.

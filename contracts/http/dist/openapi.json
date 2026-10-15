@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.7",
+    "version": "1.0.0-baseline.8",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority."
   },
   "servers": [
@@ -12,6 +12,217 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/admin/tenants": {
+      "get": {
+        "operationId": "listTenants",
+        "summary": "Page the platform tenant catalogue",
+        "description": "Requires fresh authenticated actor and exact current platform tenant.lifecycle.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Includes active and suspended tenants; ordered ascending by exact tenant ID. Limit 1..100, default 50. No cross-request snapshot guarantee; unknown query fields are rejected.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-tenant-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listTenants-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/TenantAdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/TenantCatalogueMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "provisionTenant",
+        "summary": "Provision an tenant with its first external identity",
+        "description": "Requires fresh authenticated actor and exact current platform tenant.provision evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Browser mode additionally requires one exact configured Origin and X-FleetIQ-CSRF: 1; bearer credentials cannot bypass session mode. JSON is bounded to 16 KiB and rejects unknown fields. The client supplies a stable opaque command ID; keep it and all business fields unchanged after an uncertain response. The server derives the administrator and receipt time. Exact retries keep the first committed time and original effect; different content or actor using that ID conflicts. Current authentication and authority are rechecked even on retry. Atomically creates an active tenant, immutable provisioning evidence, and metadata.read, metadata.manage, and access.manage grants for the selected existing internal actor. No grant is implicitly given to the provisioner. Missing administrator returns 404 with complete rollback. Existing inactive actors may receive retained grants but cannot exercise them until active. Replaying provisioning does not restore revoked grants or reactivate a suspended tenant.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionTenantRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/provisionTenant-200"
+          },
+          "201": {
+            "$ref": "#/components/responses/provisionTenant-201"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/TenantAdministrationForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/TenantCatalogueMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/TenantAdministrationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tenants/{tenant_id}/lifecycle": {
+      "post": {
+        "operationId": "changeTenantLifecycle",
+        "summary": "Activate or suspend an existing tenant",
+        "description": "Requires fresh authenticated actor and exact current platform tenant.lifecycle.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Browser mode additionally requires one exact configured Origin and X-FleetIQ-CSRF: 1; bearer credentials cannot bypass session mode. JSON is bounded to 16 KiB and rejects unknown fields. The client supplies a stable opaque command ID; keep it and all business fields unchanged after an uncertain response. The server derives the administrator and receipt time. Exact retries keep the first committed time and original effect; different content or actor using that ID conflicts. Current authentication and authority are rechecked even on retry. Retains tenant data, grants, and history. Suspension denies fresh tenant authorization and removes the tenant from operator discovery. It does not cancel in-flight work or suspend ingestion/workers. Platform administration remains available for activation. An already-requested state records a no-change audit. Replaying a command after another state transition returns the original effect without undoing the later transition.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TenantLifecycleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/changeTenantLifecycle-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/TenantAdministrationForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/TenantLifecycleMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/TenantAdministrationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/tenant-lifecycle-changes": {
+      "get": {
+        "operationId": "listTenantLifecycleChanges",
+        "summary": "Page immutable tenant lifecycle audit",
+        "description": "Requires fresh authenticated actor and exact current platform tenant.lifecycle.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Descending (recorded_at_ms, change_id) order. Both before cursor parameters must be supplied together. Limit 1..100, default 50. Each page uses current committed history without a traversal snapshot guarantee. External identity subjects are not returned. Unknown query fields are rejected.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-time"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-change"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listTenantLifecycleChanges-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/TenantAdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/TenantAuditMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/admin/actors/{actor_id}/platform-grants": {
       "get": {
         "operationId": "listActorPlatformGrants",
@@ -1093,6 +1304,211 @@
   },
   "components": {
     "schemas": {
+      "ProvisionTenantRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "provisioning_id",
+          "tenant_id",
+          "initial_administrator_actor_id"
+        ],
+        "properties": {
+          "provisioning_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "tenant_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "initial_administrator_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          }
+        }
+      },
+      "ProvisionTenantResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "provisioned",
+              "already_provisioned"
+            ]
+          }
+        }
+      },
+      "TenantLifecycleRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "state"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ]
+          }
+        }
+      },
+      "TenantLifecycleResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "state_changed"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "already_recorded"
+            ]
+          },
+          "state_changed": {
+            "type": "boolean",
+            "description": "Original durable effect, including on retry; not a claim about current state."
+          }
+        }
+      },
+      "TenantCatalogueEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tenant_id",
+          "state"
+        ],
+        "properties": {
+          "tenant_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended"
+            ]
+          }
+        }
+      },
+      "TenantCataloguePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tenants",
+          "next_after"
+        ],
+        "properties": {
+          "tenants": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/TenantCatalogueEntry"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "TenantLifecycleAuditCursor": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recorded_at_ms",
+          "change_id"
+        ],
+        "properties": {
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          }
+        }
+      },
+      "TenantLifecycleAuditEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "administrator_actor_id",
+          "tenant_id",
+          "kind",
+          "recorded_at_ms",
+          "state_changed"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "administrator_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "tenant_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "activate",
+              "suspend"
+            ]
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state_changed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TenantLifecycleAuditPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "changes",
+          "next_before"
+        ],
+        "properties": {
+          "changes": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/TenantLifecycleAuditEntry"
+            }
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TenantLifecycleAuditCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "PlatformAccessAuditPage": {
         "type": "object",
         "additionalProperties": false,
@@ -2380,6 +2796,24 @@
       }
     },
     "parameters": {
+      "admin-tenant-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive ascending tenant-ID position; not authorization evidence.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "admin-tenant-id": {
+        "name": "tenant_id",
+        "in": "path",
+        "required": true,
+        "description": "Stable internal tenant selected for administration.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
       "admin-platform-after-action": {
         "name": "after_action",
         "in": "query",
@@ -2774,6 +3208,231 @@
       }
     },
     "responses": {
+      "listTenants-200": {
+        "description": "Current tenant catalogue ordered by tenant ID; includes suspended tenants.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TenantCataloguePage"
+            },
+            "example": {
+              "tenants": [
+                {
+                  "tenant_id": "tenant-a",
+                  "state": "active"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "provisionTenant-200": {
+        "description": "Exact business command already provisioned. Original host receipt time is retained.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProvisionTenantResult"
+            },
+            "example": {
+              "outcome": "already_provisioned"
+            }
+          }
+        }
+      },
+      "provisionTenant-201": {
+        "description": "Tenant, exact initial identity and audit created atomically; no access grants are created.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProvisionTenantResult"
+            },
+            "example": {
+              "outcome": "provisioned"
+            }
+          }
+        }
+      },
+      "changeTenantLifecycle-200": {
+        "description": "Command recorded or exactly retried. The original effect is returned without reapplying old state.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TenantLifecycleResult"
+            },
+            "example": {
+              "outcome": "recorded",
+              "state_changed": true
+            }
+          }
+        }
+      },
+      "listTenantLifecycleChanges-200": {
+        "description": "Immutable lifecycle commands ordered by descending (recorded_at_ms, change_id).",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TenantLifecycleAuditPage"
+            },
+            "example": {
+              "changes": [
+                {
+                  "change_id": "change-a",
+                  "administrator_actor_id": "operator-a",
+                  "tenant_id": "tenant-a",
+                  "kind": "suspend",
+                  "recorded_at_ms": 1000,
+                  "state_changed": true
+                }
+              ],
+              "next_before": null
+            }
+          }
+        }
+      },
+      "TenantCatalogueMethodNotAllowed": {
+        "description": "Unsupported method for the tenant catalogue.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "GET, HEAD, POST"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "TenantLifecycleMethodNotAllowed": {
+        "description": "Only lifecycle POST is supported.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "POST"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "TenantAuditMethodNotAllowed": {
+        "description": "Only audit GET and HEAD are supported.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "GET, HEAD"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "TenantAdministrationForbidden": {
+        "description": "Missing the exact operation-specific tenant.provision or tenant.lifecycle.manage platform permission, or failed browser origin/CSRF protection.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:forbidden",
+              "title": "Access denied",
+              "status": 403
+            }
+          }
+        }
+      },
+      "TenantAdministrationConflict": {
+        "description": "Command identity or tenant provisioning identity already names different command content.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:conflict",
+              "title": "Command conflicts with current tenant state",
+              "status": 409
+            }
+          }
+        }
+      },
       "PlatformAccessConflict": {
         "description": "Command identity names different content or administrator, or revocation would remove the final active platform-access administrator.",
         "headers": {

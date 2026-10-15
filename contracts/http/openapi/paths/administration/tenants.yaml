@@ -1,0 +1,66 @@
+get:
+  operationId: "listTenants"
+  summary: "Page the platform tenant catalogue"
+  description: "Requires fresh authenticated actor and exact current platform tenant.lifecycle.manage evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Includes active and suspended tenants; ordered ascending by exact tenant ID. Limit 1..100, default 50. No cross-request snapshot guarantee; unknown query fields are rejected."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      $ref: "../../components/parameters/admin-page-limit.yaml"
+    -
+      $ref: "../../components/parameters/admin-tenant-after.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listTenants-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/TenantAdministrationForbidden.yaml"
+    "405":
+      $ref: "../../components/responses/TenantCatalogueMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
+post:
+  operationId: "provisionTenant"
+  summary: "Provision an tenant with its first external identity"
+  description: "Requires fresh authenticated actor and exact current platform tenant.provision evidence. Tenant grants or other platform actions do not substitute. Available only on an authenticated listener. All outcomes are no-store with redacted problems. Browser mode additionally requires one exact configured Origin and X-FleetIQ-CSRF: 1; bearer credentials cannot bypass session mode. JSON is bounded to 16 KiB and rejects unknown fields. The client supplies a stable opaque command ID; keep it and all business fields unchanged after an uncertain response. The server derives the administrator and receipt time. Exact retries keep the first committed time and original effect; different content or actor using that ID conflicts. Current authentication and authority are rechecked even on retry. Atomically creates an active tenant, immutable provisioning evidence, and metadata.read, metadata.manage, and access.manage grants for the selected existing internal actor. No grant is implicitly given to the provisioner. Missing administrator returns 404 with complete rollback. Existing inactive actors may receive retained grants but cannot exercise them until active. Replaying provisioning does not restore revoked grants or reactivate a suspended tenant."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      $ref: "../../components/parameters/admin-mutation-origin.yaml"
+    -
+      $ref: "../../components/parameters/admin-mutation-csrf.yaml"
+  requestBody:
+    required: true
+    content:
+      "application/json":
+        schema:
+          $ref: "../../components/schemas/ProvisionTenantRequest.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/provisionTenant-200.yaml"
+    "201":
+      $ref: "../../components/responses/provisionTenant-201.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/TenantAdministrationForbidden.yaml"
+    "405":
+      $ref: "../../components/responses/TenantCatalogueMethodNotAllowed.yaml"
+    "404":
+      $ref: "../../components/responses/NotFound.yaml"
+    "409":
+      $ref: "../../components/responses/TenantAdministrationConflict.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

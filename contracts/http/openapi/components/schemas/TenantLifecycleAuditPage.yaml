@@ -1,0 +1,17 @@
+type: "object"
+additionalProperties: false
+required:
+  - "changes"
+  - "next_before"
+properties:
+  changes:
+    type: "array"
+    maxItems: 100
+    items:
+      $ref: "./TenantLifecycleAuditEntry.yaml"
+  next_before:
+    anyOf:
+      -
+        $ref: "./TenantLifecycleAuditCursor.yaml"
+      -
+        type: "null"
