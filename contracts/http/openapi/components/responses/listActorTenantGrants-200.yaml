@@ -1,0 +1,9 @@
+description: "Current grants in ascending action-name order. Missing actors and actors without grants both return an empty terminal page."
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/TenantGrantCataloguePage.yaml
+    example: {"grants":[{"action":"access.manage"},{"action":"metadata.manage"},{"action":"metadata.read"}],"next_after":null}

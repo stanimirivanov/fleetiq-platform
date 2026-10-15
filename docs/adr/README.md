@@ -122,6 +122,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0104](0104-bound-parallel-rust-tests-and-cache-dependencies.md) | Bounded cross-binary Rust tests, explicit doctests, and trusted-main dependency caching |
 
+| [0105](0105-expose-tenant-access-administration-over-http.md) | Tenant-scoped grant HTTP commands, bounded current grants and immutable audit |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

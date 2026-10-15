@@ -40,6 +40,7 @@ pub use identity::{
     PostgresTenantAccessAdministration, PostgresTenantAccessAdministrationError,
     PostgresTenantAccessAuditRepository, PostgresTenantAccessAuditRepositoryError,
     PostgresTenantCatalogRepository, PostgresTenantCatalogRepositoryError,
+    PostgresTenantGrantCatalogRepository, PostgresTenantGrantCatalogRepositoryError,
     PostgresTenantLifecycleAdministration, PostgresTenantLifecycleAdministrationError,
     PostgresTenantLifecycleAuditRepository, PostgresTenantLifecycleAuditRepositoryError,
     PostgresTenantProvisioning, PostgresTenantProvisioningError,

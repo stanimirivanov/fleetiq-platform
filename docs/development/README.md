@@ -178,3 +178,5 @@ the M02 current-access API slice and its verification boundaries.
 
 The [parallel Rust verification plan](plans/parallel-rust-verification.md) records
 bounded Nextest scheduling, complete-suite equivalence and trusted-main build caching.
+
+[Tenant-access HTTP slice](plans/tenant-access-administration-http.md) records the M02 tenant grant delivery and verification.

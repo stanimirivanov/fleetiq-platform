@@ -1,0 +1,6 @@
+name: after_action
+in: query
+required: false
+description: "Exclusive action-name position from next_after; valid even after the grant is revoked."
+schema:
+  $ref: ../schemas/TenantAction.yaml

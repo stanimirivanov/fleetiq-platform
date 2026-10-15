@@ -22,7 +22,8 @@
   HTTP operations; external-identity and platform-grant administration also have
   authenticated HTTP operations. Tenant provisioning, lifecycle, catalogue and
   lifecycle audit now have [HTTP administration](../operations/tenant-administration.md)
-  under distinct exact platform permissions. Tenant-grant APIs remain deferred.
+  under distinct exact platform permissions. Tenant grant/revoke, current grants
+  and audit now require exact tenant access.manage independently of platform grants.
   The authenticated caller can
   discover bounded active tenants and exact current actions through
   [operator tenant discovery](../operations/operator-tenants.md); hints never
@@ -60,10 +61,10 @@
   contract: live semantic state and some
   protected routes are not yet described. Browser OIDC login and operator
   sessions, tenant discovery, actor administration, external-identity
-  administration, platform-grant administration, and tenant provisioning/lifecycle are included in the
+  administration, platform-grant administration, tenant provisioning/lifecycle,
+  and tenant-access administration are included in the
   additive baseline.
-- Further business APIs, identity-provider qualification, tenant-grant
-  administration APIs, device transport listeners, operator UI, archival storage, and
+- Further business APIs, identity-provider qualification, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
 
 ## Browser operator authentication
@@ -388,8 +389,8 @@ subject are configured together. The
 current actor mapping and exact `metadata.read` tenant grant are checked on
 every request before the metadata repository is called. Browser mode instead
 uses the provider-neutral operator sessions described above. Customer provider
-and deployment qualification, membership or role models, platform/tenant grant
-and tenant-lifecycle administration transport remain future work. See the
+and deployment qualification and membership or role models remain future work.
+Platform and tenant administration now have protected HTTP adapters. See the
 [protected asset query procedure](../operations/asset-query.md),
 [device query procedure](../operations/device-query.md),
 [asset-type query procedure](../operations/asset-type-query.md),
@@ -402,7 +403,7 @@ and tenant-lifecycle administration transport remain future work. See the
 and [asset-binding snapshot procedure](../operations/asset-binding-snapshot.md).
 
 There is no broader business resource API, production authentication provider,
-tenant grant administration API, message broker, object archive, cache,
+message broker, object archive, cache,
 production deployment manifest, or service-level objective. Do not describe
 the version-discovery resource, library contracts, or local database defaults
 as production product behavior.
@@ -423,3 +424,14 @@ as production product behavior.
 The intended sequence is maintained in
 [implementation milestones](../roadmap/milestones.md). Update this document when
 a merged capability materially changes what the repository can do.
+
+## Tenant-access HTTP administration
+
+Exact tenant access.manage now authorizes grant/revoke commands, an actor's
+bounded current grants and tenant-scoped immutable audit. Platform grants never
+substitute. Commands preserve first durable receipt time and effect on retries;
+strict timestamp commands retain their existing meaning. No schema change is
+needed. Final tenant-administrator self-revocation remains possible; no platform
+bypass or tenant recovery API is introduced. See the
+[operator procedure](../operations/tenant-access-administration.md) and
+[execution plan](plans/tenant-access-administration-http.md).

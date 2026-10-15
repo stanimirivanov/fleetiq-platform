@@ -2,6 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, TenantAccessChangeId, TenantId, UnixTimeMillis};
 
+use crate::recorded_time::RecordedTime;
 use crate::{AuthorizedTenant, ManageAccess, TenantAction};
 
 /// Requested mutation of one exact tenant action grant.
@@ -20,7 +21,7 @@ pub struct TenantAccessChangeRequest {
     target_actor_id: ActorId,
     action: TenantAction,
     kind: TenantAccessChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl TenantAccessChangeRequest {
@@ -37,7 +38,27 @@ impl TenantAccessChangeRequest {
             target_actor_id,
             action,
             kind,
-            recorded_at,
+            recorded_at: RecordedTime::Exact(recorded_at),
+        }
+    }
+
+    /// Creates a redeliverable command preserving its first durable host receipt.
+    ///
+    /// Administrator, tenant, target, action, kind and change identity must still
+    /// match. The exact-time constructor instead treats time as command content.
+    pub const fn for_delivery(
+        change_id: TenantAccessChangeId,
+        target_actor_id: ActorId,
+        action: TenantAction,
+        kind: TenantAccessChangeKind,
+        recorded_at: UnixTimeMillis,
+    ) -> Self {
+        Self {
+            change_id,
+            target_actor_id,
+            action,
+            kind,
+            recorded_at: RecordedTime::FirstReceipt(recorded_at),
         }
     }
 }
@@ -54,7 +75,7 @@ pub struct TenantAccessChange {
     target_actor_id: ActorId,
     action: TenantAction,
     kind: TenantAccessChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl TenantAccessChange {
@@ -88,9 +109,16 @@ impl TenantAccessChange {
         self.kind
     }
 
-    /// Returns the trusted host time recorded for the command.
+    /// Returns proposed host time; redeliveries retain the stored first receipt.
     pub const fn recorded_at(&self) -> UnixTimeMillis {
-        self.recorded_at
+        self.recorded_at.value()
+    }
+
+    /// Checks stored time under the explicit retry policy.
+    ///
+    /// Persistence must also compare every identity and business field.
+    pub fn accepts_recorded_at(&self, stored: UnixTimeMillis) -> bool {
+        self.recorded_at.accepts(stored)
     }
 }
 
@@ -120,7 +148,8 @@ pub trait TenantAccessAdministrationRepository: Send + Sync {
     /// Applies current grant state and records its audit command atomically.
     ///
     /// Exact retries return [`TenantAccessChangeOutcome::AlreadyRecorded`].
-    /// Reusing a change identity for different content is an error.
+    /// Reusing a change identity for different content is an error. Delivery retries
+    /// retain first committed time; exact commands also compare their timestamps.
     ///
     /// # Errors
     ///

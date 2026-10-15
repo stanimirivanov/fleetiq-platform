@@ -1,7 +1,7 @@
 use std::{error::Error, fmt};
 
 use crate::action_codec::tenant_action_name;
-use fleetiq_domain::{TenantAccessChangeId, TenantId};
+use fleetiq_domain::{TenantAccessChangeId, TenantId, UnixTimeMillis};
 use fleetiq_identity::{
     TenantAccessAdministrationRepository, TenantAccessChange, TenantAccessChangeEffect,
     TenantAccessChangeKind, TenantAccessChangeOutcome,
@@ -30,7 +30,10 @@ impl TenantAccessAdministrationRepository for PostgresTenantAccessAdministration
     /// Serializes changes per tenant, mutates current grants, and appends audit
     /// in one transaction. The stable tenant row is locked before checking the
     /// command identity, preventing concurrent uses of one tenant-scoped change
-    /// ID from racing when they target different actors.
+    /// ID from racing when they target different actors. Resolve original effects
+    /// before mutation, so delayed grant retries cannot restore revoked access.
+    /// Delivery retries retain the first durable timestamp; exact commands
+    /// still compare time as immutable content.
     async fn apply(
         &self,
         change: &TenantAccessChange,
@@ -68,7 +71,7 @@ impl TenantAccessAdministrationRepository for PostgresTenantAccessAdministration
                 || existing.target_actor_id != change.target_actor_id().as_str()
                 || existing.action != tenant_action_name(change.action())
                 || existing.change_kind != kind_name(change.kind())
-                || existing.recorded_at_ms != change.recorded_at().get()
+                || !change.accepts_recorded_at(UnixTimeMillis::new(existing.recorded_at_ms))
             {
                 return Err(PostgresTenantAccessAdministrationError::IdentityCollision {
                     tenant_id: change.tenant_id().clone(),

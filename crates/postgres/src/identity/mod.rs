@@ -14,6 +14,7 @@ mod platform_grant_catalog;
 mod tenant_access_administration;
 mod tenant_access_audit;
 mod tenant_catalog;
+mod tenant_grant_catalog;
 mod tenant_lifecycle_administration;
 mod tenant_lifecycle_audit;
 mod tenant_provisioning;
@@ -59,3 +60,7 @@ pub use tenant_lifecycle_audit::{
     PostgresTenantLifecycleAuditRepository, PostgresTenantLifecycleAuditRepositoryError,
 };
 pub use tenant_provisioning::{PostgresTenantProvisioning, PostgresTenantProvisioningError};
+
+pub use tenant_grant_catalog::{
+    PostgresTenantGrantCatalogRepository, PostgresTenantGrantCatalogRepositoryError,
+};

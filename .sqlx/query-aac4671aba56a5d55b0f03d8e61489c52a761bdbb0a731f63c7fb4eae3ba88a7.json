@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT action\n            FROM identity.tenant_action_grants\n            WHERE tenant_id = $1 AND actor_id = $2\n              AND ($3::text IS NULL OR action > $3)\n            ORDER BY action ASC\n            LIMIT $4\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "action",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "identity.tenant_action_grants",
+            "name": "action"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "aac4671aba56a5d55b0f03d8e61489c52a761bdbb0a731f63c7fb4eae3ba88a7"
+}

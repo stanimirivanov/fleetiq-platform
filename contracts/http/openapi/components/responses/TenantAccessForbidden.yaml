@@ -1,0 +1,12 @@
+description: "Missing exact access.manage authority in this active tenant, tenant cannot be authorized, or browser mutation origin/CSRF validation failed. Platform actions never substitute."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:forbidden"
+      title: "Access denied"
+      status: 403

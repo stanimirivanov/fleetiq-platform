@@ -1,0 +1,11 @@
+type: object
+additionalProperties: false
+required: [change_id, kind, action]
+properties:
+  change_id:
+    $ref: ./AdministrationIdentifier.yaml
+  kind:
+    type: string
+    enum: [grant, revoke]
+  action:
+    $ref: ./TenantAction.yaml

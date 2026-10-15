@@ -1,0 +1,9 @@
+description: "Immutable grant administration evidence, newest first. Initial tenant-provisioning grants have separate evidence."
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/TenantAccessAuditPage.yaml
+    example: {"changes":[{"change_id":"change-b","administrator_actor_id":"operator-a","tenant_id":"tenant-a","target_actor_id":"actor-b","action":"metadata.read","kind":"grant","recorded_at_ms":1000,"state_changed":false}],"next_before":{"recorded_at_ms":1000,"change_id":"change-b"}}

@@ -258,3 +258,81 @@ async fn audit_count(pool: &PgPool) -> sqlx::Result<i64> {
         .fetch_one(pool)
         .await
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn delivery_retries_keep_original_time_and_effect_but_exact_commands_compare_time(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let service =
+        TenantAccessAdministration::new(PostgresTenantAccessAdministration::new(pool.clone()));
+    for (time, expected) in [
+        (
+            100,
+            TenantAccessChangeOutcome::Recorded(TenantAccessChangeEffect::StateChanged),
+        ),
+        (
+            999,
+            TenantAccessChangeOutcome::AlreadyRecorded(TenantAccessChangeEffect::StateChanged),
+        ),
+    ] {
+        let delivery = TenantAccessChangeRequest::for_delivery(
+            TenantAccessChangeId::new("delivery")?,
+            ActorId::new("actor-target")?,
+            TenantAction::ReadMetadata,
+            TenantAccessChangeKind::Grant,
+            UnixTimeMillis::new(time),
+        );
+        assert_eq!(
+            service.apply(manage_access(&pool).await?, delivery).await?,
+            expected
+        );
+    }
+    let strict = request(
+        "delivery",
+        "actor-target",
+        TenantAction::ReadMetadata,
+        TenantAccessChangeKind::Grant,
+        999,
+    );
+    assert!(matches!(
+        service.apply(manage_access(&pool).await?, strict).await,
+        Err(TenantAccessAdministrationError::Repository(
+            PostgresTenantAccessAdministrationError::IdentityCollision { .. }
+        ))
+    ));
+    service
+        .apply(
+            manage_access(&pool).await?,
+            request(
+                "remove",
+                "actor-target",
+                TenantAction::ReadMetadata,
+                TenantAccessChangeKind::Revoke,
+                1000,
+            ),
+        )
+        .await?;
+    let retry = TenantAccessChangeRequest::for_delivery(
+        TenantAccessChangeId::new("delivery")?,
+        ActorId::new("actor-target")?,
+        TenantAction::ReadMetadata,
+        TenantAccessChangeKind::Grant,
+        UnixTimeMillis::new(2000),
+    );
+    assert_eq!(
+        service.apply(manage_access(&pool).await?, retry).await?,
+        TenantAccessChangeOutcome::AlreadyRecorded(TenantAccessChangeEffect::StateChanged)
+    );
+    assert_eq!(sqlx::query_scalar::<_,i64>("SELECT recorded_at_ms FROM identity.tenant_access_changes WHERE tenant_id='tenant-a' AND change_id='delivery'").fetch_one(&pool).await?,100);
+    assert_eq!(audit_count(&pool).await?, 2);
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>(
+            "SELECT count(*) FROM identity.tenant_action_grants WHERE actor_id='actor-target'"
+        )
+        .fetch_one(&pool)
+        .await?,
+        0
+    );
+    Ok(())
+}
