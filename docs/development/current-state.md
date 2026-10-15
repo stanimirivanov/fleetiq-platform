@@ -20,7 +20,9 @@
   bounded target-asset binding snapshot queries use those boundaries;
   actor administration now exposes provisioning, lifecycle, catalogue, and audit
   HTTP operations; external-identity and platform-grant administration also have
-  authenticated HTTP operations. Tenant administration remains without an HTTP API.
+  authenticated HTTP operations. Tenant provisioning, lifecycle, catalogue and
+  lifecycle audit now have [HTTP administration](../operations/tenant-administration.md)
+  under distinct exact platform permissions. Tenant-grant APIs remain deferred.
   The authenticated caller can
   discover bounded active tenants and exact current actions through
   [operator tenant discovery](../operations/operator-tenants.md); hints never
@@ -58,7 +60,7 @@
   contract: live semantic state and some
   protected routes are not yet described. Browser OIDC login and operator
   sessions, tenant discovery, actor administration, external-identity
-  administration, and platform-grant administration are included in the
+  administration, platform-grant administration, and tenant provisioning/lifecycle are included in the
   additive baseline.
 - Further business APIs, identity-provider qualification, tenant-grant
   administration APIs, device transport listeners, operator UI, archival storage, and

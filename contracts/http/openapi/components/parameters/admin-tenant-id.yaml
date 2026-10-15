@@ -1,0 +1,6 @@
+name: "tenant_id"
+in: "path"
+required: true
+description: "Stable internal tenant selected for administration."
+schema:
+  $ref: "../schemas/AdministrationIdentifier.yaml"

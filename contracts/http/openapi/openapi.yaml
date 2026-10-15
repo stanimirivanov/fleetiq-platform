@@ -1,12 +1,18 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.7"
+  version: "1.0.0-baseline.8"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/admin/tenants":
+    $ref: "./paths/administration/tenants.yaml"
+  "/api/v1/admin/tenants/{tenant_id}/lifecycle":
+    $ref: "./paths/administration/tenant-lifecycle.yaml"
+  "/api/v1/admin/tenant-lifecycle-changes":
+    $ref: "./paths/administration/tenant-lifecycle-changes.yaml"
   "/api/v1/admin/actors/{actor_id}/platform-grants":
     $ref: "./paths/administration/actor-platform-grants.yaml"
   "/api/v1/admin/actors/{actor_id}/platform-access-changes":
@@ -55,6 +61,24 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    ProvisionTenantRequest:
+      $ref: "./components/schemas/ProvisionTenantRequest.yaml"
+    ProvisionTenantResult:
+      $ref: "./components/schemas/ProvisionTenantResult.yaml"
+    TenantLifecycleRequest:
+      $ref: "./components/schemas/TenantLifecycleRequest.yaml"
+    TenantLifecycleResult:
+      $ref: "./components/schemas/TenantLifecycleResult.yaml"
+    TenantCatalogueEntry:
+      $ref: "./components/schemas/TenantCatalogueEntry.yaml"
+    TenantCataloguePage:
+      $ref: "./components/schemas/TenantCataloguePage.yaml"
+    TenantLifecycleAuditCursor:
+      $ref: "./components/schemas/TenantLifecycleAuditCursor.yaml"
+    TenantLifecycleAuditEntry:
+      $ref: "./components/schemas/TenantLifecycleAuditEntry.yaml"
+    TenantLifecycleAuditPage:
+      $ref: "./components/schemas/TenantLifecycleAuditPage.yaml"
     PlatformAccessAuditPage:
       $ref: "./components/schemas/PlatformAccessAuditPage.yaml"
     PlatformAccessAuditEntry:
@@ -152,6 +176,10 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    admin-tenant-after:
+      $ref: "./components/parameters/admin-tenant-after.yaml"
+    admin-tenant-id:
+      $ref: "./components/parameters/admin-tenant-id.yaml"
     admin-platform-after-action:
       $ref: "./components/parameters/admin-platform-after-action.yaml"
     admin-identity-after-authority:
@@ -225,6 +253,26 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    listTenants-200:
+      $ref: "./components/responses/listTenants-200.yaml"
+    provisionTenant-200:
+      $ref: "./components/responses/provisionTenant-200.yaml"
+    provisionTenant-201:
+      $ref: "./components/responses/provisionTenant-201.yaml"
+    changeTenantLifecycle-200:
+      $ref: "./components/responses/changeTenantLifecycle-200.yaml"
+    listTenantLifecycleChanges-200:
+      $ref: "./components/responses/listTenantLifecycleChanges-200.yaml"
+    TenantCatalogueMethodNotAllowed:
+      $ref: "./components/responses/TenantCatalogueMethodNotAllowed.yaml"
+    TenantLifecycleMethodNotAllowed:
+      $ref: "./components/responses/TenantLifecycleMethodNotAllowed.yaml"
+    TenantAuditMethodNotAllowed:
+      $ref: "./components/responses/TenantAuditMethodNotAllowed.yaml"
+    TenantAdministrationForbidden:
+      $ref: "./components/responses/TenantAdministrationForbidden.yaml"
+    TenantAdministrationConflict:
+      $ref: "./components/responses/TenantAdministrationConflict.yaml"
     PlatformAccessConflict:
       $ref: "./components/responses/PlatformAccessConflict.yaml"
     listPlatformAccessChanges-200:

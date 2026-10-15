@@ -118,6 +118,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0102](0102-expose-platform-access-administration-over-http.md) | Platform-grant HTTP administration with first-receipt retries and active recovery protection |
 
+| [0103](0103-expose-tenant-administration-over-http.md) | Tenant provisioning and lifecycle HTTP with distinct platform permissions and safe first-receipt retries |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

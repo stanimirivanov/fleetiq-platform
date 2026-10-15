@@ -1,6 +1,6 @@
 use std::{error::Error, fmt};
 
-use fleetiq_domain::{TenantId, TenantProvisioningId};
+use fleetiq_domain::{TenantId, TenantProvisioningId, UnixTimeMillis};
 use fleetiq_identity::{
     TenantProvisioningCommand, TenantProvisioningOutcome, TenantProvisioningRepository,
 };
@@ -77,7 +77,7 @@ impl TenantProvisioningRepository for PostgresTenantProvisioning {
                     && existing.provisioner_actor_id == command.provisioner_actor_id().as_str()
                     && existing.initial_administrator_actor_id
                         == command.initial_administrator_actor_id().as_str()
-                    && existing.recorded_at_ms == command.recorded_at().get()
+                    && command.accepts_recorded_at(UnixTimeMillis::new(existing.recorded_at_ms))
                 {
                     transaction.commit().await.map_err(repository_error)?;
                     return Ok(TenantProvisioningOutcome::AlreadyProvisioned);

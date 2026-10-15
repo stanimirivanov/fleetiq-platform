@@ -1,0 +1,12 @@
+description: "Missing the exact operation-specific tenant.provision or tenant.lifecycle.manage platform permission, or failed browser origin/CSRF protection."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:forbidden"
+      title: "Access denied"
+      status: 403

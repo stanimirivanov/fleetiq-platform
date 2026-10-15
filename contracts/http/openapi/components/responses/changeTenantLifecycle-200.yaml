@@ -1,0 +1,11 @@
+description: "Command recorded or exactly retried. The original effect is returned without reapplying old state."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/TenantLifecycleResult.yaml"
+    example:
+      outcome: "recorded"
+      state_changed: true

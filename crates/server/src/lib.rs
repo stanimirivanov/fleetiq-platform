@@ -25,6 +25,7 @@ mod protected_device;
 mod protected_relationship;
 mod protected_request;
 mod protected_signal_binding;
+mod tenant_administration;
 
 use std::{error::Error, fmt, io};
 
@@ -135,6 +136,13 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(
+            tenant_administration::postgres_tenant_administration_router(
+                pool.clone(),
+                authentication.clone(),
+                mutation.clone(),
+            ),
+        )
         .merge(
             platform_access_administration::postgres_platform_access_administration_router(
                 pool.clone(),

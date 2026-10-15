@@ -1,0 +1,13 @@
+type: "object"
+additionalProperties: false
+required:
+  - "tenant_id"
+  - "state"
+properties:
+  tenant_id:
+    $ref: "./AdministrationIdentifier.yaml"
+  state:
+    type: "string"
+    enum:
+      - "active"
+      - "suspended"

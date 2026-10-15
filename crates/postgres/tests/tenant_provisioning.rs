@@ -264,3 +264,74 @@ async fn provisioning_count(pool: &PgPool) -> sqlx::Result<i64> {
         .fetch_one(pool)
         .await
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn delivery_retry_keeps_first_time_but_strict_time_and_provisioner_still_matter(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed_actor(&pool, "operator-a").await?;
+    seed_actor(&pool, "operator-b").await?;
+    seed_actor(&pool, "admin-a").await?;
+    seed_platform_grant(&pool, "operator-a").await?;
+    seed_platform_grant(&pool, "operator-b").await?;
+    let service = TenantProvisioningService::new(PostgresTenantProvisioning::new(pool.clone()));
+    let delivery = |time| {
+        fleetiq_identity::TenantProvisioningRequest::for_delivery(
+            TenantProvisioningId::new("delivery-a").unwrap(),
+            TenantId::new("tenant-a").unwrap(),
+            ActorId::new("admin-a").unwrap(),
+            UnixTimeMillis::new(time),
+        )
+    };
+    let a = authorization(&pool, "operator-a").await?;
+    let b = authorization(&pool, "operator-a").await?;
+    let (a, b) = tokio::join!(
+        service.provision(a, delivery(1000)),
+        service.provision(b, delivery(2000))
+    );
+    let outcomes = [a?, b?];
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| **o == TenantProvisioningOutcome::Provisioned)
+            .count(),
+        1
+    );
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| **o == TenantProvisioningOutcome::AlreadyProvisioned)
+            .count(),
+        1
+    );
+    let time=sqlx::query_scalar::<_,i64>("SELECT recorded_at_ms FROM identity.tenant_provisionings WHERE provisioning_id='delivery-a'").fetch_one(&pool).await?;
+    assert!([1000, 2000].contains(&time));
+    assert_eq!(
+        service
+            .provision(authorization(&pool, "operator-a").await?, delivery(3000))
+            .await?,
+        TenantProvisioningOutcome::AlreadyProvisioned
+    );
+    assert!(matches!(
+        service
+            .provision(
+                authorization(&pool, "operator-a").await?,
+                request("delivery-a", "tenant-a", "admin-a", time + 1)
+            )
+            .await,
+        Err(fleetiq_identity::TenantProvisioningError::Repository(
+            PostgresTenantProvisioningError::IdentityCollision { .. }
+        ))
+    ));
+    assert!(matches!(
+        service
+            .provision(authorization(&pool, "operator-b").await?, delivery(3000))
+            .await,
+        Err(fleetiq_identity::TenantProvisioningError::Repository(
+            PostgresTenantProvisioningError::IdentityCollision { .. }
+        ))
+    ));
+    assert_eq!(tenant_grant_count(&pool).await?, 3);
+    assert_eq!(provisioning_count(&pool).await?, 1);
+    Ok(())
+}

@@ -8,6 +8,7 @@ mod login;
 mod metadata;
 mod platform_access;
 mod session;
+mod tenants;
 
 use std::{
     error::Error,

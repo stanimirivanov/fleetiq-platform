@@ -2,6 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, TenantId, TenantProvisioningId, UnixTimeMillis};
 
+use crate::recorded_time::RecordedTime;
 use crate::{AuthorizedPlatform, ProvisionTenant};
 
 /// Trusted input for one idempotent tenant provisioning command.
@@ -10,7 +11,7 @@ pub struct TenantProvisioningRequest {
     provisioning_id: TenantProvisioningId,
     tenant_id: TenantId,
     initial_administrator_actor_id: ActorId,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl TenantProvisioningRequest {
@@ -25,7 +26,25 @@ impl TenantProvisioningRequest {
             provisioning_id,
             tenant_id,
             initial_administrator_actor_id,
-            recorded_at,
+            recorded_at: RecordedTime::Exact(recorded_at),
+        }
+    }
+
+    /// Creates a redeliverable request retaining the first durable host receipt time.
+    ///
+    /// All identities and business fields, including the authenticated administrator,
+    /// must still match. Use [`Self::new`] when time is immutable command content.
+    pub const fn for_delivery(
+        provisioning_id: TenantProvisioningId,
+        tenant_id: TenantId,
+        initial_administrator_actor_id: ActorId,
+        recorded_at: UnixTimeMillis,
+    ) -> Self {
+        Self {
+            provisioning_id,
+            tenant_id,
+            initial_administrator_actor_id,
+            recorded_at: RecordedTime::FirstReceipt(recorded_at),
         }
     }
 }
@@ -40,7 +59,7 @@ pub struct TenantProvisioningCommand {
     tenant_id: TenantId,
     provisioner_actor_id: ActorId,
     initial_administrator_actor_id: ActorId,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl TenantProvisioningCommand {
@@ -64,9 +83,16 @@ impl TenantProvisioningCommand {
         &self.initial_administrator_actor_id
     }
 
-    /// Returns the trusted host time recorded for the command.
+    /// Returns the proposed host time; redeliveries retain the stored first receipt.
     pub const fn recorded_at(&self) -> UnixTimeMillis {
-        self.recorded_at
+        self.recorded_at.value()
+    }
+
+    /// Checks stored time under the explicit retry policy.
+    ///
+    /// Persistence must also compare every identity and business field.
+    pub fn accepts_recorded_at(&self, stored: UnixTimeMillis) -> bool {
+        self.recorded_at.accepts(stored)
     }
 }
 

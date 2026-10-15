@@ -43,3 +43,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [External-identity administration](external-identity-administration.md) — attach/detach, current mappings, and immutable audit.
 
 - [Platform-access administration](platform-access-administration.md) — exact grant/revoke, current grants, immutable audit, and safe delegation.
+
+- [Tenant provisioning and lifecycle](tenant-administration.md) — provision initial access, activate/suspend, and inspect catalogue and lifecycle audit.

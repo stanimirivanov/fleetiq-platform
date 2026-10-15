@@ -1,0 +1,13 @@
+type: "object"
+additionalProperties: false
+required:
+  - "provisioning_id"
+  - "tenant_id"
+  - "initial_administrator_actor_id"
+properties:
+  provisioning_id:
+    $ref: "./AdministrationIdentifier.yaml"
+  tenant_id:
+    $ref: "./AdministrationIdentifier.yaml"
+  initial_administrator_actor_id:
+    $ref: "./AdministrationIdentifier.yaml"

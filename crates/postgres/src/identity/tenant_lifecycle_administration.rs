@@ -1,6 +1,6 @@
 use std::{error::Error, fmt};
 
-use fleetiq_domain::{TenantId, TenantLifecycleChangeId};
+use fleetiq_domain::{TenantId, TenantLifecycleChangeId, UnixTimeMillis};
 use fleetiq_identity::{
     TenantLifecycleAdministrationRepository, TenantLifecycleChange, TenantLifecycleChangeEffect,
     TenantLifecycleChangeKind, TenantLifecycleChangeOutcome,
@@ -105,7 +105,7 @@ async fn resolve_existing(
     if existing.administrator_actor_id != change.administrator_actor_id().as_str()
         || existing.tenant_id != change.tenant_id().as_str()
         || existing.change_kind != kind_name(change.kind())
-        || existing.recorded_at_ms != change.recorded_at().get()
+        || !change.accepts_recorded_at(UnixTimeMillis::new(existing.recorded_at_ms))
     {
         return Err(
             PostgresTenantLifecycleAdministrationError::IdentityCollision {
