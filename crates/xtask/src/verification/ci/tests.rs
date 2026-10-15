@@ -261,7 +261,7 @@ fn windows_sensor_coverage_cannot_be_disabled_or_replaced() {
     assert!(expected.contains("name: Windows harness sensors"));
     assert!(expected.contains("runs-on: windows-2025"));
     for changed in [
-        expected.replace("runs-on: windows-2025", "runs-on: ubuntu-24.04"),
+        expected.replace("runs-on: windows-2025", "runs-on: ubuntu-26.04"),
         expected.replace(
             "        run: cargo test -p fleetiq-xtask --locked",
             "        run: cargo --version",
