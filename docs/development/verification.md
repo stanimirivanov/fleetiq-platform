@@ -184,6 +184,10 @@ silently skipping a failed fixture setup. The Windows JSON artifact covers only
 its OpenAPI group; Rust fixture results remain in the step output and job status.
 This extra job requires no database and changes no acceptance membership. Existing job names and the full applicable
 gates remain in place; Compose smoke verification retains its own job.
+The six jobs start independently so a scanner installer or action failure in
+architecture cannot skip Rust, supply-chain, OpenAPI, or Compose evidence.
+Branch protection must require each applicable job; job independence does not
+make an unsuccessful architecture result acceptable.
 
 The reviewed [workflow template](../../.github/ci.yml.template) owns setup,
 services, permissions, action repositories and positions, artifact handling, and
@@ -214,6 +218,14 @@ workflow content remains compared exactly, including permissions, commands,
 conditions, setup inputs, services, and cleanup. No YAML parser or Node process
 is required for this Rust sensor.
 
+A major tag such as `@v7` would reduce visible patch updates, but it can move
+the action code used by a later run without changing this repository or opening
+a PR. The immutable SHA makes each action update a reviewable candidate tested
+by CI before merge. Dependabot version updates propose the SHA and release
+comment in one workflow file; contributors do not maintain a second template
+pin. GitHub does not issue Dependabot vulnerability alerts for SHA-pinned
+actions, so review the scheduled update PRs and upstream advisories explicitly.
+
 An action-only Dependabot update may change its SHA and version comment in
 the workflow without editing the template or running regeneration. Review the
 upstream commit, runtime requirements, and release notes before merge; a
@@ -236,7 +248,7 @@ or rolling a Dependabot proposal back. Ordinary checks never repair policy.
 
 | Job | Explicit tools and state |
 |:--|:--|
-| Architecture policy | Rust, Git, and Node 24 only to install checksum-verified Gitleaks; CI policy preflight runs before that installer |
+| Architecture policy | Rust and Git run CI, repository, and architecture policy checks before Node 24 installs checksum-verified Gitleaks |
 | Windows harness sensors / OpenAPI contract | Rust, Git, pinned pnpm, Node 24, and locked local Redocly installation |
 | Supply-chain policy | Rust and the inventoried cargo-deny/cargo-machete versions; no Node or npm setup |
 | Rust quality gate | Repository-selected Rust, SQLx CLI, and migrated PostgreSQL; DATABASE_URL is scoped to this job |
@@ -245,8 +257,13 @@ or rolling a Dependabot proposal back. Ordinary checks never repair policy.
 Rust checks must not read Node action outputs, resolve tools through npm/npx,
 or require a package-manager cache hit. JavaScript action implementations use
 their own declared runtime; that does not install Node tooling for Rust commands.
-The existing architecture prerequisite and required checks remain in place;
-dependency qualification never implies permission to bypass them.
+Each job owns its setup and runs without a `needs` edge to architecture.
+The Rust job applies migrations with its pinned SQLx CLI, the same tool used in
+local setup, rather than an ambient PostgreSQL client from the runner image.
+Jobs select the Ubuntu 24.04 and Windows 2025 image families explicitly;
+GitHub still updates each hosted image within its family.
+Every applicable job remains a required review gate; dependency qualification
+never implies permission to bypass architecture policy.
 
 OpenAPI jobs use `pnpm install --frozen-lockfile` and the local locked CLI.
 Their explicit pnpm cache is keyed by `pnpm-lock.yaml`; implicit npm cache
@@ -274,7 +291,10 @@ build cache remains separate from GitHub Actions caches.
 - Before merge, require the applicable CI jobs on the actual candidate revision.
   Branch rules and independent owner approval are external controls: this
   repository cannot certify their settings or prevent an administrator bypass.
-  No harness can guarantee that an upstream action update is behaviorally safe.
+  No local sensor can execute a GitHub-hosted action. The Node 24 patch version
+  and hosted runner images still change within their declared families, so
+  local checks cannot guarantee identical environments or that an upstream
+  action update is behaviorally safe.
 
 At handoff, report the repository, milestone, issue content, assumptions, and
 **passed / failed / not run** evidence using the

@@ -23,7 +23,7 @@ env:
 jobs:
   architecture:
     name: Architecture policy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       # The event supplies the trusted published base. Do not infer HEAD^ from
@@ -39,6 +39,12 @@ jobs:
 
       - name: Verify CI policy before installing harness tools
         run: cargo xtask verify --check-ci
+
+      - name: Verify repository policy before auxiliary setup
+        run: cargo xtask repository
+
+      - name: Verify workspace architecture before auxiliary setup
+        run: cargo xtask architecture
 
       - name: Install Node.js for the checksummed scanner installer
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -64,7 +70,7 @@ jobs:
 
   harness-windows:
     name: Windows harness sensors
-    runs-on: windows-latest
+    runs-on: windows-2025
     timeout-minutes: 15
 
     steps:
@@ -113,9 +119,8 @@ jobs:
 
   openapi:
     name: OpenAPI contract
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
-    needs: architecture
 
     steps:
       - name: Check out source
@@ -154,9 +159,8 @@ jobs:
 
   supply-chain:
     name: Supply-chain policy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
-    needs: architecture
 
     steps:
       - name: Check out source
@@ -184,9 +188,8 @@ jobs:
 
   rust:
     name: Rust quality gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
-    needs: architecture
     env:
       DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
 
@@ -222,10 +225,7 @@ jobs:
           --no-default-features --features rustls,postgres
 
       - name: Apply metadata schema for checked queries
-        run: |
-          for migration in migrations/*.sql; do
-            psql "$DATABASE_URL" --set ON_ERROR_STOP=1 --file "$migration"
-          done
+        run: sqlx migrate run --source migrations
 
       - name: Run authoritative Rust verification
         id: verify
@@ -242,9 +242,8 @@ jobs:
 
   local-compose:
     name: Local Compose smoke test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
-    needs: architecture
 
     steps:
       - name: Check out source

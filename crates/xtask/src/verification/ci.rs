@@ -101,7 +101,8 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
             .iter()
             .find(|check| check.id == id)
             .ok_or_else(|| format!("verification catalogue is missing {id}"))?;
-        replace_token(&mut result, &format!("@check:{id}@"), check.command, 1)?;
+        let count = if id == "sensor-tests" { 1 } else { 2 };
+        replace_token(&mut result, &format!("@check:{id}@"), check.command, count)?;
     }
     for (name, tool, count) in [
         ("deny", Tool::Deny, 1),

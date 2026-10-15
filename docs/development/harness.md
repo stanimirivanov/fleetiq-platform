@@ -120,8 +120,10 @@ metadata-only evidence.
 | Local Compose smoke checks | The container builds, starts, reports health, preserves isolation, and stops cleanly | T3; Docker with Compose and free configured host ports |
 
 The T2 commands, order, and unavailable-check protocol are canonical in
-[CONTRIBUTING.md](../../CONTRIBUTING.md#verification). CI runs T1 before the
-separate supply-chain, database-backed Rust, and local Compose jobs. The
+[CONTRIBUTING.md](../../CONTRIBUTING.md#verification). CI starts the independent
+architecture, supply-chain, database-backed Rust, OpenAPI, and local Compose
+jobs on the candidate revision. The architecture job runs repository and
+dependency policy before its scanner setup, then runs the full T1 group. The
 [dependency management guide](dependency-management.md) records tool versions,
 exceptions, and update review.
 

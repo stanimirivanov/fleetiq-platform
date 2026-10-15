@@ -78,6 +78,64 @@ fn missing_group_and_modified_database_service_are_rejected() {
 }
 
 #[test]
+fn verification_jobs_are_independent_and_migrations_use_the_pinned_cli() {
+    let expected = generated();
+    let architecture = expected
+        .split_once("\n  architecture:\n")
+        .unwrap()
+        .1
+        .split_once("\n  harness-windows:\n")
+        .unwrap()
+        .0;
+    let auxiliary_setup = architecture
+        .find("Install Node.js for the checksummed scanner")
+        .unwrap();
+    for command in ["cargo xtask repository", "cargo xtask architecture"] {
+        assert!(
+            architecture.find(command).unwrap() < auxiliary_setup,
+            "{command} must run before the scanner's Node setup"
+        );
+    }
+    let jobs = [
+        ("architecture", "harness-windows"),
+        ("harness-windows", "openapi"),
+        ("openapi", "supply-chain"),
+        ("supply-chain", "rust"),
+        ("rust", "local-compose"),
+    ];
+    for (job, next) in jobs {
+        let section = expected
+            .split_once(&format!("  {job}:\n"))
+            .unwrap_or_else(|| panic!("missing {job} job"))
+            .1
+            .split_once(&format!("\n  {next}:\n"))
+            .unwrap_or_else(|| panic!("missing {next} job"))
+            .0;
+        assert!(
+            !section
+                .lines()
+                .any(|line| line.trim().starts_with("needs:")),
+            "{job} must execute independently of another job's setup"
+        );
+    }
+    let compose = expected.split_once("\n  local-compose:\n").unwrap().1;
+    assert!(
+        !compose
+            .lines()
+            .any(|line| line.trim().starts_with("needs:"))
+    );
+    let rust = expected
+        .split_once("\n  rust:\n")
+        .unwrap()
+        .1
+        .split_once("\n  local-compose:\n")
+        .unwrap()
+        .0;
+    assert!(rust.contains("run: sqlx migrate run --source migrations"));
+    assert!(!rust.contains("psql "));
+}
+
+#[test]
 fn missing_repeated_and_unknown_placeholders_are_rejected() {
     let original = template();
     for changed in [
@@ -201,9 +259,9 @@ fn policy_file_symlinks_are_rejected_without_reading_or_overwriting_targets() {
 fn windows_sensor_coverage_cannot_be_disabled_or_replaced() {
     let expected = generated();
     assert!(expected.contains("name: Windows harness sensors"));
-    assert!(expected.contains("runs-on: windows-latest"));
+    assert!(expected.contains("runs-on: windows-2025"));
     for changed in [
-        expected.replace("runs-on: windows-latest", "runs-on: ubuntu-latest"),
+        expected.replace("runs-on: windows-2025", "runs-on: ubuntu-24.04"),
         expected.replace(
             "        run: cargo test -p fleetiq-xtask --locked",
             "        run: cargo --version",
