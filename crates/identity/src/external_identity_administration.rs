@@ -2,6 +2,7 @@ use std::{error::Error, fmt, future::Future};
 
 use fleetiq_domain::{ActorId, ExternalIdentity, ExternalIdentityChangeId, UnixTimeMillis};
 
+use crate::recorded_time::RecordedTime;
 use crate::{AuthorizedPlatform, ManageIdentity};
 
 /// Requested mutation of one exact external-identity mapping.
@@ -14,13 +15,13 @@ pub enum ExternalIdentityChangeKind {
 }
 
 /// Trusted input for one idempotent external-identity command.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct ExternalIdentityChangeRequest {
     change_id: ExternalIdentityChangeId,
     target_actor_id: ActorId,
     external_identity: ExternalIdentity,
     kind: ExternalIdentityChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl ExternalIdentityChangeRequest {
@@ -37,7 +38,27 @@ impl ExternalIdentityChangeRequest {
             target_actor_id,
             external_identity,
             kind,
-            recorded_at,
+            recorded_at: RecordedTime::Exact(recorded_at),
+        }
+    }
+
+    /// Creates a redeliverable command retaining the first durable host receipt time.
+    ///
+    /// Exact administrator, target, authority, subject, kind, and command identity
+    /// must still match. Use [`Self::new`] when time belongs to an immutable command.
+    pub const fn for_delivery(
+        change_id: ExternalIdentityChangeId,
+        target_actor_id: ActorId,
+        external_identity: ExternalIdentity,
+        kind: ExternalIdentityChangeKind,
+        recorded_at: UnixTimeMillis,
+    ) -> Self {
+        Self {
+            change_id,
+            target_actor_id,
+            external_identity,
+            kind,
+            recorded_at: RecordedTime::FirstReceipt(recorded_at),
         }
     }
 }
@@ -46,14 +67,14 @@ impl ExternalIdentityChangeRequest {
 ///
 /// Construction is private to the application service so persistence cannot
 /// accept a caller-selected administrator as trusted audit context.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct ExternalIdentityChange {
     change_id: ExternalIdentityChangeId,
     administrator_actor_id: ActorId,
     target_actor_id: ActorId,
     external_identity: ExternalIdentity,
     kind: ExternalIdentityChangeKind,
-    recorded_at: UnixTimeMillis,
+    recorded_at: RecordedTime,
 }
 
 impl ExternalIdentityChange {
@@ -82,9 +103,18 @@ impl ExternalIdentityChange {
         self.kind
     }
 
-    /// Returns the trusted host time recorded for the command.
+    /// Returns the trusted host time proposed for the first durable write.
+    ///
+    /// Delivery retries retain the stored time rather than this proposal.
     pub const fn recorded_at(&self) -> UnixTimeMillis {
-        self.recorded_at
+        self.recorded_at.value()
+    }
+
+    /// Tests stored time under this command's explicit retry policy.
+    ///
+    /// Repositories must also compare every identity and business field.
+    pub fn accepts_recorded_at(&self, stored: UnixTimeMillis) -> bool {
+        self.recorded_at.accepts(stored)
     }
 }
 
@@ -116,7 +146,8 @@ pub trait ExternalIdentityAdministrationRepository: Send + Sync {
     /// Exact retries return [`ExternalIdentityChangeOutcome::AlreadyRecorded`].
     /// Reusing a change identity for different content is an error. Detaching
     /// an actor's final external identity must fail without recording an audit
-    /// row or changing the mapping.
+    /// row or changing the mapping. Delivery retries retain the original stored
+    /// time and effect; immutable commands additionally compare recorded time.
     ///
     /// # Errors
     ///
@@ -202,5 +233,32 @@ where
     }
 }
 
+impl fmt::Debug for ExternalIdentityChangeRequest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("ExternalIdentityChangeRequest")
+            .field("change_id", &self.change_id)
+            .field("target_actor_id", &self.target_actor_id)
+            .field("authority_id", self.external_identity.authority_id())
+            .field("subject", &"<redacted>")
+            .field("kind", &self.kind)
+            .field("recorded_at", &self.recorded_at)
+            .finish()
+    }
+}
+impl fmt::Debug for ExternalIdentityChange {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("ExternalIdentityChange")
+            .field("change_id", &self.change_id)
+            .field("administrator_actor_id", &self.administrator_actor_id)
+            .field("target_actor_id", &self.target_actor_id)
+            .field("authority_id", self.external_identity.authority_id())
+            .field("subject", &"<redacted>")
+            .field("kind", &self.kind)
+            .field("recorded_at", &self.recorded_at)
+            .finish()
+    }
+}
 #[cfg(test)]
 mod tests;

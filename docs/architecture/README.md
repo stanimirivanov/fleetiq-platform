@@ -75,6 +75,12 @@ workload authentication remains a separately selected mode. First-receipt comman
 retries retain the original durable audit time and effect. See
 [ADR 0100](../adr/0100-expose-actor-administration-over-http.md).
 
+External-identity commands and bounded mapping/audit reads use the same exact
+platform evidence and listener-selected guard in a separate HTTP adapter. Identity
+owns first-receipt retry policy and PostgreSQL retains atomic mapping/audit writes;
+subjects are returned only to authorized callers and redacted from command diagnostics.
+See [ADR 0101](../adr/0101-expose-external-identity-administration-over-http.md).
+
 ## Browser identity boundary
 
 ```mermaid

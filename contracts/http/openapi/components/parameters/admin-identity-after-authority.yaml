@@ -1,0 +1,6 @@
+name: after_authority_id
+in: query
+required: false
+description: Exclusive catalogue cursor authority; requires after_subject. Preserve exact case.
+schema:
+  $ref: ../schemas/AdministrationIdentifier.yaml

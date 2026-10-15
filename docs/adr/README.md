@@ -114,6 +114,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0100](0100-expose-actor-administration-over-http.md) | Actor administration HTTP with shared mutation protection and first-receipt retries |
 
+| [0101](0101-expose-external-identity-administration-over-http.md) | Exact external-identity HTTP administration, bounded mapping/audit pages, and first-receipt retries |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

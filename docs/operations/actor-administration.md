@@ -106,6 +106,7 @@ Use the existing listener and database configuration; no migration or additional
 service is needed. The [modular OpenAPI contract](../../contracts/http/README.md)
 is authoritative for payloads and statuses. Deploy API consumers only after the
 contract reaches the backend main branch. Rolling back removes this additive
-HTTP surface without deleting actors or audit facts. UI administration,
-external-identity replacement, grant management, and tenant onboarding are later
-implementation slices.
+HTTP surface without deleting actors or audit facts.
+[External-identity replacement](external-identity-administration.md) now has its own
+protected command and query routes. UI administration, grant management, and tenant
+onboarding remain later implementation slices.

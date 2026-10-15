@@ -1,0 +1,20 @@
+type: object
+additionalProperties: false
+required: [change_id, administrator_actor_id, target_actor_id, external_identity, kind, recorded_at_ms, state_changed]
+properties:
+  change_id:
+    $ref: ./AdministrationIdentifier.yaml
+  administrator_actor_id:
+    $ref: ./AdministrationIdentifier.yaml
+  target_actor_id:
+    $ref: ./AdministrationIdentifier.yaml
+  external_identity:
+    $ref: ./InitialActorIdentity.yaml
+  kind:
+    type: string
+    enum: [attach, detach]
+  recorded_at_ms:
+    type: integer
+    format: int64
+  state_changed:
+    type: boolean

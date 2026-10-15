@@ -437,3 +437,180 @@ fn assert_constraint(error: &sqlx::Error, expected: &str) {
         Some(expected)
     );
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn different_delivery_times_keep_one_fact_without_reapplying_old_mapping(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let administration = ExternalIdentityAdministration::new(
+        PostgresExternalIdentityAdministration::new(pool.clone()),
+    );
+    let delivery = |time| {
+        ExternalIdentityChangeRequest::for_delivery(
+            ExternalIdentityChangeId::new("delivery-a").unwrap(),
+            actor_id("actor-target"),
+            external_identity("recovery", " Exact Subject "),
+            ExternalIdentityChangeKind::Attach,
+            UnixTimeMillis::new(time),
+        )
+    };
+    let first_auth = manage_identity(&pool).await?;
+    let second_auth = manage_identity(&pool).await?;
+    let (first, second) = tokio::join!(
+        administration.apply(first_auth, delivery(1_000)),
+        administration.apply(second_auth, delivery(2_000)),
+    );
+    let outcomes = [first?, second?];
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| matches!(o, ExternalIdentityChangeOutcome::Recorded(_)))
+            .count(),
+        1
+    );
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| matches!(o, ExternalIdentityChangeOutcome::AlreadyRecorded(_)))
+            .count(),
+        1
+    );
+    let stored: i64 = sqlx::query_scalar("SELECT recorded_at_ms FROM identity.external_identity_changes WHERE change_id='delivery-a'").fetch_one(&pool).await?;
+    assert!([1_000, 2_000].contains(&stored));
+    administration
+        .apply(
+            manage_identity(&pool).await?,
+            request(
+                "detach-recovery",
+                "actor-target",
+                "recovery",
+                " Exact Subject ",
+                ExternalIdentityChangeKind::Detach,
+                3_000,
+            ),
+        )
+        .await?;
+    assert_eq!(
+        administration
+            .apply(manage_identity(&pool).await?, delivery(4_000))
+            .await?,
+        ExternalIdentityChangeOutcome::AlreadyRecorded(ExternalIdentityChangeEffect::StateChanged)
+    );
+    assert_eq!(
+        mapping_count(&pool, "recovery", " Exact Subject ").await?,
+        0
+    );
+    assert_eq!(audit_count(&pool).await?, 2);
+    for (target, authority, subject, kind) in [
+        (
+            "actor-other",
+            "recovery",
+            " Exact Subject ",
+            ExternalIdentityChangeKind::Attach,
+        ),
+        (
+            "actor-target",
+            "Recovery",
+            " Exact Subject ",
+            ExternalIdentityChangeKind::Attach,
+        ),
+        (
+            "actor-target",
+            "recovery",
+            "exact subject",
+            ExternalIdentityChangeKind::Attach,
+        ),
+        (
+            "actor-target",
+            "recovery",
+            " Exact Subject ",
+            ExternalIdentityChangeKind::Detach,
+        ),
+    ] {
+        let different = ExternalIdentityChangeRequest::for_delivery(
+            ExternalIdentityChangeId::new("delivery-a")?,
+            actor_id(target),
+            external_identity(authority, subject),
+            kind,
+            UnixTimeMillis::new(5_000),
+        );
+        assert!(matches!(
+            administration
+                .apply(manage_identity(&pool).await?, different)
+                .await,
+            Err(ExternalIdentityAdministrationError::Repository(
+                PostgresExternalIdentityAdministrationError::IdentityCollision { .. }
+            ))
+        ));
+    }
+    Ok(())
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn delivery_retries_require_original_administrator_and_strict_callers_keep_time_equality(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let administration = ExternalIdentityAdministration::new(
+        PostgresExternalIdentityAdministration::new(pool.clone()),
+    );
+    let delivery = |time| {
+        ExternalIdentityChangeRequest::for_delivery(
+            ExternalIdentityChangeId::new("delivery-a").unwrap(),
+            actor_id("actor-target"),
+            external_identity("recovery", "subject-a"),
+            ExternalIdentityChangeKind::Attach,
+            UnixTimeMillis::new(time),
+        )
+    };
+    administration
+        .apply(manage_identity(&pool).await?, delivery(1_000))
+        .await?;
+    assert_eq!(
+        administration
+            .apply(
+                manage_identity(&pool).await?,
+                request(
+                    "delivery-a",
+                    "actor-target",
+                    "recovery",
+                    "subject-a",
+                    ExternalIdentityChangeKind::Attach,
+                    1_000
+                )
+            )
+            .await?,
+        ExternalIdentityChangeOutcome::AlreadyRecorded(ExternalIdentityChangeEffect::StateChanged)
+    );
+    assert!(matches!(
+        administration
+            .apply(
+                manage_identity(&pool).await?,
+                request(
+                    "delivery-a",
+                    "actor-target",
+                    "recovery",
+                    "subject-a",
+                    ExternalIdentityChangeKind::Attach,
+                    1_001
+                )
+            )
+            .await,
+        Err(ExternalIdentityAdministrationError::Repository(
+            PostgresExternalIdentityAdministrationError::IdentityCollision { .. }
+        ))
+    ));
+    sqlx::query("INSERT INTO identity.platform_action_grants (actor_id, action) VALUES ('actor-target', 'identity.manage')").execute(&pool).await?;
+    let other = PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
+        .authorize::<ManageIdentity>(support::authenticated_actor("actor-target").await)
+        .await?;
+    assert!(matches!(
+        administration.apply(other, delivery(2_000)).await,
+        Err(ExternalIdentityAdministrationError::Repository(
+            PostgresExternalIdentityAdministrationError::IdentityCollision { .. }
+        ))
+    ));
+    assert_eq!(audit_count(&pool).await?, 1);
+    Ok(())
+}

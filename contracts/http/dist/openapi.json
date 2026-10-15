@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.5",
+    "version": "1.0.0-baseline.6",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection."
   },
   "servers": [
@@ -12,6 +12,163 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/admin/actors/{actor_id}/external-identities": {
+      "get": {
+        "operationId": "listActorExternalIdentities",
+        "summary": "Page one actor's current external identities",
+        "description": "Requires fresh authentication and exact current platform identity.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact subjects, credentials, and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Ascending exact (authority_id, subject) order, limit 1..100, default 50. Supply both after_authority_id and after_subject from next_after, or neither. Cursors are traversal positions, not authorization or snapshots; detached cursor mappings need not still exist. Missing actors and actors without mappings both return an empty terminal page. Authorized responses and cursors contain sensitive opaque subjects: exclude request queries, bodies, and responses from routine logs. No platform-wide principal enumeration.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-actor-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-identity-after-authority"
+          },
+          {
+            "$ref": "#/components/parameters/admin-identity-after-subject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listActorExternalIdentities-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorAuditMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/actors/{actor_id}/external-identity-changes": {
+      "post": {
+        "operationId": "changeExternalIdentity",
+        "summary": "Attach or detach one exact external identity",
+        "description": "Requires fresh authentication and exact current platform identity.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact subjects, credentials, and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1; Authorization cannot bypass browser mode. JSON is limited to 16 KiB and rejects unknown fields. The server derives administrator and receipt time; clients keep the command ID, target, kind, authority, and subject unchanged after an uncertain result. The first committed time and effect survive retries without reapplying an old mapping state. Reusing the ID with different business content or administrator returns 409. Attach/detach is ensure-present/ensure-absent; a new command for an already satisfied state records state_changed false. An identity assigned to another actor conflicts for either operation and is never implicitly rebound. Detach of the actor's final identity conflicts. Missing target actors return 404. Replacement requires attaching a new mapping before explicitly detaching the old. No provider user creation or grant change. Detaching the current login invalidates that session on its next authentication; an uncertain result must be recovered through another registered identity with current authority.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-actor-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalIdentityChangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/changeExternalIdentity-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorLifecycleMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/ExternalIdentityConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/external-identity-changes": {
+      "get": {
+        "operationId": "listExternalIdentityChanges",
+        "summary": "Page immutable external-identity change evidence",
+        "description": "Requires fresh authentication and exact current platform identity.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact subjects, credentials, and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Platform-wide history in descending (recorded_at_ms, change_id) order, limit 1..100, default 50. Both before_recorded_at_ms and before_change_id are required together. A cursor is not a snapshot. Exact opaque subjects are returned only to the authorized administrator; do not log responses. History does not reconstruct all current mappings because initial bootstrap/provisioning identities have separate evidence.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-time"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-change"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listExternalIdentityChanges-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorAuditMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/admin/actors": {
       "get": {
         "operationId": "listActors",
@@ -782,6 +939,164 @@
   },
   "components": {
     "schemas": {
+      "ExternalIdentityChangeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "kind",
+          "external_identity"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "attach",
+              "detach"
+            ]
+          },
+          "external_identity": {
+            "$ref": "#/components/schemas/InitialActorIdentity"
+          }
+        }
+      },
+      "ExternalIdentityChangeResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "state_changed"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "already_recorded"
+            ]
+          },
+          "state_changed": {
+            "type": "boolean",
+            "description": "Original committed effect, not a statement about the mapping's current state."
+          }
+        }
+      },
+      "ExternalIdentityCataloguePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identities",
+          "next_after"
+        ],
+        "properties": {
+          "identities": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/InitialActorIdentity"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InitialActorIdentity"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Exact exclusive authority and subject tuple; both must accompany the next request."
+          }
+        }
+      },
+      "ExternalIdentityAuditCursor": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recorded_at_ms",
+          "change_id"
+        ],
+        "properties": {
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          }
+        }
+      },
+      "ExternalIdentityAuditEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "administrator_actor_id",
+          "target_actor_id",
+          "external_identity",
+          "kind",
+          "recorded_at_ms",
+          "state_changed"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "administrator_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "target_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "external_identity": {
+            "$ref": "#/components/schemas/InitialActorIdentity"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "attach",
+              "detach"
+            ]
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state_changed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ExternalIdentityAuditPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "changes",
+          "next_before"
+        ],
+        "properties": {
+          "changes": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ExternalIdentityAuditEntry"
+            }
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExternalIdentityAuditCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "AdministrationIdentifier": {
         "type": "string",
         "minLength": 1,
@@ -1725,14 +2040,39 @@
             "description": "Absolute expiry in Unix epoch milliseconds; no sliding renewal."
           }
         }
+      },
+      "subject": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512,
+        "pattern": "^(?=[\\s\\S]*\\S)[^\\u0000-\\u001F\\u007F-\\u009F]+$",
+        "description": "Exact case-sensitive opaque subject; never trimmed or normalized. Not a credential."
       }
     },
     "parameters": {
+      "admin-identity-after-authority": {
+        "name": "after_authority_id",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive catalogue cursor authority; requires after_subject. Preserve exact case.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "admin-identity-after-subject": {
+        "name": "after_subject",
+        "in": "query",
+        "required": false,
+        "description": "Exact exclusive catalogue cursor subject; requires after_authority_id. Use standard URL query encoding, never trim or normalize. Sensitive query data must be excluded from access logs and diagnostics.",
+        "schema": {
+          "$ref": "#/components/schemas/subject"
+        }
+      },
       "admin-actor-id": {
         "name": "actor_id",
         "in": "path",
         "required": true,
-        "description": "Stable actor targeted by this lifecycle command.",
+        "description": "Stable internal actor selected for administration.",
         "schema": {
           "$ref": "#/components/schemas/AdministrationIdentifier"
         }
@@ -2095,6 +2435,101 @@
       }
     },
     "responses": {
+      "listActorExternalIdentities-200": {
+        "description": "Current exact mappings for the selected actor, ordered by authority then subject. Missing actors and actors with no mappings both return an empty terminal page.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExternalIdentityCataloguePage"
+            },
+            "example": {
+              "identities": [
+                {
+                  "authority_id": "workforce",
+                  "subject": "subject-actor-b"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "changeExternalIdentity-200": {
+        "description": "Original committed command effect; exact retries do not reapply earlier mapping state.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExternalIdentityChangeResult"
+            },
+            "example": {
+              "outcome": "recorded",
+              "state_changed": true
+            }
+          }
+        }
+      },
+      "listExternalIdentityChanges-200": {
+        "description": "Immutable platform-wide attach/detach evidence, newest first by receipt time and change ID. Initial bootstrap and provisioning mappings are separate historical facts.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExternalIdentityAuditPage"
+            },
+            "example": {
+              "changes": [
+                {
+                  "change_id": "attach-recovery",
+                  "administrator_actor_id": "operator-a",
+                  "target_actor_id": "actor-b",
+                  "external_identity": {
+                    "authority_id": "recovery",
+                    "subject": " Subject "
+                  },
+                  "kind": "attach",
+                  "recorded_at_ms": 1000,
+                  "state_changed": true
+                }
+              ],
+              "next_before": null
+            }
+          }
+        }
+      },
+      "ExternalIdentityConflict": {
+        "description": "Command identity names different content or administrator, the mapping belongs to another actor, or detach would remove the target actor's final external identity.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:conflict",
+              "title": "Command conflicts with current identity state",
+              "status": 409
+            }
+          }
+        }
+      },
       "listActors-200": {
         "description": "Current actor catalogue ordered by actor ID; includes deactivated actors.",
         "headers": {

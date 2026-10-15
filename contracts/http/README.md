@@ -138,3 +138,9 @@ platform identity.manage; browser mutations also require exact origin and CSRF
 protection. See the [operating procedure](../../docs/operations/actor-administration.md)
 for command retry and paging semantics. Existing operation IDs and payloads remain
 unchanged.
+
+Baseline.6 adds explicit attach/detach commands, actor-scoped current mapping pages,
+and immutable external-identity audit under exact identity.manage authority.
+[The operating procedure](../../docs/operations/external-identity-administration.md)
+explains replacement, first-receipt retry, paired cursors, and subject-safe logging.
+Existing operation IDs and payloads remain unchanged.

@@ -1,12 +1,18 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.5"
+  version: "1.0.0-baseline.6"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/admin/actors/{actor_id}/external-identities":
+    $ref: "./paths/administration/actor-external-identities.yaml"
+  "/api/v1/admin/actors/{actor_id}/external-identity-changes":
+    $ref: "./paths/administration/actor-external-identity-changes.yaml"
+  "/api/v1/admin/external-identity-changes":
+    $ref: "./paths/administration/external-identity-changes.yaml"
   "/api/v1/admin/actors":
     $ref: "./paths/administration/actors.yaml"
   "/api/v1/admin/actors/{actor_id}/lifecycle":
@@ -43,6 +49,18 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    ExternalIdentityChangeRequest:
+      $ref: "./components/schemas/ExternalIdentityChangeRequest.yaml"
+    ExternalIdentityChangeResult:
+      $ref: "./components/schemas/ExternalIdentityChangeResult.yaml"
+    ExternalIdentityCataloguePage:
+      $ref: "./components/schemas/ExternalIdentityCataloguePage.yaml"
+    ExternalIdentityAuditCursor:
+      $ref: "./components/schemas/ExternalIdentityAuditCursor.yaml"
+    ExternalIdentityAuditEntry:
+      $ref: "./components/schemas/ExternalIdentityAuditEntry.yaml"
+    ExternalIdentityAuditPage:
+      $ref: "./components/schemas/ExternalIdentityAuditPage.yaml"
     AdministrationIdentifier:
       $ref: "./components/schemas/AdministrationIdentifier.yaml"
     InitialActorIdentity:
@@ -114,6 +132,10 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    admin-identity-after-authority:
+      $ref: "./components/parameters/admin-identity-after-authority.yaml"
+    admin-identity-after-subject:
+      $ref: "./components/parameters/admin-identity-after-subject.yaml"
     admin-actor-id:
       $ref: "./components/parameters/admin-actor-id.yaml"
     admin-page-limit:
@@ -181,6 +203,14 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    listActorExternalIdentities-200:
+      $ref: "./components/responses/listActorExternalIdentities-200.yaml"
+    changeExternalIdentity-200:
+      $ref: "./components/responses/changeExternalIdentity-200.yaml"
+    listExternalIdentityChanges-200:
+      $ref: "./components/responses/listExternalIdentityChanges-200.yaml"
+    ExternalIdentityConflict:
+      $ref: "./components/responses/ExternalIdentityConflict.yaml"
     listActors-200:
       $ref: "./components/responses/listActors-200.yaml"
     provisionActor-201:

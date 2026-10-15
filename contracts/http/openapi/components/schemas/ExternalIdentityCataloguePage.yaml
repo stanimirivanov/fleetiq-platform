@@ -1,0 +1,14 @@
+type: object
+additionalProperties: false
+required: [identities, next_after]
+properties:
+  identities:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./InitialActorIdentity.yaml
+  next_after:
+    anyOf:
+      - $ref: ./InitialActorIdentity.yaml
+      - type: "null"
+    description: Exact exclusive authority and subject tuple; both must accompany the next request.

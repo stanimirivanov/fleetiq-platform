@@ -3,6 +3,7 @@
 mod administration;
 mod credential;
 mod discovery;
+mod external_identities;
 mod login;
 mod metadata;
 mod session;

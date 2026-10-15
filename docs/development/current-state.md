@@ -56,10 +56,11 @@
   and bounded relationship and signal-binding snapshots. It remains a partial
   contract: live semantic state and some
   protected routes are not yet described. Browser OIDC login and operator
-  sessions, tenant discovery, and actor administration are included in the
+  sessions, tenant discovery, actor administration, and external-identity
+  administration are included in the
   additive baseline.
 - Further business APIs, identity-provider qualification, authorization
-  administration APIs, device transport listeners, operator UI, archival storage, and
+  platform/tenant grant APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
 
 ## Browser operator authentication
@@ -290,8 +291,8 @@ listeners. Each consumes exact current platform identity.manage evidence. Browse
 commands share logout's exact-origin/CSRF guard; HTTP deliveries retain the first
 durable host receipt time, while existing immutable commands keep strict time
 equality. See [ADR 0100](../adr/0100-expose-actor-administration-over-http.md) and
-the [operating procedure](../operations/actor-administration.md). External-identity
-replacement, grants, tenant administration, and administration UI remain separate.
+the [operating procedure](../operations/actor-administration.md). Platform/tenant
+grant administration, tenant administration, and administration UI remain separate.
 
 
 Tenant lifecycle administration uses a separate exact
@@ -339,6 +340,14 @@ selected actor's external identities, ordered by exact authority and subject.
 Catalogue entry and cursor diagnostics redact the opaque subject, and the query
 does not provide platform-wide principal enumeration.
 
+External-identity attachment/detachment, actor-scoped current mappings, and bounded
+change history now have protected HTTP routes. Each request rechecks exact current
+identity.manage authority. Browser mutations use the shared origin/CSRF guard;
+redelivered commands retain the original time and effect without undoing later
+mapping changes. Detaching a session's login mapping invalidates its next request.
+See [ADR 0101](../adr/0101-expose-external-identity-administration-over-http.md) and
+[operations](../operations/external-identity-administration.md).
+
 The application can grant or revoke an exact tenant action only with consumed
 `ManageAccess` authorization evidence. Tenant and administrator identity come
 from that evidence. Each host-identified command atomically changes current
@@ -371,8 +380,8 @@ subject are configured together. The
 current actor mapping and exact `metadata.read` tenant grant are checked on
 every request before the metadata repository is called. Browser mode instead
 uses the provider-neutral operator sessions described above. Customer provider
-and deployment qualification, membership or role models, administration
-transport, and the audit HTTP API remain future work. See the
+and deployment qualification, membership or role models, platform/tenant grant
+and tenant-lifecycle administration transport remain future work. See the
 [protected asset query procedure](../operations/asset-query.md),
 [device query procedure](../operations/device-query.md),
 [asset-type query procedure](../operations/asset-type-query.md),
@@ -385,7 +394,7 @@ transport, and the audit HTTP API remain future work. See the
 and [asset-binding snapshot procedure](../operations/asset-binding-snapshot.md).
 
 There is no broader business resource API, production authentication provider,
-authorization administration API, message broker, object archive, cache,
+platform/tenant grant administration API, message broker, object archive, cache,
 production deployment manifest, or service-level objective. Do not describe
 the version-discovery resource, library contracts, or local database defaults
 as production product behavior.

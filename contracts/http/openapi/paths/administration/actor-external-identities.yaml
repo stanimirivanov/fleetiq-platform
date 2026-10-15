@@ -1,0 +1,25 @@
+get:
+  operationId: listActorExternalIdentities
+  summary: "Page one actor's current external identities"
+  description: "Requires fresh authentication and exact current platform identity.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact subjects, credentials, and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Ascending exact (authority_id, subject) order, limit 1..100, default 50. Supply both after_authority_id and after_subject from next_after, or neither. Cursors are traversal positions, not authorization or snapshots; detached cursor mappings need not still exist. Missing actors and actors without mappings both return an empty terminal page. Authorized responses and cursors contain sensitive opaque subjects: exclude request queries, bodies, and responses from routine logs. No platform-wide principal enumeration."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/admin-actor-id.yaml
+    - $ref: ../../components/parameters/admin-page-limit.yaml
+    - $ref: ../../components/parameters/admin-identity-after-authority.yaml
+    - $ref: ../../components/parameters/admin-identity-after-subject.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/listActorExternalIdentities-200.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/AdministrationForbidden.yaml
+    "405":
+      $ref: ../../components/responses/ActorAuditMethodNotAllowed.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml
