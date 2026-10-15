@@ -191,7 +191,7 @@ make an unsuccessful architecture result acceptable.
 
 The reviewed [workflow template](../../.github/ci.yml.template) owns setup,
 services, permissions, action repositories and positions, artifact handling, and
-cleanup. Workflow-owned action SHAs fill version-free template slots. Catalogue placeholders
+cleanup. Workflow-owned action major tags fill version-free template slots. Catalogue placeholders
 supply group commands and pinned tool versions. `cargo xtask verify --check-ci`
 compares the entire rendered document with the checked-in workflow, normalizing
 LF/CRLF line endings. This checks repository wiring, not external GitHub behavior
@@ -210,38 +210,26 @@ so matching generated content never replaces independent policy review.
 ### Separate policy from dependency metadata
 
 The workflow is the only source of action versions. Each approved action uses
-a full lowercase 40-character commit SHA and a `# v<major>.<minor>.<patch>`
-comment for review and Dependabot. The template contains named action slots,
-not a second set of pins. The sensor validates the approved repository, pin
+an `@v<major>` tag, such as `@v7`. The template contains named action slots,
+not a second version list. The sensor validates the approved repository, tag
 shape, and agreement across all uses before rendering those slots. All other
 workflow content remains compared exactly, including permissions, commands,
 conditions, setup inputs, services, and cleanup. No YAML parser or Node process
 is required for this Rust sensor.
 
-A major tag such as `@v7` would reduce visible patch updates, but it can move
-the action code used by a later run without changing this repository or opening
-a PR. The immutable SHA makes each action update a reviewable candidate tested
-by CI before merge. Dependabot version updates propose the SHA and release
-comment in one workflow file; contributors do not maintain a second template
-pin. GitHub does not issue Dependabot vulnerability alerts for SHA-pinned
-actions, so review the scheduled update PRs and upstream advisories explicitly.
+A major tag follows compatible action releases without routine workflow edits.
+Review major-version updates and runtime requirements when changing a tag. The
+CI jobs qualify the action code resolved for each run.
 
-An action-only Dependabot update may change its SHA and version comment in
-the workflow without editing the template or running regeneration. Review the
-upstream commit, runtime requirements, and release notes before merge; a
-syntactically valid SHA and comment do not prove provenance or compatibility.
-The sensor does not fetch action source or infer that a comment matches a tag.
-Resolve both the release tag and its optional `^{}` dereference with `git ls-remote`.
-For annotated tags, pin the dereferenced commit, not the tag-object SHA. For
-lightweight tags, the tag ref already points at the commit. Verify against the
-official action repository, never a fork.
-[GitHub's action security guidance](https://docs.github.com/en/actions/reference/security/secure-use#using-third-party-actions)
-describes the provenance review requirement.
+An action-only major-version update changes the workflow without editing the
+template or running regeneration. The sensor does not fetch action source or
+prove upstream provenance or compatibility. Review the official action release
+notes and run the applicable checks before merge.
 
 Structural or tool-version changes still update the template or catalogue,
 then explicitly run `cargo xtask verify --write-ci` and `--check-ci`.
-Regeneration preserves the workflow's dependency pins. Missing, malformed, or
-inconsistent pins fail rather than guessing a ref, downloading an alternative,
+Regeneration preserves the workflow's action tags. Missing, malformed, or
+inconsistent tags fail rather than guessing a ref, downloading an alternative,
 or rolling a Dependabot proposal back. Ordinary checks never repair policy.
 
 ### Keep tool setup local to its owner
@@ -260,7 +248,7 @@ their own declared runtime; that does not install Node tooling for Rust commands
 Each job owns its setup and runs without a `needs` edge to architecture.
 The Rust job applies migrations with its pinned SQLx CLI, the same tool used in
 local setup, rather than an ambient PostgreSQL client from the runner image.
-Jobs select the Ubuntu 24.04 and Windows 2025 image families explicitly;
+Jobs select the Ubuntu 26.04 and Windows 2025 image families explicitly;
 GitHub still updates each hosted image within its family.
 Every applicable job remains a required review gate; dependency qualification
 never implies permission to bypass architecture policy.

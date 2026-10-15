@@ -3,7 +3,7 @@
 //! The reviewed template owns setup, service, permission, and cleanup semantics.
 //! The catalogue supplies runner groups and CLI versions. Comparing the entire
 //! rendered document rejects disabled, conditional, or commented-out checks as
-//! well as changed commands. Only immutable action dependency refs are supplied
+//! well as changed commands. Only major-version action refs are supplied
 //! by the workflow itself; their repositories and locations stay template-owned.
 
 #[cfg(test)]

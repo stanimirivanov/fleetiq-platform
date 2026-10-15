@@ -91,11 +91,11 @@ boundaries and protocol fixture compatibility.
 
 ### GitHub Actions updates
 
-Action pins live only in the workflow as immutable commit SHAs with version
-comments. Dependabot can update those pins without synchronizing a second
-version list in the template. Review their official upstream provenance and
-runtime compatibility, then run the applicable checks. See the canonical
-[CI resilience rules](verification.md#ci-resilience-rules) for pin validation,
+Action major tags live only in the workflow. The template has no duplicate
+version list to maintain, and minor and patch releases do not require workflow
+edits. Review major-version changes and runtime compatibility, then run the
+applicable checks. See the canonical
+[CI resilience rules](verification.md#ci-resilience-rules) for tag validation,
 structural regeneration, tooling isolation, and cache policy.
 
 ### Wasmtime security patch qualification

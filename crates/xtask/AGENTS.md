@@ -37,8 +37,8 @@ integrity. Documentation does not change actual tool permissions.
 Run `cargo test -p fleetiq-xtask --locked`, `cargo xtask repository`, and
 `cargo xtask architecture`. For CI structure or tool-version changes, explicitly
 regenerate with `cargo xtask verify --write-ci` and check with `--check-ci`.
-Action-only SHA updates change the workflow alone and require `--check-ci`, not
-a duplicate template pin or regeneration. Follow the verification guide's CI
-resilience rules for provenance review and tooling isolation. Select relevant
+Action-only major-tag updates change the workflow alone and require `--check-ci`,
+not a duplicate template version or regeneration. Follow the verification
+guide's CI resilience rules for update review and tooling isolation. Select relevant
 groups from the verification guide and run the applicable contributor gate.
 Report platform-specific checks and missing prerequisites exactly.

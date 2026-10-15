@@ -11,7 +11,7 @@ fn template() -> String {
 }
 
 fn workflow() -> String {
-    fs::read_to_string(Path::new(ROOT).join(super::WORKFLOW)).expect("workflow action pins")
+    fs::read_to_string(Path::new(ROOT).join(super::WORKFLOW)).expect("workflow action tags")
 }
 
 fn generated() -> String {
@@ -331,24 +331,33 @@ impl Drop for PolicyParentLink {
     }
 }
 
-// A synthetic immutable ref is used only in owned filesystem fixtures.
+// A synthetic major-version update is used only in owned filesystem fixtures.
 fn action_candidate(document: &str) -> String {
     let previous = document
         .lines()
         .find_map(|line| line.trim_start().strip_prefix("uses: actions/setup-node@"))
-        .expect("setup-node fixture pin");
-    document.replace(previous, &format!("{} # v7.2.0", "b".repeat(40)))
+        .expect("setup-node fixture tag");
+    let next_major = previous
+        .strip_prefix('v')
+        .expect("major-version tag")
+        .parse::<u32>()
+        .expect("numeric major version")
+        + 1;
+    document.replace(
+        &format!("uses: actions/setup-node@{previous}"),
+        &format!("uses: actions/setup-node@v{next_major}"),
+    )
 }
 
 #[test]
-fn dependabot_pin_only_update_passes_without_template_edit_or_regeneration() {
+fn major_tag_only_update_passes_without_template_edit_or_regeneration() {
     let fixture = Fixture::new();
     let path = fixture.0.join(super::WORKFLOW);
     let original_template = fs::read(fixture.0.join(TEMPLATE)).unwrap();
     let candidate = action_candidate(&generated());
     fs::write(&path, &candidate).unwrap();
 
-    check(&fixture.0).expect("workflow-only immutable dependency update is supported");
+    check(&fixture.0).expect("workflow-only major-version update is supported");
     assert_eq!(
         fs::read(fixture.0.join(TEMPLATE)).unwrap(),
         original_template
@@ -387,36 +396,57 @@ fn dependency_update_cannot_hide_changed_permissions_commands_or_setup() {
 }
 
 #[test]
-fn unpinned_malformed_inconsistent_and_substituted_actions_fail_without_repair() {
+fn malformed_inconsistent_and_substituted_actions_fail_without_repair() {
     let fixture = Fixture::new();
     let original = generated();
     let prefix = "uses: actions/setup-node@";
-    let pin = original
+    let tag = original
         .lines()
         .find_map(|line| line.trim_start().strip_prefix(prefix))
         .unwrap();
+    let full_reference = format!("{prefix}{tag}");
+    let next_tag = action_candidate(&original)
+        .lines()
+        .find_map(|line| line.trim_start().strip_prefix(prefix))
+        .unwrap()
+        .to_owned();
+    for invalid in [
+        "",
+        "7",
+        "v",
+        "v0",
+        "v07",
+        "v7.1.0",
+        "v7 # release",
+        "v7-branch",
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    ] {
+        let changed = original.replace(&full_reference, &format!("{prefix}{invalid}"));
+        assert_ne!(changed, original);
+        let path = fixture.0.join(super::WORKFLOW);
+        fs::write(&path, &changed).unwrap();
+        assert!(check(&fixture.0).is_err());
+        assert!(super::write(&fixture.0).is_err());
+        assert_eq!(fs::read_to_string(path).unwrap(), changed);
+    }
     for changed in [
-        original.replace(pin, "v7"),
-        original.replace(pin, "v7.1.0"),
-        original.replace(pin, &format!("{} # v7.1.0", "0".repeat(40))),
-        original.replace(pin, &format!("{} # v7.1.0", "b".repeat(39))),
-        original.replace(pin, &format!("{} # v7.1.0", "B".repeat(40))),
-        original.replace(pin, &"b".repeat(40)),
+        original.replacen(&full_reference, &format!("{prefix}{next_tag}"), 1),
         original.replace(
-            pin,
-            &format!("{} # v7.1.0\n        if: false", "b".repeat(40)),
+            &full_reference,
+            &format!("{full_reference}\n        if: false"),
         ),
-        original.replace(pin, &format!("{} # v07.1.0", "b".repeat(40))),
-        original.replacen(pin, &format!("{} # v7.2.0", "b".repeat(40)), 1),
-        original.replace("uses: actions/setup-node@", "uses: unapproved/setup-node@"),
-        original.replace("uses: actions/setup-node@", "# uses: actions/setup-node@"),
+        original.replace(&full_reference, &format!("# {full_reference}")),
+        original.replace(
+            &full_reference,
+            &format!("uses: unapproved/setup-node@{tag}"),
+        ),
     ] {
         assert_ne!(changed, original);
         let path = fixture.0.join(super::WORKFLOW);
         fs::write(&path, &changed).unwrap();
         assert!(check(&fixture.0).is_err());
         // Structural injection with otherwise valid refs is repairable explicitly;
-        // invalid or inconsistent refs must never be fetched or silently reset.
+        // invalid or inconsistent refs must never be silently reset.
         if !changed.contains("        if: false") && !changed.contains("# uses:") {
             assert!(super::write(&fixture.0).is_err());
             assert_eq!(fs::read_to_string(path).unwrap(), changed);
@@ -472,7 +502,7 @@ fn rust_and_supply_chain_tools_do_not_require_node_and_database_env_is_local() {
 }
 
 #[test]
-fn shell_literal_action_text_is_opaque_to_dependency_pin_collection() {
+fn shell_literal_action_text_is_opaque_to_dependency_ref_collection() {
     let fixture = Fixture::new();
     let marker = "      - name: Install Node.js for the checksummed scanner installer";
     // The full template comparison owns this block. Its payload is shell data,

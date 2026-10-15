@@ -1,6 +1,6 @@
 # Generated from .github/ci.yml.template and the Rust verification catalogue.
-# Action SHA pins live in .github/workflows/ci.yml; structure/tools come from this template/catalogue.
-# Edit structure via the template and cargo xtask verify --write-ci; Dependabot updates pins.
+# Action major-version tags live in .github/workflows/ci.yml; structure/tools come from this template/catalogue.
+# Edit structure via the template and cargo xtask verify --write-ci; update action tags in the workflow.
 name: CI
 
 on:
