@@ -19,7 +19,8 @@
   bounded asset-relationship snapshot, bounded source-binding snapshot, and
   bounded target-asset binding snapshot queries use those boundaries;
   actor administration now exposes provisioning, lifecycle, catalogue, and audit
-  HTTP operations; other administration remains without an HTTP API.
+  HTTP operations; external-identity and platform-grant administration also have
+  authenticated HTTP operations. Tenant administration remains without an HTTP API.
   The authenticated caller can
   discover bounded active tenants and exact current actions through
   [operator tenant discovery](../operations/operator-tenants.md); hints never
@@ -56,11 +57,11 @@
   and bounded relationship and signal-binding snapshots. It remains a partial
   contract: live semantic state and some
   protected routes are not yet described. Browser OIDC login and operator
-  sessions, tenant discovery, actor administration, and external-identity
-  administration are included in the
+  sessions, tenant discovery, actor administration, external-identity
+  administration, and platform-grant administration are included in the
   additive baseline.
-- Further business APIs, identity-provider qualification, authorization
-  platform/tenant grant APIs, device transport listeners, operator UI, archival storage, and
+- Further business APIs, identity-provider qualification, tenant-grant
+  administration APIs, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
 
 ## Browser operator authentication
@@ -263,6 +264,11 @@ Revocation affects the next policy decision. The final
 `platform.access.manage` grant cannot be revoked, preventing administrative
 lockout while allowing authority to move after explicit delegation.
 
+Platform-grant administration now has authenticated grant/revoke, actor-scoped
+current-grant and immutable audit HTTP routes. Delivery retries retain first
+receipt time; revocation preserves the final active administrator. See
+[the operating procedure](../operations/platform-access-administration.md).
+
 The same exact platform administration authorization protects bounded,
 newest-first audit queries. Stable keyset cursors use recorded time and the
 platform-scoped change identity, including deterministic ordering when several
@@ -291,7 +297,7 @@ listeners. Each consumes exact current platform identity.manage evidence. Browse
 commands share logout's exact-origin/CSRF guard; HTTP deliveries retain the first
 durable host receipt time, while existing immutable commands keep strict time
 equality. See [ADR 0100](../adr/0100-expose-actor-administration-over-http.md) and
-the [operating procedure](../operations/actor-administration.md). Platform/tenant
+the [operating procedure](../operations/actor-administration.md). Tenant
 grant administration, tenant administration, and administration UI remain separate.
 
 
@@ -394,7 +400,7 @@ and tenant-lifecycle administration transport remain future work. See the
 and [asset-binding snapshot procedure](../operations/asset-binding-snapshot.md).
 
 There is no broader business resource API, production authentication provider,
-platform/tenant grant administration API, message broker, object archive, cache,
+tenant grant administration API, message broker, object archive, cache,
 production deployment manifest, or service-level objective. Do not describe
 the version-discovery resource, library contracts, or local database defaults
 as production product behavior.

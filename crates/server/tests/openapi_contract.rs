@@ -98,6 +98,18 @@ const OPERATIONS: &[PublishedOperation] = &[
 // suites validate their payloads; this table prevents unreviewed paths/methods
 // or duplicate operation IDs from slipping past the global inventory guard.
 const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
+    (
+        "/api/v1/admin/actors/{actor_id}/platform-grants",
+        &[("get", "listActorPlatformGrants")],
+    ),
+    (
+        "/api/v1/admin/actors/{actor_id}/platform-access-changes",
+        &[("post", "changePlatformAccess")],
+    ),
+    (
+        "/api/v1/admin/platform-access-changes",
+        &[("get", "listPlatformAccessChanges")],
+    ),
     ("/api/v1/auth/login", &[("get", "beginOperatorLogin")]),
     ("/api/v1/auth/callback", &[("get", "completeOperatorLogin")]),
     ("/api/v1/auth/session", &[("get", "getOperatorSession")]),

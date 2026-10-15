@@ -1,0 +1,9 @@
+description: "Immutable grant administration evidence, newest first. Initial bootstrap grants have separate evidence."
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/PlatformAccessAuditPage.yaml
+    example: {"changes":[{"change_id":"change-b","administrator_actor_id":"operator-a","target_actor_id":"actor-b","action":"tenant.provision","kind":"grant","recorded_at_ms":1000,"state_changed":false}],"next_before":{"recorded_at_ms":1000,"change_id":"change-b"}}

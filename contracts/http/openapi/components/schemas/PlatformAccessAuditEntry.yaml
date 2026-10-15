@@ -1,0 +1,20 @@
+type: object
+additionalProperties: false
+required: [change_id, administrator_actor_id, target_actor_id, action, kind, recorded_at_ms, state_changed]
+properties:
+  change_id:
+    $ref: ./AdministrationIdentifier.yaml
+  administrator_actor_id:
+    $ref: ./AdministrationIdentifier.yaml
+  target_actor_id:
+    $ref: ./AdministrationIdentifier.yaml
+  action:
+    $ref: ./PlatformAction.yaml
+  kind:
+    type: string
+    enum: [grant, revoke]
+  recorded_at_ms:
+    type: integer
+    format: int64
+  state_changed:
+    type: boolean

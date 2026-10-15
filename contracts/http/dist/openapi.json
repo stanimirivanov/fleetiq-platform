@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.6",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection."
+    "version": "1.0.0-baseline.7",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority."
   },
   "servers": [
     {
@@ -12,6 +12,160 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/admin/actors/{actor_id}/platform-grants": {
+      "get": {
+        "operationId": "listActorPlatformGrants",
+        "summary": "Page one actor's current platform grants",
+        "description": "Requires fresh authentication and exact current platform platform.access.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact credentials and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Ascending exact action-name order, limit 1..100, default 50. Supply after_action from next_after or omit it. Cursors are traversal positions, not authorization or snapshots; revoked cursor grants need not still exist. Missing actors and actors without grants both return an empty terminal page. Inactive actors retain grants but cannot use them. No platform-wide grant enumeration.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-actor-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-platform-after-action"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listActorPlatformGrants-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorAuditMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/actors/{actor_id}/platform-access-changes": {
+      "post": {
+        "operationId": "changePlatformAccess",
+        "summary": "Grant or revoke one exact platform action",
+        "description": "Requires fresh authentication and exact current platform platform.access.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact credentials and database details. Authentication and authorization precede input validation. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1; Authorization cannot bypass browser mode. JSON is limited to 16 KiB and rejects unknown fields. The server derives administrator and receipt time; clients retain command ID, target, action and kind after uncertain results. Retries preserve first committed time and effect without restoring earlier grant state. Different content or administrator under the same ID returns 409. Grant/revoke ensures presence/absence; a new already-satisfied command records state_changed false. Missing mutation targets return 404. Removing the final active platform-access administrator conflicts, including when another grant belongs only to an inactive actor. Self-revocation affects the next decision, so retry may return 403: another authorized administrator must inspect audit. Previously issued evidence is not recalled.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-actor-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformAccessChangeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/changePlatformAccess-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorLifecycleMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/PlatformAccessConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/admin/platform-access-changes": {
+      "get": {
+        "operationId": "listPlatformAccessChanges",
+        "summary": "Page immutable platform access change evidence",
+        "description": "Requires fresh authentication and exact current platform platform.access.manage authority. Tenant grants and other platform actions never substitute. Only mounted on an authenticated listener. Every outcome is no-store; problems redact credentials and database details. Authentication and authorization precede input validation. Unknown and duplicate query fields are rejected. Platform-wide history in descending (recorded_at_ms, change_id) order, limit 1..100, default 50. Both before_recorded_at_ms and before_change_id are required together. A cursor is not a snapshot. Initial bootstrap grants have separate evidence: this history alone does not reconstruct current grants.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-time"
+          },
+          {
+            "$ref": "#/components/parameters/admin-audit-before-change"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listPlatformAccessChanges-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/AdministrationForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/ActorAuditMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/admin/actors/{actor_id}/external-identities": {
       "get": {
         "operationId": "listActorExternalIdentities",
@@ -939,6 +1093,182 @@
   },
   "components": {
     "schemas": {
+      "PlatformAccessAuditPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "changes",
+          "next_before"
+        ],
+        "properties": {
+          "changes": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/PlatformAccessAuditEntry"
+            }
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlatformAccessAuditCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PlatformAccessAuditEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "administrator_actor_id",
+          "target_actor_id",
+          "action",
+          "kind",
+          "recorded_at_ms",
+          "state_changed"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "administrator_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "target_actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "action": {
+            "$ref": "#/components/schemas/PlatformAction"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "grant",
+              "revoke"
+            ]
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state_changed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlatformAccessAuditCursor": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "recorded_at_ms",
+          "change_id"
+        ],
+        "properties": {
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          }
+        }
+      },
+      "PlatformGrantCataloguePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "grants",
+          "next_after"
+        ],
+        "properties": {
+          "grants": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "action"
+              ],
+              "properties": {
+                "action": {
+                  "$ref": "#/components/schemas/PlatformAction"
+                }
+              }
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlatformAction"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PlatformAccessChangeResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "state_changed"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "recorded",
+              "already_recorded"
+            ]
+          },
+          "state_changed": {
+            "type": "boolean",
+            "description": "Original committed grant effect. Read the catalogue for current grant state."
+          }
+        }
+      },
+      "PlatformAccessChangeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "change_id",
+          "kind",
+          "action"
+        ],
+        "properties": {
+          "change_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "grant",
+              "revoke"
+            ]
+          },
+          "action": {
+            "$ref": "#/components/schemas/PlatformAction"
+          }
+        }
+      },
+      "PlatformAction": {
+        "type": "string",
+        "enum": [
+          "identity.manage",
+          "platform.access.manage",
+          "tenant.lifecycle.manage",
+          "tenant.provision"
+        ],
+        "description": "Exact platform action, independent of tenant-scoped permissions."
+      },
       "ExternalIdentityChangeRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -2050,6 +2380,15 @@
       }
     },
     "parameters": {
+      "admin-platform-after-action": {
+        "name": "after_action",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive action-name position from next_after; valid even after the grant is revoked.",
+        "schema": {
+          "$ref": "#/components/schemas/PlatformAction"
+        }
+      },
       "admin-identity-after-authority": {
         "name": "after_authority_id",
         "in": "query",
@@ -2435,6 +2774,109 @@
       }
     },
     "responses": {
+      "PlatformAccessConflict": {
+        "description": "Command identity names different content or administrator, or revocation would remove the final active platform-access administrator.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:conflict",
+              "title": "Command conflicts with current platform access state",
+              "status": 409
+            }
+          }
+        }
+      },
+      "listPlatformAccessChanges-200": {
+        "description": "Immutable grant administration evidence, newest first. Initial bootstrap grants have separate evidence.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PlatformAccessAuditPage"
+            },
+            "example": {
+              "changes": [
+                {
+                  "change_id": "change-b",
+                  "administrator_actor_id": "operator-a",
+                  "target_actor_id": "actor-b",
+                  "action": "tenant.provision",
+                  "kind": "grant",
+                  "recorded_at_ms": 1000,
+                  "state_changed": false
+                }
+              ],
+              "next_before": {
+                "recorded_at_ms": 1000,
+                "change_id": "change-b"
+              }
+            }
+          }
+        }
+      },
+      "listActorPlatformGrants-200": {
+        "description": "Current grants in ascending action-name order. Missing actors and actors without grants both return an empty terminal page.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PlatformGrantCataloguePage"
+            },
+            "example": {
+              "grants": [
+                {
+                  "action": "identity.manage"
+                },
+                {
+                  "action": "platform.access.manage"
+                },
+                {
+                  "action": "tenant.lifecycle.manage"
+                },
+                {
+                  "action": "tenant.provision"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "changePlatformAccess-200": {
+        "description": "Original committed effect. Retries retain first receipt time and never restore earlier grant state.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PlatformAccessChangeResult"
+            },
+            "example": {
+              "outcome": "recorded",
+              "state_changed": true
+            }
+          }
+        }
+      },
       "listActorExternalIdentities-200": {
         "description": "Current exact mappings for the selected actor, ordered by authority then subject. Missing actors and actors with no mappings both return an empty terminal page.",
         "headers": {

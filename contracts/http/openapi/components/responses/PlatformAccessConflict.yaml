@@ -1,0 +1,12 @@
+description: Command identity names different content or administrator, or revocation would remove the final active platform-access administrator.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:conflict
+      title: Command conflicts with current platform access state
+      status: 409

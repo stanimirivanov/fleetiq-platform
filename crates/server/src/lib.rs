@@ -18,6 +18,7 @@ mod health;
 mod http_api;
 mod mutation_guard;
 mod operator_tenants;
+mod platform_access_administration;
 mod protected_asset;
 mod protected_definitions;
 mod protected_device;
@@ -134,6 +135,13 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(
+            platform_access_administration::postgres_platform_access_administration_router(
+                pool.clone(),
+                authentication.clone(),
+                mutation.clone(),
+            ),
+        )
         .merge(actor_administration::postgres_actor_administration_router(
             pool.clone(),
             authentication.clone(),
@@ -270,6 +278,8 @@ mod tests {
         let paths = [
             "/api/v1/me/tenants",
             "/api/v1/admin/actors",
+            "/api/v1/admin/actors/actor-a/platform-grants",
+            "/api/v1/admin/platform-access-changes",
             "/api/v1/admin/actor-lifecycle-changes",
             "/api/v1/tenants/tenant-a/assets/asset-1",
             "/api/v1/tenants/tenant-a/assets/asset-1/device",

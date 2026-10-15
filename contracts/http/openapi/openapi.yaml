@@ -1,12 +1,18 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.6"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection."
+  version: "1.0.0-baseline.7"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/admin/actors/{actor_id}/platform-grants":
+    $ref: "./paths/administration/actor-platform-grants.yaml"
+  "/api/v1/admin/actors/{actor_id}/platform-access-changes":
+    $ref: "./paths/administration/actor-platform-access-changes.yaml"
+  "/api/v1/admin/platform-access-changes":
+    $ref: "./paths/administration/platform-access-changes.yaml"
   "/api/v1/admin/actors/{actor_id}/external-identities":
     $ref: "./paths/administration/actor-external-identities.yaml"
   "/api/v1/admin/actors/{actor_id}/external-identity-changes":
@@ -49,6 +55,20 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    PlatformAccessAuditPage:
+      $ref: "./components/schemas/PlatformAccessAuditPage.yaml"
+    PlatformAccessAuditEntry:
+      $ref: "./components/schemas/PlatformAccessAuditEntry.yaml"
+    PlatformAccessAuditCursor:
+      $ref: "./components/schemas/PlatformAccessAuditCursor.yaml"
+    PlatformGrantCataloguePage:
+      $ref: "./components/schemas/PlatformGrantCataloguePage.yaml"
+    PlatformAccessChangeResult:
+      $ref: "./components/schemas/PlatformAccessChangeResult.yaml"
+    PlatformAccessChangeRequest:
+      $ref: "./components/schemas/PlatformAccessChangeRequest.yaml"
+    PlatformAction:
+      $ref: "./components/schemas/PlatformAction.yaml"
     ExternalIdentityChangeRequest:
       $ref: "./components/schemas/ExternalIdentityChangeRequest.yaml"
     ExternalIdentityChangeResult:
@@ -132,6 +152,8 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    admin-platform-after-action:
+      $ref: "./components/parameters/admin-platform-after-action.yaml"
     admin-identity-after-authority:
       $ref: "./components/parameters/admin-identity-after-authority.yaml"
     admin-identity-after-subject:
@@ -203,6 +225,14 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    PlatformAccessConflict:
+      $ref: "./components/responses/PlatformAccessConflict.yaml"
+    listPlatformAccessChanges-200:
+      $ref: "./components/responses/listPlatformAccessChanges-200.yaml"
+    listActorPlatformGrants-200:
+      $ref: "./components/responses/listActorPlatformGrants-200.yaml"
+    changePlatformAccess-200:
+      $ref: "./components/responses/changePlatformAccess-200.yaml"
     listActorExternalIdentities-200:
       $ref: "./components/responses/listActorExternalIdentities-200.yaml"
     changeExternalIdentity-200:

@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT COUNT(*) AS \"count!\"\n        FROM identity.platform_action_grants AS grant_state\n        INNER JOIN identity.actors AS actor_state\n            ON actor_state.actor_id = grant_state.actor_id\n        WHERE grant_state.action = 'platform.access.manage'\n          AND actor_state.is_active\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "02ea568c95afc6037c2c2a17bfd9f531ebad3cdf8377bd9a427ba7bffab01bdd"
+}

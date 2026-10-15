@@ -398,3 +398,204 @@ fn assert_constraint(error: &sqlx::Error, expected: &str) {
         Some(expected)
     );
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn inactive_grant_holder_cannot_replace_final_active_administrator(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    sqlx::query("UPDATE identity.actors SET is_active = false WHERE actor_id = 'actor-target'")
+        .execute(&pool)
+        .await?;
+    let administration =
+        PlatformAccessAdministration::new(PostgresPlatformAccessAdministration::new(pool.clone()));
+    administration
+        .apply(
+            manage_platform_access(&pool).await?,
+            request(
+                "inactive-delegation",
+                "actor-target",
+                PlatformAction::ManagePlatformAccess,
+                PlatformAccessChangeKind::Grant,
+                1000,
+            ),
+        )
+        .await?;
+    let result = administration
+        .apply(
+            manage_platform_access(&pool).await?,
+            request(
+                "unsafe-revoke",
+                "operator-a",
+                PlatformAction::ManagePlatformAccess,
+                PlatformAccessChangeKind::Revoke,
+                2000,
+            ),
+        )
+        .await;
+    assert!(matches!(
+        result,
+        Err(PlatformAccessAdministrationError::Repository(
+            PostgresPlatformAccessAdministrationError::LastPlatformAdministrator { .. }
+        ))
+    ));
+    assert_eq!(audit_count(&pool).await?, 1);
+    assert!(manage_platform_access(&pool).await.is_ok());
+    Ok(())
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn delivery_retries_preserve_first_time_and_effect_without_reapplying_old_state(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let administration =
+        PlatformAccessAdministration::new(PostgresPlatformAccessAdministration::new(pool.clone()));
+    let delivery = |time| {
+        PlatformAccessChangeRequest::for_delivery(
+            PlatformAccessChangeId::new("delivery").unwrap(),
+            actor_id("actor-target"),
+            PlatformAction::ProvisionTenant,
+            PlatformAccessChangeKind::Grant,
+            UnixTimeMillis::new(time),
+        )
+    };
+    let (left, right) = tokio::join!(
+        administration.apply(manage_platform_access(&pool).await?, delivery(1000)),
+        administration.apply(manage_platform_access(&pool).await?, delivery(2000)),
+    );
+    let outcomes = [left?, right?];
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| matches!(o, PlatformAccessChangeOutcome::Recorded(_)))
+            .count(),
+        1
+    );
+    assert_eq!(
+        outcomes
+            .iter()
+            .filter(|o| matches!(o, PlatformAccessChangeOutcome::AlreadyRecorded(_)))
+            .count(),
+        1
+    );
+    let time: i64 = sqlx::query_scalar(
+        "SELECT recorded_at_ms FROM identity.platform_access_changes WHERE change_id='delivery'",
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert!([1000, 2000].contains(&time));
+    let strict = request(
+        "delivery",
+        "actor-target",
+        PlatformAction::ProvisionTenant,
+        PlatformAccessChangeKind::Grant,
+        time + 1,
+    );
+    assert!(matches!(
+        administration
+            .apply(manage_platform_access(&pool).await?, strict)
+            .await,
+        Err(PlatformAccessAdministrationError::Repository(
+            PostgresPlatformAccessAdministrationError::IdentityCollision { .. }
+        ))
+    ));
+    administration
+        .apply(
+            manage_platform_access(&pool).await?,
+            request(
+                "revoke",
+                "actor-target",
+                PlatformAction::ProvisionTenant,
+                PlatformAccessChangeKind::Revoke,
+                3000,
+            ),
+        )
+        .await?;
+    assert_eq!(
+        administration
+            .apply(manage_platform_access(&pool).await?, delivery(4000))
+            .await?,
+        PlatformAccessChangeOutcome::AlreadyRecorded(PlatformAccessChangeEffect::StateChanged)
+    );
+    let grants: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM identity.platform_action_grants WHERE actor_id='actor-target'",
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert_eq!(grants, 0);
+    assert_eq!(audit_count(&pool).await?, 2);
+    let unchanged: i64 = sqlx::query_scalar(
+        "SELECT recorded_at_ms FROM identity.platform_access_changes WHERE change_id='delivery'",
+    )
+    .fetch_one(&pool)
+    .await?;
+    assert_eq!(unchanged, time);
+    Ok(())
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn lifecycle_and_revocation_cannot_race_away_both_active_administrators(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let grants =
+        PlatformAccessAdministration::new(PostgresPlatformAccessAdministration::new(pool.clone()));
+    grants
+        .apply(
+            manage_platform_access(&pool).await?,
+            request(
+                "delegate-before-race",
+                "actor-target",
+                PlatformAction::ManagePlatformAccess,
+                PlatformAccessChangeKind::Grant,
+                1000,
+            ),
+        )
+        .await?;
+    let lifecycle = fleetiq_identity::ActorLifecycleAdministration::new(
+        fleetiq_postgres::PostgresActorLifecycleAdministration::new(pool.clone()),
+    );
+    let revoke_authority = manage_platform_access(&pool).await?;
+    let lifecycle_authority =
+        PlatformAuthorizationService::new(PostgresPlatformAccessPolicy::new(pool.clone()))
+            .authorize::<fleetiq_access::ManageIdentity>(
+                support::authenticated_actor("operator-a").await,
+            )
+            .await?;
+    let revoke = request(
+        "revoke-race",
+        "operator-a",
+        PlatformAction::ManagePlatformAccess,
+        PlatformAccessChangeKind::Revoke,
+        2000,
+    );
+    let deactivate = fleetiq_identity::ActorLifecycleChangeRequest::new(
+        fleetiq_domain::ActorLifecycleChangeId::new("deactivate-race")?,
+        actor_id("actor-target"),
+        fleetiq_identity::ActorLifecycleChangeKind::Deactivate,
+        UnixTimeMillis::new(2000),
+    );
+    let (revoked, deactivated) = tokio::join!(
+        grants.apply(revoke_authority, revoke),
+        lifecycle.apply(lifecycle_authority, deactivate),
+    );
+    match (revoked, deactivated) {
+        (Ok(PlatformAccessChangeOutcome::Recorded(PlatformAccessChangeEffect::StateChanged)),
+            Err(fleetiq_identity::ActorLifecycleAdministrationError::Repository(
+                fleetiq_postgres::PostgresActorLifecycleAdministrationError::LastActivePlatformAdministrator { .. }))) |
+        (Err(PlatformAccessAdministrationError::Repository(PostgresPlatformAccessAdministrationError::LastPlatformAdministrator { .. })),
+            Ok(fleetiq_identity::ActorLifecycleChangeOutcome::Recorded(fleetiq_identity::ActorLifecycleChangeEffect::StateChanged))) => {}
+        result => panic!("exactly one change may retire recovery authority: {result:?}"),
+    }
+    let remaining: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM identity.platform_action_grants AS grants JOIN identity.actors AS actors USING (actor_id) WHERE grants.action='platform.access.manage' AND actors.is_active"
+    ).fetch_one(&pool).await?;
+    assert_eq!(remaining, 1);
+    let lifecycle_count: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM identity.actor_lifecycle_changes")
+            .fetch_one(&pool)
+            .await?;
+    assert_eq!(audit_count(&pool).await? + lifecycle_count, 2);
+    Ok(())
+}

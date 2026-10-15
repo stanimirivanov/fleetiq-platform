@@ -6,6 +6,7 @@ mod discovery;
 mod external_identities;
 mod login;
 mod metadata;
+mod platform_access;
 mod session;
 
 use std::{

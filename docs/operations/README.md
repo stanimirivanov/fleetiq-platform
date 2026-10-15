@@ -41,3 +41,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [Actor provisioning and lifecycle administration](actor-administration.md)
 
 - [External-identity administration](external-identity-administration.md) — attach/detach, current mappings, and immutable audit.
+
+- [Platform-access administration](platform-access-administration.md) — exact grant/revoke, current grants, immutable audit, and safe delegation.

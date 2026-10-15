@@ -39,6 +39,8 @@ impl PlatformAccessAdministrationRepository for PostgresPlatformAccessAdministra
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
         lock_platform_scope(&mut transaction).await?;
 
+        // Resolve durable identity before touching current state: replaying an old
+        // grant after a later revoke would silently restore retired authority.
         if let Some(outcome) = resolve_existing(&mut transaction, change).await? {
             transaction.commit().await.map_err(repository_error)?;
             return Ok(outcome);
@@ -111,7 +113,7 @@ async fn resolve_existing(
         || existing.target_actor_id != change.target_actor_id().as_str()
         || existing.action != platform_action_name(change.action())
         || existing.change_kind != kind_name(change.kind())
-        || existing.recorded_at_ms != change.recorded_at().get()
+        || !change.accepts_recorded_at(fleetiq_domain::UnixTimeMillis::new(existing.recorded_at_ms))
     {
         return Err(
             PostgresPlatformAccessAdministrationError::IdentityCollision {
@@ -172,11 +174,16 @@ async fn preserve_final_administrator(
     transaction: &mut Transaction<'_, Postgres>,
     target_actor_id: &ActorId,
 ) -> Result<(), PostgresPlatformAccessAdministrationError> {
+    // Lifecycle changes take the same singleton lock. Inactive grant holders
+    // cannot supply recovery authority, even though their grants are retained.
     let remaining_administrators = sqlx::query_scalar!(
         r#"
         SELECT COUNT(*) AS "count!"
-        FROM identity.platform_action_grants
-        WHERE action = 'platform.access.manage'
+        FROM identity.platform_action_grants AS grant_state
+        INNER JOIN identity.actors AS actor_state
+            ON actor_state.actor_id = grant_state.actor_id
+        WHERE grant_state.action = 'platform.access.manage'
+          AND actor_state.is_active
         "#,
     )
     .fetch_one(&mut **transaction)
