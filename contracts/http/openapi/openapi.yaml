@@ -1,12 +1,16 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.11"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence."
+  version: "1.0.0-baseline.12"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/relationships/{relationship_id}/revisions/{revision}":
+    $ref: "./paths/relationships/revision.yaml"
+  "/api/v1/tenants/{tenant_id}/signal-bindings/{binding_id}/revisions/{revision}":
+    $ref: "./paths/bindings/revision.yaml"
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/device":
     $ref: "./paths/assets/device.yaml"
   "/api/v1/tenants/{tenant_id}/asset-types":
@@ -81,6 +85,22 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    RevisionRelationshipType:
+      $ref: "./components/schemas/RevisionRelationshipType.yaml"
+    RevisionProperty:
+      $ref: "./components/schemas/RevisionProperty.yaml"
+    RevisionSource:
+      $ref: "./components/schemas/RevisionSource.yaml"
+    RevisionTarget:
+      $ref: "./components/schemas/RevisionTarget.yaml"
+    RevisionEffectiveInterval:
+      $ref: "./components/schemas/RevisionEffectiveInterval.yaml"
+    AppendRelationshipRevisionRequest:
+      $ref: "./components/schemas/AppendRelationshipRevisionRequest.yaml"
+    AppendSignalBindingRevisionRequest:
+      $ref: "./components/schemas/AppendSignalBindingRevisionRequest.yaml"
+    MetadataRevisionResult:
+      $ref: "./components/schemas/MetadataRevisionResult.yaml"
     RegistrationAssetType:
       $ref: "./components/schemas/RegistrationAssetType.yaml"
     RegistrationExternalIdentifier:
@@ -238,6 +258,12 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    revision-relationship-id:
+      $ref: "./components/parameters/revision-relationship-id.yaml"
+    revision-binding-id:
+      $ref: "./components/parameters/revision-binding-id.yaml"
+    exact-record-revision:
+      $ref: "./components/parameters/exact-record-revision.yaml"
     definition-after-id:
       $ref: "./components/parameters/definition-after-id.yaml"
     definition-after-version:
@@ -325,6 +351,18 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    MetadataRevisionCreated:
+      $ref: "./components/responses/MetadataRevisionCreated.yaml"
+    MetadataRevisionRepeated:
+      $ref: "./components/responses/MetadataRevisionRepeated.yaml"
+    MetadataRevisionConflict:
+      $ref: "./components/responses/MetadataRevisionConflict.yaml"
+    MetadataRevisionNotFound:
+      $ref: "./components/responses/MetadataRevisionNotFound.yaml"
+    getRelationshipRevision-200:
+      $ref: "./components/responses/getRelationshipRevision-200.yaml"
+    getSignalBindingRevision-200:
+      $ref: "./components/responses/getSignalBindingRevision-200.yaml"
     MetadataRegistrationCreated:
       $ref: "./components/responses/MetadataRegistrationCreated.yaml"
     MetadataRegistrationRepeated:

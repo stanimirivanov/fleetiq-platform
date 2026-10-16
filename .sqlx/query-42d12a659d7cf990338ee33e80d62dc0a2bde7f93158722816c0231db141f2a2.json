@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO metadata.signal_binding_revision_records (tenant_id,binding_id,revision,actor_id) VALUES ($1,$2,$3,$4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "42d12a659d7cf990338ee33e80d62dc0a2bde7f93158722816c0231db141f2a2"
+}

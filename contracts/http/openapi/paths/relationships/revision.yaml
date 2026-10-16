@@ -1,0 +1,76 @@
+get:
+  operationId: "getRelationshipRevision"
+  summary: "Read one exact relationship revision"
+  description: "Requires exact current metadata.read under the listener-selected identity. Returns the existing immutable representation for precisely the requested positive u64 revision, including its original recorded time and half-open effective interval. A missing exact revision returns 404, never another revision. Leading zeros in the decimal path are accepted. All outcomes are no-store. This read does not append, resolve signals or select a bitemporal snapshot."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      "$ref": "../../components/parameters/metadata-read-tenant-id.yaml"
+    -
+      "$ref": "../../components/parameters/revision-relationship-id.yaml"
+    -
+      "$ref": "../../components/parameters/exact-record-revision.yaml"
+  responses:
+    "200":
+      "$ref": "../../components/responses/getRelationshipRevision-200.yaml"
+    "400":
+      "$ref": "../../components/responses/InvalidRequest.yaml"
+    "401":
+      "$ref": "../../components/responses/Unauthenticated.yaml"
+    "403":
+      "$ref": "../../components/responses/DefinitionReadForbidden.yaml"
+    "404":
+      "$ref": "../../components/responses/NotFound.yaml"
+    "405":
+      "$ref": "../../components/responses/MetadataRegistrationMethodNotAllowed.yaml"
+    "500":
+      "$ref": "../../components/responses/InternalError.yaml"
+post:
+  operationId: "appendRelationshipRevision"
+  summary: "Append or explicitly correct one relationship revision"
+  description: "Mounted only on an authenticated listener. Requires exact current metadata.manage for the selected active tenant, independent of metadata.read. Browser mode requires one exact configured Origin and X-FleetIQ-CSRF: 1 and never falls back to bearer. Authentication and authorization precede body/reference errors. JSON is limited to 32 KiB with closed nested objects; unknown and duplicate fields are rejected. Actor, tenant, revision identity and recorded time cannot be supplied in JSON. The path selects the exact positive u64 revision as decimal text. Revision 1 creates the lineage; the exact successor explicitly corrects it, without editing old facts. Effective start/end are physical time, separate from trusted host recorded time. Return 201 appended, 200 already_appended for identical complete content with original actor/time, 409 for different content, gaps, exhausted sequence, clock regression or unattributed legacy facts, and 404 for missing same-tenant references. Recorded time cannot decrease. Retry identical identity/revision/content after a lost or ambiguous response, even after later corrections; a commit error is never success. All outcomes are no-store and redact storage details. No deletion, graph-wide cycle/cardinality enforcement or automatic semantic reprocessing is introduced. Directed source and target assets and exact relationship type must exist in the same tenant."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      "$ref": "../../components/parameters/admin-tenant-id.yaml"
+    -
+      "$ref": "../../components/parameters/revision-relationship-id.yaml"
+    -
+      "$ref": "../../components/parameters/exact-record-revision.yaml"
+    -
+      "$ref": "../../components/parameters/admin-mutation-origin.yaml"
+    -
+      "$ref": "../../components/parameters/admin-mutation-csrf.yaml"
+  requestBody:
+    required: true
+    content:
+      "application/json":
+        schema:
+          "$ref": "../../components/schemas/AppendRelationshipRevisionRequest.yaml"
+  responses:
+    "200":
+      "$ref": "../../components/responses/MetadataRevisionRepeated.yaml"
+    "201":
+      "$ref": "../../components/responses/MetadataRevisionCreated.yaml"
+    "400":
+      "$ref": "../../components/responses/InvalidRequest.yaml"
+    "401":
+      "$ref": "../../components/responses/Unauthenticated.yaml"
+    "403":
+      "$ref": "../../components/responses/DefinitionWriteForbidden.yaml"
+    "404":
+      "$ref": "../../components/responses/MetadataRevisionNotFound.yaml"
+    "405":
+      "$ref": "../../components/responses/MetadataRegistrationMethodNotAllowed.yaml"
+    "409":
+      "$ref": "../../components/responses/MetadataRevisionConflict.yaml"
+    "500":
+      "$ref": "../../components/responses/InternalError.yaml"

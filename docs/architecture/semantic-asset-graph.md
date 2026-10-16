@@ -32,6 +32,11 @@ corrections without destructive history edits. Graph-wide rules such as role
 compatibility, cardinality, overlapping intervals, and containment cycles
 belong in an application operation with repository access.
 
+The [revision command API](../operations/metadata-revisions.md) appends complete
+facts under exact tenant management authority. Explicit successive revisions
+correct history; equal retries of an older attributed fact preserve its original
+actor/time even after later corrections. Existing strict writes remain unattributed.
+
 ## Devices and endpoints
 
 A communication device is an asset with an ordered set of stable endpoints.

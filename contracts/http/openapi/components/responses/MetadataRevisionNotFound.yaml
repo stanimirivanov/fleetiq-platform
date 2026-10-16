@@ -1,0 +1,12 @@
+description: "A required same-tenant asset, endpoint or exact type/property reference is absent or incompatible with the target asset type."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      "$ref": "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:not-found"
+      title: "Referenced resource not found"
+      status: 404

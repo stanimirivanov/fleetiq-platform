@@ -1,0 +1,14 @@
+description: "Exact fact, stable revision head and original actor attribution committed atomically."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      "$ref": "../schemas/MetadataRevisionResult.yaml"
+    example:
+      outcome: "appended"
+      id: "relationship-a"
+      revision: "1"
+      recorded_by: "operator-a"
+      recorded_at_ms: 1792108800000

@@ -1,0 +1,14 @@
+description: "Identical exact revision already exists; returns original actor and recorded time, including after later corrections."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      "$ref": "../schemas/MetadataRevisionResult.yaml"
+    example:
+      outcome: "already_appended"
+      id: "relationship-a"
+      revision: "1"
+      recorded_by: "operator-a"
+      recorded_at_ms: 1792108800000

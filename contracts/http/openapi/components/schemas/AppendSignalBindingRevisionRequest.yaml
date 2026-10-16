@@ -1,0 +1,16 @@
+type: "object"
+additionalProperties: false
+required:
+  -
+    "source"
+  -
+    "target"
+  -
+    "effective_interval"
+properties:
+  source:
+    "$ref": "./RevisionSource.yaml"
+  target:
+    "$ref": "./RevisionTarget.yaml"
+  effective_interval:
+    "$ref": "./RevisionEffectiveInterval.yaml"

@@ -1,0 +1,17 @@
+type: "object"
+additionalProperties: false
+required:
+  -
+    "id"
+  -
+    "version"
+properties:
+  id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    pattern: "^[^\\s]+$"
+  version:
+    type: "integer"
+    minimum: 1
+    maximum: 4294967295

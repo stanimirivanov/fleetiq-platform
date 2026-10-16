@@ -19,6 +19,17 @@ impl PostgresRelationshipRepository {
         relationship: &AssetRelationship,
     ) -> Result<(), PostgresRepositoryError> {
         let mut transaction = self.pool.begin().await.map_err(classify_database_error)?;
+        Self::append_revision_on(&mut transaction, relationship).await?;
+        transaction.commit().await.map_err(classify_database_error)
+    }
+
+    /// Appends under the caller-owned transaction so attribution commits atomically.
+    ///
+    /// Preserve head lock ordering, fresh dependent snapshots and strict errors.
+    pub(in crate::metadata) async fn append_revision_on(
+        transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        relationship: &AssetRelationship,
+    ) -> Result<(), PostgresRepositoryError> {
         let tenant_id = relationship.tenant_id().as_str();
         let relationship_id = relationship.id().as_str();
         let revision_number = relationship.revision().get();
@@ -35,7 +46,7 @@ impl PostgresRelationshipRepository {
             relationship_id,
             revision
         )
-        .execute(&mut *transaction)
+        .execute(&mut **transaction)
         .await
         .map_err(classify_database_error)?;
         let is_first_revision = identity_insert.rows_affected() == 1;
@@ -63,7 +74,7 @@ impl PostgresRelationshipRepository {
                 tenant_id,
                 relationship_id
             )
-            .fetch_one(&mut *transaction)
+            .fetch_one(&mut **transaction)
             .await
             .map_err(classify_database_error)?;
             let latest =
@@ -94,7 +105,7 @@ impl PostgresRelationshipRepository {
                 relationship_id,
                 head.latest_revision
             )
-            .fetch_one(&mut *transaction)
+            .fetch_one(&mut **transaction)
             .await
             .map_err(classify_database_error)?;
 
@@ -106,7 +117,7 @@ impl PostgresRelationshipRepository {
             }
         }
 
-        insert_revision_row(&mut transaction, relationship, &revision).await?;
+        insert_revision_row(transaction, relationship, &revision).await?;
 
         if !is_first_revision {
             sqlx::query!(
@@ -119,12 +130,12 @@ impl PostgresRelationshipRepository {
                 relationship_id,
                 revision
             )
-            .execute(&mut *transaction)
+            .execute(&mut **transaction)
             .await
             .map_err(classify_database_error)?;
         }
 
-        transaction.commit().await.map_err(classify_database_error)
+        Ok(())
     }
 }
 

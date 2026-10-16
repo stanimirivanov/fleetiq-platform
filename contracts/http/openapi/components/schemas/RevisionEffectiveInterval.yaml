@@ -1,0 +1,17 @@
+type: "object"
+additionalProperties: false
+required:
+  -
+    "start_ms"
+properties:
+  start_ms:
+    type: "integer"
+    format: "int64"
+  end_ms:
+    type:
+      -
+        "integer"
+      -
+        "null"
+    format: "int64"
+description: "Half-open physical interval [start_ms,end_ms); null/omitted end is unbounded. A finite end must be strictly after start; enforced by domain construction."

@@ -14,3 +14,6 @@ pub use relationship_repository::PostgresRelationshipRepository;
 pub use signal_binding_repository::PostgresSignalBindingRepository;
 
 pub use registration_repository::PostgresRegistrationRepository;
+
+mod revision_command_repository;
+pub use revision_command_repository::PostgresRevisionCommandRepository;

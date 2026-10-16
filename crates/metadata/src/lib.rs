@@ -67,3 +67,9 @@ pub use registration::{
     MetadataRegistration, RegistrationError, RegistrationOutcome, RegistrationReceipt,
     RegistrationRepository, RegistrationService,
 };
+
+mod revision_command;
+pub use revision_command::{
+    MetadataRevision, RevisionCommandError, RevisionCommandRepository, RevisionCommandService,
+    RevisionOutcome, RevisionReceipt,
+};

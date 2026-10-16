@@ -16,6 +16,17 @@ impl PostgresSignalBindingRepository {
         binding: &SignalBinding,
     ) -> Result<(), PostgresRepositoryError> {
         let mut transaction = self.pool.begin().await.map_err(classify_database_error)?;
+        Self::append_revision_on(&mut transaction, binding).await?;
+        transaction.commit().await.map_err(classify_database_error)
+    }
+
+    /// Appends under the caller-owned transaction so attribution commits atomically.
+    ///
+    /// Preserve head lock ordering, fresh dependent snapshots and strict errors.
+    pub(in crate::metadata) async fn append_revision_on(
+        transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        binding: &SignalBinding,
+    ) -> Result<(), PostgresRepositoryError> {
         let tenant_id = binding.tenant_id().as_str();
         let binding_id = binding.id().as_str();
         let revision_number = binding.revision().get();
@@ -32,7 +43,7 @@ impl PostgresSignalBindingRepository {
             binding_id,
             revision
         )
-        .execute(&mut *transaction)
+        .execute(&mut **transaction)
         .await
         .map_err(classify_database_error)?;
         let is_first_revision = identity_insert.rows_affected() == 1;
@@ -61,7 +72,7 @@ impl PostgresSignalBindingRepository {
                 tenant_id,
                 binding_id
             )
-            .fetch_one(&mut *transaction)
+            .fetch_one(&mut **transaction)
             .await
             .map_err(classify_database_error)?;
             let latest = parse_revision("signal_bindings.latest_revision", &head.latest_revision)?;
@@ -92,7 +103,7 @@ impl PostgresSignalBindingRepository {
                 binding_id,
                 head.latest_revision
             )
-            .fetch_one(&mut *transaction)
+            .fetch_one(&mut **transaction)
             .await
             .map_err(classify_database_error)?;
 
@@ -104,7 +115,7 @@ impl PostgresSignalBindingRepository {
             }
         }
 
-        insert_revision_row(&mut transaction, binding, &revision).await?;
+        insert_revision_row(transaction, binding, &revision).await?;
 
         if !is_first_revision {
             sqlx::query!(
@@ -117,12 +128,12 @@ impl PostgresSignalBindingRepository {
                 binding_id,
                 revision
             )
-            .execute(&mut *transaction)
+            .execute(&mut **transaction)
             .await
             .map_err(classify_database_error)?;
         }
 
-        transaction.commit().await.map_err(classify_database_error)
+        Ok(())
     }
 }
 

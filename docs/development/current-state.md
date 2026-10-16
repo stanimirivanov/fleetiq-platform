@@ -2,6 +2,10 @@
 
 ## TL;DR
 
+- [Relationship and signal-binding commands](../operations/metadata-revisions.md)
+  now expose attributed immutable appends and explicit corrections; their existing
+  exact revision reads are included in the published HTTP baseline.
+
 - The repository includes the first runnable backend composition root and a
   provider-neutral, PostgreSQL-backed identity and tenant authorization
   boundary. The `fleetiq-access` crate owns authentication and

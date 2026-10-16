@@ -1,0 +1,26 @@
+type: "object"
+additionalProperties: false
+required:
+  -
+    "relationship_type"
+  -
+    "source_asset_id"
+  -
+    "target_asset_id"
+  -
+    "effective_interval"
+properties:
+  relationship_type:
+    "$ref": "./RevisionRelationshipType.yaml"
+  source_asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    pattern: "^[^\\s]+$"
+  target_asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    pattern: "^[^\\s]+$"
+  effective_interval:
+    "$ref": "./RevisionEffectiveInterval.yaml"

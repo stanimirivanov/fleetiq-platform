@@ -1,0 +1,9 @@
+name: "relationship_id"
+in: "path"
+required: true
+description: "Stable relationship identity within the selected tenant."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  pattern: "^[^\\s]+$"

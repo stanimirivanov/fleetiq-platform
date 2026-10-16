@@ -1,0 +1,25 @@
+type: "object"
+additionalProperties: false
+required:
+  -
+    "device_asset_id"
+  -
+    "endpoint_id"
+  -
+    "signal_id"
+properties:
+  device_asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    pattern: "^[^\\s]+$"
+  endpoint_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    pattern: "^[^\\s]+$"
+  signal_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    pattern: "^[^\\s]+$"
