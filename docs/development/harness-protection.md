@@ -47,9 +47,9 @@ to HEAD, HEAD^, or an inferred merge base.
 
 Local contributors fetch the current trusted `origin/main`. CI checks out
 complete history with `fetch-depth: 0` and uses the event's pull-request base
-SHA, or the push event's `before` SHA on main. The synthetic PR merge commit's
-first parent is not the source of trust. Record the exact resolved base when
-reporting verification. A new branch with no published base or an unavailable
+SHA. The CI workflow is PR-only; main pushes do not schedule history checks.
+The synthetic PR merge commit's first parent is not the source of trust. Record
+the exact resolved base when reporting verification. A new branch with no published base or an unavailable
 force-push predecessor requires explicit maintainer investigation rather than
 an automatic pass.
 

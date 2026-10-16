@@ -92,7 +92,7 @@ installation remains explicit in the [development guide](README.md),
 
 For architecture or acceptance, supply a current trusted published base with
 `--base`. Fetch the latest history before using `origin/main`. CI provides the
-PR event base or push predecessor SHA; do not select an older ancestor to hide
+PR event base SHA; do not select an older ancestor to hide
 published changes. The runner records the resolved ID rather than the caller's
 free-form reference. Missing, unrelated, or unavailable history blocks the
 checks that need it. Base freshness remains the caller's responsibility.
@@ -174,6 +174,12 @@ fails the group; changes within an already-dirty tree remain a documented limit.
 handling and retention remain governed by the workflow and GitHub settings.
 
 ## CI and contributor handoff
+
+The CI workflow runs only on pull requests to conserve this private repository's
+GitHub Actions credits. Merging to main does not start a duplicate run. Direct
+pushes to main are not validated by this workflow; passing PR checks remain the
+merge-validation boundary. Other workflows and repository branch rules are
+configured separately.
 
 CI invokes the same architecture, supply-chain, Rust, and OpenAPI groups after
 its explicit prerequisite setup. The additional `Windows harness sensors` job
@@ -262,8 +268,12 @@ Its Rust environment hash includes toolchain, Cargo manifests/lockfile and confi
 explicit inputs additionally isolate OS, architecture, execution policy, flags and target.
 Only explicit debug build, deps and fingerprint directories are cached; whole-target
 caching is disabled, excluding tools, Nextest output and verification reports.
-Workspace crates and installed binaries are excluded. PRs restore, and only successful
-main pushes save. Never cache acceptance reports or treat a cache hit as verification.
+Workspace crates and installed binaries are excluded. PRs restore existing cache
+entries and never save them. The save condition remains restricted to successful
+main pushes, which the PR-only workflow no longer schedules. Consequently, this
+workflow does not refresh trusted-main Rust caches; entries may expire and later
+runs may be cold. Alternate cache warming or PR-scoped writes require a separate
+review. Never cache acceptance reports or treat a cache hit as verification.
 The exact template rejects conditional checks, unreviewed cache inputs and PR cache writes. Docker BuildKit's existing locked
 build cache remains separate from GitHub Actions caches.
 
