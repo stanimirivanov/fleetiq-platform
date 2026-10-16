@@ -5,8 +5,8 @@ name: CI
 
 on:
   pull_request:
-#  push:
-#    branches: [main] -- disabled for single developer useage
+  push:
+    branches: [main]
 
 permissions:
   contents: read
