@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO metadata.relationship_revision_records (tenant_id,relationship_id,revision,actor_id) VALUES ($1,$2,$3,$4)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a2c43185b28b72ec36abf73d65aa563ff36dfb242e1b8207a45ae776cf4254c4"
+}

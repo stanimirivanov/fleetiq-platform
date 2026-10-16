@@ -27,6 +27,7 @@ mod protected_relationship;
 mod protected_request;
 mod protected_signal_binding;
 mod registration;
+mod revision_commands;
 mod tenant_access_administration;
 mod tenant_administration;
 
@@ -139,6 +140,11 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(revision_commands::postgres_revision_router(
+            pool.clone(),
+            authentication.clone(),
+            mutation.clone(),
+        ))
         .merge(registration::postgres_registration_router(
             pool.clone(),
             authentication.clone(),

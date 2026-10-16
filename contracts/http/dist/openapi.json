@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.11",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence."
+    "version": "1.0.0-baseline.12",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution."
   },
   "servers": [
     {
@@ -12,6 +12,242 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/relationships/{relationship_id}/revisions/{revision}": {
+      "get": {
+        "operationId": "getRelationshipRevision",
+        "summary": "Read one exact relationship revision",
+        "description": "Requires exact current metadata.read under the listener-selected identity. Returns the existing immutable representation for precisely the requested positive u64 revision, including its original recorded time and half-open effective interval. A missing exact revision returns 404, never another revision. Leading zeros in the decimal path are accepted. All outcomes are no-store. This read does not append, resolve signals or select a bitemporal snapshot.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/revision-relationship-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-record-revision"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/getRelationshipRevision-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MetadataRegistrationMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "appendRelationshipRevision",
+        "summary": "Append or explicitly correct one relationship revision",
+        "description": "Mounted only on an authenticated listener. Requires exact current metadata.manage for the selected active tenant, independent of metadata.read. Browser mode requires one exact configured Origin and X-FleetIQ-CSRF: 1 and never falls back to bearer. Authentication and authorization precede body/reference errors. JSON is limited to 32 KiB with closed nested objects; unknown and duplicate fields are rejected. Actor, tenant, revision identity and recorded time cannot be supplied in JSON. The path selects the exact positive u64 revision as decimal text. Revision 1 creates the lineage; the exact successor explicitly corrects it, without editing old facts. Effective start/end are physical time, separate from trusted host recorded time. Return 201 appended, 200 already_appended for identical complete content with original actor/time, 409 for different content, gaps, exhausted sequence, clock regression or unattributed legacy facts, and 404 for missing same-tenant references. Recorded time cannot decrease. Retry identical identity/revision/content after a lost or ambiguous response, even after later corrections; a commit error is never success. All outcomes are no-store and redact storage details. No deletion, graph-wide cycle/cardinality enforcement or automatic semantic reprocessing is introduced. Directed source and target assets and exact relationship type must exist in the same tenant.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/revision-relationship-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-record-revision"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppendRelationshipRevisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MetadataRevisionRepeated"
+          },
+          "201": {
+            "$ref": "#/components/responses/MetadataRevisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionWriteForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/MetadataRevisionNotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MetadataRegistrationMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/MetadataRevisionConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/signal-bindings/{binding_id}/revisions/{revision}": {
+      "get": {
+        "operationId": "getSignalBindingRevision",
+        "summary": "Read one exact binding revision",
+        "description": "Requires exact current metadata.read under the listener-selected identity. Returns the existing immutable representation for precisely the requested positive u64 revision, including its original recorded time and half-open effective interval. A missing exact revision returns 404, never another revision. Leading zeros in the decimal path are accepted. All outcomes are no-store. This read does not append, resolve signals or select a bitemporal snapshot.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/revision-binding-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-record-revision"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/getSignalBindingRevision-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MetadataRegistrationMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "appendSignalBindingRevision",
+        "summary": "Append or explicitly correct one binding revision",
+        "description": "Mounted only on an authenticated listener. Requires exact current metadata.manage for the selected active tenant, independent of metadata.read. Browser mode requires one exact configured Origin and X-FleetIQ-CSRF: 1 and never falls back to bearer. Authentication and authorization precede body/reference errors. JSON is limited to 32 KiB with closed nested objects; unknown and duplicate fields are rejected. Actor, tenant, revision identity and recorded time cannot be supplied in JSON. The path selects the exact positive u64 revision as decimal text. Revision 1 creates the lineage; the exact successor explicitly corrects it, without editing old facts. Effective start/end are physical time, separate from trusted host recorded time. Return 201 appended, 200 already_appended for identical complete content with original actor/time, 409 for different content, gaps, exhausted sequence, clock regression or unattributed legacy facts, and 404 for missing same-tenant references. Recorded time cannot decrease. Retry identical identity/revision/content after a lost or ambiguous response, even after later corrections; a commit error is never success. All outcomes are no-store and redact storage details. No deletion, graph-wide cycle/cardinality enforcement or automatic semantic reprocessing is introduced. Source device endpoint must exist in this tenant; target property must be an exact member of the target asset type. Source signal names remain protocol-neutral, without asserting a deployed decoder emits them.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/revision-binding-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-record-revision"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppendSignalBindingRevisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MetadataRevisionRepeated"
+          },
+          "201": {
+            "$ref": "#/components/responses/MetadataRevisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionWriteForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/MetadataRevisionNotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MetadataRegistrationMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/MetadataRevisionConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/device": {
       "get": {
         "operationId": "getCommunicationDevice",
@@ -2134,6 +2370,209 @@
   },
   "components": {
     "schemas": {
+      "RevisionRelationshipType": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        }
+      },
+      "RevisionProperty": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        }
+      },
+      "RevisionSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "device_asset_id",
+          "endpoint_id",
+          "signal_id"
+        ],
+        "properties": {
+          "device_asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "endpoint_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "signal_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          }
+        }
+      },
+      "RevisionTarget": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "asset_id",
+          "property"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "property": {
+            "$ref": "#/components/schemas/RevisionProperty"
+          }
+        }
+      },
+      "RevisionEffectiveInterval": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start_ms"
+        ],
+        "properties": {
+          "start_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "end_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        },
+        "description": "Half-open physical interval [start_ms,end_ms); null/omitted end is unbounded. A finite end must be strictly after start; enforced by domain construction."
+      },
+      "AppendRelationshipRevisionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "relationship_type",
+          "source_asset_id",
+          "target_asset_id",
+          "effective_interval"
+        ],
+        "properties": {
+          "relationship_type": {
+            "$ref": "#/components/schemas/RevisionRelationshipType"
+          },
+          "source_asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "target_asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "effective_interval": {
+            "$ref": "#/components/schemas/RevisionEffectiveInterval"
+          }
+        }
+      },
+      "AppendSignalBindingRevisionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "target",
+          "effective_interval"
+        ],
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/RevisionSource"
+          },
+          "target": {
+            "$ref": "#/components/schemas/RevisionTarget"
+          },
+          "effective_interval": {
+            "$ref": "#/components/schemas/RevisionEffectiveInterval"
+          }
+        }
+      },
+      "MetadataRevisionResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "id",
+          "revision",
+          "recorded_by",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "appended",
+              "already_appended"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "revision": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 20,
+            "description": "Canonical positive u64 decimal text."
+          },
+          "recorded_by": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\s]+$"
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "RegistrationAssetType": {
         "type": "object",
         "additionalProperties": false,
@@ -4169,6 +4608,40 @@
       }
     },
     "parameters": {
+      "revision-relationship-id": {
+        "name": "relationship_id",
+        "in": "path",
+        "required": true,
+        "description": "Stable relationship identity within the selected tenant.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\s]+$"
+        }
+      },
+      "revision-binding-id": {
+        "name": "binding_id",
+        "in": "path",
+        "required": true,
+        "description": "Stable signal-binding identity within the selected tenant.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\s]+$"
+        }
+      },
+      "exact-record-revision": {
+        "name": "revision",
+        "in": "path",
+        "required": true,
+        "description": "Positive ASCII decimal integer fitting u64. Leading zeros are accepted; responses normalize decimal text. Appends require revision 1 or the exact successor of the committed head, except identical attributed retries.",
+        "schema": {
+          "type": "string",
+          "pattern": "^0*[1-9][0-9]*$"
+        }
+      },
       "definition-after-id": {
         "name": "after_id",
         "in": "query",
@@ -4628,6 +5101,158 @@
       }
     },
     "responses": {
+      "MetadataRevisionCreated": {
+        "description": "Exact fact, stable revision head and original actor attribution committed atomically.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/MetadataRevisionResult"
+            },
+            "example": {
+              "outcome": "appended",
+              "id": "relationship-a",
+              "revision": "1",
+              "recorded_by": "operator-a",
+              "recorded_at_ms": 1792108800000
+            }
+          }
+        }
+      },
+      "MetadataRevisionRepeated": {
+        "description": "Identical exact revision already exists; returns original actor and recorded time, including after later corrections.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/MetadataRevisionResult"
+            },
+            "example": {
+              "outcome": "already_appended",
+              "id": "relationship-a",
+              "revision": "1",
+              "recorded_by": "operator-a",
+              "recorded_at_ms": 1792108800000
+            }
+          }
+        }
+      },
+      "MetadataRevisionConflict": {
+        "description": "Different exact content, unattributed legacy revision, sequence gap/exhaustion or recorded-time regression. Never overwrites history.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:conflict",
+              "title": "Revision conflicts with recorded history",
+              "status": 409
+            }
+          }
+        }
+      },
+      "MetadataRevisionNotFound": {
+        "description": "A required same-tenant asset, endpoint or exact type/property reference is absent or incompatible with the target asset type.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:not-found",
+              "title": "Referenced resource not found",
+              "status": 404
+            }
+          }
+        }
+      },
+      "getRelationshipRevision-200": {
+        "description": "Existing exact immutable revision representation; this is not an implicit latest or a current snapshot.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "example": {
+              "id": "relationship-a",
+              "tenant_id": "tenant-a",
+              "revision": "1",
+              "recorded_at_ms": 1792108800000,
+              "relationship_type": {
+                "id": "physical.contains",
+                "version": 1
+              },
+              "source_asset_id": "asset-a",
+              "target_asset_id": "asset-b",
+              "effective_interval": {
+                "start_ms": 0,
+                "end_ms": null
+              }
+            }
+          }
+        }
+      },
+      "getSignalBindingRevision-200": {
+        "description": "Existing exact immutable revision representation; this is not an implicit latest or a current snapshot.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SignalBinding"
+            },
+            "example": {
+              "id": "binding-a",
+              "tenant_id": "tenant-a",
+              "revision": "1",
+              "recorded_at_ms": 1792108800000,
+              "source": {
+                "device_asset_id": "asset-a",
+                "endpoint_id": "can-primary",
+                "signal_id": "bus.voltage"
+              },
+              "target": {
+                "asset_id": "asset-b",
+                "property": {
+                  "id": "electrical.voltage",
+                  "version": 1
+                }
+              },
+              "effective_interval": {
+                "start_ms": 0,
+                "end_ms": null
+              }
+            }
+          }
+        }
+      },
       "MetadataRegistrationCreated": {
         "description": "Complete aggregate, batched children and original actor/time evidence committed atomically.",
         "headers": {

@@ -1,0 +1,15 @@
+type: "object"
+additionalProperties: false
+required:
+  -
+    "asset_id"
+  -
+    "property"
+properties:
+  asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+    pattern: "^[^\\s]+$"
+  property:
+    "$ref": "./RevisionProperty.yaml"

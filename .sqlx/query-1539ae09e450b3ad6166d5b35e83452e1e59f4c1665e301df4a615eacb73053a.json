@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT actor_id FROM metadata.relationship_revision_records WHERE tenant_id=$1 AND relationship_id=$2 AND revision=$3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.relationship_revision_records",
+            "name": "actor_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1539ae09e450b3ad6166d5b35e83452e1e59f4c1665e301df4a615eacb73053a"
+}

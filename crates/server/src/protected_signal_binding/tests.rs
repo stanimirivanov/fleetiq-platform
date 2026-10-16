@@ -328,7 +328,7 @@ async fn repository_error_is_redacted_and_other_methods_are_rejected() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::METHOD_NOT_ALLOWED);
-    assert_eq!(response.headers()[header::ALLOW], "GET, HEAD");
+    assert_eq!(response.headers()[header::ALLOW], "GET,HEAD");
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
 }
 

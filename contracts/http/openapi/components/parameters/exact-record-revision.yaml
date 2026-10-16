@@ -1,0 +1,7 @@
+name: "revision"
+in: "path"
+required: true
+description: "Positive ASCII decimal integer fitting u64. Leading zeros are accepted; responses normalize decimal text. Appends require revision 1 or the exact successor of the committed head, except identical attributed retries."
+schema:
+  type: "string"
+  pattern: "^0*[1-9][0-9]*$"

@@ -1,0 +1,9 @@
+name: "binding_id"
+in: "path"
+required: true
+description: "Stable signal-binding identity within the selected tenant."
+schema:
+  type: "string"
+  minLength: 1
+  maxLength: 128
+  pattern: "^[^\\s]+$"

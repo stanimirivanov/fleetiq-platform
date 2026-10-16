@@ -25,6 +25,7 @@ use sqlx::PgPool;
 use crate::protected_request::{
     BAD_REQUEST, INTERNAL, NOT_FOUND, RequestAuthenticator, authenticate, authorize_metadata_read,
     no_store, parse_record_revision, problem, protected_method_not_allowed,
+    resource_method_not_allowed,
 };
 
 struct RelationshipQueryState<A, P, Q> {
@@ -59,7 +60,7 @@ where
         )
         .route(
             "/api/v1/tenants/{tenant_id}/relationships/{relationship_id}/revisions/{revision}",
-            get(get_revision::<A, P, Q>).fallback(protected_method_not_allowed),
+            get(get_revision::<A, P, Q>).fallback(resource_method_not_allowed),
         )
         .with_state(state)
 }

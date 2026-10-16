@@ -51,3 +51,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [Semantic definition commissioning](semantic-definitions.md) — publish immutable types/properties and discover exact versions.
 
 - [Asset and communication-device registration](metadata-registration.md) — atomic commissioning, original attribution, collisions and safe retries.
+
+- [Relationship and signal-binding revisions](metadata-revisions.md) — explicit corrections, original attribution and safe exact retries.

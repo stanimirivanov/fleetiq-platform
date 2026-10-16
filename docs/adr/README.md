@@ -126,6 +126,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 | [0106](0106-publish-and-discover-immutable-semantic-definitions.md) | Immutable definition publication with content-checked retries and bounded version discovery |
 | [0107](0107-register-assets-and-communication-devices.md) | Atomic asset/device registration with content-checked retries and original actor/time evidence |
 
+| [0108](0108-expose-attributed-metadata-revision-commands.md) | Attributed immutable relationship/binding corrections with exact retry semantics |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

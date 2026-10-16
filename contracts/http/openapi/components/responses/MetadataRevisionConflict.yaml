@@ -1,0 +1,12 @@
+description: "Different exact content, unattributed legacy revision, sequence gap/exhaustion or recorded-time regression. Never overwrites history."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      "$ref": "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:conflict"
+      title: "Revision conflicts with recorded history"
+      status: 409
