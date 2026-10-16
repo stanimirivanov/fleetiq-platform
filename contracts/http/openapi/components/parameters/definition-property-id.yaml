@@ -1,0 +1,6 @@
+name: "property_id"
+in: "path"
+required: true
+description: "Exact property identity whose immutable versions are requested."
+schema:
+  $ref: "../schemas/AdministrationIdentifier.yaml"

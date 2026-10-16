@@ -100,6 +100,11 @@ with no platform bypass. Identity owns the current-grants port and first-receipt
 command policy; PostgreSQL retains tenant-scoped serialization and atomic audit.
 See [ADR 0105](../adr/0105-expose-tenant-access-administration-over-http.md).
 
+Semantic definition commissioning composes narrow metadata publication and
+catalogue ports. Strict atomic writes remain unchanged; only exact aggregate
+primary-key collisions enter fresh-statement content comparison. Bounded summaries
+avoid per-definition child reads. See [ADR 0106](../adr/0106-publish-and-discover-immutable-semantic-definitions.md).
+
 ## Browser identity boundary
 
 ```mermaid

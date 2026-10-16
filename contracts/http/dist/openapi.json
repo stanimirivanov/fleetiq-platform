@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.9",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority."
+    "version": "1.0.0-baseline.10",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read."
   },
   "servers": [
     {
@@ -12,6 +12,498 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/asset-types": {
+      "get": {
+        "operationId": "listAssetTypeDefinitions",
+        "summary": "List immutable asset-types versions",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listAssetTypeDefinitions-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionCollectionMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "publishAssetTypeDefinition",
+        "summary": "Publish one immutable asset-type definition",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.manage; no other action implies it. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1. Browser mode never falls back to bearer. JSON is limited to 16 KiB; unknown and duplicate fields are rejected. The immutable identity is tenant/kind/ID/version. Versions are positive uint32, need not be contiguous and never replace older meaning. First publication returns 201; an identical complete aggregate returns 200 already_published, including after an uncertain response. Any different name, value kind, canonical unit or ordered supported-property references under an occupied version returns 409. Asset-type membership is capped at 100 and duplicate property IDs are invalid; exact referenced property versions must exist in this tenant. Omitted canonical_unit means null. Failed publication commits no partial aggregate. Publisher identity and receipt time are not part of content equality; this slice does not introduce actor/time audit or backfill provenance for earlier strict inserts.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishAssetTypeDefinitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DefinitionPublicationRepeated"
+          },
+          "201": {
+            "$ref": "#/components/responses/DefinitionPublicationCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionWriteForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/DefinitionPublicationNotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionCollectionMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/DefinitionPublicationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions": {
+      "get": {
+        "operationId": "listAssetTypeDefinitionVersions",
+        "summary": "List one asset-type identity's immutable versions",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied. The path fixes the exact ID; a supplied after_id must match it. Missing IDs return empty pages.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-type-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listAssetTypeDefinitions-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionVersionsMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/properties": {
+      "get": {
+        "operationId": "listPropertyDefinitions",
+        "summary": "List immutable properties versions",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listPropertyDefinitions-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionCollectionMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "publishPropertyDefinition",
+        "summary": "Publish one immutable property definition",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.manage; no other action implies it. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1. Browser mode never falls back to bearer. JSON is limited to 16 KiB; unknown and duplicate fields are rejected. The immutable identity is tenant/kind/ID/version. Versions are positive uint32, need not be contiguous and never replace older meaning. First publication returns 201; an identical complete aggregate returns 200 already_published, including after an uncertain response. Any different name, value kind, canonical unit or ordered supported-property references under an occupied version returns 409. Asset-type membership is capped at 100 and duplicate property IDs are invalid; exact referenced property versions must exist in this tenant. Omitted canonical_unit means null. Failed publication commits no partial aggregate. Publisher identity and receipt time are not part of content equality; this slice does not introduce actor/time audit or backfill provenance for earlier strict inserts.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishPropertyDefinitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DefinitionPublicationRepeated"
+          },
+          "201": {
+            "$ref": "#/components/responses/DefinitionPublicationCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionWriteForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/DefinitionPublicationNotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionCollectionMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/DefinitionPublicationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions": {
+      "get": {
+        "operationId": "listPropertyDefinitionVersions",
+        "summary": "List one property identity's immutable versions",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied. The path fixes the exact ID; a supplied after_id must match it. Missing IDs return empty pages.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-property-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listPropertyDefinitions-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionVersionsMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/relationship-types": {
+      "get": {
+        "operationId": "listRelationshipTypeDefinitions",
+        "summary": "List immutable relationship-types versions",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listRelationshipTypeDefinitions-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionCollectionMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "publishRelationshipTypeDefinition",
+        "summary": "Publish one immutable relationship-type definition",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.manage; no other action implies it. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1. Browser mode never falls back to bearer. JSON is limited to 16 KiB; unknown and duplicate fields are rejected. The immutable identity is tenant/kind/ID/version. Versions are positive uint32, need not be contiguous and never replace older meaning. First publication returns 201; an identical complete aggregate returns 200 already_published, including after an uncertain response. Any different name, value kind, canonical unit or ordered supported-property references under an occupied version returns 409. Asset-type membership is capped at 100 and duplicate property IDs are invalid; exact referenced property versions must exist in this tenant. Omitted canonical_unit means null. Failed publication commits no partial aggregate. Publisher identity and receipt time are not part of content equality; this slice does not introduce actor/time audit or backfill provenance for earlier strict inserts.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishRelationshipTypeDefinitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DefinitionPublicationRepeated"
+          },
+          "201": {
+            "$ref": "#/components/responses/DefinitionPublicationCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionWriteForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/DefinitionPublicationNotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionCollectionMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/DefinitionPublicationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions": {
+      "get": {
+        "operationId": "listRelationshipTypeDefinitionVersions",
+        "summary": "List one relationship-type identity's immutable versions",
+        "description": "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied. The path fixes the exact ID; a supplied after_id must match it. Missing IDs return empty pages.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-type-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-after-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/listRelationshipTypeDefinitions-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionReadForbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/DefinitionVersionsMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/actors/{actor_id}/grants": {
       "get": {
         "operationId": "listActorTenantGrants",
@@ -1467,6 +1959,212 @@
   },
   "components": {
     "schemas": {
+      "SemanticDefinitionName": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200,
+        "pattern": "^(?!\\s)(?![\\s\\S]*\\s$)[^\\u0000-\\u001F\\u007F-\\u009F]+$"
+      },
+      "SemanticDefinitionPosition": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        }
+      },
+      "SemanticDefinitionSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "name": {
+            "$ref": "#/components/schemas/SemanticDefinitionName"
+          }
+        }
+      },
+      "DefinitionCataloguePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "definitions",
+          "next_after"
+        ],
+        "properties": {
+          "definitions": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/SemanticDefinitionSummary"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemanticDefinitionPosition"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "DefinitionPublicationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "published",
+              "already_published"
+            ]
+          }
+        }
+      },
+      "PublishAssetTypeDefinitionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "name",
+          "supported_properties"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "name": {
+            "$ref": "#/components/schemas/SemanticDefinitionName"
+          },
+          "supported_properties": {
+            "type": "array",
+            "maxItems": 100,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/SemanticDefinitionPosition"
+            },
+            "description": "Ordered exact property versions. Repeated property IDs are invalid even when their versions differ. All references must exist in the selected tenant."
+          }
+        }
+      },
+      "PublishRelationshipTypeDefinitionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "name": {
+            "$ref": "#/components/schemas/SemanticDefinitionName"
+          }
+        }
+      },
+      "PublishPropertyDefinitionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "name",
+          "value_kind"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "name": {
+            "$ref": "#/components/schemas/SemanticDefinitionName"
+          },
+          "value_kind": {
+            "type": "string",
+            "enum": [
+              "boolean",
+              "integer",
+              "decimal",
+              "text"
+            ]
+          },
+          "canonical_unit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted means null. Only integer or decimal properties may specify a canonical unit; this performs no unit conversion."
+          }
+        },
+        "if": {
+          "properties": {
+            "value_kind": {
+              "enum": [
+                "boolean",
+                "text"
+              ]
+            }
+          },
+          "required": [
+            "value_kind"
+          ]
+        },
+        "then": {
+          "properties": {
+            "canonical_unit": {
+              "type": "null"
+            }
+          }
+        }
+      },
       "TenantAccessAuditPage": {
         "type": "object",
         "additionalProperties": false,
@@ -3129,6 +3827,44 @@
       }
     },
     "parameters": {
+      "definition-after-id": {
+        "name": "after_id",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive identity from next_after; supply together with after_version. The cursor need not name an existing version.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "definition-after-version": {
+        "name": "after_version",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive numeric version from next_after; supply together with after_id.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
+      "definition-type-id": {
+        "name": "type_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact definition identity whose immutable versions are requested.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "definition-property-id": {
+        "name": "property_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact property identity whose immutable versions are requested.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
       "admin-tenant-after-action": {
         "name": "after_action",
         "in": "query",
@@ -3550,6 +4286,279 @@
       }
     },
     "responses": {
+      "DefinitionPublicationCreated": {
+        "description": "Complete immutable definition committed atomically. No actor/time publication audit is introduced.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DefinitionPublicationResult"
+            },
+            "example": {
+              "outcome": "published"
+            }
+          }
+        }
+      },
+      "DefinitionPublicationRepeated": {
+        "description": "The exact complete immutable content already exists. No additional write or mutation is applied.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DefinitionPublicationResult"
+            },
+            "example": {
+              "outcome": "already_published"
+            }
+          }
+        }
+      },
+      "DefinitionPublicationConflict": {
+        "description": "This tenant/kind/ID/version already names different immutable content. Changing meaning requires a new positive version.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:conflict",
+              "title": "Definition version contains different immutable content",
+              "status": 409
+            }
+          }
+        }
+      },
+      "DefinitionPublicationNotFound": {
+        "description": "An exact referenced property version is missing in the selected tenant; no part of the publication commits.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:not-found",
+              "title": "Referenced resource not found",
+              "status": 404
+            }
+          }
+        }
+      },
+      "DefinitionReadForbidden": {
+        "description": "Missing current metadata.read in the selected active tenant, or the routed tenant cannot be authorized. Other tenant or platform permissions do not substitute.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:forbidden",
+              "title": "Access denied",
+              "status": 403
+            }
+          }
+        }
+      },
+      "DefinitionWriteForbidden": {
+        "description": "Missing current metadata.manage in the selected active tenant, tenant cannot be authorized, or browser Origin/CSRF validation failed. Other actions never substitute.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:forbidden",
+              "title": "Access denied",
+              "status": 403
+            }
+          }
+        }
+      },
+      "DefinitionCollectionMethodNotAllowed": {
+        "description": "Supported methods are GET, HEAD, POST.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "GET, HEAD, POST"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "DefinitionVersionsMethodNotAllowed": {
+        "description": "Supported methods are GET, HEAD.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string",
+              "const": "GET, HEAD"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "listAssetTypeDefinitions-200": {
+        "description": "Immutable asset-types version summaries ordered by (id, numeric version). Missing identities return an empty terminal page. Complete content is obtained through the existing exact GET.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DefinitionCataloguePage"
+            },
+            "example": {
+              "definitions": [
+                {
+                  "id": "equipment",
+                  "version": 1,
+                  "name": "Equipment"
+                },
+                {
+                  "id": "equipment",
+                  "version": 2,
+                  "name": "Equipment"
+                },
+                {
+                  "id": "equipment",
+                  "version": 10,
+                  "name": "Equipment"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "listPropertyDefinitions-200": {
+        "description": "Immutable properties version summaries ordered by (id, numeric version). Missing identities return an empty terminal page. Complete content is obtained through the existing exact GET.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DefinitionCataloguePage"
+            },
+            "example": {
+              "definitions": [
+                {
+                  "id": "temperature",
+                  "version": 1,
+                  "name": "Temperature"
+                },
+                {
+                  "id": "temperature",
+                  "version": 2,
+                  "name": "Temperature"
+                },
+                {
+                  "id": "temperature",
+                  "version": 10,
+                  "name": "Temperature"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "listRelationshipTypeDefinitions-200": {
+        "description": "Immutable relationship-types version summaries ordered by (id, numeric version). Missing identities return an empty terminal page. Complete content is obtained through the existing exact GET.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DefinitionCataloguePage"
+            },
+            "example": {
+              "definitions": [
+                {
+                  "id": "physical.contains",
+                  "version": 1,
+                  "name": "Contains"
+                },
+                {
+                  "id": "physical.contains",
+                  "version": 2,
+                  "name": "Contains"
+                },
+                {
+                  "id": "physical.contains",
+                  "version": 10,
+                  "name": "Contains"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
       "listActorTenantGrants-200": {
         "description": "Current grants in ascending action-name order. Missing actors and actors without grants both return an empty terminal page.",
         "headers": {

@@ -180,3 +180,5 @@ The [parallel Rust verification plan](plans/parallel-rust-verification.md) recor
 bounded Nextest scheduling, complete-suite equivalence and trusted-main build caching.
 
 [Tenant-access HTTP slice](plans/tenant-access-administration-http.md) records the M02 tenant grant delivery and verification.
+
+The [approved M02–M04 sequence](plans/m02-m04-delivery.md) records the cross-repository PR numbering. The [definition publication slice](plans/semantic-definition-publication.md) implements original PR 8.

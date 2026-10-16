@@ -2,6 +2,7 @@
 
 mod administration;
 mod credential;
+mod definitions;
 mod discovery;
 mod external_identities;
 mod login;

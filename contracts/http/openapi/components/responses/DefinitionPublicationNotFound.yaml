@@ -1,0 +1,12 @@
+description: "An exact referenced property version is missing in the selected tenant; no part of the publication commits."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:not-found"
+      title: "Referenced resource not found"
+      status: 404

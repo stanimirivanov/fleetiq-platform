@@ -1,0 +1,40 @@
+type: "object"
+additionalProperties: false
+required:
+  - "id"
+  - "version"
+  - "name"
+  - "value_kind"
+properties:
+  id:
+    $ref: "./AdministrationIdentifier.yaml"
+  version:
+    type: "integer"
+    minimum: 1
+    maximum: 4294967295
+  name:
+    $ref: "./SemanticDefinitionName.yaml"
+  value_kind:
+    type: "string"
+    enum:
+      - "boolean"
+      - "integer"
+      - "decimal"
+      - "text"
+  canonical_unit:
+    anyOf:
+      - $ref: "./AdministrationIdentifier.yaml"
+      - type: "null"
+    description: "Omitted means null. Only integer or decimal properties may specify a canonical unit; this performs no unit conversion."
+if:
+  properties:
+    value_kind:
+      enum:
+        - "boolean"
+        - "text"
+  required:
+    - "value_kind"
+then:
+  properties:
+    canonical_unit:
+      type: "null"

@@ -1,0 +1,23 @@
+type: "object"
+additionalProperties: false
+required:
+  - "id"
+  - "version"
+  - "name"
+  - "supported_properties"
+properties:
+  id:
+    $ref: "./AdministrationIdentifier.yaml"
+  version:
+    type: "integer"
+    minimum: 1
+    maximum: 4294967295
+  name:
+    $ref: "./SemanticDefinitionName.yaml"
+  supported_properties:
+    type: "array"
+    maxItems: 100
+    uniqueItems: true
+    items:
+      $ref: "./SemanticDefinitionPosition.yaml"
+    description: "Ordered exact property versions. Repeated property IDs are invalid even when their versions differ. All references must exist in the selected tenant."

@@ -1,0 +1,12 @@
+description: "Missing current metadata.manage in the selected active tenant, tenant cannot be authorized, or browser Origin/CSRF validation failed. Other actions never substitute."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:forbidden"
+      title: "Access denied"
+      status: 403

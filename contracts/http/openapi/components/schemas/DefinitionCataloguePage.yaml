@@ -1,0 +1,15 @@
+type: "object"
+additionalProperties: false
+required:
+  - "definitions"
+  - "next_after"
+properties:
+  definitions:
+    type: "array"
+    maxItems: 100
+    items:
+      $ref: "./SemanticDefinitionSummary.yaml"
+  next_after:
+    anyOf:
+      - $ref: "./SemanticDefinitionPosition.yaml"
+      - type: "null"

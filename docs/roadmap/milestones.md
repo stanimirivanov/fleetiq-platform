@@ -81,6 +81,8 @@ Configures one real customer asset model without hard-coding its industry,
 operates an agreed pilot workflow, closes material findings, publishes support
 and upgrade policy, and releases the first supported product version.
 
+The [approved M02–M04 PR sequence](../development/plans/m02-m04-delivery.md) records task dependencies and delivery order.
+
 ## Planning rules
 
 - GitHub owns live issue state, labels, assignees, and milestone assignment.

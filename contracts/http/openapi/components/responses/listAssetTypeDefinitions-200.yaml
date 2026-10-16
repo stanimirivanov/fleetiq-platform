@@ -1,0 +1,20 @@
+description: "Immutable asset-types version summaries ordered by (id, numeric version). Missing identities return an empty terminal page. Complete content is obtained through the existing exact GET."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/DefinitionCataloguePage.yaml"
+    example:
+      definitions:
+        - id: "equipment"
+          version: 1
+          name: "Equipment"
+        - id: "equipment"
+          version: 2
+          name: "Equipment"
+        - id: "equipment"
+          version: 10
+          name: "Equipment"
+      next_after: null

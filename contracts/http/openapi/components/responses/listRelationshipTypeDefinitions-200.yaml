@@ -1,0 +1,20 @@
+description: "Immutable relationship-types version summaries ordered by (id, numeric version). Missing identities return an empty terminal page. Complete content is obtained through the existing exact GET."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/DefinitionCataloguePage.yaml"
+    example:
+      definitions:
+        - id: "physical.contains"
+          version: 1
+          name: "Contains"
+        - id: "physical.contains"
+          version: 2
+          name: "Contains"
+        - id: "physical.contains"
+          version: 10
+          name: "Contains"
+      next_after: null

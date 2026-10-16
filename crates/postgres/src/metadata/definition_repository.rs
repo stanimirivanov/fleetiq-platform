@@ -11,8 +11,10 @@ use sqlx::PgPool;
 use crate::error::PostgresRepositoryError;
 
 mod asset_type;
+mod catalogue;
 mod common;
 mod property;
+mod publication;
 mod relationship_type;
 
 /// PostgreSQL implementation of the semantic-definition repository port.
