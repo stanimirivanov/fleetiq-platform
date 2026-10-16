@@ -1,0 +1,12 @@
+description: "The exact asset-type version or underlying device asset is absent in this tenant. Foreign-tenant data never satisfies the reference."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      "$ref": "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:not-found"
+      title: "Referenced resource not found"
+      status: 404

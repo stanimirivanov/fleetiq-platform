@@ -1,0 +1,16 @@
+description: "Read existing communication capability without modifying endpoint order."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      "$ref": "../schemas/CommunicationDevice.yaml"
+    example:
+      tenant_id: "tenant-a"
+      asset_id: "asset-a"
+      endpoints:
+        -
+          id: "can-primary"
+          kind: "bus.can"
+          name: "Primary CAN interface"

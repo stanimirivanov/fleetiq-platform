@@ -1,0 +1,11 @@
+type: "object"
+additionalProperties: false
+required:
+  - "endpoints"
+properties:
+  endpoints:
+    type: "array"
+    maxItems: 100
+    items:
+      "$ref": "./DeviceEndpoint.yaml"
+description: "Attach capability to the existing asset in the route. Endpoint IDs are unique within the declaration; declaration order participates in retry equality."

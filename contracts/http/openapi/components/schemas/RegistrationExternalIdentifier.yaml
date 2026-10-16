@@ -1,0 +1,17 @@
+type: "object"
+additionalProperties: false
+required:
+  - "kind"
+  - "value"
+properties:
+  kind:
+    "$ref": "./AdministrationIdentifier.yaml"
+  authority:
+    anyOf:
+      -
+        "$ref": "./AdministrationIdentifier.yaml"
+      -
+        type: "null"
+    description: "Omitted authority means null; no issuer namespace is assumed universal."
+  value:
+    "$ref": "./AdministrationIdentifier.yaml"

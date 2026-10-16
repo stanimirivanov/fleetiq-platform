@@ -1,15 +1,18 @@
 # M02, M03 and M04 delivery sequence
 
-Status: Approved sequence; PRs 1–7 delivered; PR 8 implemented and locally verified, awaiting merge.
+Status: Approved sequence; PRs 1–8 merged; PR 9 registration implemented and locally verified, awaiting review.
 
 ## TL;DR
 
 This records the previously agreed cross-repository sequence without renumbering.
 PR 7 tenant onboarding/access was deliberately delivered as two reviewable backend
 PRs: #288 and #292. Original plan PR 8, semantic definition publication and
-discovery, is implemented and locally verified; its
+discovery, is merged as #295; its
 [delivery record](semantic-definition-publication.md) contains the evidence.
-After its merge, continue with PR 9: asset and communication-device registration.
+PR 9 is [asset and communication-device registration](metadata-registration.md),
+tracked by issue #298; its delivery record contains verification evidence.
+After it merges, continue with PR 10: relationship and
+signal-binding revision commands.
 Completed guide, discovery and administration slices are not new work. Future
 slices retain the dependencies and milestone boundaries below.
 

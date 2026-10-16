@@ -27,8 +27,8 @@ impl PostgresDeviceRepository {
     /// capability to the existing asset. One `UNNEST ... WITH ORDINALITY` then
     /// inserts all endpoints while retaining their declaration order. Empty
     /// arrays still register the device and produce no endpoint rows.
-    async fn insert_device(
-        &self,
+    pub(super) async fn insert_on(
+        executor: impl sqlx::PgExecutor<'_>,
         device: &CommunicationDevice,
     ) -> Result<(), PostgresRepositoryError> {
         let endpoints = device.endpoints();
@@ -73,7 +73,7 @@ impl PostgresDeviceRepository {
             &endpoint_kind_ids as &[&str],
             &endpoint_names as &[&str]
         )
-        .execute(&self.pool)
+        .execute(executor)
         .await
         .map_err(classify_database_error)?;
 
@@ -134,7 +134,7 @@ impl DeviceRepository for PostgresDeviceRepository {
         &'a self,
         device: &'a CommunicationDevice,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send + 'a {
-        self.insert_device(device)
+        Self::insert_on(&self.pool, device)
     }
 
     fn find_by_asset<'a>(

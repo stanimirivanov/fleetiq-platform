@@ -124,6 +124,7 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0105](0105-expose-tenant-access-administration-over-http.md) | Tenant-scoped grant HTTP commands, bounded current grants and immutable audit |
 | [0106](0106-publish-and-discover-immutable-semantic-definitions.md) | Immutable definition publication with content-checked retries and bounded version discovery |
+| [0107](0107-register-assets-and-communication-devices.md) | Atomic asset/device registration with content-checked retries and original actor/time evidence |
 
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before

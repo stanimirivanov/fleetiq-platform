@@ -251,7 +251,7 @@ async fn device_path_rejects_other_methods() {
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::METHOD_NOT_ALLOWED);
-    assert_eq!(response.headers()[header::ALLOW], "GET, HEAD");
+    assert_eq!(response.headers()[header::ALLOW], "GET,HEAD");
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
 }
 

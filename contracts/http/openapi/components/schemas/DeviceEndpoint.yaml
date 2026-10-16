@@ -1,0 +1,14 @@
+type: "object"
+additionalProperties: false
+required:
+  - "id"
+  - "kind"
+  - "name"
+properties:
+  id:
+    "$ref": "./AdministrationIdentifier.yaml"
+  kind:
+    "$ref": "./AdministrationIdentifier.yaml"
+  name:
+    "$ref": "./SemanticDefinitionName.yaml"
+description: "Stable source boundary under a communication device; kind is extensible and no protocol or semantic binding is implied."

@@ -26,14 +26,19 @@ impl PostgresAssetRepository {
     /// feeds its identity into one set-based insert for all external
     /// identifiers. Parallel arrays are expanded with `UNNEST`, eliminating a
     /// database round trip per identifier. Empty arrays still insert the asset
-    /// and naturally produce no identifier rows.
-    async fn insert_asset(&self, asset: &Asset) -> Result<(), PostgresRepositoryError> {
+    /// and naturally produce no identifier rows. Canonical identifier order
+    /// also gives concurrent multi-identifier claims the same unique-lock order.
+    pub(super) async fn insert_on(
+        executor: impl sqlx::PgExecutor<'_>,
+        asset: &Asset,
+    ) -> Result<(), PostgresRepositoryError> {
         let tenant_id = asset.tenant_id().as_str();
         let asset_id = asset.id().as_str();
         let type_id = asset.asset_type().id().as_str();
         let type_version = i64::from(asset.asset_type().version().get());
         let name = asset.name().as_str();
-        let identifiers = asset.external_identifiers();
+        let mut identifiers: Vec<_> = asset.external_identifiers().iter().collect();
+        identifiers.sort_unstable();
         let kinds: Vec<_> = identifiers
             .iter()
             .map(|identifier| identifier.kind().as_str())
@@ -76,7 +81,7 @@ impl PostgresAssetRepository {
             &authorities as &[Option<&str>],
             &values as &[&str]
         )
-        .execute(&self.pool)
+        .execute(executor)
         .await
         .map_err(classify_database_error)?;
 
@@ -183,7 +188,7 @@ impl AssetRepository for PostgresAssetRepository {
         &'a self,
         asset: &'a Asset,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send + 'a {
-        self.insert_asset(asset)
+        Self::insert_on(&self.pool, asset)
     }
 
     fn find_by_id<'a>(

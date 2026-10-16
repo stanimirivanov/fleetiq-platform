@@ -1,0 +1,12 @@
+description: "Complete aggregate, batched children and original actor/time evidence committed atomically."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      "$ref": "../schemas/MetadataRegistrationResult.yaml"
+    example:
+      outcome: "registered"
+      registered_by: "operator-a"
+      recorded_at_ms: 1792108800000

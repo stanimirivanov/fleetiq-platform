@@ -67,6 +67,7 @@
 - Immutable semantic definitions now have protected publication and bounded
   collection/version catalogues; exact metadata.manage and metadata.read remain
   separate. See [commissioning](../operations/semantic-definitions.md).
+- Asset and communication-device registration now expose create-only HTTP commands with exact metadata.manage, atomic immutable actor/time evidence and content-checked retries; see [registration](../operations/metadata-registration.md).
 - Further business APIs, identity-provider qualification, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
 

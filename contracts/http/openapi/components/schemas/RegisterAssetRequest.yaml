@@ -1,0 +1,21 @@
+type: "object"
+additionalProperties: false
+required:
+  - "id"
+  - "name"
+  - "asset_type"
+  - "external_identifiers"
+properties:
+  id:
+    "$ref": "./AdministrationIdentifier.yaml"
+  name:
+    "$ref": "./SemanticDefinitionName.yaml"
+  asset_type:
+    "$ref": "./RegistrationAssetType.yaml"
+  external_identifiers:
+    type: "array"
+    maxItems: 100
+    uniqueItems: true
+    items:
+      "$ref": "./RegistrationExternalIdentifier.yaml"
+description: "Create-only content. Identifier order is irrelevant; duplicate kind/authority/value is invalid, including omitted versus null authority."

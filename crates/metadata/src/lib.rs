@@ -21,6 +21,7 @@ mod definition_repository;
 mod definition_service;
 mod device_repository;
 mod device_service;
+mod registration;
 mod relationship_repository;
 mod relationship_service;
 mod repository;
@@ -60,4 +61,9 @@ pub use definition_publication::{
 };
 pub use semantic_definition::{
     DefinitionIdentity, DefinitionKind, DefinitionPosition, SemanticDefinition,
+};
+
+pub use registration::{
+    MetadataRegistration, RegistrationError, RegistrationOutcome, RegistrationReceipt,
+    RegistrationRepository, RegistrationService,
 };

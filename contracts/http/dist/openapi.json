@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.10",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read."
+    "version": "1.0.0-baseline.11",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence."
   },
   "servers": [
     {
@@ -12,6 +12,118 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/device": {
+      "get": {
+        "operationId": "getCommunicationDevice",
+        "summary": "Read one asset’s communication capability",
+        "description": "Requires exact current metadata.read for the selected tenant through the existing listener-selected identity boundary. Returns the existing ordered endpoint representation. No registration or history mutation is performed. Returns 404 if the selected asset has no communication capability. Every outcome is no-store.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-asset-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/getCommunicationDevice-200"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MetadataRegistrationMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerCommunicationDevice",
+        "summary": "Attach communication capability and ordered endpoints",
+        "description": "Only mounted on an authenticated listener. Requires exact current metadata.manage for the selected active tenant; no other action implies it. Authenticate and authorize before reporting body/resource errors. Invalid, missing, suspended or inaccessible tenant returns 403. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1; browser mode never falls back to bearer. JSON is limited to 32 KiB with closed nested shapes; unknown and duplicate fields are rejected. Return 201 registered for first creation, 200 already_registered for equal complete content and original registration evidence. Retry the same internal identity and complete content after a lost or ambiguous response; a storage/commit error is never success. Different content or an external-identity collision returns 409 without overwrite. Actor/time are trusted host context, never JSON. Different authorized actors may retry; attribution stays with the first. Existing unattributed strict inserts return 409; no historical provenance is invented. All outcomes are no-store and redact database details. The route asset must already exist in this tenant. Up to 100 endpoints, including an empty declaration. Duplicate endpoint IDs are invalid; complete endpoint ID, kind, name and declaration order participate in retry equality. No protocol activation or semantic binding is performed.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterCommunicationDeviceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MetadataRegistrationRepeated"
+          },
+          "201": {
+            "$ref": "#/components/responses/MetadataRegistrationCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionWriteForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/MetadataRegistrationNotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MetadataRegistrationMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/MetadataRegistrationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/asset-types": {
       "get": {
         "operationId": "listAssetTypeDefinitions",
@@ -1487,6 +1599,69 @@
             "$ref": "#/components/responses/InternalError"
           }
         }
+      },
+      "post": {
+        "operationId": "registerAsset",
+        "summary": "Register an asset and typed external identifiers",
+        "description": "Only mounted on an authenticated listener. Requires exact current metadata.manage for the selected active tenant; no other action implies it. Authenticate and authorize before reporting body/resource errors. Invalid, missing, suspended or inaccessible tenant returns 403. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1; browser mode never falls back to bearer. JSON is limited to 32 KiB with closed nested shapes; unknown and duplicate fields are rejected. Return 201 registered for first creation, 200 already_registered for equal complete content and original registration evidence. Retry the same internal identity and complete content after a lost or ambiguous response; a storage/commit error is never success. Different content or an external-identity collision returns 409 without overwrite. Actor/time are trusted host context, never JSON. Different authorized actors may retry; attribution stays with the first. Existing unattributed strict inserts return 409; no historical provenance is invented. All outcomes are no-store and redact database details. The exact asset-type version must exist in this tenant. Up to 100 external identifiers; omitted authority means null. Kind/authority/value defines each external namespace; identifier declaration order is irrelevant. Duplicate identifiers are invalid. IMEI/serial values never replace internal asset identity.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterAssetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MetadataRegistrationRepeated"
+          },
+          "201": {
+            "$ref": "#/components/responses/MetadataRegistrationCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/DefinitionWriteForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/MetadataRegistrationNotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MetadataRegistrationMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/MetadataRegistrationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
       }
     },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}": {
@@ -1959,6 +2134,173 @@
   },
   "components": {
     "schemas": {
+      "RegistrationAssetType": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        },
+        "description": "Exact immutable asset-type version in the selected tenant."
+      },
+      "RegistrationExternalIdentifier": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "authority": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omitted authority means null; no issuer namespace is assumed universal."
+          },
+          "value": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          }
+        }
+      },
+      "RegisterAssetRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "asset_type",
+          "external_identifiers"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "name": {
+            "$ref": "#/components/schemas/SemanticDefinitionName"
+          },
+          "asset_type": {
+            "$ref": "#/components/schemas/RegistrationAssetType"
+          },
+          "external_identifiers": {
+            "type": "array",
+            "maxItems": 100,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/components/schemas/RegistrationExternalIdentifier"
+            }
+          }
+        },
+        "description": "Create-only content. Identifier order is irrelevant; duplicate kind/authority/value is invalid, including omitted versus null authority."
+      },
+      "DeviceEndpoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "name": {
+            "$ref": "#/components/schemas/SemanticDefinitionName"
+          }
+        },
+        "description": "Stable source boundary under a communication device; kind is extensible and no protocol or semantic binding is implied."
+      },
+      "RegisterCommunicationDeviceRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "endpoints"
+        ],
+        "properties": {
+          "endpoints": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/DeviceEndpoint"
+            }
+          }
+        },
+        "description": "Attach capability to the existing asset in the route. Endpoint IDs are unique within the declaration; declaration order participates in retry equality."
+      },
+      "CommunicationDevice": {
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "asset_id",
+          "endpoints"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceEndpoint"
+            }
+          }
+        },
+        "description": "Existing device GET representation; endpoints retain declaration order."
+      },
+      "MetadataRegistrationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outcome",
+          "registered_by",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "registered",
+              "already_registered"
+            ]
+          },
+          "registered_by": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "Immutable first-registration evidence, including on an exact retry by a different currently authorized actor. Receipt time is signed Unix milliseconds sampled by the host."
+      },
       "SemanticDefinitionName": {
         "type": "string",
         "minLength": 1,
@@ -4286,6 +4628,138 @@
       }
     },
     "responses": {
+      "MetadataRegistrationCreated": {
+        "description": "Complete aggregate, batched children and original actor/time evidence committed atomically.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/MetadataRegistrationResult"
+            },
+            "example": {
+              "outcome": "registered",
+              "registered_by": "operator-a",
+              "recorded_at_ms": 1792108800000
+            }
+          }
+        }
+      },
+      "MetadataRegistrationRepeated": {
+        "description": "Same complete content already exists with evidence; original actor/time is retained.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/MetadataRegistrationResult"
+            },
+            "example": {
+              "outcome": "already_registered",
+              "registered_by": "operator-a",
+              "recorded_at_ms": 1792108800000
+            }
+          }
+        }
+      },
+      "MetadataRegistrationConflict": {
+        "description": "Internal identity has different content, external identity is owned by another asset, or a legacy object lacks trustworthy attributed evidence. No overwrite.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:conflict",
+              "title": "Registration identity is occupied",
+              "status": 409
+            }
+          }
+        }
+      },
+      "MetadataRegistrationNotFound": {
+        "description": "The exact asset-type version or underlying device asset is absent in this tenant. Foreign-tenant data never satisfies the reference.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:not-found",
+              "title": "Referenced resource not found",
+              "status": 404
+            }
+          }
+        }
+      },
+      "MetadataRegistrationMethodNotAllowed": {
+        "description": "Supported methods are GET, HEAD, POST; Allow order/optional whitespace is immaterial.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated supported methods GET, HEAD, POST."
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
+      "getCommunicationDevice-200": {
+        "description": "Read existing communication capability without modifying endpoint order.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CommunicationDevice"
+            },
+            "example": {
+              "tenant_id": "tenant-a",
+              "asset_id": "asset-a",
+              "endpoints": [
+                {
+                  "id": "can-primary",
+                  "kind": "bus.can",
+                  "name": "Primary CAN interface"
+                }
+              ]
+            }
+          }
+        }
+      },
       "DefinitionPublicationCreated": {
         "description": "Complete immutable definition committed atomically. No actor/time publication audit is introduced.",
         "headers": {

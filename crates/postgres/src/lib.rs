@@ -52,7 +52,8 @@ pub use ingestion::{
 };
 pub use metadata::{
     PostgresAssetRepository, PostgresDefinitionRepository, PostgresDeviceRepository,
-    PostgresRelationshipRepository, PostgresSignalBindingRepository,
+    PostgresRegistrationRepository, PostgresRelationshipRepository,
+    PostgresSignalBindingRepository,
 };
 use sqlx::migrate::Migrator;
 

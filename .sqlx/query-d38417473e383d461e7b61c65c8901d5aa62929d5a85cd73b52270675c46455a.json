@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO metadata.registration_records\n             (tenant_id, asset_id, registration_kind, actor_id, recorded_at_ms)\n             VALUES ($1, $2, $3, $4, $5)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d38417473e383d461e7b61c65c8901d5aa62929d5a85cd73b52270675c46455a"
+}

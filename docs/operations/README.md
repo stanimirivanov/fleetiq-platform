@@ -49,3 +49,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [Tenant-access administration](tenant-access-administration.md) — exact tenant grant/revoke, current grants, audit and delegation limits.
 
 - [Semantic definition commissioning](semantic-definitions.md) — publish immutable types/properties and discover exact versions.
+
+- [Asset and communication-device registration](metadata-registration.md) — atomic commissioning, original attribution, collisions and safe retries.

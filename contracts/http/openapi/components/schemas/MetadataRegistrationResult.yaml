@@ -1,0 +1,18 @@
+type: "object"
+additionalProperties: false
+required:
+  - "outcome"
+  - "registered_by"
+  - "recorded_at_ms"
+properties:
+  outcome:
+    type: "string"
+    enum:
+      - "registered"
+      - "already_registered"
+  registered_by:
+    "$ref": "./AdministrationIdentifier.yaml"
+  recorded_at_ms:
+    type: "integer"
+    format: "int64"
+description: "Immutable first-registration evidence, including on an exact retry by a different currently authorized actor. Receipt time is signed Unix milliseconds sampled by the host."
