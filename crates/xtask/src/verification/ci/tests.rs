@@ -24,6 +24,52 @@ fn checked_in_workflow_matches_authoritative_inventory() {
 }
 
 #[test]
+fn pull_requests_are_the_only_ci_event_and_supply_the_trusted_base() {
+    let expected = generated();
+    let events = expected
+        .split_once("\non:\n")
+        .unwrap()
+        .1
+        .split_once("\npermissions:\n")
+        .unwrap()
+        .0;
+    assert_eq!(events, "  pull_request:\n");
+    assert!(expected.contains("HARNESS_BASE: ${{ github.event.pull_request.base.sha }}"));
+    assert!(!expected.contains("github.event.before"));
+}
+
+#[test]
+fn trigger_and_trusted_base_drift_are_rejected() {
+    let fixture = Fixture::new();
+    let original = generated();
+    let trigger = "on:\n  pull_request:\n";
+    for changed in [
+        original.replacen(trigger, "on:\n  push:\n    branches: [main]\n", 1),
+        original.replacen(
+            trigger,
+            "on:\n  pull_request:\n  push:\n    branches: [main]\n",
+            1,
+        ),
+        original.replacen(trigger, "on:\n  pull_request:\n  workflow_dispatch:\n", 1),
+        original.replacen(
+            trigger,
+            "on:\n  pull_request:\n  schedule:\n    - cron: '0 0 * * *'\n",
+            1,
+        ),
+        original.replacen(trigger, "on:\n  pull_request:\n    branches: [main]\n", 1),
+        original.replace("github.event.pull_request.base.sha", "github.event.before"),
+        original.replace("${{ github.event.pull_request.base.sha }}", "HEAD^"),
+    ] {
+        assert_ne!(changed, original);
+        fs::write(fixture.0.join(super::WORKFLOW), changed).unwrap();
+        assert!(
+            check(&fixture.0).is_err(),
+            "event or trusted-base drift must fail"
+        );
+    }
+}
+
+#[test]
 fn generated_document_and_crlf_are_accepted() {
     let expected = generated();
     assert_eq!(check_document(&expected, &expected), Ok(()));

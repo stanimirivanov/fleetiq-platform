@@ -5,8 +5,6 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -26,9 +24,9 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     env:
-      # The event supplies the trusted published base. Do not infer HEAD^ from
-      # the synthetic PR merge or silently accept a missing/zero push base.
-      HARNESS_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+      # Use the exact PR event base, never HEAD^ from the synthetic merge.
+      # A missing trusted base must fail history verification.
+      HARNESS_BASE: ${{ github.event.pull_request.base.sha }}
 
     steps:
       - name: Check out source
