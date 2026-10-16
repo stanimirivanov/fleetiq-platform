@@ -1,12 +1,24 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.9"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority."
+  version: "1.0.0-baseline.10"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/asset-types":
+    $ref: "./paths/definitions/asset-type-catalogue.yaml"
+  "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions":
+    $ref: "./paths/definitions/asset-type-versions.yaml"
+  "/api/v1/tenants/{tenant_id}/properties":
+    $ref: "./paths/definitions/property-catalogue.yaml"
+  "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions":
+    $ref: "./paths/definitions/property-versions.yaml"
+  "/api/v1/tenants/{tenant_id}/relationship-types":
+    $ref: "./paths/definitions/relationship-type-catalogue.yaml"
+  "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions":
+    $ref: "./paths/definitions/relationship-type-versions.yaml"
   "/api/v1/tenants/{tenant_id}/actors/{actor_id}/grants":
     $ref: "./paths/administration/actor-tenant-grants.yaml"
   "/api/v1/tenants/{tenant_id}/actors/{actor_id}/access-changes":
@@ -67,6 +79,22 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    SemanticDefinitionName:
+      $ref: "./components/schemas/SemanticDefinitionName.yaml"
+    SemanticDefinitionPosition:
+      $ref: "./components/schemas/SemanticDefinitionPosition.yaml"
+    SemanticDefinitionSummary:
+      $ref: "./components/schemas/SemanticDefinitionSummary.yaml"
+    DefinitionCataloguePage:
+      $ref: "./components/schemas/DefinitionCataloguePage.yaml"
+    DefinitionPublicationResult:
+      $ref: "./components/schemas/DefinitionPublicationResult.yaml"
+    PublishAssetTypeDefinitionRequest:
+      $ref: "./components/schemas/PublishAssetTypeDefinitionRequest.yaml"
+    PublishRelationshipTypeDefinitionRequest:
+      $ref: "./components/schemas/PublishRelationshipTypeDefinitionRequest.yaml"
+    PublishPropertyDefinitionRequest:
+      $ref: "./components/schemas/PublishPropertyDefinitionRequest.yaml"
     TenantAccessAuditPage:
       $ref: "./components/schemas/TenantAccessAuditPage.yaml"
     TenantAccessAuditEntry:
@@ -194,6 +222,14 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    definition-after-id:
+      $ref: "./components/parameters/definition-after-id.yaml"
+    definition-after-version:
+      $ref: "./components/parameters/definition-after-version.yaml"
+    definition-type-id:
+      $ref: "./components/parameters/definition-type-id.yaml"
+    definition-property-id:
+      $ref: "./components/parameters/definition-property-id.yaml"
     admin-tenant-after-action:
       $ref: "./components/parameters/admin-tenant-after-action.yaml"
     admin-tenant-after:
@@ -273,6 +309,28 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    DefinitionPublicationCreated:
+      $ref: "./components/responses/DefinitionPublicationCreated.yaml"
+    DefinitionPublicationRepeated:
+      $ref: "./components/responses/DefinitionPublicationRepeated.yaml"
+    DefinitionPublicationConflict:
+      $ref: "./components/responses/DefinitionPublicationConflict.yaml"
+    DefinitionPublicationNotFound:
+      $ref: "./components/responses/DefinitionPublicationNotFound.yaml"
+    DefinitionReadForbidden:
+      $ref: "./components/responses/DefinitionReadForbidden.yaml"
+    DefinitionWriteForbidden:
+      $ref: "./components/responses/DefinitionWriteForbidden.yaml"
+    DefinitionCollectionMethodNotAllowed:
+      $ref: "./components/responses/DefinitionCollectionMethodNotAllowed.yaml"
+    DefinitionVersionsMethodNotAllowed:
+      $ref: "./components/responses/DefinitionVersionsMethodNotAllowed.yaml"
+    listAssetTypeDefinitions-200:
+      $ref: "./components/responses/listAssetTypeDefinitions-200.yaml"
+    listPropertyDefinitions-200:
+      $ref: "./components/responses/listPropertyDefinitions-200.yaml"
+    listRelationshipTypeDefinitions-200:
+      $ref: "./components/responses/listRelationshipTypeDefinitions-200.yaml"
     listActorTenantGrants-200:
       $ref: "./components/responses/listActorTenantGrants-200.yaml"
     listTenantAccessChanges-200:

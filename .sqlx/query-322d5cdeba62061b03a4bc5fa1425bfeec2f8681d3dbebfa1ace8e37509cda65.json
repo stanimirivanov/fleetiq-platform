@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id AS \"id!\", version AS \"version!\", display_name AS \"name!\"\n            FROM (\n                SELECT type_id AS id, version, display_name\n                FROM metadata.asset_type_definitions\n                WHERE tenant_id = $1 AND $2::text = 'asset_type'\n                UNION ALL\n                SELECT property_id AS id, version, display_name\n                FROM metadata.property_definitions\n                WHERE tenant_id = $1 AND $2::text = 'property'\n                UNION ALL\n                SELECT relationship_type_id AS id, version, display_name\n                FROM metadata.relationship_type_definitions\n                WHERE tenant_id = $1 AND $2::text = 'relationship_type'\n            ) AS definitions\n            WHERE ($3::text IS NULL OR id = $3)\n              AND ($4::text IS NULL OR (id, version) > ($4, $5::bigint))\n            ORDER BY id ASC, version ASC\n            LIMIT $6\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "version!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "322d5cdeba62061b03a4bc5fa1425bfeec2f8681d3dbebfa1ace8e37509cda65"
+}

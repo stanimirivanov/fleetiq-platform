@@ -1,0 +1,6 @@
+name: "after_id"
+in: "query"
+required: false
+description: "Exclusive identity from next_after; supply together with after_version. The cursor need not name an existing version."
+schema:
+  $ref: "../schemas/AdministrationIdentifier.yaml"

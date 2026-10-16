@@ -1,0 +1,8 @@
+name: "after_version"
+in: "query"
+required: false
+description: "Exclusive numeric version from next_after; supply together with after_id."
+schema:
+  type: "integer"
+  minimum: 1
+  maximum: 4294967295

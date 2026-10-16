@@ -1,0 +1,26 @@
+get:
+  operationId: "listAssetTypeDefinitionVersions"
+  summary: "List one asset-type identity's immutable versions"
+  description: "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied. The path fixes the exact ID; a supplied after_id must match it. Missing IDs return empty pages."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: "../../components/parameters/admin-tenant-id.yaml"
+    - $ref: "../../components/parameters/definition-type-id.yaml"
+    - $ref: "../../components/parameters/admin-page-limit.yaml"
+    - $ref: "../../components/parameters/definition-after-id.yaml"
+    - $ref: "../../components/parameters/definition-after-version.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listAssetTypeDefinitions-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/DefinitionReadForbidden.yaml"
+    "405":
+      $ref: "../../components/responses/DefinitionVersionsMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

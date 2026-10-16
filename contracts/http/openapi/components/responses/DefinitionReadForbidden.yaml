@@ -1,0 +1,12 @@
+description: "Missing current metadata.read in the selected active tenant, or the routed tenant cannot be authorized. Other tenant or platform permissions do not substitute."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:forbidden"
+      title: "Access denied"
+      status: 403

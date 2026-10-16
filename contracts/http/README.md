@@ -4,12 +4,13 @@
 
 The backend owns this partial OpenAPI 3.1 description of `/api/v1`. It
 publishes actor-scoped current tenant/action discovery, version discovery, bounded asset catalogue and exact asset reads,
-pinned semantic definitions, and bounded bitemporal relationship and
+immutable semantic definition publication/discovery, and bounded bitemporal relationship and
 signal-binding snapshots. Other implemented routes remain outside this
 client-facing subset. The additive baseline includes operator OIDC login,
 callback, session discovery, and sign-out. Metadata reads use either browser
 cookies or configured workload bearer plus current tenant `metadata.read` access;
-a server listener selects exactly one mode. Operator discovery uses that same
+publication requires exact tenant `metadata.manage`. A server listener selects
+exactly one mode. Operator discovery uses that same
 authentication boundary and returns only the caller's current active tenant
 grants, without requiring a tenant to be selected first.
 
@@ -167,3 +168,6 @@ exact tenant access.manage; platform authority never substitutes. Current grants
 atomic grant/revoke and immutable audit remain distinct. See the
 [operator procedure](../../docs/operations/tenant-access-administration.md)
 for retries, pagination, browser guards and final-administrator self-revocation.
+
+Baseline.10 adds immutable definition publication and bounded collection/version
+catalogues. Existing exact reads remain unchanged. See [semantic commissioning](../../docs/operations/semantic-definitions.md) for separate read/write permissions, content-checked retries and audit limits.

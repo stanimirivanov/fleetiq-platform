@@ -1,0 +1,61 @@
+get:
+  operationId: "listAssetTypeDefinitions"
+  summary: "List immutable asset-types versions"
+  description: "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.read; metadata.manage and access.manage do not imply read access. Limit 1..100, default 50. Unknown and duplicate query fields are invalid. Both after_id and after_version are required together. Numeric versions sort numerically within case-sensitive IDs. Cursors are exclusive traversal positions, not snapshots or authority. New versions may be published during traversal; no latest-version alias or distinct-definition total is implied."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: "../../components/parameters/admin-tenant-id.yaml"
+    - $ref: "../../components/parameters/admin-page-limit.yaml"
+    - $ref: "../../components/parameters/definition-after-id.yaml"
+    - $ref: "../../components/parameters/definition-after-version.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/listAssetTypeDefinitions-200.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/DefinitionReadForbidden.yaml"
+    "405":
+      $ref: "../../components/responses/DefinitionCollectionMethodNotAllowed.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"
+post:
+  operationId: "publishAssetTypeDefinition"
+  summary: "Publish one immutable asset-type definition"
+  description: "Only mounted on an authenticated listener. Authenticate and authorize the tenant before reporting command, identity or query errors. An invalid, missing, suspended or inaccessible tenant returns 403. Every outcome is no-store and problems redact credentials and database details. Requires exact current metadata.manage; no other action implies it. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1. Browser mode never falls back to bearer. JSON is limited to 16 KiB; unknown and duplicate fields are rejected. The immutable identity is tenant/kind/ID/version. Versions are positive uint32, need not be contiguous and never replace older meaning. First publication returns 201; an identical complete aggregate returns 200 already_published, including after an uncertain response. Any different name, value kind, canonical unit or ordered supported-property references under an occupied version returns 409. Asset-type membership is capped at 100 and duplicate property IDs are invalid; exact referenced property versions must exist in this tenant. Omitted canonical_unit means null. Failed publication commits no partial aggregate. Publisher identity and receipt time are not part of content equality; this slice does not introduce actor/time audit or backfill provenance for earlier strict inserts."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: "../../components/parameters/admin-tenant-id.yaml"
+    - $ref: "../../components/parameters/admin-mutation-origin.yaml"
+    - $ref: "../../components/parameters/admin-mutation-csrf.yaml"
+  requestBody:
+    required: true
+    content:
+      "application/json":
+        schema:
+          $ref: "../../components/schemas/PublishAssetTypeDefinitionRequest.yaml"
+  responses:
+    "200":
+      $ref: "../../components/responses/DefinitionPublicationRepeated.yaml"
+    "201":
+      $ref: "../../components/responses/DefinitionPublicationCreated.yaml"
+    "400":
+      $ref: "../../components/responses/InvalidRequest.yaml"
+    "401":
+      $ref: "../../components/responses/Unauthenticated.yaml"
+    "403":
+      $ref: "../../components/responses/DefinitionWriteForbidden.yaml"
+    "404":
+      $ref: "../../components/responses/DefinitionPublicationNotFound.yaml"
+    "405":
+      $ref: "../../components/responses/DefinitionCollectionMethodNotAllowed.yaml"
+    "409":
+      $ref: "../../components/responses/DefinitionPublicationConflict.yaml"
+    "500":
+      $ref: "../../components/responses/InternalError.yaml"

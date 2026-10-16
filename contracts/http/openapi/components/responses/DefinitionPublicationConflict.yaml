@@ -1,0 +1,12 @@
+description: "This tenant/kind/ID/version already names different immutable content. Changing meaning requires a new positive version."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      $ref: "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:conflict"
+      title: "Definition version contains different immutable content"
+      status: 409

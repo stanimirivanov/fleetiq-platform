@@ -64,6 +64,9 @@
   administration, platform-grant administration, tenant provisioning/lifecycle,
   and tenant-access administration are included in the
   additive baseline.
+- Immutable semantic definitions now have protected publication and bounded
+  collection/version catalogues; exact metadata.manage and metadata.read remain
+  separate. See [commissioning](../operations/semantic-definitions.md).
 - Further business APIs, identity-provider qualification, device transport listeners, operator UI, archival storage, and
   observability remain future milestones.
 
@@ -435,3 +438,13 @@ needed. Final tenant-administrator self-revocation remains possible; no platform
 bypass or tenant recovery API is introduced. See the
 [operator procedure](../operations/tenant-access-administration.md) and
 [execution plan](plans/tenant-access-administration-http.md).
+
+## Semantic definition commissioning
+
+Original plan PR 8 exposes collection GET/POST and per-identity version catalogues
+for asset, property and relationship types. Publication resolves exact complete
+content on retry and rejects changed content under an immutable version. Existing
+exact GETs and strict Rust insert behavior remain unchanged. Catalogues use one
+bounded summary query; no migration or attributed publication audit is added.
+See [ADR 0106](../adr/0106-publish-and-discover-immutable-semantic-definitions.md)
+and the [execution plan](plans/semantic-definition-publication.md).

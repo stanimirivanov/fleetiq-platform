@@ -2,7 +2,8 @@
 //!
 //! Definitions, assets, communication devices, relationships, and signal
 //! bindings share the metadata authorization boundary. PostgreSQL adapts these
-//! ports without entering the application policy.
+//! ports without entering the application policy. Definition publication resolves
+//! immutable content on retry; bounded catalogues retain exact version scope.
 
 use fleetiq_access::{AuthorizedTenant, ManageMetadata, ReadMetadata};
 
@@ -14,6 +15,8 @@ use fleetiq_access::{
 };
 
 mod asset_service;
+mod definition_catalogue;
+mod definition_publication;
 mod definition_repository;
 mod definition_service;
 mod device_repository;
@@ -21,6 +24,7 @@ mod device_service;
 mod relationship_repository;
 mod relationship_service;
 mod repository;
+mod semantic_definition;
 mod signal_binding_repository;
 mod signal_binding_service;
 
@@ -45,3 +49,15 @@ pub use signal_binding_repository::{
     SignalBindingSnapshotPageQuery, SignalBindingSnapshotQuery,
 };
 pub use signal_binding_service::{SignalBindingApplicationError, SignalBindingApplicationService};
+
+pub use definition_catalogue::{
+    DefinitionCataloguePage, DefinitionCatalogueQuery, DefinitionCatalogueRepository,
+    DefinitionCatalogueService, DefinitionSummary, InvalidDefinitionCatalogueQuery,
+};
+pub use definition_publication::{
+    DefinitionPublicationError, DefinitionPublicationOutcome, DefinitionPublicationRepository,
+    DefinitionPublicationService,
+};
+pub use semantic_definition::{
+    DefinitionIdentity, DefinitionKind, DefinitionPosition, SemanticDefinition,
+};

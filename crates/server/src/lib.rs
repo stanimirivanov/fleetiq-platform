@@ -13,6 +13,7 @@ mod command;
 mod config;
 #[cfg(test)]
 mod contract_test_support;
+mod definition_administration;
 mod external_identity_administration;
 mod health;
 mod http_api;
@@ -137,6 +138,13 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(
+            definition_administration::postgres_definition_administration_router(
+                pool.clone(),
+                authentication.clone(),
+                mutation.clone(),
+            ),
+        )
         .merge(
             tenant_access_administration::postgres_tenant_access_administration_router(
                 pool.clone(),

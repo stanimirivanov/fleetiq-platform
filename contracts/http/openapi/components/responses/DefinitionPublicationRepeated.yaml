@@ -1,0 +1,10 @@
+description: "The exact complete immutable content already exists. No additional write or mutation is applied."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/DefinitionPublicationResult.yaml"
+    example:
+      outcome: "already_published"

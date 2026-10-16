@@ -1,0 +1,6 @@
+name: "type_id"
+in: "path"
+required: true
+description: "Exact definition identity whose immutable versions are requested."
+schema:
+  $ref: "../schemas/AdministrationIdentifier.yaml"

@@ -1,0 +1,10 @@
+type: "object"
+additionalProperties: false
+required:
+  - "outcome"
+properties:
+  outcome:
+    type: "string"
+    enum:
+      - "published"
+      - "already_published"

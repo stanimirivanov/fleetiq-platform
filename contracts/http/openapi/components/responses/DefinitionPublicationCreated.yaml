@@ -1,0 +1,10 @@
+description: "Complete immutable definition committed atomically. No actor/time publication audit is introduced."
+headers:
+  Cache-Control:
+    $ref: "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      $ref: "../schemas/DefinitionPublicationResult.yaml"
+    example:
+      outcome: "published"

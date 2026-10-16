@@ -99,6 +99,39 @@ const OPERATIONS: &[PublishedOperation] = &[
 // or duplicate operation IDs from slipping past the global inventory guard.
 const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
     (
+        "/api/v1/tenants/{tenant_id}/asset-types",
+        &[
+            ("get", "listAssetTypeDefinitions"),
+            ("post", "publishAssetTypeDefinition"),
+        ],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions",
+        &[("get", "listAssetTypeDefinitionVersions")],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/properties",
+        &[
+            ("get", "listPropertyDefinitions"),
+            ("post", "publishPropertyDefinition"),
+        ],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions",
+        &[("get", "listPropertyDefinitionVersions")],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/relationship-types",
+        &[
+            ("get", "listRelationshipTypeDefinitions"),
+            ("post", "publishRelationshipTypeDefinition"),
+        ],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions",
+        &[("get", "listRelationshipTypeDefinitionVersions")],
+    ),
+    (
         "/api/v1/tenants/{tenant_id}/actors/{actor_id}/grants",
         &[("get", "listActorTenantGrants")],
     ),
