@@ -138,6 +138,13 @@ pub(crate) async fn protected_method_not_allowed() -> Response {
     no_store(method_not_allowed().await)
 }
 
+/// Let Axum calculate Allow from merged GET/POST route ownership.
+pub(crate) async fn resource_method_not_allowed() -> Response {
+    let mut response = protected_method_not_allowed().await;
+    response.headers_mut().remove(header::ALLOW);
+    response
+}
+
 pub(crate) fn problem(status: StatusCode, kind: &'static str, title: &'static str) -> Response {
     no_store(ApiProblem::new(status, kind, title).into_response())
 }

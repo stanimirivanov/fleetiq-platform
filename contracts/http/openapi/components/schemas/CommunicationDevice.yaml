@@ -1,0 +1,19 @@
+type: "object"
+required:
+  - "tenant_id"
+  - "asset_id"
+  - "endpoints"
+properties:
+  tenant_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+  asset_id:
+    type: "string"
+    minLength: 1
+    maxLength: 128
+  endpoints:
+    type: "array"
+    items:
+      "$ref": "./DeviceEndpoint.yaml"
+description: "Existing device GET representation; endpoints retain declaration order."

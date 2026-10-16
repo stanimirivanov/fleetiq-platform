@@ -4,12 +4,12 @@
 
 The backend owns this partial OpenAPI 3.1 description of `/api/v1`. It
 publishes actor-scoped current tenant/action discovery, version discovery, bounded asset catalogue and exact asset reads,
-immutable semantic definition publication/discovery, and bounded bitemporal relationship and
+immutable semantic definition publication/discovery, asset/device registration and ordered device reads, and bounded bitemporal relationship and
 signal-binding snapshots. Other implemented routes remain outside this
 client-facing subset. The additive baseline includes operator OIDC login,
 callback, session discovery, and sign-out. Metadata reads use either browser
 cookies or configured workload bearer plus current tenant `metadata.read` access;
-publication requires exact tenant `metadata.manage`. A server listener selects
+publication and registration require exact tenant `metadata.manage`. Registration atomically retains original actor/time evidence on exact retries; see [commissioning](../../docs/operations/metadata-registration.md). A server listener selects
 exactly one mode. Operator discovery uses that same
 authentication boundary and returns only the caller's current active tenant
 grants, without requiring a tenant to be selected first.

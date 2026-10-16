@@ -1,0 +1,12 @@
+description: "Same complete content already exists with evidence; original actor/time is retained."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/json":
+    schema:
+      "$ref": "../schemas/MetadataRegistrationResult.yaml"
+    example:
+      outcome: "already_registered"
+      registered_by: "operator-a"
+      recorded_at_ms: 1792108800000

@@ -42,6 +42,12 @@ Endpoints do not select protocol packages and do not assign business meaning.
 Package activation interprets vendor traffic. Signal bindings perform semantic
 attribution after decoding.
 
+Creation through the [registration API](../operations/metadata-registration.md)
+commits each aggregate and its complete children with immutable first-actor/time
+evidence. Exact retries compare all creation content; external identifiers are a
+set and endpoints retain order. Legacy strict inserts have unknown attribution.
+A device remains communication capability on its existing asset identity.
+
 ## Signal bindings
 
 A binding connects:

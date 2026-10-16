@@ -53,7 +53,8 @@ where
     Router::new()
         .route(
             "/api/v1/tenants/{tenant_id}/assets",
-            get(get_asset_page::<A, P, Q>).fallback(protected_method_not_allowed),
+            get(get_asset_page::<A, P, Q>)
+                .fallback(crate::protected_request::resource_method_not_allowed),
         )
         .route(
             "/api/v1/tenants/{tenant_id}/assets/{asset_id}",

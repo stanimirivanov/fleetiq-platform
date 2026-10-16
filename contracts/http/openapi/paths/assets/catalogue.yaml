@@ -20,3 +20,44 @@ get:
       $ref: "../../components/responses/Forbidden.yaml"
     "500":
       $ref: "../../components/responses/InternalError.yaml"
+post:
+  operationId: "registerAsset"
+  summary: "Register an asset and typed external identifiers"
+  description: "Only mounted on an authenticated listener. Requires exact current metadata.manage for the selected active tenant; no other action implies it. Authenticate and authorize before reporting body/resource errors. Invalid, missing, suspended or inaccessible tenant returns 403. Browser mutations require one exact configured Origin and X-FleetIQ-CSRF: 1; browser mode never falls back to bearer. JSON is limited to 32 KiB with closed nested shapes; unknown and duplicate fields are rejected. Return 201 registered for first creation, 200 already_registered for equal complete content and original registration evidence. Retry the same internal identity and complete content after a lost or ambiguous response; a storage/commit error is never success. Different content or an external-identity collision returns 409 without overwrite. Actor/time are trusted host context, never JSON. Different authorized actors may retry; attribution stays with the first. Existing unattributed strict inserts return 409; no historical provenance is invented. All outcomes are no-store and redact database details. The exact asset-type version must exist in this tenant. Up to 100 external identifiers; omitted authority means null. Kind/authority/value defines each external namespace; identifier declaration order is irrelevant. Duplicate identifiers are invalid. IMEI/serial values never replace internal asset identity."
+  security:
+    -
+      bearerAuth: []
+    -
+      cookieAuth: []
+  parameters:
+    -
+      "$ref": "../../components/parameters/admin-tenant-id.yaml"
+    -
+      "$ref": "../../components/parameters/admin-mutation-origin.yaml"
+    -
+      "$ref": "../../components/parameters/admin-mutation-csrf.yaml"
+  requestBody:
+    required: true
+    content:
+      "application/json":
+        schema:
+          "$ref": "../../components/schemas/RegisterAssetRequest.yaml"
+  responses:
+    "200":
+      "$ref": "../../components/responses/MetadataRegistrationRepeated.yaml"
+    "201":
+      "$ref": "../../components/responses/MetadataRegistrationCreated.yaml"
+    "400":
+      "$ref": "../../components/responses/InvalidRequest.yaml"
+    "401":
+      "$ref": "../../components/responses/Unauthenticated.yaml"
+    "403":
+      "$ref": "../../components/responses/DefinitionWriteForbidden.yaml"
+    "404":
+      "$ref": "../../components/responses/MetadataRegistrationNotFound.yaml"
+    "405":
+      "$ref": "../../components/responses/MetadataRegistrationMethodNotAllowed.yaml"
+    "409":
+      "$ref": "../../components/responses/MetadataRegistrationConflict.yaml"
+    "500":
+      "$ref": "../../components/responses/InternalError.yaml"

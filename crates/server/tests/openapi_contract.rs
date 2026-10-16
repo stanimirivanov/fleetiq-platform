@@ -16,6 +16,7 @@ const SPEC: &str = include_str!("../../../contracts/http/dist/openapi.json");
 struct PublishedOperation {
     path: &'static str,
     id: &'static str,
+    post_id: Option<&'static str>,
     protected: bool,
     can_be_missing: bool,
     snapshot: bool,
@@ -25,6 +26,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/me/tenants",
         id: "listOperatorTenants",
+        post_id: None,
         protected: true,
         can_be_missing: false,
         snapshot: false,
@@ -32,6 +34,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1",
         id: "getApiVersion",
+        post_id: None,
         protected: false,
         can_be_missing: false,
         snapshot: false,
@@ -39,6 +42,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/assets",
         id: "listAssets",
+        post_id: Some("registerAsset"),
         protected: true,
         can_be_missing: false,
         snapshot: false,
@@ -46,6 +50,15 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}",
         id: "getAsset",
+        post_id: None,
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/device",
+        id: "getCommunicationDevice",
+        post_id: Some("registerCommunicationDevice"),
         protected: true,
         can_be_missing: true,
         snapshot: false,
@@ -53,6 +66,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/relationships",
         id: "listAssetRelationships",
+        post_id: None,
         protected: true,
         can_be_missing: true,
         snapshot: true,
@@ -60,6 +74,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/signal-bindings",
         id: "listAssetSignalBindings",
+        post_id: None,
         protected: true,
         can_be_missing: true,
         snapshot: true,
@@ -67,6 +82,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/signal-bindings",
         id: "listSourceSignalBindings",
+        post_id: None,
         protected: true,
         can_be_missing: false,
         snapshot: true,
@@ -74,6 +90,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/asset-types/{type_id}/versions/{version}",
         id: "getAssetTypeDefinition",
+        post_id: None,
         protected: true,
         can_be_missing: true,
         snapshot: false,
@@ -81,6 +98,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/properties/{property_id}/versions/{version}",
         id: "getPropertyDefinition",
+        post_id: None,
         protected: true,
         can_be_missing: true,
         snapshot: false,
@@ -88,6 +106,7 @@ const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/relationship-types/{type_id}/versions/{version}",
         id: "getRelationshipTypeDefinition",
+        post_id: None,
         protected: true,
         can_be_missing: true,
         snapshot: false,
@@ -300,6 +319,30 @@ fn assert_additional_paths(
     }
 }
 
+fn assert_reviewed_methods(
+    path_item: &Value,
+    expected: &PublishedOperation,
+    ids: &mut HashSet<&'static str>,
+) {
+    assert!(
+        path_item.as_object().is_some_and(|item| {
+            item.len() == 1 + usize::from(expected.post_id.is_some())
+                && item.contains_key("get")
+                && (expected.post_id.is_none() || item.contains_key("post"))
+        }),
+        "{} must publish exactly its reviewed methods",
+        expected.path
+    );
+    if let Some(post_id) = expected.post_id {
+        assert_eq!(
+            path_item["post"]["operationId"], post_id,
+            "{}",
+            expected.path
+        );
+        assert!(ids.insert(post_id), "duplicate operation ID");
+    }
+}
+
 #[test]
 fn published_operations_have_stable_security_and_request_contracts() -> Result<(), Box<dyn Error>> {
     let contract = contract()?;
@@ -319,13 +362,7 @@ fn published_operations_have_stable_security_and_request_contracts() -> Result<(
         let path_item = paths
             .get(expected.path)
             .expect("every reviewed path must exist");
-        assert!(
-            path_item
-                .as_object()
-                .is_some_and(|item| item.len() == 1 && item.contains_key("get")),
-            "{} must publish only GET",
-            expected.path
-        );
+        assert_reviewed_methods(path_item, expected, &mut ids);
         let operation = &path_item["get"];
         assert_eq!(operation["operationId"], expected.id, "{}", expected.path);
         assert!(ids.insert(expected.id), "duplicate operation ID");

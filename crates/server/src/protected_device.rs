@@ -16,7 +16,7 @@ use sqlx::PgPool;
 
 use crate::protected_request::{
     BAD_REQUEST, INTERNAL, NOT_FOUND, RequestAuthenticator, authenticate, authorize_metadata_read,
-    no_store, problem, protected_method_not_allowed,
+    no_store, problem,
 };
 
 struct DeviceQueryState<A, P, Q> {
@@ -48,7 +48,8 @@ where
     Router::new()
         .route(
             "/api/v1/tenants/{tenant_id}/assets/{asset_id}/device",
-            get(get_device::<A, P, Q>).fallback(protected_method_not_allowed),
+            get(get_device::<A, P, Q>)
+                .fallback(crate::protected_request::resource_method_not_allowed),
         )
         .with_state(state)
 }

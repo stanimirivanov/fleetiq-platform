@@ -8,6 +8,7 @@ mod external_identities;
 mod login;
 mod metadata;
 mod platform_access;
+mod registration;
 mod session;
 mod tenant_access;
 mod tenants;

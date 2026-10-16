@@ -1,0 +1,16 @@
+description: "Supported methods are GET, HEAD, POST; Allow order/optional whitespace is immaterial."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+  Allow:
+    schema:
+      type: "string"
+    description: "Comma-separated supported methods GET, HEAD, POST."
+content:
+  "application/problem+json":
+    schema:
+      "$ref": "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:method-not-allowed"
+      title: "Method not allowed"
+      status: 405

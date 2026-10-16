@@ -1,0 +1,12 @@
+description: "Internal identity has different content, external identity is owned by another asset, or a legacy object lacks trustworthy attributed evidence. No overwrite."
+headers:
+  Cache-Control:
+    "$ref": "../headers/cache-control.yaml"
+content:
+  "application/problem+json":
+    schema:
+      "$ref": "../schemas/Problem.yaml"
+    example:
+      type: "urn:fleetiq:problem:conflict"
+      title: "Registration identity is occupied"
+      status: 409
