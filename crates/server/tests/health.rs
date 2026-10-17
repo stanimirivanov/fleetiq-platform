@@ -39,3 +39,26 @@ async fn readiness_tracks_postgresql_availability(pool: PgPool) -> Result<(), Bo
     );
     Ok(())
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn readiness_rejects_schema_drift_while_liveness_remains_available(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    sqlx::query(
+        "UPDATE public._sqlx_migrations SET checksum = decode('00', 'hex') WHERE version = 1",
+    )
+    .execute(&pool)
+    .await?;
+    let router = health_router(pool);
+    for (path, expected) in [
+        ("/health/live", StatusCode::NO_CONTENT),
+        ("/health/ready", StatusCode::SERVICE_UNAVAILABLE),
+    ] {
+        let response = router
+            .clone()
+            .oneshot(Request::get(path).body(Body::empty())?)
+            .await?;
+        assert_eq!(response.status(), expected);
+    }
+    Ok(())
+}

@@ -5,8 +5,16 @@ use std::{error::Error, ffi::OsString, fmt};
 pub enum ProcessCommand {
     /// Run the long-lived HTTP backend.
     Serve,
+    /// Serve only after read-only schema validation; never execute DDL.
+    ServeChecked,
+    /// Apply the embedded migrations without starting HTTP.
+    Migrate,
+    /// Print the embedded version/checksum inventory without configuration.
+    MigrationInventory,
     /// Establish the installation's first platform operator and exit.
     BootstrapPlatformOperator,
+    /// Bootstrap against an already migrated schema without DDL.
+    BootstrapPlatformOperatorChecked,
     /// Print command usage without reading runtime configuration.
     Help,
 }
@@ -33,12 +41,24 @@ impl ProcessCommand {
         let command = command
             .into_string()
             .map_err(|_| ProcessCommandError::NonUnicodeArgument)?;
-        let parsed = match command.as_str() {
+        let mut parsed = match command.as_str() {
             "serve" => Self::Serve,
+            "migrate" => Self::Migrate,
+            "migration-inventory" => Self::MigrationInventory,
             "bootstrap-platform-operator" => Self::BootstrapPlatformOperator,
             "help" | "--help" | "-h" => Self::Help,
             _ => return Err(ProcessCommandError::UnknownCommand),
         };
+        if let Some(flag) = arguments.next() {
+            if flag != "--check-schema" {
+                return Err(ProcessCommandError::UnexpectedArgument);
+            }
+            parsed = match parsed {
+                Self::Serve => Self::ServeChecked,
+                Self::BootstrapPlatformOperator => Self::BootstrapPlatformOperatorChecked,
+                _ => return Err(ProcessCommandError::UnexpectedArgument),
+            };
+        }
         if arguments.next().is_some() {
             return Err(ProcessCommandError::UnexpectedArgument);
         }
@@ -47,7 +67,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [serve|bootstrap-platform-operator|help]\n\
+        "Usage: fleetiq-server [serve [--check-schema]|migrate|migration-inventory|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -107,6 +127,40 @@ mod tests {
                 ProcessCommand::parse([OsString::from(argument)])
                     .expect("help command should parse"),
                 ProcessCommand::Help
+            );
+        }
+    }
+
+    #[test]
+    fn production_schema_checks_are_explicit_and_reject_ambiguous_flags() {
+        for (args, expected) in [
+            (
+                vec!["serve", "--check-schema"],
+                ProcessCommand::ServeChecked,
+            ),
+            (
+                vec!["bootstrap-platform-operator", "--check-schema"],
+                ProcessCommand::BootstrapPlatformOperatorChecked,
+            ),
+            (vec!["migrate"], ProcessCommand::Migrate),
+            (
+                vec!["migration-inventory"],
+                ProcessCommand::MigrationInventory,
+            ),
+        ] {
+            assert_eq!(
+                ProcessCommand::parse(args.into_iter().map(OsString::from)).unwrap(),
+                expected
+            );
+        }
+        for args in [
+            vec!["migrate", "--check-schema"],
+            vec!["serve", "--check-schema", "--check-schema"],
+            vec!["migration-inventory", "secret"],
+        ] {
+            assert_eq!(
+                ProcessCommand::parse(args.into_iter().map(OsString::from)),
+                Err(ProcessCommandError::UnexpectedArgument)
             );
         }
     }

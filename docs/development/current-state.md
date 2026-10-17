@@ -2,6 +2,8 @@
 
 ## TL;DR
 
+- Kubernetes plan D01 adds [explicit migration and checked runtime commands](../operations/runtime-and-migrations.md), deterministic embedded migration inventory and bounded mounted OIDC CA trust. Image publication, Kubernetes packaging, release/recovery orchestration and real deployed browser qualification remain later slices.
+
 - [Relationship and signal-binding commands](../operations/metadata-revisions.md)
   now expose attributed immutable appends and explicit corrections; their existing
   exact revision reads are included in the published HTTP baseline.

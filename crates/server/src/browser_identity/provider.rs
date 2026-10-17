@@ -80,13 +80,7 @@ pub(crate) struct OidcClient {
 
 impl OidcClient {
     pub(crate) async fn discover(configuration: BrowserIdentityConfig) -> Result<Self, OidcError> {
-        let http = reqwest::Client::builder()
-            .https_only(true)
-            .redirect(reqwest::redirect::Policy::none())
-            .timeout(PROVIDER_REQUEST_TIMEOUT)
-            .connect_timeout(PROVIDER_REQUEST_TIMEOUT)
-            .build()
-            .map_err(|_| OidcError::Operational)?;
+        let http = trust::http_client(&configuration)?;
         let client = discover_client(&configuration, &http).await?;
         Ok(Self {
             configuration,
@@ -292,5 +286,9 @@ async fn bounded_request(
     Ok(result)
 }
 
+mod trust;
+
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod trust_tests;

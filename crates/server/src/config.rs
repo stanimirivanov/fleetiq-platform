@@ -2,6 +2,7 @@ use std::{env, error::Error, fmt, net::SocketAddr};
 
 use fleetiq_domain::{ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId};
 
+use crate::SchemaMode;
 use crate::browser_identity::{BrowserIdentityConfig, BrowserIdentityConfigError};
 
 const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1:8080";
@@ -47,6 +48,7 @@ impl fmt::Debug for BearerIdentityConfig {
 #[derive(Clone)]
 pub struct ServerConfig {
     database_url: String,
+    schema_mode: SchemaMode,
     bind_address: SocketAddr,
     bearer_identity: Option<BearerIdentityConfig>,
     browser_identity: Option<BrowserIdentityConfig>,
@@ -112,6 +114,17 @@ impl ServerConfig {
             }
             _ => return Err(ServerConfigError::IncompleteBrowserIdentity),
         }
+        if let Some(path) = optional_environment("FLEETIQ_OIDC_ADDITIONAL_CA_BUNDLE")? {
+            let browser = config
+                .browser_identity
+                .take()
+                .ok_or(ServerConfigError::IncompleteBrowserIdentity)?;
+            config.browser_identity = Some(
+                browser
+                    .with_additional_ca_bundle(path)
+                    .map_err(ServerConfigError::BrowserIdentity)?,
+            );
+        }
         Ok(config)
     }
 
@@ -143,6 +156,7 @@ impl ServerConfig {
                 })?;
         Ok(Self {
             database_url,
+            schema_mode: SchemaMode::Migrate,
             bind_address,
             bearer_identity: None,
             browser_identity: None,
@@ -214,6 +228,20 @@ impl ServerConfig {
         self.bearer_identity.as_ref()
     }
 
+    /// Selects development migration or production read-only validation.
+    ///
+    /// Check mode requires explicit migration first and a runtime role without
+    /// DDL privileges. It does not relax authentication or readiness.
+    #[must_use]
+    pub const fn with_schema_mode(mut self, mode: SchemaMode) -> Self {
+        self.schema_mode = mode;
+        self
+    }
+
+    pub(crate) const fn schema_mode(&self) -> SchemaMode {
+        self.schema_mode
+    }
+
     /// Returns the validated HTTP listener address.
     pub const fn bind_address(&self) -> SocketAddr {
         self.bind_address
@@ -225,6 +253,7 @@ impl fmt::Debug for ServerConfig {
         formatter
             .debug_struct("ServerConfig")
             .field("database_url", &"[REDACTED]")
+            .field("schema_mode", &self.schema_mode)
             .field("bind_address", &self.bind_address)
             .field("bearer_identity", &self.bearer_identity)
             .field("browser_identity", &self.browser_identity)

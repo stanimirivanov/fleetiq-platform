@@ -10,6 +10,11 @@ migrations, creates the actor, exact external identity, and the initial
 environment values when it
 finishes.
 
+For production, first run explicit migration with separate DDL credentials,
+then select `bootstrap-platform-operator --check-schema` with bootstrap-only DML
+privileges. See [runtime and migrations](runtime-and-migrations.md). The unqualified
+command retains development migrate-on-start compatibility.
+
 ## Preconditions
 
 - PostgreSQL is reachable through `DATABASE_URL`.

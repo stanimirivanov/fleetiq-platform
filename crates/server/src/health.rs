@@ -4,7 +4,7 @@ use sqlx::PgPool;
 /// Builds the unauthenticated operational health surface.
 ///
 /// Liveness reports that the process can serve HTTP. Readiness additionally
-/// requires a successful PostgreSQL round trip. Neither endpoint exposes
+/// requires an exact successful migration version/checksum snapshot. Neither endpoint exposes
 /// configuration, dependency errors, tenant data, or database details.
 pub fn health_router(pool: PgPool) -> Router {
     Router::new()
@@ -18,11 +18,8 @@ async fn liveness() -> StatusCode {
 }
 
 async fn readiness(State(pool): State<PgPool>) -> StatusCode {
-    match sqlx::query_scalar!(r#"SELECT 1 AS "value!""#)
-        .fetch_one(&pool)
-        .await
-    {
-        Ok(1) => StatusCode::NO_CONTENT,
-        Ok(_) | Err(_) => StatusCode::SERVICE_UNAVAILABLE,
+    match fleetiq_postgres::check_schema(&pool).await {
+        Ok(()) => StatusCode::NO_CONTENT,
+        Err(_) => StatusCode::SERVICE_UNAVAILABLE,
     }
 }

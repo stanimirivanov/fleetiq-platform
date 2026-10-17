@@ -59,7 +59,10 @@ from `localhost` trying IPv6 `::1` before falling back to Compose's published
 IPv4 port. Use `127.0.0.1` in the host-side `DATABASE_URL` to avoid that delay;
 keep the same port, database, credentials, and database settings.
 
-The server requires `DATABASE_URL`, applies the embedded migration chain before
+Production deployments must select `serve --check-schema` after an explicit
+`migrate` process with separate credentials. See [runtime and migrations](../operations/runtime-and-migrations.md).
+
+The development server requires `DATABASE_URL`, applies the embedded migration chain before
 binding its listener, and defaults `FLEETIQ_BIND_ADDRESS` to
 `127.0.0.1:8080`. Explicitly running migrations remains useful for SQLx
 compilation and database inspection; applying them again at server startup is

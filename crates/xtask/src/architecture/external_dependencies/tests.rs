@@ -6,7 +6,7 @@ use super::*;
 
 #[test]
 fn current_workspace_matches_exact_external_ownership() {
-    assert_eq!(check(&metadata()).expect("external ownership matches"), 34);
+    assert_eq!(check(&metadata()).expect("external ownership matches"), 37);
 }
 
 #[test]
@@ -17,7 +17,7 @@ fn renamed_approved_dependency_keeps_canonical_identity() {
 
     assert_eq!(
         check(&metadata).expect("aliases do not change ownership"),
-        34
+        37
     );
 }
 
@@ -29,7 +29,7 @@ fn renamed_internal_dependency_is_not_external() {
 
     assert_eq!(
         check(&metadata).expect("member paths establish identity"),
-        34
+        37
     );
 }
 

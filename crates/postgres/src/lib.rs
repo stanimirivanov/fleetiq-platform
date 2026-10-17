@@ -55,6 +55,9 @@ pub use metadata::{
     PostgresRegistrationRepository, PostgresRelationshipRepository,
     PostgresRevisionCommandRepository, PostgresSignalBindingRepository,
 };
+mod schema;
+pub use schema::{SchemaCompatibilityError, apply_migrations, check_schema};
+
 use sqlx::migrate::Migrator;
 
 /// Error returned by PostgreSQL asset repository operations.

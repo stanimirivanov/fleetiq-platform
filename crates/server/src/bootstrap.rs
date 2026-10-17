@@ -5,6 +5,7 @@ use std::{
     time::{SystemTime, SystemTimeError, UNIX_EPOCH},
 };
 
+use crate::{SchemaMode, SchemaPreparationError};
 use fleetiq_domain::{
     ActorId, ExternalIdentity, ExternalIdentitySubject, ExternalIdentitySubjectError,
     IdentifierError, IdentityAuthorityId, UnixTimeMillis,
@@ -13,7 +14,7 @@ use fleetiq_identity::{
     PlatformBootstrapError, PlatformBootstrapOutcome, PlatformBootstrapRequest,
     PlatformBootstrapService,
 };
-use fleetiq_postgres::{MIGRATOR, PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
+use fleetiq_postgres::{PostgresPlatformBootstrap, PostgresPlatformBootstrapError};
 use sqlx::postgres::PgPoolOptions;
 
 const DATABASE_URL: &str = "DATABASE_URL";
@@ -28,6 +29,7 @@ const EXTERNAL_SUBJECT: &str = "FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT";
 #[derive(Clone)]
 pub struct PlatformBootstrapConfig {
     database_url: String,
+    schema_mode: SchemaMode,
     actor_id: ActorId,
     external_identity: ExternalIdentity,
 }
@@ -74,9 +76,19 @@ impl PlatformBootstrapConfig {
             .map_err(PlatformBootstrapConfigError::ExternalSubject)?;
         Ok(Self {
             database_url,
+            schema_mode: SchemaMode::Migrate,
             actor_id,
             external_identity: ExternalIdentity::new(authority_id, external_subject),
         })
+    }
+
+    /// Uses read-only schema validation for separately migrated installations.
+    /// Bootstrap still writes its atomic identity/audit facts and needs a
+    /// separately authorized data-writing role; it never grants DDL authority.
+    #[must_use]
+    pub const fn with_schema_mode(mut self, mode: SchemaMode) -> Self {
+        self.schema_mode = mode;
+        self
     }
 
     fn request(&self, recorded_at: UnixTimeMillis) -> PlatformBootstrapRequest {
@@ -93,6 +105,7 @@ impl fmt::Debug for PlatformBootstrapConfig {
         formatter
             .debug_struct("PlatformBootstrapConfig")
             .field("database_url", &"[REDACTED]")
+            .field("schema_mode", &self.schema_mode)
             .field("actor_id", &self.actor_id)
             .field("authority_id", &self.external_identity.authority_id())
             .field("external_subject", &"[REDACTED]")
@@ -102,8 +115,8 @@ impl fmt::Debug for PlatformBootstrapConfig {
 
 /// Runs the explicit one-time platform bootstrap operation and closes its pool.
 ///
-/// The command applies the embedded migration chain before attempting
-/// bootstrap, making it suitable for a new empty installation. It does not
+/// Development mode applies migrations first. Production Check mode only
+/// validates the ledger, requiring explicit migration before bootstrap. It does not
 /// start an HTTP listener and emits no identity or database values.
 ///
 /// # Errors
@@ -119,10 +132,11 @@ pub async fn bootstrap_platform_operator(
         .map_err(PlatformBootstrapCommandError::DatabaseConnection)?;
 
     let result = async {
-        MIGRATOR
-            .run(&pool)
+        config
+            .schema_mode
+            .prepare(&pool)
             .await
-            .map_err(PlatformBootstrapCommandError::Migration)?;
+            .map_err(PlatformBootstrapCommandError::Schema)?;
         let recorded_at = current_unix_time()?;
         PlatformBootstrapService::new(PostgresPlatformBootstrap::new(pool.clone()))
             .bootstrap(&config.request(recorded_at))
@@ -210,12 +224,11 @@ impl Error for PlatformBootstrapConfigError {
 }
 
 /// Failure while executing the platform-bootstrap process command.
-#[derive(Debug)]
 pub enum PlatformBootstrapCommandError {
     /// PostgreSQL could not be reached with the configured connection string.
     DatabaseConnection(sqlx::Error),
-    /// The embedded migration chain could not be applied.
-    Migration(sqlx::migrate::MigrateError),
+    /// The embedded schema could not be prepared or validated.
+    Schema(SchemaPreparationError),
     /// The host clock is earlier than the Unix epoch.
     Clock(SystemTimeError),
     /// The current Unix-millisecond value does not fit the persisted contract.
@@ -230,8 +243,8 @@ impl fmt::Display for PlatformBootstrapCommandError {
             Self::DatabaseConnection(_) => {
                 formatter.write_str("failed to connect to PostgreSQL for platform bootstrap")
             }
-            Self::Migration(_) => {
-                formatter.write_str("failed to apply PostgreSQL migrations for platform bootstrap")
+            Self::Schema(_) => {
+                formatter.write_str("database schema is not ready for platform bootstrap")
             }
             Self::Clock(_) => formatter.write_str("host clock is earlier than the Unix epoch"),
             Self::TimestampOutOfRange => {
@@ -242,11 +255,17 @@ impl fmt::Display for PlatformBootstrapCommandError {
     }
 }
 
+impl fmt::Debug for PlatformBootstrapCommandError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(self, f)
+    }
+}
+
 impl Error for PlatformBootstrapCommandError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::DatabaseConnection(error) => Some(error),
-            Self::Migration(error) => Some(error),
+            Self::Schema(error) => Some(error),
             Self::Clock(error) => Some(error),
             Self::Bootstrap(error) => Some(error),
             Self::TimestampOutOfRange => None,

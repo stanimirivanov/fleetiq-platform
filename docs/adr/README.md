@@ -128,6 +128,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0108](0108-expose-attributed-metadata-revision-commands.md) | Attributed immutable relationship/binding corrections with exact retry semantics |
 
+| [0109](0109-separate-production-serving-from-schema-migration.md) | Explicit migration execution, no-DDL production serving/bootstrap and additive OIDC CA trust |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.
