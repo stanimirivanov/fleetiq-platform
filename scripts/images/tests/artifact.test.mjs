@@ -13,6 +13,7 @@ test("OCI metadata binds runtime, subject, SBOM and provenance to one digest", (
     const artifact = inspectLayout(f.layout, f.revision);
     assert.equal(artifact.digest, f.index.digest);
     assert.equal(artifact.config, f.config.digest);
+    assert.deepEqual(artifact.runtime, f.image);
     assert.throws(() => inspectLayout(f.layout, "b".repeat(40)));
   } finally {
     f.cleanup();

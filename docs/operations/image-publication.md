@@ -48,11 +48,19 @@ and native binary output from Docker exec, avoiding slow Windows bind-mount
 writes and the daemon archive API's process-tmpfs limitation; the tool
 container has no network or daemon socket. Linux tools use the host UID/GID to
 read owner-only archives and write owned evidence without adding capabilities or
-making files public. After import, Docker exports its actual loaded bytes for
-raw config-digest verification and scanning. The observed local image ID is
-tracked separately for runtime and cleanup: classic and containerd image stores
+making files public. Trivy scans the original OCI layout at the exact runtime
+manifest digest before Docker loading, as supported by its
+[OCI layout input](https://trivy.dev/docs/v0.76/guide/target/container_image/#oci-layout).
+A small single-runtime OCI entrypoint handles Trivy's nested-index selector
+limitation; it mounts the original blobs read-only and leaves the publication
+layout unchanged. The scanner never reads a Docker-save archive. Docker read-back
+remains only for
+raw config-digest verification of the runtime fixture. The observed local image
+ID is tracked separately for runtime and cleanup: classic and containerd image
+stores
 use different ID semantics. The reviewed OCI publication digest is unchanged.
-HTTP binds only to an allocated loopback port; the existing port 5432, developer database and Kubernetes cluster are not used. Every transient
+HTTP binds only to an allocated loopback port; the existing port 5432, developer
+database and Kubernetes cluster are not used. Every transient
 container, including tools, receives an owner label. Cleanup verifies ownership;
 there is no global prune, volume reset or shared-service repair.
 

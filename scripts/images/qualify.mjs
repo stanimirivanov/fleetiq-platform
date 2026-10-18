@@ -141,21 +141,17 @@ export async function qualify() {
       writeFileSync(join(reports, name + ".json"), artifact[name].bytes);
       record[name] = { digest: "sha256:" + hash(artifact[name].bytes) };
     }
-    stage = "runtime-export";
+    stage = "scan";
     await resources.start();
+    // Scan the bytes we publish directly, before any Docker archive conversion.
+    record.scan = await scanRuntime(directory, tools, artifact, resources);
+    stage = "runtime-export";
     loaded = await loadRuntime(
       tools,
       directory,
       tag,
       resources,
       artifact.config,
-    );
-    stage = "scan";
-    record.scan = await scanRuntime(
-      directory,
-      tools,
-      artifact.config,
-      resources,
     );
     stage = "runtime";
     const runtime = await qualifyRuntime(

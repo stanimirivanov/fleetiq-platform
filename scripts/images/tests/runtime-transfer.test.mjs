@@ -116,25 +116,40 @@ test("load verifies Docker's read-back config for classic and manifest IDs and r
   }
 });
 
-test("scanner matches private archive ownership and retains its hardened sandbox", async () => {
+test("scanner matches private evidence ownership and retains its hardened sandbox", async () => {
   const f = layoutFixture();
   try {
     await assert.rejects(
-      scanRuntime(f.directory, { scanner: "fixture" }, "unused", {
-        container: async (_suffix, args) => {
-          assert.equal(args[args.indexOf("--user") + 1], containerUser());
-          assert.ok(args.includes("--read-only"));
-          assert.equal(args[args.indexOf("--cap-drop") + 1], "ALL");
-          assert.ok(args.includes("no-new-privileges:true"));
-          assert.ok(args.includes("/cache:rw,noexec,nosuid,size=4g,mode=1777"));
-          if (process.platform !== "win32")
-            assert.equal(
-              statSync(join(f.directory, "private-scan")).mode & 0o777,
-              0o700,
+      scanRuntime(
+        f.directory,
+        { scanner: "fixture" },
+        { manifest: f.image.digest, config: f.config.digest, runtime: f.image },
+        {
+          container: async (_suffix, args) => {
+            assert.equal(args[args.indexOf("--user") + 1], containerUser());
+            assert.ok(args.includes("--read-only"));
+            assert.equal(args[args.indexOf("--cap-drop") + 1], "ALL");
+            assert.ok(
+              args.includes(join(f.directory, "scan-layout") + ":/scan:ro"),
             );
-          throw new Error("fixture stopped before scan");
+            assert.ok(
+              args.includes(
+                join(f.directory, "layout", "blobs") + ":/scan/blobs:ro",
+              ),
+            );
+            assert.ok(args.includes("no-new-privileges:true"));
+            assert.ok(
+              args.includes("/cache:rw,noexec,nosuid,size=4g,mode=1777"),
+            );
+            if (process.platform !== "win32")
+              assert.equal(
+                statSync(join(f.directory, "private-scan")).mode & 0o777,
+                0o700,
+              );
+            throw new Error("fixture stopped before scan");
+          },
         },
-      }),
+      ),
       /fixture stopped before scan/,
     );
   } finally {

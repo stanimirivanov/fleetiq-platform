@@ -106,6 +106,7 @@ export function inspectLayout(layout, revision) {
   return {
     digest: descriptor.digest,
     manifest: image.digest,
+    runtime: image,
     config: manifest.config.digest,
     provenance,
     sbom,

@@ -1,4 +1,4 @@
-/** Scan the exact runtime archive without a Docker socket or registry credentials. */
+/** Scan the original OCI runtime manifest without Docker export or registry credentials. */
 import {
   mkdirSync,
   writeFileSync,
@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { docker, containerUser } from "./process.mjs";
-import { validateScan, readJson, hash } from "./policy.mjs";
+import { validateScan, readJson, hash, ensure, DIGEST } from "./policy.mjs";
 export function redactScan(scan) {
   // Keep every finding and severity; never upload matched credential bytes/code.
   for (const result of scan.Results ?? [])
@@ -20,12 +20,42 @@ export function redactScan(scan) {
       }));
   return scan;
 }
-export async function scanRuntime(directory, tools, expectedConfig, resources) {
+export function prepareScanLayout(directory, artifact) {
+  ensure(
+    DIGEST.test(artifact?.manifest) &&
+      DIGEST.test(artifact?.config) &&
+      artifact.runtime?.digest === artifact.manifest,
+    "Scan requires the verified runtime manifest and config digests.",
+  );
+  // Trivy 0.76 cannot select a digest inside BuildKit's nested index. A standard
+  // single-image entrypoint selects the verified descriptor without copying or
+  // rewriting any blob. The published BuildKit layout remains untouched.
+  const view = join(directory, "scan-layout");
+  mkdirSync(join(view, "blobs"), { recursive: true });
+  writeFileSync(
+    join(view, "oci-layout"),
+    JSON.stringify({ imageLayoutVersion: "1.0.0" }),
+    { flag: "wx" },
+  );
+  writeFileSync(
+    join(view, "index.json"),
+    JSON.stringify({ schemaVersion: 2, manifests: [artifact.runtime] }),
+    { flag: "wx" },
+  );
+  return view;
+}
+export async function scanRuntime(
+  directory,
+  tools,
+  artifact,
+  resources,
+  execute = docker,
+) {
+  const view = prepareScanLayout(directory, artifact);
   const reports = join(directory, "reports");
   const privateOutput = join(directory, "private-scan");
   mkdirSync(privateOutput, { recursive: true, mode: 0o700 });
-  // Without DAC capabilities, container root cannot read another UID's mode-0600
-  // archive on Linux. Match the producer UID; retain private file permissions.
+  // Match bind-mount ownership and keep raw secret-bearing output private.
   // Keep the large database on Linux scratch; only redacted JSON is retained.
   const scanner = await resources.container("scanner", [
     "--user",
@@ -40,7 +70,9 @@ export async function scanRuntime(directory, tools, expectedConfig, resources) {
     "--tmpfs",
     "/cache:rw,noexec,nosuid,size=4g,mode=1777",
     "--volume",
-    directory + ":/artifact:ro",
+    view + ":/scan:ro",
+    "--volume",
+    join(directory, "layout", "blobs") + ":/scan/blobs:ro",
     "--volume",
     privateOutput + ":/private",
     "--entrypoint",
@@ -51,12 +83,14 @@ export async function scanRuntime(directory, tools, expectedConfig, resources) {
   const base = ["exec", scanner, "trivy", "--cache-dir", "/cache"];
   let failure;
   try {
-    await docker(
+    await execute(
       [
         ...base,
         "image",
         "--input",
-        "/artifact/runtime.tar",
+        "/scan@" + artifact.manifest,
+        "--platform",
+        tools.platform,
         "--scanners",
         "vuln,secret",
         "--severity",
@@ -94,13 +128,13 @@ export async function scanRuntime(directory, tools, expectedConfig, resources) {
   }
   if (failure) throw failure;
   const database = JSON.parse(
-    await docker([...base, "version", "--format", "json"]),
+    await execute([...base, "version", "--format", "json"]),
   );
   validateScan(
     readJson(join(reports, "scan.json")),
     database,
     Date.now(),
-    expectedConfig,
+    artifact.config,
   );
   writeFileSync(
     join(reports, "scanner.json"),
