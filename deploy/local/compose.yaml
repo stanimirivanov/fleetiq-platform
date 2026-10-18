@@ -2,6 +2,8 @@ name: fleetiq-platform
 
 services:
   server:
+    # Development compatibility; the production image defaults to checked serving.
+    command: ["serve"]
     build:
       context: ../..
       dockerfile: Dockerfile

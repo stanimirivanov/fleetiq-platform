@@ -9,7 +9,9 @@
     "lint:openapi": "node scripts/lint-openapi-layout.mjs",
     "bundle:openapi": "redocly bundle contracts/http/openapi/openapi.yaml --config contracts/http/redocly.yaml --output contracts/http/dist/openapi.json --component-renaming-conflicts-severity=error",
     "check:openapi": "pnpm test:openapi && pnpm lint:openapi && node scripts/check-openapi.mjs",
-    "test:openapi": "node --test scripts/tests/openapi-layout.test.mjs scripts/tests/openapi-bundle.test.mjs"
+    "test:openapi": "node --test scripts/tests/openapi-layout.test.mjs scripts/tests/openapi-bundle.test.mjs",
+    "test:images": "node --test scripts/images/tests/*.test.mjs",
+    "qualify:image": "node scripts/images/qualify.mjs"
   },
   "devDependencies": {
     "@redocly/cli": "2.62.1"

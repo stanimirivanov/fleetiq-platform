@@ -127,3 +127,11 @@ Migration/rollout failures require maintenance, diagnosis and a reviewed forward
 fix or isolated restore. No automatic down migration, incompatible binary restart
 or data/PVC deletion is performed. Existing development Compose remains a
 separate diagnostic until the Kubernetes plan proves operating/recovery parity.
+
+## Container readiness command
+
+The shell-free production image uses `fleetiq-server healthcheck` instead of
+curl. It requests only loopback port 8080's `/health/ready`, requires HTTP 204,
+refuses redirects/proxies and times out after two seconds. It does not read
+startup credentials or perform migrations. See [image production](image-publication.md)
+for runtime packaging and qualification.

@@ -1,9 +1,18 @@
-.git
-.github
-.idea
-.env
-.env.*
-target
+# An allowlisted build context excludes operator configuration and credentials.
+*
+!Cargo.toml
+!Cargo.lock
+!crates/
+!crates/**
+!migrations/
+!migrations/**
+!.sqlx/
+!.sqlx/**
+!Dockerfile
+# Never import local build output or crash dumps through an allowed directory.
 **/target
-hs_err_pid*.log
-replay_pid*.log
+**/.env
+**/.env.*
+**/hs_err_pid*.log
+**/replay_pid*.log
+**/.git

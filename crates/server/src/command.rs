@@ -11,6 +11,8 @@ pub enum ProcessCommand {
     Migrate,
     /// Print the embedded version/checksum inventory without configuration.
     MigrationInventory,
+    /// Probe HTTP readiness on the container loopback port without database credentials.
+    Healthcheck,
     /// Establish the installation's first platform operator and exit.
     BootstrapPlatformOperator,
     /// Bootstrap against an already migrated schema without DDL.
@@ -45,6 +47,7 @@ impl ProcessCommand {
             "serve" => Self::Serve,
             "migrate" => Self::Migrate,
             "migration-inventory" => Self::MigrationInventory,
+            "healthcheck" => Self::Healthcheck,
             "bootstrap-platform-operator" => Self::BootstrapPlatformOperator,
             "help" | "--help" | "-h" => Self::Help,
             _ => return Err(ProcessCommandError::UnknownCommand),
@@ -67,7 +70,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [serve [--check-schema]|migrate|migration-inventory|bootstrap-platform-operator [--check-schema]|help]\n\
+        "Usage: fleetiq-server [serve [--check-schema]|migrate|migration-inventory|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -143,6 +146,7 @@ mod tests {
                 ProcessCommand::BootstrapPlatformOperatorChecked,
             ),
             (vec!["migrate"], ProcessCommand::Migrate),
+            (vec!["healthcheck"], ProcessCommand::Healthcheck),
             (
                 vec!["migration-inventory"],
                 ProcessCommand::MigrationInventory,
@@ -155,6 +159,7 @@ mod tests {
         }
         for args in [
             vec!["migrate", "--check-schema"],
+            vec!["healthcheck", "--check-schema"],
             vec!["serve", "--check-schema", "--check-schema"],
             vec!["migration-inventory", "secret"],
         ] {

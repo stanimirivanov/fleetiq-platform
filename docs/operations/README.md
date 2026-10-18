@@ -8,6 +8,8 @@ restore, and incident runbooks will be added when those capabilities exist.
 
 ## Available procedures
 
+- [Backend image publication](image-publication.md) — qualify immutable production bytes, review provenance/inventory and manually publish by digest.
+
 - [Runtime and migrations](runtime-and-migrations.md) — explicit migration, checked production serving/bootstrap, role privileges, readiness, OIDC CA trust and shutdown.
 
 - [Browser operator identity](browser-identity.md) — configure provider-neutral
