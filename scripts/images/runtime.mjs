@@ -3,20 +3,18 @@ import { join } from "node:path";
 import { docker, jsonDocker } from "./process.mjs";
 import { until } from "./resources.mjs";
 import { ensure, CHECKS, readJson } from "./policy.mjs";
+import { validateLoadedIdentity } from "./transport.mjs";
 import { validateInventory } from "./inventory.mjs";
 export async function qualifyRuntime(
   image,
   tools,
-  artifact,
   root,
   resources,
   directory,
+  loadedId,
 ) {
   const [loaded] = await jsonDocker(["image", "inspect", image]);
-  ensure(
-    loaded.Id === artifact.config,
-    "Loaded runtime config differs from exported OCI artifact.",
-  );
+  validateLoadedIdentity(loaded, loadedId);
   const pg = await resources.container("postgres", [
     "--tmpfs",
     "/var/lib/postgresql:rw,nosuid,size=256m",

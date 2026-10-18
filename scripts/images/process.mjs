@@ -123,6 +123,15 @@ export async function run(
     if (descriptor !== undefined) closeSync(descriptor);
   }
 }
+// Match bind-mounted file ownership on Linux; Docker Desktop maps Windows ACLs.
+export function containerUser(
+  uid = process.getuid?.() ?? 0,
+  gid = process.getgid?.() ?? 0,
+) {
+  if (![uid, gid].every((id) => Number.isSafeInteger(id) && id >= 0))
+    throw new Error("Invalid container filesystem identity.");
+  return uid + ":" + gid;
+}
 let owner;
 export function setDockerOwner(value) {
   owner = value;

@@ -22,7 +22,11 @@ import {
   IMAGE,
   SBOM_CATALOGERS,
 } from "./policy.mjs";
-import { loadRuntime, roundtrip } from "./transport.mjs";
+import {
+  loadRuntime,
+  roundtrip,
+  validateLoadedIdentity,
+} from "./transport.mjs";
 import { qualifyCompose } from "./compose.mjs";
 import { qualifyRuntime } from "./runtime.mjs";
 import { scanRuntime } from "./scan.mjs";
@@ -59,7 +63,8 @@ export async function qualify() {
   save();
   const cancel = cancellation();
   let builder = false;
-  let loaded = false;
+  let loaded;
+  let failure;
   let successful = false;
   let stage = "build";
   const tag = "fleetiq-qualified:" + resources.id;
@@ -138,8 +143,13 @@ export async function qualify() {
     }
     stage = "runtime-export";
     await resources.start();
-    await loadRuntime(tools, directory, tag, resources);
-    loaded = true;
+    loaded = await loadRuntime(
+      tools,
+      directory,
+      tag,
+      resources,
+      artifact.config,
+    );
     stage = "scan";
     record.scan = await scanRuntime(
       directory,
@@ -151,10 +161,10 @@ export async function qualify() {
     const runtime = await qualifyRuntime(
       tag,
       tools,
-      artifact,
       root,
       resources,
       directory,
+      loaded,
     );
     const inventory = JSON.stringify(runtime.inventory, null, 2) + "\n";
     writeFileSync(join(reports, "migrations.json"), inventory);
@@ -181,6 +191,9 @@ export async function qualify() {
     );
     cancel.check();
     successful = true;
+  } catch (error) {
+    failure = error;
+    throw error;
   } finally {
     stage = successful ? "cleanup" : stage;
     try {
@@ -193,10 +206,9 @@ export async function qualify() {
           });
       }
       if (loaded) {
-        ensure(
-          (await jsonDocker(["image", "inspect", tag]))[0].Id ===
-            record.image.config,
-          "Loaded image ownership changed.",
+        validateLoadedIdentity(
+          (await jsonDocker(["image", "inspect", tag]))[0],
+          loaded,
         );
         await docker(["image", "rm", tag]);
       }
@@ -208,6 +220,13 @@ export async function qualify() {
         );
         record.outcome = "passed";
       }
+    } catch (cleanupError) {
+      if (failure)
+        throw new AggregateError(
+          [failure, cleanupError],
+          failure.message + "; cleanup also failed: " + cleanupError.message,
+        );
+      throw cleanupError;
     } finally {
       record.stage = stage;
       save();

@@ -46,8 +46,13 @@ creates a uniquely owned builder, ephemeral PostgreSQL/registry containers and
 private network. Runtime archive spooling uses bounded container scratch space
 and native binary output from Docker exec, avoiding slow Windows bind-mount
 writes and the daemon archive API's process-tmpfs limitation; the tool
-container has no network or daemon socket. HTTP binds only to an allocated loopback port; the existing
-port 5432, developer database and Kubernetes cluster are not used. Every transient
+container has no network or daemon socket. Linux tools use the host UID/GID to
+read owner-only archives and write owned evidence without adding capabilities or
+making files public. After import, Docker exports its actual loaded bytes for
+raw config-digest verification and scanning. The observed local image ID is
+tracked separately for runtime and cleanup: classic and containerd image stores
+use different ID semantics. The reviewed OCI publication digest is unchanged.
+HTTP binds only to an allocated loopback port; the existing port 5432, developer database and Kubernetes cluster are not used. Every transient
 container, including tools, receives an owner label. Cleanup verifies ownership;
 there is no global prune, volume reset or shared-service repair.
 

@@ -7,7 +7,7 @@ import {
   existsSync,
 } from "node:fs";
 import { join } from "node:path";
-import { docker } from "./process.mjs";
+import { docker, containerUser } from "./process.mjs";
 import { validateScan, readJson, hash } from "./policy.mjs";
 export function redactScan(scan) {
   // Keep every finding and severity; never upload matched credential bytes/code.
@@ -23,9 +23,13 @@ export function redactScan(scan) {
 export async function scanRuntime(directory, tools, expectedConfig, resources) {
   const reports = join(directory, "reports");
   const privateOutput = join(directory, "private-scan");
-  mkdirSync(privateOutput, { recursive: true });
+  mkdirSync(privateOutput, { recursive: true, mode: 0o700 });
+  // Without DAC capabilities, container root cannot read another UID's mode-0600
+  // archive on Linux. Match the producer UID; retain private file permissions.
   // Keep the large database on Linux scratch; only redacted JSON is retained.
   const scanner = await resources.container("scanner", [
+    "--user",
+    containerUser(),
     "--read-only",
     "--cap-drop",
     "ALL",
@@ -34,7 +38,7 @@ export async function scanRuntime(directory, tools, expectedConfig, resources) {
     "--tmpfs",
     "/tmp:rw,noexec,nosuid,size=512m",
     "--tmpfs",
-    "/cache:rw,noexec,nosuid,size=4g",
+    "/cache:rw,noexec,nosuid,size=4g,mode=1777",
     "--volume",
     directory + ":/artifact:ro",
     "--volume",
