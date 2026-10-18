@@ -19,6 +19,7 @@ fleetiq-domain = { path = "../domain" }
 fleetiq-identity = { path = "../identity" }
 fleetiq-metadata = { path = "../metadata" }
 fleetiq-postgres = { path = "../postgres" }
+serde_json.workspace = true
 serde.workspace = true
 sqlx.workspace = true
 subtle.workspace = true
@@ -26,8 +27,11 @@ tokio.workspace = true
 
 [dev-dependencies]
 jsonschema = { version = "0.58.5", default-features = false }
-serde_json.workspace = true
 tower.workspace = true
+# Real TLS fixtures generate ephemeral keys; neither dependency enters runtime.
+rcgen = { version = "=0.14.10", default-features = false, features = ["crypto", "ring", "pem"] }
+tokio-rustls = { version = "=0.26.6", default-features = false, features = ["ring", "tls12"] }
+tokio = { workspace = true, features = ["io-util", "sync"] }
 
 [lints]
 workspace = true

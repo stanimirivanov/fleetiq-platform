@@ -1,4 +1,8 @@
-use std::{error::Error, fmt};
+use std::{
+    error::Error,
+    fmt,
+    path::{Path, PathBuf},
+};
 
 use fleetiq_domain::IdentityAuthorityId;
 use url::Url;
@@ -14,6 +18,7 @@ pub struct BrowserIdentityConfig {
     client_id: String,
     client_secret: String,
     identity_authority: IdentityAuthorityId,
+    additional_ca_bundle: Option<PathBuf>,
 }
 
 impl BrowserIdentityConfig {
@@ -49,7 +54,32 @@ impl BrowserIdentityConfig {
             client_id: client_id.to_owned(),
             client_secret: client_secret.to_owned(),
             identity_authority,
+            additional_ca_bundle: None,
         })
+    }
+
+    /// Adds deployment-mounted CA certificates to the OIDC client's default roots.
+    ///
+    /// Only the path is retained here. Startup reads and validates the bounded
+    /// PEM file before discovery. No global trust store or verification switch
+    /// is changed. Restart the process to rotate the mounted trust bundle.
+    ///
+    /// # Errors
+    /// Returns [`BrowserIdentityConfigError::InvalidCaBundlePath`] for an empty path.
+    pub fn with_additional_ca_bundle(
+        mut self,
+        path: impl Into<PathBuf>,
+    ) -> Result<Self, BrowserIdentityConfigError> {
+        let path = path.into();
+        if path.as_os_str().is_empty() {
+            return Err(BrowserIdentityConfigError::InvalidCaBundlePath);
+        }
+        self.additional_ca_bundle = Some(path);
+        Ok(self)
+    }
+
+    pub(crate) fn additional_ca_bundle(&self) -> Option<&Path> {
+        self.additional_ca_bundle.as_deref()
     }
 
     /// Returns the single trusted public origin, without a trailing slash.
@@ -90,6 +120,7 @@ impl fmt::Debug for BrowserIdentityConfig {
             .field("identity_authority", &self.identity_authority)
             .field("client_id", &"[redacted]")
             .field("client_secret", &"[redacted]")
+            .field("additional_ca_bundle", &self.additional_ca_bundle.is_some())
             .finish()
     }
 }
@@ -105,6 +136,8 @@ pub enum BrowserIdentityConfigError {
     InvalidClientCredentials,
     /// The registered identity authority does not satisfy domain constraints.
     InvalidIdentityAuthority,
+    /// The configured additional trust-bundle path is empty.
+    InvalidCaBundlePath,
 }
 
 impl fmt::Display for BrowserIdentityConfigError {
@@ -116,6 +149,7 @@ impl fmt::Display for BrowserIdentityConfigError {
             }
             Self::InvalidClientCredentials => "OIDC client credentials are invalid",
             Self::InvalidIdentityAuthority => "OIDC identity authority is invalid",
+            Self::InvalidCaBundlePath => "OIDC additional CA bundle path is invalid",
         })
     }
 }

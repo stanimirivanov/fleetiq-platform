@@ -17,8 +17,14 @@ configured workload bearer must never be placed in UX configuration.
 | `FLEETIQ_OIDC_CLIENT_ID` | Confidential OIDC client registered with the provider |
 | `FLEETIQ_OIDC_CLIENT_SECRET` | Backend-only secret injected through the deployment environment |
 | `FLEETIQ_OIDC_IDENTITY_AUTHORITY` | Stable FleetIQ authority identifier for this exact issuer |
+| `FLEETIQ_OIDC_ADDITIONAL_CA_BUNDLE` | Optional read-only mounted public PEM CA bundle; adds trust only for the OIDC client |
 
-Configure all five values together. Partial configuration or simultaneous
+The optional CA bundle requires browser mode, is bounded to 256 KiB and 32
+certificate blocks, and never disables TLS/hostname checks or replaces default
+roots. Invalid/missing/empty content fails startup. Restart after trust rotation;
+see [the runtime trust contract](runtime-and-migrations.md#mounted-oidc-ca-trust).
+
+Configure all five identity values together. Partial configuration or simultaneous
 workload bearer and browser modes fails startup. Discovery must succeed before
 the listener starts. Register the exact callback
 `https://fleet.example.com/api/v1/auth/callback`, authorization-code flow,
