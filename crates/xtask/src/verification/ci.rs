@@ -109,7 +109,7 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
         ("machete", Tool::Machete, 1),
         ("sqlx", Tool::Sqlx, 1),
         ("pnpm", Tool::Pnpm, 2),
-        ("node", Tool::Node, 3),
+        ("node", Tool::Node, 4),
         ("nextest", Tool::Nextest, 1),
     ] {
         replace_token(

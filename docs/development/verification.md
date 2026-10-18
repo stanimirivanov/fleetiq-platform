@@ -189,7 +189,7 @@ junction cases and Unix symlink cases run on their actual platforms without
 silently skipping a failed fixture setup. The Windows JSON artifact covers only
 its OpenAPI group; Rust fixture results remain in the step output and job status.
 This extra job requires no database and changes no acceptance membership. Existing job names and the full applicable
-gates remain in place; Compose smoke verification retains its own job.
+gates remain in place; Compose smoke verification retains its own job. That job now qualifies one production OCI artifact, scans it and exercises actual development Compose using the same bytes; it runs the producer negative fixtures and retains redacted image evidence. The Windows job also executes these database-independent producer fixtures.
 The six jobs start independently so a scanner installer or action failure in
 architecture cannot skip Rust, supply-chain, OpenAPI, or Compose evidence.
 Branch protection must require each applicable job; job independence does not

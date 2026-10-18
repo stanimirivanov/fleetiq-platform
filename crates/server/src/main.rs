@@ -1,5 +1,7 @@
 //! `FleetIQ` backend process entry point.
 
+mod health_probe;
+
 use std::{env, error::Error, process::ExitCode};
 
 use fleetiq_identity::PlatformBootstrapOutcome;
@@ -32,6 +34,7 @@ async fn execute() -> Result<(), Box<dyn Error>> {
             println!("embedded migrations applied and verified");
         }
         ProcessCommand::MigrationInventory => println!("{}", migration_inventory()?),
+        ProcessCommand::Healthcheck => health_probe::check().await?,
         command @ (ProcessCommand::BootstrapPlatformOperator
         | ProcessCommand::BootstrapPlatformOperatorChecked) => {
             let mode = if command == ProcessCommand::BootstrapPlatformOperatorChecked {

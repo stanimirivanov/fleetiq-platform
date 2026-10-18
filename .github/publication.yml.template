@@ -1,0 +1,90 @@
+# Protected producer operation; ordinary verification remains pull-request-only.
+name: Publish backend image
+on:
+  workflow_dispatch:
+    inputs:
+      source_revision:
+        description: Exact current main commit (40 lowercase hexadecimal characters)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: backend-publication
+  cancel-in-progress: false
+jobs:
+  authorize:
+    name: Validate publication prerequisites
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    steps:
+      - name: Check out requested workflow revision
+        uses: actions/checkout@@action:checkout@
+        with:
+          persist-credentials: false
+      - name: Install Node.js
+        uses: actions/setup-node@@action:setup-node@
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Check producer policy and fixtures
+        run: node --test scripts/images/tests/*.test.mjs
+      - name: Refuse unreviewed source or unauthorized publication
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FLEETIQ_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: node scripts/images/preflight.mjs
+  publish:
+    name: Qualify and publish immutable backend
+    needs: authorize
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      packages: write
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@@action:checkout@
+        with:
+          ref: ${{ inputs.source_revision }}
+          persist-credentials: false
+      - name: Install Node.js
+        uses: actions/setup-node@@action:setup-node@
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Revalidate source and maintainer authorization
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FLEETIQ_SOURCE_REVISION: ${{ inputs.source_revision }}
+        run: node scripts/images/preflight.mjs
+      - name: Qualify the single OCI artifact
+        id: qualify
+        run: node scripts/images/qualify.mjs
+      - name: Authenticate the source-owned registry publisher
+        uses: docker/login-action@@action:login@
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Publish the exact qualified bytes and verify registry digest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FLEETIQ_SOURCE_REVISION: ${{ inputs.source_revision }}
+          FLEETIQ_QUALIFICATION_DIR: ${{ steps.qualify.outputs.directory }}
+        run: node scripts/images/publish.mjs
+      - name: Retain publication and failure evidence
+        if: always() && steps.qualify.outcome != 'skipped'
+        uses: actions/upload-artifact@@action:upload-artifact@
+        with:
+          name: backend-publication-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/images/*/reports/*.json
+          if-no-files-found: error
+          retention-days: 90

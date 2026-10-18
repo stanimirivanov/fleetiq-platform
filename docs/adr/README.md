@@ -130,6 +130,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0109](0109-separate-production-serving-from-schema-migration.md) | Explicit migration execution, no-DDL production serving/bootstrap and additive OIDC CA trust |
 
+| [0110](0110-publish-qualified-immutable-backend-artifacts.md) | Source-owned build-once backend OCI images, migration inventory and explicit maintainer publication |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

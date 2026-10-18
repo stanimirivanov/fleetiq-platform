@@ -27,3 +27,8 @@
 /docs/development/dependency-management.md @stanimirivanov
 /docs/development/sql-migrations.md @stanimirivanov
 /docs/architecture/dependency-rules.md @stanimirivanov
+# Source-owned production image and publication contract.
+/Dockerfile @stanimirivanov
+/.dockerignore @stanimirivanov
+/deploy/local/ @stanimirivanov
+/docs/operations/image-publication.md @stanimirivanov

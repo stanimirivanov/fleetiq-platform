@@ -2,6 +2,7 @@
 # Action major-version tags live in .github/workflows/ci.yml; structure/tools come from this template/catalogue.
 # Edit structure via the template and cargo xtask verify --write-ci; update action tags in the workflow.
 name: CI
+run-name: FleetIQ PR ${{ github.event.pull_request.number }} from ${{ github.event.pull_request.head.sha }} to ${{ github.event.pull_request.base.ref }} at ${{ github.sha }}
 
 on:
   pull_request:
@@ -101,6 +102,9 @@ jobs:
 
       - name: Exercise Windows repository sensor fixtures
         run: cargo test -p fleetiq-xtask --locked
+
+      - name: Exercise cross-platform producer fixtures
+        run: node --test scripts/images/tests/*.test.mjs
 
       - name: Run authoritative OpenAPI verification on Windows
         id: verify
@@ -264,7 +268,7 @@ jobs:
   local-compose:
     name: Local Compose smoke test
     runs-on: ubuntu-26.04
-    timeout-minutes: 20
+    timeout-minutes: 90
 
     steps:
       - name: Check out source
@@ -272,24 +276,24 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build and start the local stack
-        run: docker compose -f deploy/local/compose.yaml up --build --wait
+      - name: Install Node.js for artifact qualification
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
 
-      - name: Verify the backend health surface
-        run: |
-          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:58080/health/live
-          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:58080/health/ready
+      - name: Verify producer policy and negative fixtures
+        run: node --test scripts/images/tests/*.test.mjs
 
-      - name: Verify backend isolation and graceful shutdown
-        run: |
-          server_id="$(docker compose -f deploy/local/compose.yaml ps --quiet server)"
-          test "$(docker inspect --format '{{.Config.User}}' "$server_id")" = "10001:10001"
-          test "$(docker inspect --format '{{.HostConfig.ReadonlyRootfs}}' "$server_id")" = "true"
-          test "$(docker inspect --format '{{json .HostConfig.CapDrop}}' "$server_id")" = '["ALL"]'
-          test "$(docker inspect --format '{{json .HostConfig.SecurityOpt}}' "$server_id")" = '["no-new-privileges:true"]'
-          docker compose -f deploy/local/compose.yaml stop server
-          test "$(docker inspect --format '{{.State.ExitCode}}' "$server_id")" = "0"
+      - name: Qualify production bytes and development Compose
+        id: qualify
+        run: node scripts/images/qualify.mjs
 
-      - name: Stop the local stack
-        if: always()
-        run: docker compose -f deploy/local/compose.yaml down --volumes
+      - name: Retain image qualification and failure evidence
+        if: always() && steps.qualify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-image-qualification
+          path: target/images/*/reports/*.json
+          if-no-files-found: error
+          retention-days: 14
