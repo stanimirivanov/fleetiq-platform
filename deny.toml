@@ -67,10 +67,10 @@ exceptions = [
     # implementations are permissive dependencies, not a global license change.
     # Owner: browser identity maintainers; remove on replacement/version review.
     { crate = "ring@0.17.14", allow = ["ISC"] },
-    { crate = "rustls-webpki@0.103.15", allow = ["ISC"] },
+    { crate = "rustls-webpki@0.103.16", allow = ["ISC"] },
     { crate = "untrusted@0.9.0", allow = ["ISC"] },
     # Mozilla-derived public trust-anchor data uses this permissive data license.
-    { crate = "webpki-roots@1.0.9", allow = ["CDLA-Permissive-2.0"] },
+    { crate = "webpki-roots@1.0.10", allow = ["CDLA-Permissive-2.0"] },
 ]
 [sources]
 unknown-registry = "deny"

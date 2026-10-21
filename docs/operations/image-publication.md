@@ -42,6 +42,10 @@ node scripts/images/qualify.mjs
 ```
 
 If Docker is not on PATH, set FLEETIQ_DOCKER to its executable path. The script
+first pulls and starts the pinned archive helper with the same read-only,
+capability-free, network-disabled sandbox used by runtime export. This bounded
+`transport-preflight` fails before a cold build if the helper cannot start and
+pulls its layers before build-cache and scanner storage are occupied. It then
 creates a uniquely owned builder, ephemeral PostgreSQL/registry containers and
 private network. Runtime archive spooling uses bounded container scratch space
 and native binary output from Docker exec, avoiding slow Windows bind-mount
@@ -209,7 +213,26 @@ digests and avoid mutable Trivy action tags, not to disable scanning; see the
 
 A missing tool, incompatible source, invalid inventory, stale/failed scan or
 cleanup failure prevents success. Inspect the named stage and redacted reports;
-fix the cause and rerun the complete affected gate. Never change a threshold,
+fix the cause and rerun the complete affected gate.
+
+Captured tool failures now retain only `failure.operation`, numeric or null
+`failure.exitCode`, `failure.bounded` and an allowlisted `failure.category` in
+`qualification.json`. Categories distinguish storage exhaustion, unavailable
+Docker, registry authentication, network/timeout, image lookup, invalid mounts,
+missing entrypoints and permission refusal. Unknown diagnostics remain
+`command-failed`; an unknown non-tool error retains only `operation-failed`.
+Cleanup failures are recorded separately. Raw child output, argv and error
+stacks are never copied into these fields. The classifier uses a private bounded
+4096-character stderr window; inherited live build output is not classified.
+
+A Docker exit 125 does not identify its cause. Earlier receipts that omitted
+Docker's diagnostic cannot establish a permission, image, storage or daemon
+failure from that number alone. Check the safe category on a new affected run;
+do not weaken sandbox permissions, alter pins or assume a successful image from
+unit fixtures. Preflight adds no automatic retry and does not replace original
+OCI scanning, archive/config read-back or actual runtime/Compose qualification.
+
+Never change a threshold,
 checksum, success flag or source identity to make a receipt pass.
 
 A failed registry copy/readback can leave orphaned content. It receives no

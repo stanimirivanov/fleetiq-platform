@@ -101,9 +101,10 @@ structural regeneration, tooling isolation, and cache policy.
 ### Wasmtime security patch qualification
 
 The protocol adapter retains the same Wasmtime features and owning layer, with
-the minimum version raised to 49.0.3. The compatible patch and its matching
-Cranelift/internal crates address the advisories reported for 49.0.2; see the
-[upstream release](https://github.com/bytecodealliance/wasmtime/releases/tag/v49.0.3).
+the minimum version raised to 49.0.4. Its coordinated Cranelift/internal patches
+address RUSTSEC-2026-0378 and RUSTSEC-2026-0379, including component-stream payload
+validation and AArch64 branch generation; see the
+[upstream release](https://github.com/bytecodealliance/wasmtime/releases/tag/v49.0.4).
 No WASI or network capabilities, new direct dependencies, or advisory exceptions
 are added. Existing protocol admission, fuel, memory, deadline, cancellation,
 and cleanup tests qualify the patch, followed by the full workspace gate.
@@ -152,3 +153,29 @@ The approved RSA exception is enforced by cargo-deny's supported wrapper/version
 bans and the architecture check's exact lockfile sensor, including prereleases
 and package sources. Keep both guards with the exception. The harness uses the
 maintained TOML parser; no parser or crypto dependency enters the domain crates.
+
+
+### Certificate verification security patches
+
+D06 publication qualification found RUSTSEC-2026-0382 and RUSTSEC-2026-0381 in
+the previously locked provider HTTPS verification path. The lockfile selects
+`rustls-webpki` 0.103.16 and `webpki-roots` 1.0.10 to reject distrusted emSign
+intermediates/remove their affected public trust anchor. See the upstream
+[webpki change](https://github.com/rustls/webpki/pull/546) and
+[root inventory change](https://github.com/rustls/webpki-roots/pull/133).
+Keep the existing OIDC transport ownership, features and additional-CA contract;
+no direct dependency, source exception or advisory waiver is added.
+
+The existing exact-version ISC and CDLA-Permissive-2.0 license selectors move
+only to these patched versions. Comparing the published crate `LICENSE` files
+confirmed byte-identical terms for each old/new pair:
+
+| Package pair | LICENSE SHA-256 (both versions) |
+| --- | --- |
+| rustls-webpki 0.103.15 / 0.103.16 | `5b698ca13897be3afdb7174256fa1574f8c6892b8bea1a66dd6469d3fe27885a` |
+| webpki-roots 1.0.9 / 1.0.10 | `e271993808fec50ab29350b39539cdec611a9103f827e0aa26d61da70e2d33f8` |
+
+The old selectors are removed; the global license allowlist and every advisory
+exception remain unchanged. Requalify the actual dependency graph with
+cargo-deny and the full Rust/PostgreSQL gate; do not roll back to a vulnerable
+trust store to work around provider certificate problems.

@@ -7,6 +7,7 @@ import { scanRuntime } from "../scan.mjs";
 import { containerUser } from "../process.mjs";
 import {
   loadRuntime,
+  preflightRuntimeExport,
   validateLoadedConfig,
   validateLoadedIdentity,
 } from "../transport.mjs";
@@ -154,5 +155,33 @@ test("scanner matches private evidence ownership and retains its hardened sandbo
     );
   } finally {
     f.cleanup();
+  }
+});
+
+
+test("export preflight starts the identical isolated helper and propagates refusal", async () => {
+  const tools = { transport: "fixture@sha256:immutable" };
+  for (const refuse of [false, true]) {
+    const calls = [];
+    const execute = async (args, options) => {
+      calls.push(args);
+      assert.equal(args[0], "run");
+      assert(args.includes("--rm"));
+      assert(args.includes("--read-only"));
+      assert.equal(args[args.indexOf("--user") + 1], containerUser());
+      assert.equal(args[args.indexOf("--cap-drop") + 1], "ALL");
+      assert(args.includes("no-new-privileges:true"));
+      assert.equal(args[args.indexOf("--network") + 1], "none");
+      assert.equal(args[args.indexOf("--entrypoint") + 1], "/usr/bin/sleep");
+      assert.deepEqual(args.slice(-2), [tools.transport, "0"]);
+      assert(args.includes("fixture:/artifact:ro"));
+      assert(!args.some((argument) => argument.includes("docker.sock")));
+      assert.equal(options.timeout, 120_000);
+      if (refuse) throw new Error("fixture helper refused");
+    };
+    if (refuse)
+      await assert.rejects(preflightRuntimeExport(tools, "fixture", execute), /fixture helper refused/);
+    else await preflightRuntimeExport(tools, "fixture", execute);
+    assert.equal(calls.length, 1, "preflight must not silently retry a failing sandbox");
   }
 });

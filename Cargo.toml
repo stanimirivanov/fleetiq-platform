@@ -42,7 +42,7 @@ subtle = { version = "2.6.1", default-features = false }
 tokio = { version = "~1.53", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
 toml = { version = "1.1.8", default-features = false, features = ["parse", "serde", "std"] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
-wasmtime = { version = "49.0.3", default-features = false, features = ["anyhow", "component-model", "cranelift", "runtime", "std"] }
+wasmtime = { version = "49.0.4", default-features = false, features = ["anyhow", "component-model", "cranelift", "runtime", "std"] }
 
 [workspace.lints.rust]
 missing_docs = "deny"

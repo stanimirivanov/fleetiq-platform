@@ -23,6 +23,17 @@ function sandbox(directory, readOnly) {
     directory + ":/artifact" + (readOnly ? ":ro" : ""),
   ];
 }
+/** Pull and start the exact archive sandbox before spending a cold build. */
+export async function preflightRuntimeExport(tools, directory, execute = docker) {
+  await execute(
+    [
+      "run", "--rm", ...sandbox(directory, true), "--network", "none",
+      "--entrypoint", "/usr/bin/sleep", tools.transport, "0",
+    ],
+    { timeout: 120_000 },
+  );
+}
+
 export function transport(
   tools,
   directory,
