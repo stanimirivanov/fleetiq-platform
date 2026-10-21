@@ -9,12 +9,13 @@ for (const [message, category] of [
   ["pull access denied: authentication required", "registry-authentication"],
   ["TLS handshake timeout", "network-or-timeout"],
   ["manifest unknown", "image-unavailable"],
+  ["no such manifest", "image-unavailable"],
   ["invalid mount config for type bind", "invalid-mount"],
   ['exec: "/fixture": stat /fixture: no such file or directory', "entrypoint-unavailable"],
   ["permission denied", "permission-denied"],
   ["unrecognized private diagnostic", "command-failed"],
 ]) {
-  test(`tool diagnostic has a finite safe classification: ${category}`, () => {
+  test(`tool diagnostic has a finite safe classification: ${category}: ${message}`, () => {
     assert.equal(diagnosticCategory(message), category);
   });
 }

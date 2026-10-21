@@ -42,8 +42,8 @@ node scripts/images/qualify.mjs
 ```
 
 If Docker is not on PATH, set FLEETIQ_DOCKER to its executable path. The script
-first pulls and starts the pinned archive helper with the same read-only,
-capability-free, network-disabled sandbox used by runtime export. This bounded
+first forces a registry pull and starts the pinned archive helper with the same
+read-only, capability-free, network-disabled sandbox used by runtime export. This bounded
 `transport-preflight` fails before a cold build if the helper cannot start and
 pulls its layers before build-cache and scanner storage are occupied. It then
 creates a uniquely owned builder, ephemeral PostgreSQL/registry containers and
@@ -195,6 +195,15 @@ Trivy supplies vulnerability/secret analysis. They add no Rust/runtime dependenc
 Review official release provenance, supported platform, digest and compatibility
 before changing a pin; rerun policy mutations, the real image gate and full
 platform acceptance. Remove tooling when its capability is replaced, not its checks.
+
+An archive-helper digest must resolve in the upstream registry, even on a host
+that already caches its layers. Inspect the official version tag with Docker
+manifest inspection, select its `linux/amd64` descriptor, and record its digest,
+upstream build revision and actual Skopeo version in the update review. Pin the
+version tag together with that immutable manifest digest in `tools.json`. A
+removed manifest requires a reviewed replacement; never fall back to a mutable
+tag. Preflight uses `--pull always` so a warm daemon cache cannot hide a missing
+upstream manifest. This adds no retry or skipped check.
 
 Trivy uses a current official schema-v2 database, at most 24 hours old and before
 its next-update deadline. High/critical vulnerabilities fail even when unfixed.

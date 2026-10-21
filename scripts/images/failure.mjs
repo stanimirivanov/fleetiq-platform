@@ -18,7 +18,7 @@ const categories = [
   ],
   [
     "image-unavailable",
-    /manifest unknown|no matching manifest|failed to resolve reference/iu,
+    /manifest unknown|no such manifest|no matching manifest|failed to resolve reference/iu,
   ],
   [
     "invalid-mount",

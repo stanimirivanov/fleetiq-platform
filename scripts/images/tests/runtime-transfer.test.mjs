@@ -167,6 +167,7 @@ test("export preflight starts the identical isolated helper and propagates refus
       calls.push(args);
       assert.equal(args[0], "run");
       assert(args.includes("--rm"));
+      assert.equal(args[args.indexOf("--pull") + 1], "always");
       assert(args.includes("--read-only"));
       assert.equal(args[args.indexOf("--user") + 1], containerUser());
       assert.equal(args[args.indexOf("--cap-drop") + 1], "ALL");
