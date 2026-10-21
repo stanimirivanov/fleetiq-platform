@@ -2,6 +2,7 @@
 import { openSync, closeSync, fstatSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
+import { diagnosticCategory, ImageToolFailure } from "./failure.mjs";
 const children = new Set();
 export function cancellation() {
   let interrupted = false;
@@ -59,6 +60,8 @@ export async function run(
       child.stderr?.setEncoding("utf8");
       let output = "";
       let bytes = 0;
+      let diagnosticTail = "";
+      let category = "command-failed";
       let exceeded = false;
       let settled = false;
       const append = (target, chunk) => {
@@ -69,6 +72,13 @@ export async function run(
           return;
         }
         if (target === "out") output += chunk;
+        else {
+          // Keep a bounded private window only to recognize split Docker errors.
+          // Neither this text nor argv is attached to errors or qualification reports.
+          diagnosticTail = (diagnosticTail + chunk).slice(-4096);
+          const observed = diagnosticCategory(diagnosticTail);
+          if (observed !== "command-failed") category = observed;
+        }
       };
       child.stdout?.on("data", (c) => append("out", c));
       child.stderr?.on("data", (c) => append("err", c));
@@ -85,13 +95,18 @@ export async function run(
                 child.kill();
               }
             }, 100);
-      child.on("error", () => {
+      child.on("error", (error) => {
         if (settled) return;
         settled = true;
         children.delete(child);
         clearTimeout(timer);
         clearInterval(monitor);
-        reject(new Error("Required image tool could not start."));
+        reject(
+          new ImageToolFailure(
+            args[0], null, false,
+            error.code === "ENOENT" ? "tool-unavailable" : "tool-start-failed",
+          ),
+        );
       });
       child.on("close", (code) => {
         if (settled) return;
@@ -106,15 +121,7 @@ export async function run(
           exceeded = true;
         if (code !== 0 || exceeded)
           reject(
-            new Error(
-              "Image tool " +
-                args[0] +
-                " failed (exit " +
-                code +
-                ", bounded=" +
-                exceeded +
-                ").",
-            ),
+            new ImageToolFailure(args[0], code, exceeded, category),
           );
         else resolve(output);
       });

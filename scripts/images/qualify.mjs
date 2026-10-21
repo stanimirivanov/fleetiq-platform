@@ -24,12 +24,14 @@ import {
 } from "./policy.mjs";
 import {
   loadRuntime,
+  preflightRuntimeExport,
   roundtrip,
   validateLoadedIdentity,
 } from "./transport.mjs";
 import { qualifyCompose } from "./compose.mjs";
 import { qualifyRuntime } from "./runtime.mjs";
 import { scanRuntime } from "./scan.mjs";
+import { failureDetails } from "./failure.mjs";
 export async function qualify() {
   ensure(
     process.versions.node.split(".")[0] === "24",
@@ -66,9 +68,13 @@ export async function qualify() {
   let loaded;
   let failure;
   let successful = false;
-  let stage = "build";
+  let stage = "transport-preflight";
   const tag = "fleetiq-qualified:" + resources.id;
   try {
+    // Pull/unpack the transport image before build caches and the scanner's DB
+    // occupy runner storage, and fail cheaply if its sandbox cannot start.
+    await preflightRuntimeExport(tools, directory);
+    stage = "build";
     const builderName = resources.network;
     await docker([
       "buildx",
@@ -188,6 +194,7 @@ export async function qualify() {
     cancel.check();
     successful = true;
   } catch (error) {
+    record.failure = failureDetails(error);
     failure = error;
     throw error;
   } finally {
@@ -217,6 +224,7 @@ export async function qualify() {
         record.outcome = "passed";
       }
     } catch (cleanupError) {
+      record.cleanupFailure = failureDetails(cleanupError);
       if (failure)
         throw new AggregateError(
           [failure, cleanupError],

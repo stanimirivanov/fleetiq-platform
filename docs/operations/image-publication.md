@@ -42,6 +42,10 @@ node scripts/images/qualify.mjs
 ```
 
 If Docker is not on PATH, set FLEETIQ_DOCKER to its executable path. The script
+first forces a registry pull and starts the pinned archive helper with the same
+read-only, capability-free, network-disabled sandbox used by runtime export. This bounded
+`transport-preflight` fails before a cold build if the helper cannot start and
+pulls its layers before build-cache and scanner storage are occupied. It then
 creates a uniquely owned builder, ephemeral PostgreSQL/registry containers and
 private network. Runtime archive spooling uses bounded container scratch space
 and native binary output from Docker exec, avoiding slow Windows bind-mount
@@ -192,6 +196,15 @@ Review official release provenance, supported platform, digest and compatibility
 before changing a pin; rerun policy mutations, the real image gate and full
 platform acceptance. Remove tooling when its capability is replaced, not its checks.
 
+An archive-helper digest must resolve in the upstream registry, even on a host
+that already caches its layers. Inspect the official version tag with Docker
+manifest inspection, select its `linux/amd64` descriptor, and record its digest,
+upstream build revision and actual Skopeo version in the update review. Pin the
+version tag together with that immutable manifest digest in `tools.json`. A
+removed manifest requires a reviewed replacement; never fall back to a mutable
+tag. Preflight uses `--pull always` so a warm daemon cache cannot hide a missing
+upstream manifest. This adds no retry or skipped check.
+
 Trivy uses a current official schema-v2 database, at most 24 hours old and before
 its next-update deadline. High/critical vulnerabilities fail even when unfixed.
 No ignore file, advisory waiver, insecure public-registry TLS or absent-tool pass
@@ -209,7 +222,26 @@ digests and avoid mutable Trivy action tags, not to disable scanning; see the
 
 A missing tool, incompatible source, invalid inventory, stale/failed scan or
 cleanup failure prevents success. Inspect the named stage and redacted reports;
-fix the cause and rerun the complete affected gate. Never change a threshold,
+fix the cause and rerun the complete affected gate.
+
+Captured tool failures now retain only `failure.operation`, numeric or null
+`failure.exitCode`, `failure.bounded` and an allowlisted `failure.category` in
+`qualification.json`. Categories distinguish storage exhaustion, unavailable
+Docker, registry authentication, network/timeout, image lookup, invalid mounts,
+missing entrypoints and permission refusal. Unknown diagnostics remain
+`command-failed`; an unknown non-tool error retains only `operation-failed`.
+Cleanup failures are recorded separately. Raw child output, argv and error
+stacks are never copied into these fields. The classifier uses a private bounded
+4096-character stderr window; inherited live build output is not classified.
+
+A Docker exit 125 does not identify its cause. Earlier receipts that omitted
+Docker's diagnostic cannot establish a permission, image, storage or daemon
+failure from that number alone. Check the safe category on a new affected run;
+do not weaken sandbox permissions, alter pins or assume a successful image from
+unit fixtures. Preflight adds no automatic retry and does not replace original
+OCI scanning, archive/config read-back or actual runtime/Compose qualification.
+
+Never change a threshold,
 checksum, success flag or source identity to make a receipt pass.
 
 A failed registry copy/readback can leave orphaned content. It receives no
