@@ -1,0 +1,47 @@
+type: object
+additionalProperties: false
+required: [device_asset_id, channel_id, revision, selection, policy_version, actor_id, recorded_at_ms]
+properties:
+  device_asset_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  channel_id:
+    type: string
+    pattern: '^[A-Za-z0-9_.-]{1,128}$'
+  revision:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  selection:
+    anyOf:
+      - $ref: ./ProtocolRouteSelection.yaml
+      - type: "null"
+  policy_version:
+    type: [integer, "null"]
+    minimum: 1
+    description: Admission policy recorded at commissioning; null for retirement. GET is configuration, not a fresh eligibility check.
+  actor_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  recorded_at_ms:
+    type: integer
+    format: int64
+    minimum: 0
+allOf:
+  - if:
+      additionalProperties: true
+      properties:
+        selection:
+          type: "null"
+    then:
+      additionalProperties: true
+      properties:
+        policy_version:
+          type: "null"
+    else:
+      additionalProperties: true
+      properties:
+        policy_version:
+          type: integer

@@ -14,6 +14,7 @@ fleetiq-domain = { path = "../domain" }
 fleetiq-history = { path = "../history" }
 fleetiq-identity = { path = "../identity" }
 fleetiq-ingestion = { path = "../ingestion" }
+fleetiq-protocol-sdk = { path = "../protocol-sdk" }
 fleetiq-metadata = { path = "../metadata" }
 fleetiq-semantics = { path = "../semantics" }
 fleetiq-telemetry = { path = "../telemetry" }
@@ -21,7 +22,6 @@ sqlx.workspace = true
 
 [dev-dependencies]
 fleetiq-protocol-host = { path = "../protocol-host" }
-fleetiq-protocol-sdk = { path = "../protocol-sdk" }
 tokio.workspace = true
 
 [lints]

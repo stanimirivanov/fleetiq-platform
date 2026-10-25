@@ -1,0 +1,163 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT revision.tenant_id,revision.device_asset_id,revision.channel_id,revision.revision,revision.actor_id,revision.recorded_at_ms,\n       revision.protocol_package_id,revision.protocol_package_version,revision.wit_world,revision.policy_version,\n       package.artifact_sha256,package.artifact_size_bytes\nFROM ingestion.protocol_route_heads AS head\nJOIN ingestion.protocol_route_revisions AS revision ON revision.tenant_id=head.tenant_id AND revision.device_asset_id=head.device_asset_id AND revision.channel_id=head.channel_id AND revision.revision=COALESCE($4,head.revision)\nLEFT JOIN metadata.protocol_package_releases AS package ON package.tenant_id=revision.tenant_id\n AND package.protocol_package_id=revision.protocol_package_id AND package.protocol_package_version=revision.protocol_package_version\nWHERE head.tenant_id=$1 AND head.device_asset_id=$2 AND head.channel_id=$3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "device_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "device_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "channel_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "channel_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "protocol_package_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "protocol_package_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "protocol_package_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "protocol_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "wit_world",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "wit_world"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "policy_version",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_route_revisions",
+            "name": "policy_version"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "artifact_sha256",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "metadata.protocol_package_releases",
+            "name": "artifact_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "artifact_size_bytes",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "metadata.protocol_package_releases",
+            "name": "artifact_size_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "720dcdb8746d257e34092676fca4e575366594dc6994dabb1588b8c2e2afa99c"
+}

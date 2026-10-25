@@ -79,3 +79,5 @@ pub type PostgresSignalBindingRepositoryError = PostgresRepositoryError;
 pub static MIGRATOR: Migrator = sqlx::migrate!("../../migrations");
 
 pub use ingestion::PostgresProtocolArtifactStore;
+
+pub use ingestion::PostgresProtocolRoutingRepository;

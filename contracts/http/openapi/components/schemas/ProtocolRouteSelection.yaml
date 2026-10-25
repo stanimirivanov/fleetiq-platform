@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required: [package_id, package_version, world]
+properties:
+  package_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  package_version:
+    type: string
+    minLength: 1
+    maxLength: 128
+  world:
+    type: string
+    enum: [runtime-v1, identity-v1]

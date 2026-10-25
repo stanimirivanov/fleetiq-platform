@@ -31,6 +31,7 @@ mod protected_relationship;
 mod protected_request;
 mod protected_signal_binding;
 mod protocol_packages;
+mod protocol_routes;
 mod registration;
 mod revision_commands;
 mod tenant_access_administration;
@@ -96,6 +97,11 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(protocol_routes::router(
+            pool.clone(),
+            authentication.clone(),
+            mutation.clone(),
+        ))
         .merge(protocol_packages::router(
             pool.clone(),
             authentication.clone(),
@@ -198,6 +204,7 @@ mod tests {
         let paths = [
             "/api/v1/me/tenants",
             "/api/v1/tenants/tenant-a/protocol-packages/custom.binary/versions/1",
+            "/api/v1/tenants/tenant-a/assets/device-a/protocol-routes/tcp-a",
             "/api/v1/admin/actors",
             "/api/v1/admin/actors/actor-a/platform-grants",
             "/api/v1/admin/platform-access-changes",

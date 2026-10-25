@@ -34,3 +34,10 @@ pub use observation_persistence::{
 pub use protocol_package_catalog::{
     ProtocolPackageCatalog, ProtocolPackageRegistrationOutcome, ProtocolPackageRelease,
 };
+
+mod protocol_routing;
+pub use protocol_routing::{
+    InvalidProtocolChannel, PinnedProtocolSession, ProtocolChannelId, ProtocolDeviceRoute,
+    ProtocolRouteCommand, ProtocolRouteSelection, ProtocolRouteWrite, ProtocolRoutingRepository,
+    ProtocolRoutingService, ProtocolSessionRoute, RegisteredIdentityChannel,
+};

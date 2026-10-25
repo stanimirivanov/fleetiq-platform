@@ -140,9 +140,8 @@ The Wasmtime integration implements:
 Admitted components retain their immutable package release and host-computed
 SHA-256 artifact digest. PostgreSQL catalogue registration is implemented
 separately from admission, including exact retry, immutable-content collision,
-tenant-scoped lookup, and the complete unsigned artifact-size range. Activation
-policy and package distribution remain
-planned. Source-built Rust guest authoring and conformance are implemented in the
+tenant-scoped lookup, and the complete unsigned artifact-size range. Device/channel activation and internal scoped routing are implemented;
+transport listeners and package distribution remain planned. Source-built Rust guest authoring and conformance are implemented in the
 [custom protocol example](../../examples/custom-protocol/README.md). An opt-in
 identity world returns bounded, redacted external identity proposals; resolving
 and authorizing those claims remains a separate host routing responsibility.
@@ -331,7 +330,8 @@ authorization protects bounded, newest-first lifecycle audit queries. Stable
 keyset cursors use recorded time and the platform-scoped lifecycle change
 identity. It also protects a bounded platform-wide tenant catalogue ordered by
 stable tenant identity, with explicit active or suspended current state.
-Production ingestion suspension remains planned.
+Internal protocol handoff eligibility honors current tenant suspension.
+Production transport cancellation remains planned.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
@@ -466,5 +466,13 @@ and the [execution plan](plans/semantic-definition-publication.md).
 Issue #317 adds tenant-scoped bounded PostgreSQL artifacts and explicit protected
 registration/read/admission routes. Admission uses a supervised Linux worker and
 retains exact release/world/policy evidence; ordinary metadata authority does not
-permit it. Activation, device routing and listeners remain planned. See the
+permit it. Revisioned device/channel activation and scoped identity handoffs are implemented; listeners remain planned. See the
 [admission procedure](../operations/protocol-package-admission.md).
+
+## Protocol device routing
+
+Issue #319 adds exact admitted package/world selection per registered device and
+host channel, immutable generations, historical retry receipts and explicit
+retirement. Internal lookup constrains tenant/issuer/channel/decoder and revalidates
+current eligibility before future bounded turns. Routing does not authenticate
+peers or activate network listeners. See the [commissioning guide](../operations/protocol-route-commissioning.md).

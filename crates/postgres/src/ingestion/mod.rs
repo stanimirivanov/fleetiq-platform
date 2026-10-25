@@ -14,3 +14,6 @@ pub use protocol_package_catalog::{
 
 mod protocol_artifact_store;
 pub use protocol_artifact_store::PostgresProtocolArtifactStore;
+
+mod protocol_routing;
+pub use protocol_routing::PostgresProtocolRoutingRepository;

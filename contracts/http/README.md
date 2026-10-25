@@ -172,3 +172,7 @@ for retries, pagination, browser guards and final-administrator self-revocation.
 
 Baseline.10 adds immutable definition publication and bounded collection/version
 catalogues. Existing exact reads remain unchanged. See [semantic commissioning](../../docs/operations/semantic-definitions.md) for separate read/write permissions, content-checked retries and audit limits.
+
+Baseline.14 adds protected revisioned device/channel protocol commissioning.
+GET inspects current configuration; PUT receipts may resolve historical exact
+retries and never roll back the head. See [route commissioning](../../docs/operations/protocol-route-commissioning.md).

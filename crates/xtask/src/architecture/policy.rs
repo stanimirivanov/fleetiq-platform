@@ -81,11 +81,12 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
             "fleetiq-history",
             "fleetiq-identity",
             "fleetiq-ingestion",
+            "fleetiq-protocol-sdk",
             "fleetiq-metadata",
             "fleetiq-semantics",
             "fleetiq-telemetry",
         ],
-        development: &["fleetiq-protocol-host", "fleetiq-protocol-sdk"],
+        development: &["fleetiq-protocol-host"],
         build: NONE,
     },
     PackagePolicy {

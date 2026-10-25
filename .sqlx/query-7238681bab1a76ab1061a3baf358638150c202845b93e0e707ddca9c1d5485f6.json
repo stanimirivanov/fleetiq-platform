@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO ingestion.protocol_route_heads (tenant_id,device_asset_id,channel_id,revision)\n            SELECT tenant_id,device_asset_id,$3,0 FROM metadata.communication_devices WHERE tenant_id=$1 AND device_asset_id=$2\n            ON CONFLICT (tenant_id,device_asset_id,channel_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7238681bab1a76ab1061a3baf358638150c202845b93e0e707ddca9c1d5485f6"
+}

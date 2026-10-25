@@ -1,0 +1,62 @@
+get:
+  operationId: getDeviceProtocolRoute
+  summary: Read the latest device/channel protocol configuration
+  description: Requires current tenant protocol.manage. Includes explicit retirement; configuration is not runtime eligibility or peer authentication. All outcomes are no-store.
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/protocol-tenant-id.yaml
+    - $ref: ../../components/parameters/exact-asset-id.yaml
+    - $ref: ../../components/parameters/protocol-channel-id.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/ProtocolRouteSucceeded.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/ProtocolPackageForbidden.yaml
+    "404":
+      $ref: ../../components/responses/NotFound.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml
+put:
+  operationId: changeDeviceProtocolRoute
+  summary: Select or retire an exact admitted device/channel protocol route
+  description: Requires current tenant protocol.manage, a registered communication device and exact stored/current-policy admitted release. Body limit is 4 KiB. expected_revision is a compare-and-swap generation; explicit null selection retires. Same-actor/content retries return the original generation/actor/time even after later edits, without replacing the current head; GET current configuration before further editing. new generations invalidate previous session handoffs even when selecting identical content. Invalid/missing prerequisites return 409; no implicit device creation or artifact activation occurs. Browser commands require exact Origin and X-FleetIQ-CSRF marker. Authentication and authorization precede request diagnostics. All outcomes are no-store.
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/protocol-tenant-id.yaml
+    - $ref: ../../components/parameters/exact-asset-id.yaml
+    - $ref: ../../components/parameters/protocol-channel-id.yaml
+    - $ref: ../../components/parameters/admin-mutation-origin.yaml
+    - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/ChangeProtocolRouteRequest.yaml
+        example:
+          expected_revision: 0
+          selection:
+            package_id: custom.binary
+            package_version: "1"
+            world: identity-v1
+  responses:
+    "200":
+      $ref: ../../components/responses/ProtocolRouteSucceeded.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/ProtocolPackageForbidden.yaml
+    "409":
+      $ref: ../../components/responses/ProtocolRouteConflict.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml
