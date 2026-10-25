@@ -118,6 +118,17 @@ const OPERATIONS: &[PublishedOperation] = &[
 // or duplicate operation IDs from slipping past the global inventory guard.
 const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
     (
+        "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}",
+        &[
+            ("get", "getProtocolPackageRelease"),
+            ("put", "registerProtocolPackageArtifact"),
+        ],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}/admissions",
+        &[("post", "admitProtocolPackage")],
+    ),
+    (
         "/api/v1/tenants/{tenant_id}/relationships/{relationship_id}/revisions/{revision}",
         &[
             ("get", "getRelationshipRevision"),
