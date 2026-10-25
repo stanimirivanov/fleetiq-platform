@@ -1,4 +1,6 @@
+import { hash } from "../policy.mjs";
 import test from "node:test";
+import { ImageToolFailure, failureDetails } from "../failure.mjs";
 import assert from "node:assert/strict";
 import { writeFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -11,7 +13,6 @@ import {
   validateLoadedConfig,
   validateLoadedIdentity,
 } from "../transport.mjs";
-import { hash } from "../policy.mjs";
 
 test("sandbox identity matches bind ownership without making private files public", () => {
   assert.equal(containerUser(1001, 123), "1001:123");
@@ -159,30 +160,62 @@ test("scanner matches private evidence ownership and retains its hardened sandbo
 });
 
 
-test("export preflight starts the identical isolated helper and propagates refusal", async () => {
-  const tools = { transport: "fixture@sha256:immutable" };
-  for (const refuse of [false, true]) {
-    const calls = [];
-    const execute = async (args, options) => {
-      calls.push(args);
-      assert.equal(args[0], "run");
-      assert(args.includes("--rm"));
-      assert.equal(args[args.indexOf("--pull") + 1], "always");
-      assert(args.includes("--read-only"));
-      assert.equal(args[args.indexOf("--user") + 1], containerUser());
-      assert.equal(args[args.indexOf("--cap-drop") + 1], "ALL");
-      assert(args.includes("no-new-privileges:true"));
-      assert.equal(args[args.indexOf("--network") + 1], "none");
-      assert.equal(args[args.indexOf("--entrypoint") + 1], "/usr/bin/sleep");
-      assert.deepEqual(args.slice(-2), [tools.transport, "0"]);
-      assert(args.includes("fixture:/artifact:ro"));
-      assert(!args.some((argument) => argument.includes("docker.sock")));
-      assert.equal(options.timeout, 120_000);
-      if (refuse) throw new Error("fixture helper refused");
-    };
-    if (refuse)
-      await assert.rejects(preflightRuntimeExport(tools, "fixture", execute), /fixture helper refused/);
-    else await preflightRuntimeExport(tools, "fixture", execute);
-    assert.equal(calls.length, 1, "preflight must not silently retry a failing sandbox");
+const remoteManifest = JSON.stringify({ schemaVersion: 2, config: { digest: "sha256:" + "a".repeat(64) }, layers: [] });
+const preflightTools = { transport: "quay.io/containers/skopeo:v1.22.3-immutable@sha256:" + hash(remoteManifest) };
+
+test("export preflight verifies remote bytes before starting the identical isolated helper", async () => {
+  const calls = [];
+  await preflightRuntimeExport(preflightTools, "fixture", async (args, options) => {
+    calls.push(args);
+    if (args[0] === "buildx") {
+      assert.deepEqual(args, ["buildx", "imagetools", "inspect", "--raw", preflightTools.transport]);
+      assert.equal(options.timeout, 60_000);
+      return remoteManifest;
+    }
+    assert.equal(calls.length, 2, "remote verification must precede sandbox startup");
+    assert.equal(args[0], "run");
+    assert(args.includes("--rm"));
+    assert.equal(args[args.indexOf("--pull") + 1], "always");
+    assert(args.includes("--read-only"));
+    assert.equal(args[args.indexOf("--user") + 1], containerUser());
+    assert.equal(args[args.indexOf("--cap-drop") + 1], "ALL");
+    assert(args.includes("no-new-privileges:true"));
+    assert.equal(args[args.indexOf("--network") + 1], "none");
+    assert.equal(args[args.indexOf("--entrypoint") + 1], "/usr/bin/sleep");
+    assert.deepEqual(args.slice(-2), [preflightTools.transport, "0"]);
+    assert(args.includes("fixture:/artifact:ro"));
+    assert(!args.some((argument) => argument.includes("docker.sock")));
+    assert.equal(options.timeout, 120_000);
+  });
+  assert.equal(calls.length, 2);
+});
+
+test("cached images cannot hide remote failure and sandbox refusal is not retried", async () => {
+  for (const failedCall of [1, 2]) {
+    let calls = 0;
+    await assert.rejects(preflightRuntimeExport(preflightTools, "fixture", async () => {
+      calls++;
+      if (calls === failedCall) throw new ImageToolFailure("run", 125, false, "image-unavailable");
+      return remoteManifest;
+    }), error => {
+      assert.equal(failureDetails(error).prerequisite, failedCall === 1 ? "transport-remote-manifest" : "transport-sandbox");
+      assert.equal(failureDetails(error).category, "image-unavailable");
+      assert.equal(failureDetails(error).exitCode, 125);
+      return true;
+    });
+    assert.equal(calls, failedCall, "no retry or cached fallback may hide a failed prerequisite");
+  }
+});
+
+test("wrong digest, invalid JSON and malformed manifests stop before acquisition", async () => {
+  for (const raw of [remoteManifest + " ", "not-json", JSON.stringify({ schemaVersion: 1 }), "x".repeat(2 * 1024 * 1024 + 1)]) {
+    const tools = { transport: "quay.io/containers/skopeo:v1.22.3-immutable@sha256:" + hash(raw) };
+    if (raw === remoteManifest + " ") tools.transport = preflightTools.transport;
+    let calls = 0;
+    await assert.rejects(preflightRuntimeExport(tools, "fixture", async () => { calls++; return raw; }), error => {
+      assert.equal(failureDetails(error).prerequisite, "transport-manifest-validation");
+      return true;
+    });
+    assert.equal(calls, 1);
   }
 });

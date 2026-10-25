@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { run } from "../process.mjs";
-import { diagnosticCategory, failureDetails } from "../failure.mjs";
+import { diagnosticCategory, failureDetails, ImagePrerequisiteFailure } from "../failure.mjs";
 
 for (const [message, category] of [
   ["failed to register layer: no space left on device", "storage-exhausted"],
@@ -49,4 +49,14 @@ test("missing tools and bounded processes cannot fabricate a successful numeric 
     (error) => failureDetails(error).bounded === true,
   );
   assert.deepEqual(failureDetails(new Error("fixture-private-diagnostic")), { category: "operation-failed" });
+});
+
+test("prerequisite failures retain safe context without leaking private output", () => {
+  const error = new ImagePrerequisiteFailure("transport-remote-manifest", new Error("fixture-private-diagnostic"));
+  assert.deepEqual(failureDetails(error), { category: "operation-failed", prerequisite: "transport-remote-manifest" });
+  assert(!error.message.includes("fixture-private-diagnostic"));
+  assert(!JSON.stringify(error).includes("fixture-private-diagnostic"));
+  const unknown = new ImagePrerequisiteFailure("fixture-private-phase", new Error());
+  assert.equal(failureDetails(unknown).prerequisite, "unknown");
+  assert(!unknown.message.includes("fixture-private-phase"));
 });

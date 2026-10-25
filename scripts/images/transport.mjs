@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { docker, jsonDocker, containerUser } from "./process.mjs";
 import { until } from "./resources.mjs";
 import { ensure, DIGEST, hash } from "./policy.mjs";
+import { ImagePrerequisiteFailure } from "./failure.mjs";
 function sandbox(directory, readOnly) {
   return [
     "--user",
@@ -23,15 +24,48 @@ function sandbox(directory, readOnly) {
     directory + ":/artifact" + (readOnly ? ":ro" : ""),
   ];
 }
-/** Verify registry availability and start the exact sandbox before a cold build. */
+/** Read remote bytes before cache-assisted acquisition; then prove sandbox startup. */
 export async function preflightRuntimeExport(tools, directory, execute = docker) {
-  await execute(
-    [
-      "run", "--rm", "--pull", "always", ...sandbox(directory, true), "--network", "none",
-      "--entrypoint", "/usr/bin/sleep", tools.transport, "0",
-    ],
-    { timeout: 120_000 },
-  );
+  console.log("Verify remote transport manifest: " + tools.transport);
+  let raw;
+  try {
+    // Buildx reads the registry directly. A daemon cache can outlive a removed
+    // digest and must never certify that a clean CI runner can fetch the tool.
+    raw = await execute(
+      ["buildx", "imagetools", "inspect", "--raw", tools.transport],
+      { timeout: 60_000 },
+    );
+  } catch (error) {
+    throw new ImagePrerequisiteFailure("transport-remote-manifest", error);
+  }
+  try {
+    ensure(
+      typeof raw === "string" && Buffer.byteLength(raw) <= 2 * 1024 * 1024 &&
+        "sha256:" + hash(raw) === tools.transport.split("@")[1],
+      "Remote manifest digest differs.",
+    );
+    const manifest = JSON.parse(raw);
+    ensure(
+      manifest.schemaVersion === 2 &&
+        ((Array.isArray(manifest.manifests) && manifest.manifests.length > 0) ||
+          (Array.isArray(manifest.layers) && DIGEST.test(manifest.config?.digest))),
+      "Remote manifest is invalid.",
+    );
+  } catch (error) {
+    throw new ImagePrerequisiteFailure("transport-manifest-validation", error);
+  }
+  console.log("Start pinned transport sandbox: " + tools.transport);
+  try {
+    await execute(
+      [
+        "run", "--rm", "--pull", "always", ...sandbox(directory, true), "--network", "none",
+        "--entrypoint", "/usr/bin/sleep", tools.transport, "0",
+      ],
+      { timeout: 120_000 },
+    );
+  } catch (error) {
+    throw new ImagePrerequisiteFailure("transport-sandbox", error);
+  }
 }
 
 export function transport(
