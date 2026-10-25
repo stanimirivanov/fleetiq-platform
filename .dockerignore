@@ -7,6 +7,9 @@
 !examples/
 !examples/custom-protocol/
 !examples/custom-protocol/**
+!packages/
+!packages/teltonika/
+!packages/teltonika/**
 !migrations/
 !migrations/**
 !.sqlx/

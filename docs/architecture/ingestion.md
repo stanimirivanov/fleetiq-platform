@@ -46,6 +46,10 @@ authenticate a peer. Revalidate pinned handoffs before each future bounded turn;
 see [route commissioning](../operations/protocol-route-commissioning.md).
 Catalogue presence never grants execution authority.
 
+The first vendor implementation is the bounded [Teltonika TCP package](../../packages/teltonika/README.md).
+Its wire parser is independent of WIT, host identity and business semantics;
+source time, scaled GPS fields and exact unknown IO survive without asset attribution.
+
 ## Session turn
 
 ```mermaid

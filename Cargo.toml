@@ -17,6 +17,7 @@ members = [
     "crates/telemetry",
     "crates/xtask",
     "examples/custom-protocol",
+    "packages/teltonika",
 ]
 resolver = "3"
 
@@ -26,6 +27,7 @@ repository = "https://github.com/stanimirivanov/fleetiq-platform"
 rust-version = "1.98.1"
 
 [workspace.dependencies]
+wit-bindgen = { version = "=0.57.1", default-features = false, features = ["macros", "realloc"] }
 rlimit = { version = "=0.11.0", default-features = false }
 axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"] }
 bigdecimal = { version = "0.4.0", default-features = false }

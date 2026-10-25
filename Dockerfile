@@ -11,6 +11,7 @@ WORKDIR /workspace
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 COPY examples/custom-protocol ./examples/custom-protocol
+COPY packages/teltonika ./packages/teltonika
 COPY migrations ./migrations
 COPY .sqlx ./.sqlx
 

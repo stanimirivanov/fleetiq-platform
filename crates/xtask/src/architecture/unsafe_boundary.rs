@@ -5,7 +5,11 @@ use syn::{
     visit::{self, Visit},
 };
 const OWNER: &str = "examples/custom-protocol/src/component.rs";
-const GENERATED: &str = "examples/custom-protocol/src/component/bindings.rs";
+const OWNERS: &[&str] = &[OWNER, "packages/teltonika/src/component.rs"];
+const GENERATED: &[&str] = &[
+    "examples/custom-protocol/src/component/bindings.rs",
+    "packages/teltonika/src/component/bindings.rs",
+];
 const GLUE: &str = r#"wit_bindgen::generate!({path:"../../crates/protocol-wasm/wit",world:"identity-protocol-package"});use super::Package;export!(Package);"#;
 fn compact(s: &str) -> String {
     s.chars().filter(|c| !c.is_whitespace()).collect()
@@ -14,6 +18,7 @@ struct Sensor<'a> {
     path: &'a str,
     allowed: bool,
     count: usize,
+    module_depth: usize,
     violations: Vec<String>,
 }
 impl<'ast> Visit<'ast> for Sensor<'_> {
@@ -31,12 +36,15 @@ impl<'ast> Visit<'ast> for Sensor<'_> {
 
     fn visit_item_mod(&mut self, item: &'ast ItemMod) {
         let previous = self.allowed;
-        self.allowed = self.path == OWNER
+        self.allowed = self.module_depth == 0
+            && OWNERS.contains(&self.path)
             && item.ident == "bindings"
             && item.content.is_none()
             && matches!(item.vis, syn::Visibility::Inherited)
             && item.attrs.len() == 1;
+        self.module_depth += 1;
         visit::visit_item_mod(self, item);
+        self.module_depth -= 1;
         self.allowed = previous;
     }
     fn visit_attribute(&mut self, attr: &'ast Attribute) {
@@ -66,6 +74,7 @@ fn inspect(path: &str, source: &str) -> Result<usize, String> {
         path,
         allowed: false,
         count: 0,
+        module_depth: 0,
         violations: vec![],
     };
     sensor.visit_file(&file);
@@ -117,17 +126,26 @@ pub(super) fn check(root: &Path) -> Result<(), Vec<String>> {
             .map_err(|_| format!("{path}: unsafe-boundary source unavailable"))
             .and_then(|s| inspect(path, &s));
         match result {
-            Ok(n) => count += n,
+            Ok(n) => {
+                count += n;
+                if OWNERS.contains(&path) && n != 1 {
+                    violations.push(format!(
+                        "{path}: expected exactly one top-level generated ABI allowance"
+                    ));
+                }
+            }
             Err(e) => violations.push(e),
         }
     }
-    if count != 1 {
-        violations.push("expected exactly one reviewed generated-ABI unsafe allowance".into());
+    if count != OWNERS.len() {
+        violations.push("expected exactly two reviewed generated-ABI unsafe allowances".into());
     }
-    if !fs::read_to_string(root.join(GENERATED)).is_ok_and(|s| compact(&s) == compact(GLUE)) {
-        violations.push(format!(
-            "{GENERATED}: only the reviewed generator and export invocations are permitted"
-        ));
+    for generated in GENERATED {
+        if !fs::read_to_string(root.join(generated)).is_ok_and(|s| compact(&s) == compact(GLUE)) {
+            violations.push(format!(
+                "{generated}: only the reviewed generator and export invocations are permitted"
+            ));
+        }
     }
     if violations.is_empty() {
         Ok(())
@@ -175,6 +193,21 @@ mod tests {
             )
             .is_ok()
         );
+    }
+    #[test]
+    fn teltonika_allowance_is_exact_and_does_not_extend_to_sibling_modules() {
+        let allowance = "#[allow(unsafe_code, clippy::same_length_and_capacity)] mod bindings;";
+        assert_eq!(inspect(OWNERS[1], allowance).unwrap(), 1);
+        assert!(inspect(OWNERS[1], &format!("mod nested {{ {allowance} }}")).is_err());
+        assert!(inspect("packages/teltonika/src/decoder.rs", allowance).is_err());
+        assert!(
+            inspect(
+                OWNERS[1],
+                "#[allow(unsafe_code, clippy::all)] mod bindings;"
+            )
+            .is_err()
+        );
+        assert!(inspect(OWNERS[1], "#[allow(unsafe_code, clippy::same_length_and_capacity)] mod bindings { unsafe fn bypass() {} }").is_err());
     }
     #[test]
     fn generated_boundary_rejects_handwritten_code() {

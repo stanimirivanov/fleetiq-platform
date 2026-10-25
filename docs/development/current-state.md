@@ -122,6 +122,10 @@ The protocol SDK and trusted host implement:
 - a bounded session turn that extracts and processes at most one frame.
 
 The host has no production network listener or device-session registry yet.
+The source-built [Teltonika package](../../packages/teltonika/README.md) supports
+a bounded IMEI handshake and TCP Codec 8/8 Extended subset, retaining source
+timestamps and raw unknown IO. Actual component conformance covers host ACK gates;
+hardware compatibility and durable worker/listener qualification remain pending.
 
 ## WebAssembly protocol components
 

@@ -35,6 +35,12 @@ const NONE: &[&str] = &[];
 // no production infrastructure approvals for domain, contract, or policy crates.
 pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     ExternalPackagePolicy {
+        name: "fleetiq-teltonika",
+        normal: &["wit-bindgen"],
+        development: NONE,
+        build: NONE,
+    },
+    ExternalPackagePolicy {
         name: "fleetiq-custom-protocol-example",
         normal: &["wit-bindgen"],
         development: NONE,
