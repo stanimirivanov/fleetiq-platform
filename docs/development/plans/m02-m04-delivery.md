@@ -1,6 +1,6 @@
 # M02, M03 and M04 delivery sequence
 
-Status: Approved sequence; PRs 1–9 merged; PR 10 revision commands implemented and locally verified, awaiting review.
+Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring implemented and locally verified, awaiting review.
 
 ## TL;DR
 
@@ -11,8 +11,10 @@ discovery, is merged as #295; its
 [delivery record](semantic-definition-publication.md) contains the evidence.
 PR 9, [asset and communication-device registration](metadata-registration.md),
 is merged as #299. PR 10 is [relationship and signal-binding revision commands](metadata-revision-commands.md),
-tracked by issue #300. Its delivery record contains verification evidence.
-After it merges, continue with original PR 11: the complete development installation.
+tracked by issue #300 and delivered before installation work. Its delivery record
+contains verification evidence. Original PR 11 continues through the deployment
+repository; its persistent Kubernetes qualification is deferred pending suitable
+infrastructure. Independent M03 work resumes with PR 13.
 Completed guide, discovery and administration slices are not new work. Future
 slices retain the dependencies and milestone boundaries below.
 
@@ -148,10 +150,16 @@ Every backend API slice includes its DTOs, OpenAPI definitions, examples, author
 - **Contracts & Boundaries:** Exercise existing login/session/logout and metadata APIs. Reuse POM behavior; keep provider fixtures test-only and retain real signature/TLS validation.
 - **Harness Gate:** D plus real-browser login/read/logout, CSRF, expiry, revocation, cross-tenant denial, and scanned diagnostics.
 
+Full-profile Kubernetes qualification and D06 are deferred by the owner on
+2026-10-25 until suitable infrastructure is available. They remain incomplete;
+no capacity gate or installation acceptance is waived. Resume independent M03
+work with PR 13; dependent deployment/browser acceptance remains deferred.
+
 ### PR 13: Deliver guest-package authoring and conformance tooling
 
 **M03 · fleetiq-platform · Can start alongside M02**
 
+- **Delivery:** Implemented and locally verified in issue #315; review pending. Full acceptance remains blocked by pre-existing main-branch advisories and unavailable local PostgreSQL; no gate is waived.
 - **Objective & Scope:** Provide reproducible guest builds, a custom-protocol example, and conformance tests. Add the versioned identity-claim handoff required for device onboarding.
 - **Target Layers / Files:** [protocol-sdk](../../../crates/protocol-sdk), protocol-wasm WIT, new package examples/build tooling, author documentation.
 - **Contracts & Boundaries:** Preserve existing ABI compatibility. Packages propose identity claims; only the host establishes tenant/device context and execution authority.

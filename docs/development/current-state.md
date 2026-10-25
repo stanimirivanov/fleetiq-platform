@@ -141,8 +141,11 @@ Admitted components retain their immutable package release and host-computed
 SHA-256 artifact digest. PostgreSQL catalogue registration is implemented
 separately from admission, including exact retry, immutable-content collision,
 tenant-scoped lookup, and the complete unsigned artifact-size range. Activation
-policy, artifact storage, compilation isolation, package distribution, and
-author tooling remain planned.
+policy, artifact storage, compilation isolation, and package distribution remain
+planned. Source-built Rust guest authoring and conformance are implemented in the
+[custom protocol example](../../examples/custom-protocol/README.md). An opt-in
+identity world returns bounded, redacted external identity proposals; resolving
+and authorizing those claims remains a separate host routing responsibility.
 
 ## Durable ingestion
 

@@ -1,0 +1,18 @@
+/// Optional identification extension; the original runtime interface is unchanged.
+interface identification {
+    use runtime.{invocation-input, package-error};
+    /// Untrusted external identity evidence, never a tenant or internal device ID.
+    record identity-claim {
+        kind: string,
+        value: string,
+    }
+    /// Inspect exactly one complete handshake frame without applying session
+    /// effects. Hosts independently resolve and authorize the proposed identity.
+    identify: func(input: invocation-input) -> result<identity-claim, package-error>;
+}
+
+/// Explicit opt-in extension of the existing 0.1.0 runtime world.
+world identity-protocol-package {
+    include protocol-package;
+    export identification;
+}

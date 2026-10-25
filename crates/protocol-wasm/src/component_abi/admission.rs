@@ -88,6 +88,16 @@ impl WasmSandbox {
         wasm: &[u8],
         policy: ComponentAdmissionPolicy,
     ) -> Result<AdmittedProtocolComponent, ComponentAdmissionError> {
+        self.bind_protocol_component(package, wasm, policy)
+            .map(|(admitted, _)| admitted)
+    }
+
+    pub(super) fn bind_protocol_component(
+        &self,
+        package: ProtocolPackageRef,
+        wasm: &[u8],
+        policy: ComponentAdmissionPolicy,
+    ) -> Result<(AdmittedProtocolComponent, Component), ComponentAdmissionError> {
         let actual = wasm.len();
         let limit = policy.max_component_bytes().get();
         if actual > limit {
@@ -110,11 +120,14 @@ impl WasmSandbox {
         let bindings = ProtocolPackagePre::new(instance)
             .map_err(ComponentAdmissionError::InterfaceMismatch)?;
 
-        Ok(AdmittedProtocolComponent {
-            package,
-            artifact_digest: artifact_digest_of(wasm),
-            bindings,
-        })
+        Ok((
+            AdmittedProtocolComponent {
+                package,
+                artifact_digest: artifact_digest_of(wasm),
+                bindings,
+            },
+            component,
+        ))
     }
 }
 

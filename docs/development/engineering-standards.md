@@ -83,7 +83,9 @@ can improve navigation but is not an architectural refactor.
   invariants, and route reconstruction through validating constructors.
 - Mark meaningful results `#[must_use]` where ignoring them could lose state,
   work, or a required decision.
-- `unsafe` is forbidden at workspace level. A future exception needs a focused
+- `unsafe` is denied at workspace level. The sole owner-approved exception is
+  [generated guest ABI glue](../architecture/dependency-rules.md#generated-guest-abi-boundary),
+  guarded by the architecture sensor. Any further exception needs a focused
   ADR, a narrowly scoped crate, documented invariants, and dedicated review.
 
 ### Errors and boundaries

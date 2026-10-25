@@ -225,7 +225,7 @@ const fn package_rejection_body() -> &'static str {
     "
 }
 
-fn sandbox() -> WasmSandbox {
+pub(super) fn sandbox() -> WasmSandbox {
     WasmSandbox::new(Duration::from_millis(2), nonzero_usize(1 << 20))
         .expect("test sandbox configuration is valid")
 }

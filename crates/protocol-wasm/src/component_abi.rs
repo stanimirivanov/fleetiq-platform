@@ -3,7 +3,12 @@
 mod admission;
 mod conversion;
 mod framing;
+mod identity;
 mod invocation;
+pub use identity::{
+    AdmittedIdentityProtocolComponent, IDENTITY_PROTOCOL_PACKAGE_WIT,
+    IDENTITY_PROTOCOL_PACKAGE_WORLD, IdentityInvocationError,
+};
 mod processing;
 mod session_turn;
 
