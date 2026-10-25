@@ -30,6 +30,7 @@
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
+| `fleetiq-teltonika` | Adapter | Bounded vendor wire parser and import-free Teltonika guest |
 | `fleetiq-custom-protocol-example` | Tooling | Import-free, source-built custom protocol guest and authoring example |
 | `fleetiq-xtask` | Tooling | Repository checks that do not enter production binaries |
 
@@ -253,14 +254,16 @@ roles.
 
 Owner-approved issue #315 changes workspace unsafe policy from forbid to deny
 solely to permit wit-bindgen's generated canonical ABI exports. Handwritten Rust
-remains denied. Exactly one out-of-line bindings module has an unsafe allowance;
+remains denied. Exactly two fixed out-of-line bindings modules have the owner-approved allowance:
+`examples/custom-protocol/src/component/bindings.rs` and
+`packages/teltonika/src/component/bindings.rs` (issue #321);
 `cargo xtask architecture` parses Rust attributes with Syn and rejects other
 allow/expect/cfg_attr allowances. The generated file must contain only the
 reviewed generator and export invocations, preventing handwritten unsafe from
 entering the exception. No allowlist permits runtime/application unsafe code.
 
-The owner also approved only `clippy::same_length_and_capacity` on that generated
-module: canonical ABI allocations have capacity equal to length. The sensor
+The owner also approved only `clippy::same_length_and_capacity` on those generated
+modules: canonical ABI allocations have capacity equal to length. The sensor
 rejects extra allowances there; handwritten code keeps the full Clippy policy.
 
 Protocol artifact admission adds ingestion-to-access evidence and pure SHA-256

@@ -1,6 +1,6 @@
 # M02, M03 and M04 delivery sequence
 
-Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring merged; PR 14 artifact storage/admission merged; PR 15 activation/routing in progress.
+Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring merged; PR 14 artifact storage/admission merged; PR 15 activation/routing merged; PR 16 Teltonika component in progress.
 
 ## TL;DR
 
@@ -178,7 +178,7 @@ Merged through issue #317 / PR #318. Activation and D06 remain separate.
 
 ### PR 15: Activate packages and route registered devices
 
-Implementation tracked by issue #319; D06 remains deferred.
+Merged through issue #319 / PR #320; D06 remains deferred.
 
 **M03 · fleetiq-platform · Depends on PRs 9 and 14**
 
@@ -188,6 +188,8 @@ Implementation tracked by issue #319; D06 remains deferred.
 - **Harness Gate:** P + O; unregistered claims, cross-tenant routing, inactive releases, activation races, revocation, and suspension tests.
 
 ### PR 16: Implement the first Teltonika package
+
+Implementation tracked by issue #321. Bounded TCP Codec 8/8 Extended component; listeners, hardware and D06 remain separate.
 
 **M03 · fleetiq-platform · Depends on PR 13; parallel with PRs 14–15**
 

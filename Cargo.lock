@@ -1223,6 +1223,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fleetiq-teltonika"
+version = "0.1.0"
+dependencies = [
+ "wit-bindgen",
+]
+
+[[package]]
 name = "fleetiq-xtask"
 version = "0.1.0"
 dependencies = [
