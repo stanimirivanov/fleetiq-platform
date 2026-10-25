@@ -9,7 +9,11 @@
 # operations. Re-review before private-key use or dependency changes; remove
 # when upstream is patched or this path is replaced. Full assessment:
 # docs/development/plans/browser-identity-dependency-review.md
+# EC verification exception approved 2026-10-25; exact graph enforced by
+# the architecture sensor. Re-review/remove according to
+# docs/development/plans/oidc-crypto-bigint-advisory-review.md.
 ignore = [
+    { id = "RUSTSEC-2026-0387", reason = "Exact OIDC public EC signature-verification graph only; no EC private-key operations; see oidc-crypto-bigint-advisory-review.md" },
     { id = "RUSTSEC-2023-0071", reason = "OIDC adapter performs public-key verification only; no RSA private-key operations or keys" },
 ]
 
@@ -30,6 +34,7 @@ allow-wildcard-paths = true
 # package sources and duplicate records. Keep these rules with the advisory
 # exception and remove them together after a reviewed replacement or fix.
 deny = [
+    { crate = "crypto-bigint", wrappers = ["elliptic-curve"], reason = "Only the reviewed OIDC EC verifier graph may reach crypto-bigint; see oidc-crypto-bigint-advisory-review.md" },
     { crate = "rsa", wrappers = ["openidconnect"], reason = "Only the reviewed OIDC verifier may depend on RSA; see browser-identity-dependency-review.md" },
     { crate = "openidconnect:<4.0.1", reason = "OIDC versions outside 4.0.1 need a new RSA exposure review" },
     { crate = "openidconnect:>4.0.1", reason = "OIDC versions outside 4.0.1 need a new RSA exposure review" },

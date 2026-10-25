@@ -1,6 +1,6 @@
 # OIDC crypto-bigint advisory review
 
-Status: Proposed; no new advisory exception is enabled.
+Status: Owner-approved on 2026-10-25; verification-only exception implemented.
 
 ## TL;DR
 
@@ -8,8 +8,8 @@ Status: Proposed; no new advisory exception is enabled.
 - crypto-bigint 0.7.6 cannot satisfy OIDC's pinned elliptic-curve dependency.
 - The reviewed ECDSA path verifies provider signatures with public keys; it does
   not accept EC private keys or perform private-key signing/key agreement.
-- Keep the gate failing until the owner approves either a separately reviewed
-  authentication-library migration or the exact verification-only exception below.
+- The owner approved only the exact verification-only exception below; all
+  other advisory findings remain blocking.
 
 ## Evidence
 
@@ -32,15 +32,20 @@ verifier; it does not call EC signing or key-agreement APIs. Test signing is
 EdDSA, outside this dependency path. This is an exposure assessment, not a claim
 that crypto-bigint 0.5.5 is patched or that all uses are safe.
 
-## Proposed exact exception
+## Approved exact exception
 
-Subject to explicit owner approval, ignore only RUSTSEC-2026-0387 while enforcing
+The owner explicitly approved ignoring only RUSTSEC-2026-0387 while enforcing
 the exact crates.io package versions and complete reverse-consumer closure above.
 Only the named OIDC stack and FleetIQ server may lead to crypto-bigint. Reject
 additional consumers, versions (including prereleases), alternate sources,
-duplicate records, removed required edges and malformed graph data. Keep the
-existing RSA exception separate and unchanged. Add realistic accepted/rejected
-lockfile fixtures and retain all other advisory gates.
+duplicate records, removed required edges and malformed graph data. The
+existing RSA exception remains separate and unchanged; all other advisory
+gates remain enforced.
+
+`deny.toml` permits only elliptic-curve as the direct crypto-bigint wrapper.
+The architecture sensor additionally checks every incoming edge to each named
+package, including the local fleetiq-server root, against an exact edge list.
+Both guards run in existing CI groups. The prior RSA guard remains independent.
 
 Owner: browser identity maintainers. Re-review on every affected dependency
 change, private-key use, new consumer, newly relevant exploit information, or an
@@ -62,7 +67,12 @@ The Tokio floor is now ~1.53.3 and Cargo.lock selects Tokio 1.53.3 and ctutils
 0.4.4. Focused checks passed: 118 runtime tests and four compile-fail doctests
 across access, ingestion, semantics and protocol-wasm, including both source-built
 guest conformance journeys. Repository/architecture and unused-dependency checks
-passed. The advisory rescan reports only RUSTSEC-2026-0387.
+passed. Before approval, the advisory rescan reported only RUSTSEC-2026-0387.
 
-No security-policy change has been made. The crypto-bigint finding remains an
-explicit merge blocker unless an approved reviewed remedy is implemented.
+After owner approval, all 232 xtask sensor tests, strict all-target xtask Clippy,
+formatting, repository/architecture checks and the complete `cargo deny check`
+passed (advisories, bans, licenses and sources). The regression suite exercises
+valid Cargo reference forms and rejects changes throughout the reviewed graph.
+This exception does not represent a patched crypto-bigint release. Full
+PostgreSQL-backed workspace acceptance was not run locally because the required
+database is unavailable; no full acceptance pass is claimed.

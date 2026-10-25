@@ -1,8 +1,10 @@
-//! Keeps the approved verification-only RSA advisory exception exact.
+//! Keeps approved verification-only OIDC advisory exceptions exact.
 //!
 //! The pinned `cargo-deny` checks wrapper names, but its version ranges exclude
 //! prereleases. The lockfile supplies the complete graph, including dependencies
 //! inactive on the current host, so no added RSA consumer escapes this review.
+
+mod elliptic;
 
 #[cfg(test)]
 mod tests;
@@ -20,7 +22,8 @@ const RSA_VERSION: &str = "0.9.10";
 pub(super) fn check(path: &Path) -> Result<(), String> {
     let source = fs::read_to_string(path)
         .map_err(|error| violation(&format!("could not read {}: {error}", path.display())))?;
-    validate_lockfile(&source)
+    validate_lockfile(&source)?;
+    elliptic::validate_lockfile(&source)
 }
 
 fn validate_lockfile(source: &str) -> Result<(), String> {
