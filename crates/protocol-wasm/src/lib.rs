@@ -28,11 +28,12 @@ pub use transfer::{
 };
 
 pub use component_abi::{
-    AdmittedProtocolComponent, ComponentAdmissionError, ComponentAdmissionPolicy,
-    ComponentOutputError, PROTOCOL_PACKAGE_ABI_VERSION, PROTOCOL_PACKAGE_WIT,
-    PROTOCOL_PACKAGE_WORLD, ProcessedProtocolFrame, ProcessedProtocolSessionTurn,
-    ProtocolArtifactDigest, ProtocolComponentInvocationError, ProtocolFramePoll,
-    ProtocolFramePollError, ProtocolFrameProcessingError, ProtocolSessionTurn,
+    AdmittedIdentityProtocolComponent, AdmittedProtocolComponent, ComponentAdmissionError,
+    ComponentAdmissionPolicy, ComponentOutputError, IDENTITY_PROTOCOL_PACKAGE_WIT,
+    IDENTITY_PROTOCOL_PACKAGE_WORLD, IdentityInvocationError, PROTOCOL_PACKAGE_ABI_VERSION,
+    PROTOCOL_PACKAGE_WIT, PROTOCOL_PACKAGE_WORLD, ProcessedProtocolFrame,
+    ProcessedProtocolSessionTurn, ProtocolArtifactDigest, ProtocolComponentInvocationError,
+    ProtocolFramePoll, ProtocolFramePollError, ProtocolFrameProcessingError, ProtocolSessionTurn,
     ProtocolSessionTurnBudgets, ProtocolSessionTurnError,
 };
 

@@ -30,6 +30,7 @@
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
+| `fleetiq-custom-protocol-example` | Tooling | Import-free, source-built custom protocol guest and authoring example |
 | `fleetiq-xtask` | Tooling | Repository checks that do not enter production binaries |
 
 These roles describe the current workspace. Capability crates own their
@@ -247,3 +248,17 @@ roles.
 - [PostgreSQL adapter organization](../adr/0077-organize-postgres-adapters-by-capability.md)
 - [Application facade retirement](../adr/0078-retire-application-compatibility-facade.md)
 - [Single backend composition root](../adr/0041-establish-single-backend-composition-root.md)
+
+## Generated guest ABI boundary
+
+Owner-approved issue #315 changes workspace unsafe policy from forbid to deny
+solely to permit wit-bindgen's generated canonical ABI exports. Handwritten Rust
+remains denied. Exactly one out-of-line bindings module has an unsafe allowance;
+`cargo xtask architecture` parses Rust attributes with Syn and rejects other
+allow/expect/cfg_attr allowances. The generated file must contain only the
+reviewed generator and export invocations, preventing handwritten unsafe from
+entering the exception. No allowlist permits runtime/application unsafe code.
+
+The owner also approved only `clippy::same_length_and_capacity` on that generated
+module: canonical ABI allocations have capacity equal to length. The sensor
+rejects extra allowances there; handwritten code keeps the full Clippy policy.

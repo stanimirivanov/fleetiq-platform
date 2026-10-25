@@ -11,6 +11,7 @@
 mod assembly;
 mod decoded_output;
 mod framing;
+mod identity_claim;
 mod invocation;
 mod reply;
 mod session_state;
@@ -23,6 +24,7 @@ pub use fleetiq_telemetry::{
     ObservationQuality,
 };
 pub use framing::FrameBoundary;
+pub use identity_claim::{DeviceIdentityClaim, InvalidIdentityClaim};
 pub use invocation::{FrameProcessingInput, FrameProcessingOutput, FramingInput};
 pub use reply::{ProposedReply, ProposedReplyError, ReplyRelease};
 pub use session_state::SessionStateAction;

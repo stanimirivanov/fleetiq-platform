@@ -60,9 +60,22 @@ export class ImageToolFailure extends Error {
   }
 }
 
+/** Add only a fixed prerequisite name; never propagate child output or argv. */
+export class ImagePrerequisiteFailure extends Error {
+  constructor(phase, cause) {
+    const prerequisite = new Set([
+      "transport-remote-manifest", "transport-manifest-validation", "transport-sandbox",
+    ]).has(phase) ? phase : "unknown";
+    const details = Object.freeze({ ...failureDetails(cause), prerequisite });
+    super(`Image prerequisite ${prerequisite} failed (category=${details.category}); check the reviewed transport pin and registry availability.`);
+    this.name = "ImagePrerequisiteFailure";
+    this.details = details;
+  }
+}
+
 /** Unknown errors may quote runtime configuration, so retain no message or stack. */
 export function failureDetails(error) {
-  return error instanceof ImageToolFailure
+  return error instanceof ImageToolFailure || error instanceof ImagePrerequisiteFailure
     ? error.details
     : { category: "operation-failed" };
 }

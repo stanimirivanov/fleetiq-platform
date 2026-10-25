@@ -4,6 +4,7 @@ mod model;
 mod policy;
 mod security_exception;
 mod source_overrides;
+mod unsafe_boundary;
 
 #[cfg(test)]
 mod tests;
@@ -92,6 +93,8 @@ pub(crate) fn check() -> Result<ArchitectureReport, ArchitectureCheckError> {
     }
 
     let workspace_manifest = PathBuf::from(WORKSPACE_MANIFEST);
+    unsafe_boundary::check(workspace_manifest.parent().expect("workspace root"))
+        .map_err(ArchitectureCheckError::Policy)?;
     source_overrides::check(
         workspace_manifest
             .parent()

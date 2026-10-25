@@ -10,6 +10,7 @@ WORKDIR /workspace
 
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
+COPY examples/custom-protocol ./examples/custom-protocol
 COPY migrations ./migrations
 COPY .sqlx ./.sqlx
 

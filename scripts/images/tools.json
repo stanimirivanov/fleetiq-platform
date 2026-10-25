@@ -3,7 +3,7 @@
   "platform": "linux/amd64",
   "buildkit": "moby/buildkit:v0.34.0@sha256:b059f8d7226d0b326bc871af489a5dddf65e36af4d20d14251b072974d9ee87c",
   "sbom": "docker/buildkit-syft-scanner:1.12.0@sha256:ae4f3b554449e7e25548e7d8ccc029d17357348e30c6e3df01b92bc93654d6a9",
-  "transport": "quay.io/skopeo/stable:v1.22.3@sha256:726a37c9e0fd9467e4d66c06423c2e22a3155064b151fcae43154420eea73143",
+  "transport": "quay.io/containers/skopeo:v1.22.3-immutable@sha256:fa86db1347463b5f3c9989fbd38518854e8cf9950d4e9e071204a6be73b9f81a",
   "scanner": "aquasec/trivy:0.76.0@sha256:2416d1f74045b57274df1a340eee6b510cacd73c66a6ccb8da092b117eb7d222",
   "postgres": "postgres:18.6-alpine3.23@sha256:885cf05d376c7cf27afef02073e6bdac3841252537f16e244fd1c1e6a7c99fb1",
   "registry": "registry:3.0.0@sha256:6c5666b861f3505b116bb9aa9b25175e71210414bd010d92035ff64018f9457e"

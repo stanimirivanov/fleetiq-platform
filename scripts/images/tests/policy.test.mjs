@@ -167,3 +167,15 @@ test("incomplete, cross-source and missing-check receipts cannot pass qualificat
   ])
     assert.throws(() => validateQualification(changed, sha));
 });
+
+test("transport requires upstream immutable namespace, version and digest", () => {
+  const tools = JSON.parse(read("scripts/images/tools.json"));
+  validateTools(tools);
+  const digest = tools.transport.split("@")[1];
+  for (const transport of [
+    `quay.io/skopeo/stable:v1.22.3@${digest}`,
+    `quay.io/containers/skopeo:v1.22.3@${digest}`,
+    `quay.io/containers/skopeo:latest-immutable@${digest}`,
+    "quay.io/containers/skopeo:v1.22.3-immutable",
+  ]) assert.throws(() => validateTools({ ...tools, transport }), /immutable/);
+});

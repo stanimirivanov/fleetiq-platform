@@ -132,6 +132,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0110](0110-publish-qualified-immutable-backend-artifacts.md) | Source-owned build-once backend OCI images, migration inventory and explicit maintainer publication |
 
+| [0111](0111-add-opt-in-protocol-identity-handoff.md) | Optional untrusted identity world and source-built guest conformance |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

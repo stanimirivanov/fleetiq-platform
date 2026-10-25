@@ -7,6 +7,7 @@ test("context cannot add operator files, admit Git metadata or omit secret exclu
   validateContext(text);
   for (const changed of [
     text + "!.env\n",
+    text.replace("!examples/custom-protocol/**", "!examples/**"),
     text.replace("**/.git", ""),
     text.replace("**/.env\n", ""),
     text.replace("!crates/**", "!**"),

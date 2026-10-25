@@ -6,7 +6,7 @@ use super::*;
 
 #[test]
 fn current_workspace_matches_exact_external_ownership() {
-    assert_eq!(check(&metadata()).expect("external ownership matches"), 37);
+    assert_eq!(check(&metadata()).expect("external ownership matches"), 39);
 }
 
 #[test]
@@ -17,7 +17,7 @@ fn renamed_approved_dependency_keeps_canonical_identity() {
 
     assert_eq!(
         check(&metadata).expect("aliases do not change ownership"),
-        37
+        39
     );
 }
 
@@ -29,7 +29,7 @@ fn renamed_internal_dependency_is_not_external() {
 
     assert_eq!(
         check(&metadata).expect("member paths establish identity"),
-        37
+        39
     );
 }
 
@@ -199,7 +199,12 @@ fn package_with_no_external_dependencies_still_requires_policy() {
 #[test]
 fn duplicate_policy_and_dependency_rules_are_rejected() {
     let mut policies = PACKAGE_POLICIES.to_vec();
-    policies.push(policies[0]);
+    policies.push(
+        *policies
+            .iter()
+            .find(|policy| policy.name == "fleetiq-access")
+            .unwrap(),
+    );
     policy_mut(&mut policies, "fleetiq-domain").normal = &["bigdecimal", "bigdecimal"];
     let violations = assert_violation(
         check_with_policy(&metadata(), &policies),
