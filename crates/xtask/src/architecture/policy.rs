@@ -49,6 +49,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         name: "fleetiq-ingestion",
         role: CrateRole::Application,
         normal: &[
+            "fleetiq-access",
             "fleetiq-domain",
             "fleetiq-protocol-host",
             "fleetiq-protocol-sdk",
@@ -127,6 +128,8 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
             "fleetiq-access",
             "fleetiq-domain",
             "fleetiq-identity",
+            "fleetiq-ingestion",
+            "fleetiq-telemetry",
             "fleetiq-metadata",
             "fleetiq-postgres",
         ],

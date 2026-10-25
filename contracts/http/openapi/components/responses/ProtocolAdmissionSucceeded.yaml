@@ -1,0 +1,8 @@
+description: Successful admission for the exact selected WIT world and current policy; retries preserve the first actor/time.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ProtocolAdmissionReceipt.yaml

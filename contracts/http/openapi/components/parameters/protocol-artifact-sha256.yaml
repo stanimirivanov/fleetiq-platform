@@ -1,0 +1,7 @@
+name: X-Artifact-Sha256
+in: header
+required: true
+description: Expected lowercase SHA-256 of the exact raw request bytes; the host recomputes it before storage.
+schema:
+  type: string
+  pattern: "^[a-f0-9]{64}$"

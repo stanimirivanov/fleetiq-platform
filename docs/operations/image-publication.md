@@ -11,6 +11,10 @@ No Kubernetes, environment promotion or automatic rollback is performed.
 ## Ownership and prerequisites
 
 The root [Dockerfile](../../Dockerfile) is the sole production backend package.
+It packages the backend and isolated admission worker from the same build.
+Runtime qualification checks the worker under the same read-only/nonroot
+restrictions and verifies that Linux resource-limit initialization precedes
+empty-input rejection; existing qualification receipt names remain unchanged.
 [ADR 0110](../adr/0110-publish-qualified-immutable-backend-artifacts.md) records
 artifact identity, authority and limitations. D03 owns UX publication; D04/D05
 own runtime packages and reviewed environment selection. Transitional deployment

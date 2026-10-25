@@ -11,3 +11,6 @@ pub use decoded_observation_log::{
 pub use protocol_package_catalog::{
     PostgresProtocolPackageCatalog, PostgresProtocolPackageCatalogError,
 };
+
+mod protocol_artifact_store;
+pub use protocol_artifact_store::PostgresProtocolArtifactStore;

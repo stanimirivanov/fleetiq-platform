@@ -1,0 +1,17 @@
+type: object
+additionalProperties: false
+required: [release, world, policy_version, actor_id, admitted_at_ms]
+properties:
+  release:
+    $ref: ./ProtocolPackageRelease.yaml
+  world:
+    type: string
+    enum: [runtime-v1, identity-v1]
+  policy_version:
+    type: integer
+    const: 1
+  actor_id:
+    type: string
+  admitted_at_ms:
+    type: integer
+    minimum: 0

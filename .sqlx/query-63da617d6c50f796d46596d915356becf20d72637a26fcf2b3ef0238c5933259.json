@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ingestion.protocol_artifacts\n                (tenant_id, artifact_sha256, artifact_bytes)\n            SELECT tenant_id, artifact_sha256, $4\n            FROM metadata.protocol_package_releases\n            WHERE tenant_id = $1 AND protocol_package_id = $2 AND protocol_package_version = $3\n              AND artifact_sha256 = $5 AND artifact_size_bytes = $6\n            ON CONFLICT (tenant_id, artifact_sha256) DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Bytea",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "63da617d6c50f796d46596d915356becf20d72637a26fcf2b3ef0238c5933259"
+}

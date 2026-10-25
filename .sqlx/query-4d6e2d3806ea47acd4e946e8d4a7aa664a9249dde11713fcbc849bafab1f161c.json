@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT actor_id, admitted_at_ms FROM ingestion.protocol_admissions\n            WHERE tenant_id = $1 AND protocol_package_id = $2 AND protocol_package_version = $3\n              AND wit_world = $4 AND policy_version = $5 AND artifact_sha256 = $6\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_admissions",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "admitted_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_admissions",
+            "name": "admitted_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4d6e2d3806ea47acd4e946e8d4a7aa664a9249dde11713fcbc849bafab1f161c"
+}

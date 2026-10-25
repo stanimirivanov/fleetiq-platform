@@ -141,7 +141,7 @@ Admitted components retain their immutable package release and host-computed
 SHA-256 artifact digest. PostgreSQL catalogue registration is implemented
 separately from admission, including exact retry, immutable-content collision,
 tenant-scoped lookup, and the complete unsigned artifact-size range. Activation
-policy, artifact storage, compilation isolation, and package distribution remain
+policy and package distribution remain
 planned. Source-built Rust guest authoring and conformance are implemented in the
 [custom protocol example](../../examples/custom-protocol/README.md). An opt-in
 identity world returns bounded, redacted external identity proposals; resolving
@@ -460,3 +460,11 @@ exact GETs and strict Rust insert behavior remain unchanged. Catalogues use one
 bounded summary query; no migration or attributed publication audit is added.
 See [ADR 0106](../adr/0106-publish-and-discover-immutable-semantic-definitions.md)
 and the [execution plan](plans/semantic-definition-publication.md).
+
+## Protocol artifact admission
+
+Issue #317 adds tenant-scoped bounded PostgreSQL artifacts and explicit protected
+registration/read/admission routes. Admission uses a supervised Linux worker and
+retains exact release/world/policy evidence; ordinary metadata authority does not
+permit it. Activation, device routing and listeners remain planned. See the
+[admission procedure](../operations/protocol-package-admission.md).

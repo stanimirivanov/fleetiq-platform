@@ -25,11 +25,18 @@ resource policy, tests, and an ADR.
 ```mermaid
 stateDiagram-v2
     [*] --> Registered: immutable release metadata
-    Registered --> Admitted: digest and WIT contract verified
+    Registered --> Stored: tenant/digest bytes durable
+    Stored --> Admitted: isolated WIT/import policy verified
     Admitted --> Active: configuration selects release
     Active --> Retired: new sessions stop selecting release
     Retired --> [*]
 ```
+
+The protected registration API stores bounded bytes transactionally in PostgreSQL
+after catalogue registration; exact retries repair an interrupted upload. Separate
+`protocol.manage` authority governs registration and policy-versioned admission.
+A supervised Linux compiler child checks the exact stored bytes; successful
+evidence grants no activation authority. See [operator procedure](../operations/protocol-package-admission.md).
 
 Registration records a tenant-scoped package ID, version, host-computed artifact
 digest, and byte length. Admission verifies the exact supported WIT world and

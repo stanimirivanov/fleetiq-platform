@@ -134,6 +134,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0111](0111-add-opt-in-protocol-identity-handoff.md) | Optional untrusted identity world and source-built guest conformance |
 
+| [0112](0112-store-and-isolate-protocol-admission.md) | Immutable bounded protocol artifacts and isolated policy-versioned admission |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

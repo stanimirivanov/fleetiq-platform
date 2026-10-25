@@ -29,8 +29,8 @@ flowchart TB
     FleetIQ -.-> Archive
 ```
 
-The current repository composes its backend foundation into one executable
-process. The access policy boundary separates authenticated actors,
+The current repository composes one backend server with a short-lived isolated
+protocol-admission worker in the same runtime image. The access policy boundary separates authenticated actors,
 selected tenants, and per-action policy decisions. PostgreSQL persists internal
 actors and exact grants and evaluates current policy without a cache. The server
 provides provider-neutral OIDC login and same-origin operator sessions. Each session retains its original actor and trust-domain binding;

@@ -8,7 +8,13 @@ mod accepted_message_log;
 mod decoded_observation_log;
 mod frame_acceptance;
 mod observation_persistence;
+mod protocol_artifacts;
 mod protocol_package_catalog;
+pub use protocol_artifacts::{
+    MAX_PROTOCOL_ARTIFACT_BYTES, PROTOCOL_ADMISSION_POLICY, ProtocolAdmission,
+    ProtocolAdmissionWorld, ProtocolArtifact, ProtocolArtifactError, ProtocolArtifactStore,
+    ProtocolCompiler, ProtocolCompilerError, ProtocolPackageService, ProtocolPackageServiceError,
+};
 
 pub use accepted_message_log::{
     AcceptedMessageAppendOutcome, AcceptedMessageLog, PendingAcceptedMessage,

@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.12",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution."
+    "version": "1.0.0-baseline.13",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device."
   },
   "servers": [
     {
@@ -12,6 +12,241 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}": {
+      "get": {
+        "operationId": "getProtocolPackageRelease",
+        "summary": "Read an exact stored protocol release",
+        "description": "Returns immutable catalogue identity only when exact bytes are durably stored. Raw bytes are never returned. All outcomes are no-store. Authentication/current tenant protocol.manage precedes resource/body diagnostics. Invalid or inaccessible tenants return 403; metadata.manage does not imply code admission.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/protocol-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-package-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-package-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ProtocolPackageStored"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/ProtocolPackageForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "registerProtocolPackageArtifact",
+        "summary": "Register and store an immutable protocol artifact",
+        "description": "Bounded raw upload with host-verified digest/length. Exact retries return 200, first catalogue registration returns 201, collisions return 409. Registration and storage do not admit or activate code. Interrupted storage can leave metadata-only registration; retry identical bytes. Browser commands require exact Origin and X-FleetIQ-CSRF: 1. All outcomes are no-store. Authentication/current tenant protocol.manage precedes resource/body diagnostics. Invalid or inaccessible tenants return 403; metadata.manage does not imply code admission.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/protocol-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-package-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-package-version"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-artifact-sha256"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/wasm": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ProtocolPackageStored"
+          },
+          "201": {
+            "$ref": "#/components/responses/ProtocolPackageStored"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/ProtocolPackageForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Immutable release identity collision; no overwrite.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Raw artifact exceeds the 8 MiB ceiling.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Expected exact application/wasm Content-Type.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}/admissions": {
+      "post": {
+        "operationId": "admitProtocolPackage",
+        "summary": "Admit an exact stored protocol component",
+        "description": "Explicitly checks runtime-v1 or identity-v1 through isolated compilation. Current policy bounds raw bytes to 8 MiB, one compiler per process, 15 seconds wall time, and Linux worker limits of 2 GiB virtual address space and 10 CPU seconds. A failed or interrupted worker creates no receipt. Only Linux admission is supported; unsupported platforms fail closed. Repeated successful admission preserves original actor/time. Does not activate or route devices. Browser commands require exact Origin and X-FleetIQ-CSRF: 1. All outcomes are no-store. Authentication/current tenant protocol.manage precedes resource/body diagnostics. Invalid or inaccessible tenants return 403; metadata.manage does not imply code admission.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/protocol-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-package-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-package-version"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProtocolAdmissionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ProtocolAdmissionSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/ProtocolPackageForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "description": "Unsupported WIT or imports; no successful admission recorded.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "The single bounded compiler slot is occupied; explicit retry required.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "description": "Isolated worker unavailable, resource constrained or timed out; no successful admission recorded.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/relationships/{relationship_id}/revisions/{revision}": {
       "get": {
         "operationId": "getRelationshipRevision",
@@ -2370,6 +2605,83 @@
   },
   "components": {
     "schemas": {
+      "ProtocolPackageRelease": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package_id",
+          "package_version",
+          "artifact_sha256",
+          "artifact_size_bytes"
+        ],
+        "properties": {
+          "package_id": {
+            "type": "string"
+          },
+          "package_version": {
+            "type": "string"
+          },
+          "artifact_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "artifact_size_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8388608
+          }
+        }
+      },
+      "ProtocolAdmissionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "world"
+        ],
+        "properties": {
+          "world": {
+            "type": "string",
+            "enum": [
+              "runtime-v1",
+              "identity-v1"
+            ]
+          }
+        }
+      },
+      "ProtocolAdmissionReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "release",
+          "world",
+          "policy_version",
+          "actor_id",
+          "admitted_at_ms"
+        ],
+        "properties": {
+          "release": {
+            "$ref": "#/components/schemas/ProtocolPackageRelease"
+          },
+          "world": {
+            "type": "string",
+            "enum": [
+              "runtime-v1",
+              "identity-v1"
+            ]
+          },
+          "policy_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "actor_id": {
+            "type": "string"
+          },
+          "admitted_at_ms": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
       "RevisionRelationshipType": {
         "type": "object",
         "additionalProperties": false,
@@ -3893,7 +4205,8 @@
         "enum": [
           "access.manage",
           "metadata.manage",
-          "metadata.read"
+          "metadata.read",
+          "protocol.manage"
         ]
       },
       "OperatorTenant": {
@@ -4608,6 +4921,43 @@
       }
     },
     "parameters": {
+      "protocol-tenant-id": {
+        "name": "tenant_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact active tenant requiring current protocol.manage; other grants never substitute.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "protocol-package-id": {
+        "name": "package_id",
+        "in": "path",
+        "required": true,
+        "description": "Tenant-owned immutable package identifier.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "protocol-package-version": {
+        "name": "package_version",
+        "in": "path",
+        "required": true,
+        "description": "Exact immutable package version; not a floating channel.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "protocol-artifact-sha256": {
+        "name": "X-Artifact-Sha256",
+        "in": "header",
+        "required": true,
+        "description": "Expected lowercase SHA-256 of the exact raw request bytes; the host recomputes it before storage.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
       "revision-relationship-id": {
         "name": "relationship_id",
         "in": "path",
@@ -5101,6 +5451,62 @@
       }
     },
     "responses": {
+      "ProtocolPackageForbidden": {
+        "description": "No exact current protocol.manage authority for the selected active tenant, or browser mutation protection failed. Other actions never substitute.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:forbidden",
+              "title": "Access denied",
+              "status": 403
+            }
+          }
+        }
+      },
+      "ProtocolPackageStored": {
+        "description": "Exact stored release; catalogue-only registration is insufficient. No activation authority.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProtocolPackageRelease"
+            },
+            "example": {
+              "package_id": "custom.binary",
+              "package_version": "1",
+              "artifact_sha256": "ca9a975c3f96ba5c138718c1f5a9cf532aa134e25c6555759329847e90fa43c6",
+              "artifact_size_bytes": 17
+            }
+          }
+        }
+      },
+      "ProtocolAdmissionSucceeded": {
+        "description": "Successful admission for the exact selected WIT world and current policy; retries preserve the first actor/time.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProtocolAdmissionReceipt"
+            }
+          }
+        }
+      },
       "MetadataRevisionCreated": {
         "description": "Exact fact, stable revision head and original actor attribution committed atomically.",
         "headers": {

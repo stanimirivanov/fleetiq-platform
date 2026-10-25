@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT artifact.artifact_bytes\n            FROM ingestion.protocol_artifacts AS artifact\n            INNER JOIN metadata.protocol_package_releases AS release\n                ON release.tenant_id = artifact.tenant_id AND release.artifact_sha256 = artifact.artifact_sha256\n            WHERE release.tenant_id = $1 AND release.protocol_package_id = $2 AND release.protocol_package_version = $3\n              AND artifact.artifact_sha256 = $4 AND release.artifact_size_bytes = $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "artifact_bytes",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.protocol_artifacts",
+            "name": "artifact_bytes"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c55549c9e985425f3a333987a742d6caa4c829fe829cd613200d46c0db7be970"
+}

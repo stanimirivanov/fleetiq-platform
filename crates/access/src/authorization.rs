@@ -19,6 +19,8 @@ pub enum TenantAction {
     ManageMetadata,
     /// Manage actors' access to a tenant.
     ManageAccess,
+    /// Register and admit tenant-owned executable protocol packages.
+    ManageProtocols,
 }
 
 mod sealed {
@@ -59,6 +61,14 @@ pub struct ManageAccess;
 impl sealed::Sealed for ManageAccess {}
 impl TenantActionMarker for ManageAccess {
     const ACTION: TenantAction = TenantAction::ManageAccess;
+}
+
+/// Permission to register and admit protocol code, independent of metadata writes.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageProtocols;
+impl sealed::Sealed for ManageProtocols {}
+impl TenantActionMarker for ManageProtocols {
+    const ACTION: TenantAction = TenantAction::ManageProtocols;
 }
 
 /// Describes one actor's attempt to perform an action in a selected tenant.

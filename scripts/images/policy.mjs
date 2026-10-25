@@ -84,6 +84,12 @@ export function validateDockerfile(text, rust) {
   );
   ensure(/^USER 10001:10001$/m.test(text), "Runtime must be nonroot.");
   ensure(
+    text.includes("-p fleetiq-server -p fleetiq-protocol-wasm --bins") &&
+      text.includes("cp target/release/fleetiq-protocol-admission /tmp/fleetiq-protocol-admission") &&
+      text.includes("COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission"),
+    "Production must build and package the reviewed isolated admission worker.",
+  );
+  ensure(
     /^CMD \["serve", "--check-schema"\]$/m.test(text),
     "Production must default to checked serving.",
   );

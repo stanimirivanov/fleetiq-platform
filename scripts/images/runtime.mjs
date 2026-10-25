@@ -55,6 +55,17 @@ export async function qualifyRuntime(
     "--tmpfs",
     "/tmp:rw,noexec,nosuid,size=16m",
   ];
+  // Empty stdin must be refused only after the packaged Linux worker installs
+  // its resource limits. Missing executable/isolation returns a different code.
+  const worker = await resources.container("admission-worker", [
+    ...restrictions,
+    "--entrypoint", "/usr/local/bin/fleetiq-protocol-admission",
+    image, "runtime-v1",
+  ], "none");
+  ensure(
+    (await docker(["wait", worker], { timeout: 20_000 })).trim() === "2",
+    "Packaged admission worker did not initialize isolation and reject empty input.",
+  );
   const empty = await resources.container("empty", [
     ...restrictions,
     "-e",

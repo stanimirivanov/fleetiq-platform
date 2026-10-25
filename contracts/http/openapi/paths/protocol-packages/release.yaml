@@ -1,0 +1,78 @@
+get:
+  operationId: getProtocolPackageRelease
+  summary: Read an exact stored protocol release
+  description: "Returns immutable catalogue identity only when exact bytes are durably stored. Raw bytes are never returned. All outcomes are no-store. Authentication/current tenant protocol.manage precedes resource/body diagnostics. Invalid or inaccessible tenants return 403; metadata.manage does not imply code admission."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/protocol-tenant-id.yaml
+    - $ref: ../../components/parameters/protocol-package-id.yaml
+    - $ref: ../../components/parameters/protocol-package-version.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/ProtocolPackageStored.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/ProtocolPackageForbidden.yaml
+    "404":
+      $ref: ../../components/responses/NotFound.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml
+put:
+  operationId: registerProtocolPackageArtifact
+  summary: Register and store an immutable protocol artifact
+  description: "Bounded raw upload with host-verified digest/length. Exact retries return 200, first catalogue registration returns 201, collisions return 409. Registration and storage do not admit or activate code. Interrupted storage can leave metadata-only registration; retry identical bytes. Browser commands require exact Origin and X-FleetIQ-CSRF: 1. All outcomes are no-store. Authentication/current tenant protocol.manage precedes resource/body diagnostics. Invalid or inaccessible tenants return 403; metadata.manage does not imply code admission."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/protocol-tenant-id.yaml
+    - $ref: ../../components/parameters/protocol-package-id.yaml
+    - $ref: ../../components/parameters/protocol-package-version.yaml
+    - $ref: ../../components/parameters/admin-mutation-origin.yaml
+    - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+    - $ref: ../../components/parameters/protocol-artifact-sha256.yaml
+  requestBody:
+    required: true
+    content:
+      application/wasm:
+        schema:
+          type: string
+          format: binary
+  responses:
+    "200":
+      $ref: ../../components/responses/ProtocolPackageStored.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/ProtocolPackageForbidden.yaml
+    "404":
+      $ref: ../../components/responses/NotFound.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml
+    "201":
+      $ref: ../../components/responses/ProtocolPackageStored.yaml
+    "409":
+      description: Immutable release identity collision; no overwrite.
+      content:
+        application/problem+json:
+          schema:
+            $ref: ../../components/schemas/Problem.yaml
+    "413":
+      description: Raw artifact exceeds the 8 MiB ceiling.
+      content:
+        application/problem+json:
+          schema:
+            $ref: ../../components/schemas/Problem.yaml
+    "415":
+      description: Expected exact application/wasm Content-Type.
+      content:
+        application/problem+json:
+          schema:
+            $ref: ../../components/schemas/Problem.yaml

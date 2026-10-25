@@ -262,3 +262,8 @@ entering the exception. No allowlist permits runtime/application unsafe code.
 The owner also approved only `clippy::same_length_and_capacity` on that generated
 module: canonical ABI allocations have capacity equal to length. The sensor
 rejects extra allowances there; handwritten code keeps the full Clippy policy.
+
+Protocol artifact admission adds ingestion-to-access evidence and pure SHA-256
+validation, server-to-ingestion/telemetry composition and Linux-only rlimit in
+the Wasm adapter worker. The server does not link Wasmtime; it supervises the
+reviewed sibling executable. See [ADR 0112](../adr/0112-store-and-isolate-protocol-admission.md).

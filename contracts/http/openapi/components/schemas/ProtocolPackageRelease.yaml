@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required: [package_id, package_version, artifact_sha256, artifact_size_bytes]
+properties:
+  package_id:
+    type: string
+  package_version:
+    type: string
+  artifact_sha256:
+    type: string
+    pattern: "^[a-f0-9]{64}$"
+  artifact_size_bytes:
+    type: integer
+    minimum: 1
+    maximum: 8388608
