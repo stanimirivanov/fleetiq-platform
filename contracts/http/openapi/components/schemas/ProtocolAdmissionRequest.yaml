@@ -1,0 +1,7 @@
+type: object
+additionalProperties: false
+required: [world]
+properties:
+  world:
+    type: string
+    enum: [runtime-v1, identity-v1]

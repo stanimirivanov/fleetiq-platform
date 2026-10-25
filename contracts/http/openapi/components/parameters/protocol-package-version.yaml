@@ -1,0 +1,6 @@
+name: package_version
+in: path
+required: true
+description: Exact immutable package version; not a floating channel.
+schema:
+  type: string

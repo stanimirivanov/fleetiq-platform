@@ -227,3 +227,43 @@ fn built_guest_identity_and_admission_remain_explicit_and_bounded() {
         Err(IdentityInvocationError::PackageRejected { code: 1 })
     ));
 }
+
+/// Uses the packaged worker entry point so CI exercises actual Linux limits and
+/// import-free typed admission, rather than just in-process sandbox helpers.
+#[cfg(target_os = "linux")]
+#[test]
+fn isolated_worker_admits_source_built_guest_and_rejects_invalid_content() {
+    use std::{io::Write, process::Stdio};
+    let bytes = build();
+    for (world, input, expected) in [
+        ("identity-v1", bytes.as_slice(), 0),
+        ("runtime-v1", bytes.as_slice(), 0),
+        ("runtime-v1", b"invalid-component".as_slice(), 2),
+    ] {
+        let mut child = Command::new(env!("CARGO_BIN_EXE_fleetiq-protocol-admission"))
+            .arg(world)
+            .env_clear()
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("real admission worker");
+        child
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(input)
+            .expect("bounded worker input");
+        assert_eq!(child.wait().unwrap().code(), Some(expected));
+    }
+}
+#[cfg(not(target_os = "linux"))]
+#[test]
+fn admission_worker_refuses_unsupported_isolation() {
+    let status = Command::new(env!("CARGO_BIN_EXE_fleetiq-protocol-admission"))
+        .arg("runtime-v1")
+        .env_clear()
+        .status()
+        .unwrap();
+    assert_eq!(status.code(), Some(78));
+}

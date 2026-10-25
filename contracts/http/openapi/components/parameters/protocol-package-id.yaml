@@ -1,0 +1,6 @@
+name: package_id
+in: path
+required: true
+description: Tenant-owned immutable package identifier.
+schema:
+  type: string

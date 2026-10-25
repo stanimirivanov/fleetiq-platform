@@ -72,7 +72,7 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     },
     ExternalPackagePolicy {
         name: "fleetiq-ingestion",
-        normal: NONE,
+        normal: &["sha2"],
         development: &["tokio"],
         build: NONE,
     },
@@ -108,7 +108,7 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     },
     ExternalPackagePolicy {
         name: "fleetiq-protocol-wasm",
-        normal: &["sha2", "wasmtime"],
+        normal: &["rlimit", "sha2", "wasmtime"],
         development: &["wat", "wit-component", "wit-parser"],
         build: NONE,
     },

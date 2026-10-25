@@ -15,6 +15,13 @@ fleetiq-telemetry = { path = "../telemetry" }
 sha2.workspace = true
 wasmtime.workspace = true
 
+[target.'cfg(target_os = "linux")'.dependencies]
+rlimit.workspace = true
+
+[[bin]]
+name = "fleetiq-protocol-admission"
+path = "src/bin/admission.rs"
+
 [dev-dependencies]
 # Fixture parser and encoder must use the same wasm-tools release.
 wat = "=1.261.0"

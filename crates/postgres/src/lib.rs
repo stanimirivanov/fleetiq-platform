@@ -77,3 +77,5 @@ pub type PostgresSignalBindingRepositoryError = PostgresRepositoryError;
 
 /// Product database migrations embedded for deployment and isolated tests.
 pub static MIGRATOR: Migrator = sqlx::migrate!("../../migrations");
+
+pub use ingestion::PostgresProtocolArtifactStore;

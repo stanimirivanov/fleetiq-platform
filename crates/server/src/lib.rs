@@ -30,6 +30,7 @@ mod protected_device;
 mod protected_relationship;
 mod protected_request;
 mod protected_signal_binding;
+mod protocol_packages;
 mod registration;
 mod revision_commands;
 mod tenant_access_administration;
@@ -95,6 +96,11 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(protocol_packages::router(
+            pool.clone(),
+            authentication.clone(),
+            mutation.clone(),
+        ))
         .merge(revision_commands::postgres_revision_router(
             pool.clone(),
             authentication.clone(),
@@ -191,6 +197,7 @@ mod tests {
             .expect("valid base configuration");
         let paths = [
             "/api/v1/me/tenants",
+            "/api/v1/tenants/tenant-a/protocol-packages/custom.binary/versions/1",
             "/api/v1/admin/actors",
             "/api/v1/admin/actors/actor-a/platform-grants",
             "/api/v1/admin/platform-access-changes",

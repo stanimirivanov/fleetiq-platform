@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ingestion.protocol_admissions\n                (tenant_id, protocol_package_id, protocol_package_version, wit_world, policy_version, actor_id, admitted_at_ms, artifact_sha256)\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)\n            ON CONFLICT (tenant_id, protocol_package_id, protocol_package_version, wit_world, policy_version) DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Text",
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "838788c2c7a355c7ca970b70625d5adac95058413ff805bbf837c8c73ff89976"
+}

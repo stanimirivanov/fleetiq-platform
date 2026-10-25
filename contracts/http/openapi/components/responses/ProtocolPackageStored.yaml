@@ -1,0 +1,13 @@
+description: Exact stored release; catalogue-only registration is insufficient. No activation authority.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ProtocolPackageRelease.yaml
+    example:
+      package_id: custom.binary
+      package_version: "1"
+      artifact_sha256: "ca9a975c3f96ba5c138718c1f5a9cf532aa134e25c6555759329847e90fa43c6"
+      artifact_size_bytes: 17

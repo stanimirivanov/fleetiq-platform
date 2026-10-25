@@ -10,7 +10,7 @@ signal-binding snapshots. Other implemented routes remain outside this
 client-facing subset. The additive baseline includes operator OIDC login,
 callback, session discovery, and sign-out. Metadata reads use either browser
 cookies or configured workload bearer plus current tenant `metadata.read` access;
-publication, registration and revision commands require exact tenant `metadata.manage`. Registration atomically retains original actor/time evidence on exact retries; see [commissioning](../../docs/operations/metadata-registration.md). A server listener selects
+publication, registration and revision commands require exact tenant `metadata.manage`. Protocol artifact storage/admission requires separate exact `protocol.manage`; baseline.13 expands the closed action vocabulary, so regenerate clients before delegating it. No existing grant is upgraded automatically. Registration atomically retains original actor/time evidence on exact retries; see [commissioning](../../docs/operations/metadata-registration.md). A server listener selects
 exactly one mode. Operator discovery uses that same
 authentication boundary and returns only the caller's current active tenant
 grants, without requiring a tenant to be selected first.

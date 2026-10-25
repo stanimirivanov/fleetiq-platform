@@ -1,0 +1,50 @@
+post:
+  operationId: admitProtocolPackage
+  summary: Admit an exact stored protocol component
+  description: "Explicitly checks runtime-v1 or identity-v1 through isolated compilation. Current policy bounds raw bytes to 8 MiB, one compiler per process, 15 seconds wall time, and Linux worker limits of 2 GiB virtual address space and 10 CPU seconds. A failed or interrupted worker creates no receipt. Only Linux admission is supported; unsupported platforms fail closed. Repeated successful admission preserves original actor/time. Does not activate or route devices. Browser commands require exact Origin and X-FleetIQ-CSRF: 1. All outcomes are no-store. Authentication/current tenant protocol.manage precedes resource/body diagnostics. Invalid or inaccessible tenants return 403; metadata.manage does not imply code admission."
+  security:
+    - bearerAuth: []
+    - cookieAuth: []
+  parameters:
+    - $ref: ../../components/parameters/protocol-tenant-id.yaml
+    - $ref: ../../components/parameters/protocol-package-id.yaml
+    - $ref: ../../components/parameters/protocol-package-version.yaml
+    - $ref: ../../components/parameters/admin-mutation-origin.yaml
+    - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/ProtocolAdmissionRequest.yaml
+  responses:
+    "200":
+      $ref: ../../components/responses/ProtocolAdmissionSucceeded.yaml
+    "400":
+      $ref: ../../components/responses/InvalidRequest.yaml
+    "401":
+      $ref: ../../components/responses/Unauthenticated.yaml
+    "403":
+      $ref: ../../components/responses/ProtocolPackageForbidden.yaml
+    "404":
+      $ref: ../../components/responses/NotFound.yaml
+    "500":
+      $ref: ../../components/responses/InternalError.yaml
+    "422":
+      description: Unsupported WIT or imports; no successful admission recorded.
+      content:
+        application/problem+json:
+          schema:
+            $ref: ../../components/schemas/Problem.yaml
+    "429":
+      description: The single bounded compiler slot is occupied; explicit retry required.
+      content:
+        application/problem+json:
+          schema:
+            $ref: ../../components/schemas/Problem.yaml
+    "503":
+      description: Isolated worker unavailable, resource constrained or timed out; no successful admission recorded.
+      content:
+        application/problem+json:
+          schema:
+            $ref: ../../components/schemas/Problem.yaml

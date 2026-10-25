@@ -1,0 +1,6 @@
+name: tenant_id
+in: path
+required: true
+description: Exact active tenant requiring current protocol.manage; other grants never substitute.
+schema:
+  type: string

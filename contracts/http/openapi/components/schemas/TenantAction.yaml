@@ -4,3 +4,4 @@ enum:
   - "access.manage"
   - "metadata.manage"
   - "metadata.read"
+  - "protocol.manage"

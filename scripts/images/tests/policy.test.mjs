@@ -88,6 +88,8 @@ test("floating bases, wrong Rust, root user, unchecked default and unlocked buil
     ),
     dockerfile.replace('["serve", "--check-schema"]', '["serve"]'),
     dockerfile.replace("cargo build --locked", "cargo build"),
+    dockerfile.replace("-p fleetiq-protocol-wasm --bins", ""),
+    dockerfile.replace("COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission", ""),
   ])
     assert.throws(() => validateDockerfile(changed, "1.98.1"));
   const tools = JSON.parse(read("scripts/images/tools.json"));

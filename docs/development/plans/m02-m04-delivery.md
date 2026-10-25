@@ -1,6 +1,6 @@
 # M02, M03 and M04 delivery sequence
 
-Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring implemented and locally verified, awaiting review.
+Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring merged; PR 14 artifact storage/admission in progress.
 
 ## TL;DR
 
@@ -159,13 +159,15 @@ work with PR 13; dependent deployment/browser acceptance remains deferred.
 
 **M03 · fleetiq-platform · Can start alongside M02**
 
-- **Delivery:** Implemented and locally verified in issue #315; review pending. Full acceptance remains blocked by pre-existing main-branch advisories and unavailable local PostgreSQL; no gate is waived.
+- **Delivery:** Merged through issue #315 / PR #316. CI passed after compatible dependency patches and the explicitly approved exact OIDC advisory exception; no gate was waived.
 - **Objective & Scope:** Provide reproducible guest builds, a custom-protocol example, and conformance tests. Add the versioned identity-claim handoff required for device onboarding.
 - **Target Layers / Files:** [protocol-sdk](../../../crates/protocol-sdk), protocol-wasm WIT, new package examples/build tooling, author documentation.
 - **Contracts & Boundaries:** Preserve existing ABI compatibility. Packages propose identity claims; only the host establishes tenant/device context and execution authority.
 - **Harness Gate:** P; actual built-component admission, identity claims, fragmented framing, state, reply gates, and rejected-package controls.
 
 ### PR 14: Store protocol artifacts and control admission
+
+Implementation tracked by issue #317; activation and D06 remain separate.
 
 **M03 · fleetiq-platform · Depends on PR 13**
 
