@@ -1,12 +1,14 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.13"
+  version: "1.0.0-baseline.14"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/protocol-routes/{channel_id}":
+    $ref: ./paths/protocol-packages/device-route.yaml
   "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}":
     $ref: ./paths/protocol-packages/release.yaml
   "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}/admissions":
@@ -89,6 +91,12 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    ProtocolRouteSelection:
+      $ref: ./components/schemas/ProtocolRouteSelection.yaml
+    ChangeProtocolRouteRequest:
+      $ref: ./components/schemas/ChangeProtocolRouteRequest.yaml
+    ProtocolDeviceRoute:
+      $ref: ./components/schemas/ProtocolDeviceRoute.yaml
     ProtocolPackageRelease:
       $ref: ./components/schemas/ProtocolPackageRelease.yaml
     ProtocolAdmissionRequest:
@@ -268,6 +276,8 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    protocol-channel-id:
+      $ref: ./components/parameters/protocol-channel-id.yaml
     protocol-tenant-id:
       $ref: ./components/parameters/protocol-tenant-id.yaml
     protocol-package-id:
@@ -369,6 +379,10 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    ProtocolRouteSucceeded:
+      $ref: ./components/responses/ProtocolRouteSucceeded.yaml
+    ProtocolRouteConflict:
+      $ref: ./components/responses/ProtocolRouteConflict.yaml
     ProtocolPackageForbidden:
       $ref: ./components/responses/ProtocolPackageForbidden.yaml
     ProtocolPackageStored:

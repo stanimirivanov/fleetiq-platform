@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ingestion.protocol_route_heads SET revision=$4 WHERE tenant_id=$1 AND device_asset_id=$2 AND channel_id=$3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "73289782b789e99996aac881c6e9943bf9d1c222726f8a798def22a52928efd5"
+}

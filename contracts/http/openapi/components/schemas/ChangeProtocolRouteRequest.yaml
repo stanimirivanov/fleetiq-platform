@@ -1,0 +1,14 @@
+type: object
+additionalProperties: false
+required: [expected_revision, selection]
+properties:
+  expected_revision:
+    type: integer
+    minimum: 0
+    maximum: 4294967295
+    description: Zero expects an unconfigured route; otherwise the last observed generation.
+  selection:
+    description: Explicit null retires this route; omission is never retirement.
+    anyOf:
+      - $ref: ./ProtocolRouteSelection.yaml
+      - type: "null"

@@ -1,0 +1,12 @@
+description: Revision conflict/exhaustion/time regression or missing registered-device, stored-content or current-policy admission prerequisite. Read current configuration before retrying.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:protocol-route
+      title: Route revision conflicts
+      status: 409

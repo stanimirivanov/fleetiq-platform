@@ -40,9 +40,11 @@ evidence grants no activation authority. See [operator procedure](../operations/
 
 Registration records a tenant-scoped package ID, version, host-computed artifact
 digest, and byte length. Admission verifies the exact supported WIT world and
-host-import policy before a component may process traffic. Activation remains a
-separate planned configuration decision so catalogue presence never grants
-execution authority.
+host-import policy before a component may process traffic. Activation is an explicit revisioned device/channel configuration, separate
+from admission. Registered identity lookup is host-scoped and does not
+authenticate a peer. Revalidate pinned handoffs before each future bounded turn;
+see [route commissioning](../operations/protocol-route-commissioning.md).
+Catalogue presence never grants execution authority.
 
 ## Session turn
 

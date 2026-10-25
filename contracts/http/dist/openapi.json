@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.13",
+    "version": "1.0.0-baseline.14",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device."
   },
   "servers": [
@@ -12,6 +12,120 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/protocol-routes/{channel_id}": {
+      "get": {
+        "operationId": "getDeviceProtocolRoute",
+        "summary": "Read the latest device/channel protocol configuration",
+        "description": "Requires current tenant protocol.manage. Includes explicit retirement; configuration is not runtime eligibility or peer authentication. All outcomes are no-store.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/protocol-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-channel-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ProtocolRouteSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/ProtocolPackageForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "changeDeviceProtocolRoute",
+        "summary": "Select or retire an exact admitted device/channel protocol route",
+        "description": "Requires current tenant protocol.manage, a registered communication device and exact stored/current-policy admitted release. Body limit is 4 KiB. expected_revision is a compare-and-swap generation; explicit null selection retires. Same-actor/content retries return the original generation/actor/time even after later edits, without replacing the current head; GET current configuration before further editing. new generations invalidate previous session handoffs even when selecting identical content. Invalid/missing prerequisites return 409; no implicit device creation or artifact activation occurs. Browser commands require exact Origin and X-FleetIQ-CSRF marker. Authentication and authorization precede request diagnostics. All outcomes are no-store.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/protocol-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/protocol-channel-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeProtocolRouteRequest"
+              },
+              "example": {
+                "expected_revision": 0,
+                "selection": {
+                  "package_id": "custom.binary",
+                  "package_version": "1",
+                  "world": "identity-v1"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ProtocolRouteSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/ProtocolPackageForbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/ProtocolRouteConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}": {
       "get": {
         "operationId": "getProtocolPackageRelease",
@@ -2605,6 +2719,146 @@
   },
   "components": {
     "schemas": {
+      "ProtocolRouteSelection": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package_id",
+          "package_version",
+          "world"
+        ],
+        "properties": {
+          "package_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "package_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "world": {
+            "type": "string",
+            "enum": [
+              "runtime-v1",
+              "identity-v1"
+            ]
+          }
+        }
+      },
+      "ChangeProtocolRouteRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_revision",
+          "selection"
+        ],
+        "properties": {
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "description": "Zero expects an unconfigured route; otherwise the last observed generation."
+          },
+          "selection": {
+            "description": "Explicit null retires this route; omission is never retirement.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProtocolRouteSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ProtocolDeviceRoute": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "device_asset_id",
+          "channel_id",
+          "revision",
+          "selection",
+          "policy_version",
+          "actor_id",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "device_asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "channel_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProtocolRouteSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "policy_version": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "description": "Admission policy recorded at commissioning; null for retirement. GET is configuration, not a fresh eligibility check."
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "additionalProperties": true,
+              "properties": {
+                "selection": {
+                  "type": "null"
+                }
+              }
+            },
+            "then": {
+              "additionalProperties": true,
+              "properties": {
+                "policy_version": {
+                  "type": "null"
+                }
+              }
+            },
+            "else": {
+              "additionalProperties": true,
+              "properties": {
+                "policy_version": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ]
+      },
       "ProtocolPackageRelease": {
         "type": "object",
         "additionalProperties": false,
@@ -4921,6 +5175,16 @@
       }
     },
     "parameters": {
+      "protocol-channel-id": {
+        "name": "channel_id",
+        "in": "path",
+        "required": true,
+        "description": "Host-configured channel namespace; package claims never choose it.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+        }
+      },
       "protocol-tenant-id": {
         "name": "tenant_id",
         "in": "path",
@@ -5451,6 +5715,54 @@
       }
     },
     "responses": {
+      "ProtocolRouteSucceeded": {
+        "description": "Latest durable route generation, retaining the original actor and receipt time on exact retries.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProtocolDeviceRoute"
+            },
+            "example": {
+              "device_asset_id": "device-a",
+              "channel_id": "tcp-a",
+              "revision": 1,
+              "selection": {
+                "package_id": "custom.binary",
+                "package_version": "1",
+                "world": "identity-v1"
+              },
+              "policy_version": 1,
+              "actor_id": "operator-a",
+              "recorded_at_ms": 1000
+            }
+          }
+        }
+      },
+      "ProtocolRouteConflict": {
+        "description": "Revision conflict/exhaustion/time regression or missing registered-device, stored-content or current-policy admission prerequisite. Read current configuration before retrying.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:protocol-route",
+              "title": "Route revision conflicts",
+              "status": 409
+            }
+          }
+        }
+      },
       "ProtocolPackageForbidden": {
         "description": "No exact current protocol.manage authority for the selected active tenant, or browser mutation protection failed. Other actions never substitute.",
         "headers": {

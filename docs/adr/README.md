@@ -136,6 +136,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0112](0112-store-and-isolate-protocol-admission.md) | Immutable bounded protocol artifacts and isolated policy-versioned admission |
 
+| [0113](0113-activate-revisioned-device-protocol-routes.md) | Revisioned admitted device/channel activation, scoped identity routing and session revalidation |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

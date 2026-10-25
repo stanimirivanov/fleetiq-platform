@@ -1,0 +1,19 @@
+description: Latest durable route generation, retaining the original actor and receipt time on exact retries.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ProtocolDeviceRoute.yaml
+    example:
+      device_asset_id: device-a
+      channel_id: tcp-a
+      revision: 1
+      selection:
+        package_id: custom.binary
+        package_version: "1"
+        world: identity-v1
+      policy_version: 1
+      actor_id: operator-a
+      recorded_at_ms: 1000

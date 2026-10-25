@@ -267,3 +267,7 @@ Protocol artifact admission adds ingestion-to-access evidence and pure SHA-256
 validation, server-to-ingestion/telemetry composition and Linux-only rlimit in
 the Wasm adapter worker. The server does not link Wasmtime; it supervises the
 reviewed sibling executable. See [ADR 0112](../adr/0112-store-and-isolate-protocol-admission.md).
+
+Protocol routing promotes postgres-to-protocol-sdk from development to normal
+ownership: its ingestion port consumes the bounded, redacted device identity
+claim. No Wasmtime dependency enters server or postgres; no new library is added.

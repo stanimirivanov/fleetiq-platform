@@ -1,6 +1,6 @@
 # M02, M03 and M04 delivery sequence
 
-Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring merged; PR 14 artifact storage/admission in progress.
+Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring merged; PR 14 artifact storage/admission merged; PR 15 activation/routing in progress.
 
 ## TL;DR
 
@@ -167,7 +167,7 @@ work with PR 13; dependent deployment/browser acceptance remains deferred.
 
 ### PR 14: Store protocol artifacts and control admission
 
-Implementation tracked by issue #317; activation and D06 remain separate.
+Merged through issue #317 / PR #318. Activation and D06 remain separate.
 
 **M03 · fleetiq-platform · Depends on PR 13**
 
@@ -177,6 +177,8 @@ Implementation tracked by issue #317; activation and D06 remain separate.
 - **Harness Gate:** P + O + C; digest mismatch, immutable collision, interrupted storage, forbidden imports, and compilation/resource limits.
 
 ### PR 15: Activate packages and route registered devices
+
+Implementation tracked by issue #319; D06 remains deferred.
 
 **M03 · fleetiq-platform · Depends on PRs 9 and 14**
 

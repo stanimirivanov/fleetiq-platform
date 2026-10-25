@@ -59,3 +59,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [Relationship and signal-binding revisions](metadata-revisions.md) — explicit corrections, original attribution and safe exact retries.
 
 Protocol package operators: [storage and isolated admission](protocol-package-admission.md).
+
+- [Protocol route commissioning](protocol-route-commissioning.md): exact device/channel activation, retirement and host handoff validation.
