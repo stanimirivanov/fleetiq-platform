@@ -118,3 +118,12 @@ The detailed contracts and consequences are recorded in
 [ADRs 0004–0040](../adr/README.md). The
 [current state](../development/current-state.md) identifies which lifecycle and
 runtime capabilities are implemented today.
+
+## Live TCP ownership
+
+The explicit listener composes connection-local ingestion policy with PostgreSQL
+and isolated protocol execution. The application owns validation, route pinning,
+reply stages and durable sequencing; server adapters own sockets, private child
+IPC, quotas and shutdown. Historical replay has no transport reply port.
+See [ADR 0116](../adr/0116-accept-bounded-durable-tcp-sessions.md) and the
+[TCP runbook](../operations/tcp-ingestion.md).

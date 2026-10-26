@@ -28,6 +28,10 @@ path = "src/bin/admission.rs"
 name = "fleetiq-protocol-decode"
 path = "src/bin/decode.rs"
 
+[[bin]]
+name = "fleetiq-protocol-live"
+path = "src/bin/live.rs"
+
 [dev-dependencies]
 # Fixture parser and encoder must use the same wasm-tools release.
 wat = "=1.262.0"

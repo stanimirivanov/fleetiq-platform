@@ -200,7 +200,7 @@ Merged through issue #321 / PR #322. Bounded TCP Codec 8/8 Extended component; l
 
 ### PR 17: Persist decode work and recover stateful processing
 
-Implementation tracked by issue #323; listener, D06 and full-profile qualification remain deferred.
+Merged as PR #324 (issue #323). D06 and full-profile qualification remain deferred.
 
 **M03 · fleetiq-platform · Depends on PRs 14 and 16**
 
@@ -210,6 +210,8 @@ Implementation tracked by issue #323; listener, D06 and full-profile qualificati
 - **Harness Gate:** P + C; lease contention, ambiguous commits, stateful replay equivalence, crashes between stages, poison input, and duplicate completion.
 
 ### PR 18: Accept bounded TCP sessions with durable ingestion
+
+Implementation tracked by issue #327. D06 and full-profile qualification remain deferred.
 
 **M03 · fleetiq-platform · Depends on PRs 15–17**
 

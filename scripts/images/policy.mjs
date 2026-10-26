@@ -84,6 +84,11 @@ export function validateDockerfile(text, rust) {
   );
   ensure(/^USER 10001:10001$/m.test(text), "Runtime must be nonroot.");
   ensure(
+    text.includes("cp target/release/fleetiq-protocol-live /tmp/fleetiq-protocol-live") &&
+      text.includes("COPY --from=builder /tmp/fleetiq-protocol-live /usr/local/bin/fleetiq-protocol-live"),
+    "Production must package the fixed isolated live executor.",
+  );
+  ensure(
     text.includes("cp target/release/fleetiq-protocol-decode /tmp/fleetiq-protocol-decode") &&
       text.includes("COPY --from=builder /tmp/fleetiq-protocol-decode /usr/local/bin/fleetiq-protocol-decode"),
     "Production must package the fixed isolated replay executor.",

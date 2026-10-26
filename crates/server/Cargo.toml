@@ -34,7 +34,7 @@ tower.workspace = true
 # Real TLS fixtures generate ephemeral keys; neither dependency enters runtime.
 rcgen = { version = "=0.14.10", default-features = false, features = ["crypto", "ring", "pem"] }
 tokio-rustls = { version = "=0.26.6", default-features = false, features = ["ring", "tls12"] }
-tokio = { workspace = true, features = ["io-util", "sync"] }
+tokio = { workspace = true, features = ["io-util", "sync", "test-util"] }
 
 [lints]
 workspace = true

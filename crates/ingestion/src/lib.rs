@@ -48,3 +48,9 @@ pub use replay::{
     ReplayEffects, ReplayExecutor, ReplayFailure, ReplayLease, ReplayRepository, ReplayTick,
     ReplayWork, ReplayWorker,
 };
+
+mod live_session;
+pub use live_session::{
+    LiveExecutionFailure, LiveExecutor, LivePrepared, LiveReplayRepository, LiveReplySink,
+    LiveRoutingRepository, LiveSession, LiveSessionError, LiveStep,
+};

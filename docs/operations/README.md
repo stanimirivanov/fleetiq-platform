@@ -63,3 +63,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Protocol route commissioning](protocol-route-commissioning.md): exact device/channel activation, retirement and host handoff validation.
 
 - [Stateful protocol replay](protocol-replay.md) — fenced durable recovery, isolated execution, upgrade compatibility and no historical replies.
+
+- [Bounded TCP ingestion](tcp-ingestion.md) — explicit trusted-channel activation, limits, reply stages and recovery.

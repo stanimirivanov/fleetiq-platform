@@ -91,6 +91,8 @@ test("floating bases, wrong Rust, root user, unchecked default and unlocked buil
     dockerfile.replace("cargo build --locked", "cargo build"),
     dockerfile.replace("-p fleetiq-protocol-wasm --bins", ""),
     dockerfile.replace("cp target/release/fleetiq-protocol-decode /tmp/fleetiq-protocol-decode", ""),
+    dockerfile.replace("cp target/release/fleetiq-protocol-live /tmp/fleetiq-protocol-live", ""),
+    dockerfile.replace("COPY --from=builder /tmp/fleetiq-protocol-live /usr/local/bin/fleetiq-protocol-live", ""),
     dockerfile.replace("COPY --from=builder /tmp/fleetiq-protocol-decode /usr/local/bin/fleetiq-protocol-decode", ""),
     dockerfile.replace("COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission", ""),
   ]) {

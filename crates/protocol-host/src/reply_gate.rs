@@ -20,7 +20,8 @@ impl ReplyGate {
     /// Replies released after processing become immediately accessible to host
     /// transport code. Replies tied to durable acceptance remain opaque behind a
     /// [`DeferredReply`] until the caller supplies the corresponding accepted
-    /// message.
+    /// message. A trusted IPC adapter may instead transfer the still-gated
+    /// proposal with [`DeferredReply::into_proposal`].
     ///
     /// # Errors
     ///
@@ -60,11 +61,28 @@ pub enum StagedReply {
     AwaitingDurableAcceptance(DeferredReply),
 }
 
-/// A validated reply that cannot expose its bytes until durable acceptance.
+/// A validated durability-gated proposal. Only [`Self::release`] constructs an
+/// outbound reply; [`Self::into_proposal`] transfers an untrusted IPC proposal
+/// while retaining its release condition.
 #[derive(Clone, Eq, PartialEq)]
 pub struct DeferredReply(Box<[u8]>);
 
 impl DeferredReply {
+    /// Transfers this opaque reply back into a proposal for a trusted IPC adapter.
+    /// The durable-acceptance condition is preserved. This never creates an
+    /// outbound reply; the receiving host must restage it and prove acceptance.
+    ///
+    /// # Panics
+    /// Panics if the private nonempty-reply invariant is broken. All constructors
+    /// validate this invariant before a deferred reply can exist.
+    #[must_use]
+    pub fn into_proposal(self) -> fleetiq_protocol_sdk::ProposedReply {
+        fleetiq_protocol_sdk::ProposedReply::new(
+            Vec::from(self.0),
+            fleetiq_protocol_sdk::ReplyRelease::AfterDurableAcceptance,
+        )
+        .expect("deferred replies originate from nonempty validated proposals")
+    }
     /// Releases the reply after the triggering frame has been durably accepted.
     ///
     /// The caller must supply the [`AcceptedMessage`] created for the frame whose

@@ -55,6 +55,10 @@ async fn execute() -> Result<(), Box<dyn Error>> {
                 }
             }
         }
+        ProcessCommand::IngestTcp => {
+            fleetiq_server::run_tcp_ingestion(fleetiq_server::TcpIngestionConfig::from_env()?)
+                .await?;
+        }
         ProcessCommand::ReplayWorker => fleetiq_server::run_replay_worker().await?,
         ProcessCommand::Help => println!("{}", ProcessCommand::usage()),
     }

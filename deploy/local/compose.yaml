@@ -27,6 +27,38 @@ services:
       - no-new-privileges:true
     stop_grace_period: 10s
 
+  # Opt-in identity-only device channel; no device authentication or TLS is implied.
+  tcp-ingestion:
+    profiles: [tcp]
+    command: ["ingest-tcp"]
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${FLEETIQ_DATABASE_URL:-postgres://fleetiq:fleetiq-local-only@postgres:5432/fleetiq}
+      FLEETIQ_TCP_BIND_ADDRESS: 0.0.0.0:55027
+      FLEETIQ_TCP_IDENTITY_POLICY: ${FLEETIQ_TCP_IDENTITY_POLICY:-}
+      FLEETIQ_TCP_TENANT_ID: ${FLEETIQ_TCP_TENANT_ID:-}
+      FLEETIQ_TCP_CHANNEL_ID: ${FLEETIQ_TCP_CHANNEL_ID:-}
+      FLEETIQ_TCP_PACKAGE_ID: ${FLEETIQ_TCP_PACKAGE_ID:-}
+      FLEETIQ_TCP_PACKAGE_VERSION: ${FLEETIQ_TCP_PACKAGE_VERSION:-}
+    ports:
+      - "127.0.0.1:${FLEETIQ_TCP_PORT:-55027}:55027"
+    # The image's HTTP probe is irrelevant to this process mode. No readiness
+    # claim is made by opening a port; bootstrap checks schema and admission.
+    healthcheck:
+      disable: true
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 20s
+
   postgres:
     image: postgres:18.6-alpine3.23
     shm_size: 128mb

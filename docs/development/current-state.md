@@ -2,9 +2,13 @@
 
 ## TL;DR
 
+- [Bounded TCP ingestion](../operations/tcp-ingestion.md) now accepts explicitly
+  configured identity-v1 channels through isolated live execution and fenced durable
+  results. Identifier routing is not device authentication; D06 remains deferred.
+
 - [Stateful protocol replay](../operations/protocol-replay.md) now persists exact
   accepted/pre-state inputs and fenced claims, and commits decoded effects and
-  checkpoints atomically through an isolated Linux worker. No listener is opened;
+  checkpoints atomically through an isolated Linux worker. Historical recovery never replies;
   D06 and full-profile qualification remain deferred.
 
 - Kubernetes plan D02 adds source-owned immutable backend image qualification and explicit maintainer publication; no environment deployment is performed. See [image production](../operations/image-publication.md).

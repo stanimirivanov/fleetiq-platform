@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT package.artifact_sha256,\n            package.artifact_size_bytes::bigint AS \"size!\"\n            -- The release, active tenant, admission and stored content are read\n            -- from one statement snapshot before executing untrusted identity code.\n            FROM metadata.protocol_package_releases package\n            JOIN metadata.tenants tenant USING(tenant_id)\n            JOIN ingestion.protocol_admissions admission\n                USING (tenant_id, protocol_package_id, protocol_package_version, artifact_sha256)\n            JOIN ingestion.protocol_artifacts artifact USING (tenant_id, artifact_sha256)\n            WHERE package.tenant_id = $1\n              AND package.protocol_package_id = $2\n              AND package.protocol_package_version = $3\n            AND tenant.is_active\n              AND admission.wit_world = 'identity-v1'\n              AND admission.policy_version = $4\n            -- Length is an inexpensive corruption guard; the content adapter also\n              -- checks the digest before the child receives artifact bytes.\n              AND octet_length(artifact.artifact_bytes) = package.artifact_size_bytes",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "artifact_sha256",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "metadata.protocol_package_releases",
+            "name": "artifact_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "size!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "6e46fdd96a5b4d21932718839597b95d7487cafda336c43f982dcc1d8bbf754f"
+}

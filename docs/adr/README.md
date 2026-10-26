@@ -142,6 +142,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0115](0115-persist-fenced-stateful-protocol-replay.md) | Exact stateful replay inputs, fenced recovery and atomic decoded checkpoint completion |
 
+| [0116](0116-accept-bounded-durable-tcp-sessions.md) | Bounded live TCP ownership, isolated proposals and staged durable reply sequencing |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

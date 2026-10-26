@@ -1,18 +1,13 @@
 //! Database bytes and private supervised child I/O stay at the outbound boundary.
+use crate::protocol_process::{Cancellation, supervise};
 use fleetiq_ingestion::{
     ProtocolArtifactStore, ProtocolPackageCatalog, ReplayEffects, ReplayExecutor, ReplayFailure,
     ReplayWork,
 };
 use fleetiq_postgres::{PostgresProtocolArtifactStore, PostgresProtocolPackageCatalog};
-use fleetiq_protocol_sdk::replay_wire::{
-    REPLAY_REQUEST_LIMIT, REPLAY_RESPONSE_LIMIT, ReplayRequest, ReplayResponse,
-};
-use std::{path::PathBuf, process::Stdio, sync::Arc, time::Duration};
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    process::Command,
-    sync::{Semaphore, oneshot},
-};
+use fleetiq_protocol_sdk::replay_wire::{REPLAY_REQUEST_LIMIT, ReplayRequest, ReplayResponse};
+use std::{path::PathBuf, sync::Arc};
+use tokio::sync::{Semaphore, oneshot};
 #[cfg(test)]
 mod tests;
 fn executor_path() -> std::io::Result<PathBuf> {
@@ -41,14 +36,6 @@ impl IsolatedReplay {
     }
     pub(super) async fn drain(&self) {
         let _permit = self.slots.acquire().await;
-    }
-}
-struct Cancellation(Option<oneshot::Sender<()>>);
-impl Drop for Cancellation {
-    fn drop(&mut self) {
-        if let Some(s) = self.0.take() {
-            let _ = s.send(());
-        }
     }
 }
 impl ReplayExecutor for IsolatedReplay {
@@ -95,7 +82,7 @@ impl ReplayExecutor for IsolatedReplay {
             drop(permit);
             let _ = send.send(result);
         });
-        let response = receive.await.unwrap_or(Err(ReplayFailure::Unavailable))?;
+        let response: ReplayResponse = receive.await.unwrap_or(Err(ReplayFailure::Unavailable))?;
         if response.execution != work.execution {
             return Err(ReplayFailure::Unavailable);
         }
@@ -112,48 +99,4 @@ impl ReplayExecutor for IsolatedReplay {
             state: response.state,
         })
     }
-}
-async fn supervise(
-    path: PathBuf,
-    bytes: Vec<u8>,
-    mut cancelled: oneshot::Receiver<()>,
-) -> Result<ReplayResponse, ReplayFailure> {
-    let mut child = Command::new(path)
-        .env_clear()
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .kill_on_drop(true)
-        .spawn()
-        .map_err(|_| ReplayFailure::Unavailable)?;
-    let work = async {
-        let mut stdin = child.stdin.take().ok_or(ReplayFailure::Unavailable)?;
-        stdin
-            .write_all(&bytes)
-            .await
-            .map_err(|_| ReplayFailure::Unavailable)?;
-        drop(stdin);
-        let stdout = child.stdout.take().ok_or(ReplayFailure::Unavailable)?;
-        let mut output = Vec::new();
-        stdout
-            .take(REPLAY_RESPONSE_LIMIT + 1)
-            .read_to_end(&mut output)
-            .await
-            .map_err(|_| ReplayFailure::Unavailable)?;
-        if output.len() as u64 > REPLAY_RESPONSE_LIMIT {
-            return Err(ReplayFailure::Rejected);
-        }
-        let status = child.wait().await.map_err(|_| ReplayFailure::Unavailable)?;
-        match status.code() {
-            Some(0) => serde_json::from_slice(&output).map_err(|_| ReplayFailure::Rejected),
-            Some(2) => Err(ReplayFailure::Rejected),
-            _ => Err(ReplayFailure::Unavailable),
-        }
-    };
-    let result = tokio::select! {biased; _=&mut cancelled=>Err(ReplayFailure::Unavailable),result=tokio::time::timeout(Duration::from_secs(15),work)=>result.unwrap_or(Err(ReplayFailure::Unavailable))};
-    if result.is_err() {
-        let _ = child.kill().await;
-        let _ = child.wait().await;
-    }
-    result
 }

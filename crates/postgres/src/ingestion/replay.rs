@@ -23,7 +23,7 @@ impl ReplayRepository for PostgresReplayRepository {
         self.enqueue_work(work).await
     }
     async fn claim(&self) -> Result<Option<ReplayLease>, Self::Error> {
-        self.claim_work().await
+        self.claim_work(None).await
     }
     async fn complete(
         &self,
@@ -86,5 +86,15 @@ impl std::error::Error for PostgresReplayError {
             Self::Decoded(e) => Some(e),
             Self::Invalid => None,
         }
+    }
+}
+
+impl fleetiq_ingestion::LiveReplayRepository for PostgresReplayRepository {
+    async fn claim_exact(
+        &self,
+        message: &fleetiq_telemetry::AcceptedMessage,
+    ) -> Result<Option<ReplayLease>, Self::Error> {
+        self.claim_work(Some((message.tenant_id().as_str(), message.id().as_str())))
+            .await
     }
 }
