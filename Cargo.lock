@@ -1160,7 +1160,7 @@ dependencies = [
  "fleetiq-domain",
  "fleetiq-telemetry",
  "serde",
- "sha2 0.11.0",
+ "sha2 0.11.1",
 ]
 
 [[package]]
@@ -1173,7 +1173,7 @@ dependencies = [
  "fleetiq-telemetry",
  "rlimit",
  "serde_json",
-  "sha2 0.11.1",
+ "sha2 0.11.1",
  "wasmtime",
  "wat",
  "wit-component 0.262.0",

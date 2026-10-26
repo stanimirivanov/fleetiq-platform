@@ -64,7 +64,7 @@ async fn cancellation_reaps_a_running_executor_before_returning() {
                 Ok(text) if !text.is_empty() => break text.parse::<u32>().unwrap(),
                 Ok(_) => tokio::task::yield_now().await,
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                    tokio::task::yield_now().await
+                    tokio::task::yield_now().await;
                 }
                 Err(error) => panic!("fixture handshake failed: {error}"),
             }
