@@ -114,3 +114,22 @@ fn debug_output_does_not_expose_reply_bytes() {
     assert!(outbound_debug.contains("length: 6"));
     assert!(!outbound_debug.contains("secret"));
 }
+
+#[test]
+fn ipc_reproposal_keeps_the_durable_release_condition() {
+    let gate = ReplyGate::new(limit(8));
+    let StagedReply::AwaitingDurableAcceptance(deferred) = gate
+        .stage(reply(b"ack", ReplyRelease::AfterDurableAcceptance))
+        .unwrap()
+    else {
+        panic!("must defer")
+    };
+    let proposal = deferred.into_proposal();
+    let StagedReply::AwaitingDurableAcceptance(restaged) = gate.stage(proposal).unwrap() else {
+        panic!("IPC cannot turn durability into processing readiness")
+    };
+    let accepted = accepted_message();
+    let released = restaged.release(&accepted);
+    assert_eq!(released.as_bytes(), b"ack");
+    assert_eq!(released.durable_acceptance(), Some(accepted.id()));
+}

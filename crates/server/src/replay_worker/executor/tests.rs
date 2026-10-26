@@ -1,11 +1,13 @@
 use super::*;
+#[cfg(target_os = "linux")]
+use std::time::Duration;
 #[tokio::test]
 async fn missing_executor_is_retryable() {
     let (sender, receiver) = oneshot::channel();
     drop(sender);
     let path = PathBuf::from("missing-fleetiq-replay-fixture-executable");
     assert!(matches!(
-        supervise(path, vec![], receiver).await,
+        supervise::<ReplayResponse>(path, vec![], receiver).await,
         Err(ReplayFailure::Unavailable)
     ));
 }
@@ -56,7 +58,7 @@ async fn cancellation_reaps_a_running_executor_before_returning() {
     .unwrap();
     fs::set_permissions(&script, fs::Permissions::from_mode(0o700)).unwrap();
     let (cancel, cancelled) = oneshot::channel();
-    let task = tokio::spawn(supervise(script, vec![], cancelled));
+    let task = tokio::spawn(supervise::<ReplayResponse>(script, vec![], cancelled));
     // A process handshake, not a sleep-based guess about whether spawn happened.
     let pid = tokio::time::timeout(Duration::from_secs(5), async {
         loop {

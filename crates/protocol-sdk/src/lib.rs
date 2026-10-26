@@ -31,3 +31,6 @@ pub use session_state::SessionStateAction;
 
 /// Internal bounded process envelopes; not a guest capability or public HTTP API.
 pub mod replay_wire;
+
+/// Internal bounded live-child process contract.
+pub mod live_wire;

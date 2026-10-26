@@ -278,3 +278,35 @@ async fn incompatible_execution_is_neither_claimed_nor_quarantined(pool: PgPool)
     assert_eq!(status, "pending");
     assert!(!repo.enqueue(&work).await.unwrap());
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn live_claim_is_message_scoped_and_competes_with_global_recovery(pool: PgPool) {
+    use fleetiq_ingestion::LiveReplayRepository;
+    let work = seed(&pool).await;
+    let repo = PostgresReplayRepository::new(pool.clone());
+    repo.enqueue(&work).await.unwrap();
+    let missing = AcceptedMessage::new(
+        AcceptedMessageId::new("missing").unwrap(),
+        work.message.tenant_id().clone(),
+        work.message.device_asset_id().clone(),
+        work.message.protocol_package().clone(),
+        work.message.received_at(),
+        work.message.payload().clone(),
+    );
+    assert!(repo.claim_exact(&missing).await.unwrap().is_none());
+    let foreign = AcceptedMessage::new(
+        work.message.id().clone(),
+        TenantId::new("tenant-b").unwrap(),
+        work.message.device_asset_id().clone(),
+        work.message.protocol_package().clone(),
+        work.message.received_at(),
+        work.message.payload().clone(),
+    );
+    assert!(repo.claim_exact(&foreign).await.unwrap().is_none());
+    let other = repo.clone();
+    let (live, recovery) = tokio::join!(repo.claim_exact(&work.message), other.claim());
+    let claims = [live.unwrap(), recovery.unwrap()];
+    assert_eq!(claims.iter().flatten().count(), 1);
+    assert_eq!(claims.into_iter().flatten().next().unwrap().work, work);
+    assert!(repo.claim_exact(&work.message).await.unwrap().is_none());
+}

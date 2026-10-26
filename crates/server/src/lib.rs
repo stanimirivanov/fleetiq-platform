@@ -249,3 +249,7 @@ mod tests {
 
 mod replay_worker;
 pub use replay_worker::{ReplayWorkerError, run_replay_worker};
+
+mod protocol_process;
+mod tcp_ingestion;
+pub use tcp_ingestion::{TcpIngestionConfig, TcpIngestionError, run_tcp_ingestion};

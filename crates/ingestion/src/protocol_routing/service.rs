@@ -31,6 +31,24 @@ impl<R: ProtocolRoutingRepository> ProtocolRoutingService<R> {
     pub const fn new(repository: R) -> Self {
         Self { repository }
     }
+    /// Resolves only explicit host scope to a currently admitted identity package.
+    /// # Errors
+    /// Reports storage failures; absence never permits guest execution.
+    pub async fn bootstrap(
+        &self,
+        channel: &RegisteredIdentityChannel,
+    ) -> Result<Option<crate::ProtocolPackageRelease>, R::Error>
+    where
+        R: crate::LiveRoutingRepository,
+    {
+        if channel.selection.world != crate::ProtocolAdmissionWorld::Identity {
+            return Ok(None);
+        }
+        Ok(self.repository.bootstrap(channel).await?.filter(|release| {
+            release.tenant_id() == &channel.tenant_id
+                && release.package() == &channel.selection.package
+        }))
+    }
     /// Reads an authorized tenant's exact device/channel configuration.
     /// # Errors
     /// Reports storage or reconstruction failure.

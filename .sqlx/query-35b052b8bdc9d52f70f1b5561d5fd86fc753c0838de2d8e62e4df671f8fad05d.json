@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT w.tenant_id,w.message_id\n            FROM ingestion.replay_work w\n            JOIN ingestion.replay_sessions s USING(tenant_id,session_id)\n            WHERE s.execution_sha256=$1\n            AND s.execution_policy=1\n            AND s.admission_policy=1\n            AND w.status='pending'\n            AND w.generation<3\n            AND (w.lease_until_ms IS NULL OR w.lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint)\n            AND w.sequence=s.current_sequence+1\n            AND ($2::text IS NULL OR w.tenant_id=$2)\n            AND ($3::text IS NULL OR w.message_id=$3)\n            ORDER BY w.tenant_id,w.message_id\n            FOR UPDATE OF w SKIP LOCKED\n            LIMIT 1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "message_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "35b052b8bdc9d52f70f1b5561d5fd86fc753c0838de2d8e62e4df671f8fad05d"
+}

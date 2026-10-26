@@ -329,3 +329,85 @@ fn durable_replay_boundary_carries_state_and_outputs_but_never_replies() {
     assert!(serde_json::from_value::<ReplayResponse>(envelope).is_err());
     assert!(fleetiq_protocol_wasm::replay_frame(request(wire, vec![])).is_err());
 }
+
+#[test]
+fn live_envelope_frames_fragments_and_preserves_identity_state_and_reply_stages() {
+    use fleetiq_protocol_sdk::live_wire::{LiveRequest, LiveResponse};
+    let bytes = build();
+    let request = |unread, state, identify| LiveRequest {
+        policy: 1,
+        execution: fleetiq_protocol_sdk::replay_wire::replay_fingerprint(),
+        package_id: "teltonika.tcp".into(),
+        package_version: "1".into(),
+        artifact: bytes.clone(),
+        unread,
+        state,
+        identify,
+    };
+    let hello = b"\x00\x0f123456789012345".to_vec();
+    assert!(
+        fleetiq_protocol_wasm::live_turn(request(hello[..8].to_vec(), vec![], true))
+            .unwrap()
+            .turn
+            .is_none()
+    );
+    let packet = fixture(include_str!(
+        "../../../packages/teltonika/tests/fixtures/codec8.hex"
+    ));
+    let mut coalesced = hello.clone();
+    coalesced.extend_from_slice(&packet);
+    let response = fleetiq_protocol_wasm::live_turn(request(coalesced, vec![], true)).unwrap();
+    let turn = response.turn.unwrap();
+    assert_eq!(turn.consumed, hello.len());
+    assert_eq!(
+        turn.identity,
+        Some(("imei".into(), "123456789012345".into()))
+    );
+    assert_eq!(turn.state, [1]);
+    assert_eq!(turn.outputs.len(), 0);
+    assert_eq!(turn.replies.len(), 1);
+    assert_eq!(turn.replies[0].bytes, [1]);
+    assert!(!turn.replies[0].durable);
+    let data = fleetiq_protocol_wasm::live_turn(request(packet.clone(), turn.state, false))
+        .unwrap()
+        .turn
+        .unwrap();
+    assert_eq!(data.consumed, packet.len());
+    assert!(data.identity.is_none());
+    assert_eq!(data.outputs.len(), 26);
+    assert_eq!(data.replies[0].bytes, [0, 0, 0, packet[9]]);
+    assert!(data.replies[0].durable);
+    assert!(fleetiq_protocol_wasm::live_turn(request(packet, vec![], true)).is_err());
+    #[cfg(target_os = "linux")]
+    {
+        use std::{io::Write, process::Stdio};
+        let mut child = Command::new(env!("CARGO_BIN_EXE_fleetiq-protocol-live"))
+            .env_clear()
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        child
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(&serde_json::to_vec(&request(hello, vec![], true)).unwrap())
+            .unwrap();
+        let result = child.wait_with_output().unwrap();
+        assert!(
+            result.status.success(),
+            "live child must execute within production process limits"
+        );
+        let response: LiveResponse = serde_json::from_slice(&result.stdout).unwrap();
+        assert_eq!(response.turn.unwrap().state, [1]);
+    }
+    // Closed live DTOs reject accidental historical/reply-envelope additions.
+    let response = LiveResponse {
+        execution: fleetiq_protocol_sdk::replay_wire::replay_fingerprint(),
+        turn: None,
+    };
+    let mut json = serde_json::to_value(response).unwrap();
+    json["replies"] = serde_json::json!([1]);
+    assert!(serde_json::from_value::<LiveResponse>(json).is_err());
+}
