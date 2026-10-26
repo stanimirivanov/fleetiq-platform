@@ -24,6 +24,14 @@ struct PublishedOperation {
 
 const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/ingestion-diagnostics",
+        id: "getDeviceIngestionDiagnostics",
+        post_id: None,
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
         path: "/api/v1/me/tenants",
         id: "listOperatorTenants",
         post_id: None,

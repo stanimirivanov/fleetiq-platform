@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH recent AS MATERIALIZED (\n                SELECT tenant_id,message_id,protocol_package_id,protocol_package_version\n                FROM ingestion.accepted_messages WHERE tenant_id=$1 AND device_asset_id=$2\n                ORDER BY received_at_ms DESC,message_id DESC LIMIT $3\n            )\n            SELECT DISTINCT m.protocol_package_id,m.protocol_package_version,o.endpoint_id,o.signal_id\n            FROM recent m CROSS JOIN LATERAL (\n                SELECT endpoint_id,signal_id FROM ingestion.decoded_observations o\n                WHERE o.tenant_id=m.tenant_id AND o.message_id=m.message_id\n                  AND o.protocol_package_id=m.protocol_package_id\n                  AND o.protocol_package_version=m.protocol_package_version\n                ORDER BY output_index LIMIT $4\n            ) o\n            ORDER BY m.protocol_package_id,m.protocol_package_version,o.endpoint_id,o.signal_id LIMIT $5\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "protocol_package_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "protocol_package_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "endpoint_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "endpoint_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "signal_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "signal_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "428f3a3834a2ee792ead25a352ad93079c76e181607a314c4162ecdd1ddff1f0"
+}

@@ -83,3 +83,5 @@ pub use ingestion::PostgresProtocolArtifactStore;
 pub use ingestion::PostgresProtocolRoutingRepository;
 
 pub use ingestion::{PostgresReplayError, PostgresReplayRepository};
+
+pub use ingestion::PostgresIngestionDiagnostics;

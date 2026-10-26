@@ -54,3 +54,10 @@ pub use live_session::{
     LiveExecutionFailure, LiveExecutor, LivePrepared, LiveReplayRepository, LiveReplySink,
     LiveRoutingRepository, LiveSession, LiveSessionError, LiveStep,
 };
+
+mod diagnostics;
+pub use diagnostics::{
+    DIAGNOSTIC_FRAME_LIMIT, DIAGNOSTIC_OUTPUT_LIMIT, DIAGNOSTIC_SOURCE_LIMIT, DiagnosticFrame,
+    IngestionDiagnostics, IngestionDiagnosticsRepository, IngestionDiagnosticsService,
+    ObservedSource, ProcessingEvidence,
+};

@@ -614,3 +614,23 @@ fn caching_and_nextest_cannot_bypass_checks_or_change_reviewed_setup() {
         assert!(check(&fixture.0).is_err(),"setup weakening must fail");
     }
 }
+
+#[test]
+fn rust_evidence_retains_measured_ingestion_reports() {
+    let fixture = Fixture::new();
+    let original = generated();
+    for changed in [
+        original.replace("            target/ingestion-measurements/*.json\n", ""),
+        original.replace(
+            "target/ingestion-measurements/*.json",
+            "target/missing-measurements/*.json",
+        ),
+    ] {
+        assert_ne!(changed, original);
+        fs::write(fixture.0.join(super::WORKFLOW), changed).unwrap();
+        assert!(
+            check(&fixture.0).is_err(),
+            "measurement evidence retention must remain reviewed"
+        );
+    }
+}

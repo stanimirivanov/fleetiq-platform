@@ -261,7 +261,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: harness-rust
-          path: target/verification/*.json
+          path: |
+            target/verification/*.json
+            target/ingestion-measurements/*.json
           if-no-files-found: error
           retention-days: 14
 

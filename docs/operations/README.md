@@ -65,3 +65,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Stateful protocol replay](protocol-replay.md) — fenced durable recovery, isolated execution, upgrade compatibility and no historical replies.
 
 - [Bounded TCP ingestion](tcp-ingestion.md) — explicit trusted-channel activation, limits, reply stages and recovery.
+
+- [Ingestion diagnostics and bounded-load qualification](ingestion-diagnostics.md) — safe evidence, sampled sources and repeatable transport/storage measurements.

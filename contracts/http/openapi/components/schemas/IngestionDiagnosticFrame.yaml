@@ -1,0 +1,43 @@
+type: object
+additionalProperties: false
+required:
+- message_id
+- package_id
+- package_version
+- received_at_ms
+- processing
+- observation_count
+properties:
+  message_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  package_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  package_version:
+    type: string
+    minLength: 1
+    maxLength: 128
+  received_at_ms:
+    type: integer
+    format: int64
+  processing:
+    type: string
+    enum:
+    - accepted
+    - queued
+    - leased
+    - expired
+    - poisoned
+    - decoded
+    description: Durable evidence only. Leased does not prove a live worker; expired does not prove terminal
+      failure.
+  observation_count:
+    type:
+    - integer
+    - 'null'
+    minimum: 0
+    maximum: 4294967296
+    description: Null without a decoded completion marker; zero is successful empty decoding.

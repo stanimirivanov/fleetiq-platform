@@ -1,0 +1,21 @@
+description: Bounded snapshot of persisted ingestion evidence; no traffic is an empty sample, not an error.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/IngestionDiagnostics.yaml
+    example:
+      observed_at_ms: 1000
+      connection_liveness: not_observed
+      worker_liveness: not_observed
+      coverage:
+        frame_limit: 64
+        output_limit_per_frame: 64
+        source_limit: 128
+        frames_truncated: false
+        observations_truncated: false
+        sources_truncated: false
+      frames: []
+      sources: []

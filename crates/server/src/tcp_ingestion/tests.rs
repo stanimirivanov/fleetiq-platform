@@ -302,3 +302,5 @@ async fn global_limit_cannot_be_bypassed_with_multiple_peer_addresses(pool: PgPo
         closed(&mut client).await;
     }
 }
+
+mod measured;

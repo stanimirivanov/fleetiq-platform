@@ -20,3 +20,6 @@ pub use protocol_routing::PostgresProtocolRoutingRepository;
 
 mod replay;
 pub use replay::{PostgresReplayError, PostgresReplayRepository};
+
+mod diagnostics;
+pub use diagnostics::PostgresIngestionDiagnostics;

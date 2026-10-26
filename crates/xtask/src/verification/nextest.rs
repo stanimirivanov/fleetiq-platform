@@ -35,6 +35,10 @@ retries = 0
 postgres = {{ max-threads = 4 }}
 wasmtime = {{ max-threads = 2 }}
 [[profile.default.overrides]]
+filter = 'package(fleetiq-server) & test(/^tcp_ingestion::tests::measured::measured_bounded_tcp_envelope$/)'
+test-group = "postgres"
+threads-required = 8
+[[profile.default.overrides]]
 filter = 'package(fleetiq-postgres) | package(fleetiq-server)'
 test-group = "postgres"
 [[profile.default.overrides]]
@@ -83,6 +87,11 @@ mod tests {
             original.replace("max-threads = 4", "max-threads = 20"),
             original.replace("max-threads = 2", "max-threads = 8"),
             original.replace("retries = 0", "retries = 1"),
+            original.replace("threads-required = 8", "threads-required = 1"),
+            original.replace(
+                "test(/^tcp_ingestion::tests::measured::measured_bounded_tcp_envelope$/)",
+                "test(/^different_measurement$/)",
+            ),
             original.replace("fail-fast = false", "fail-fast = true"),
             original.replace("package(fleetiq-server)", "package(no-server-tests)"),
             original.replace("test-group = \"postgres\"", "test-group = \"wasmtime\""),

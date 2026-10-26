@@ -310,3 +310,6 @@ async fn live_claim_is_message_scoped_and_competes_with_global_recovery(pool: Pg
     assert_eq!(claims.into_iter().flatten().next().unwrap().work, work);
     assert!(repo.claim_exact(&work.message).await.unwrap().is_none());
 }
+
+#[path = "replay/diagnostics.rs"]
+mod diagnostics;

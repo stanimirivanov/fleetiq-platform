@@ -1,0 +1,35 @@
+type: object
+additionalProperties: false
+required:
+- observed_at_ms
+- connection_liveness
+- worker_liveness
+- coverage
+- frames
+- sources
+properties:
+  observed_at_ms:
+    type: integer
+    format: int64
+  connection_liveness:
+    type: string
+    const: not_observed
+  worker_liveness:
+    type: string
+    const: not_observed
+  coverage:
+    $ref: ./IngestionDiagnosticCoverage.yaml
+  frames:
+    type: array
+    maxItems: 64
+    description: Newest host receipt timestamp, then descending message identity. Not a freshness or connection
+      guarantee.
+    items:
+      $ref: ./IngestionDiagnosticFrame.yaml
+  sources:
+    type: array
+    maxItems: 128
+    description: Distinct package/version/endpoint/signal tuples from the first 64 decoded positions in
+      each sampled frame; lexicographically ordered. Not complete device capabilities.
+    items:
+      $ref: ./IngestionObservedSource.yaml

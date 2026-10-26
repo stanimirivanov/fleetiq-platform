@@ -1,12 +1,14 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.14"
+  version: "1.0.0-baseline.15"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/ingestion-diagnostics":
+    $ref: ./paths/ingestion/device-diagnostics.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/protocol-routes/{channel_id}":
     $ref: ./paths/protocol-packages/device-route.yaml
   "/api/v1/tenants/{tenant_id}/protocol-packages/{package_id}/versions/{package_version}":
@@ -91,6 +93,14 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    IngestionDiagnostics:
+      $ref: ./components/schemas/IngestionDiagnostics.yaml
+    IngestionDiagnosticCoverage:
+      $ref: ./components/schemas/IngestionDiagnosticCoverage.yaml
+    IngestionObservedSource:
+      $ref: ./components/schemas/IngestionObservedSource.yaml
+    IngestionDiagnosticFrame:
+      $ref: ./components/schemas/IngestionDiagnosticFrame.yaml
     ProtocolRouteSelection:
       $ref: ./components/schemas/ProtocolRouteSelection.yaml
     ChangeProtocolRouteRequest:
@@ -379,6 +389,8 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    IngestionDiagnosticsSucceeded:
+      $ref: ./components/responses/IngestionDiagnosticsSucceeded.yaml
     ProtocolRouteSucceeded:
       $ref: ./components/responses/ProtocolRouteSucceeded.yaml
     ProtocolRouteConflict:

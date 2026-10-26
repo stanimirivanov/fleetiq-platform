@@ -21,6 +21,7 @@ mod migration;
 mod runtime;
 mod schema_mode;
 pub use runtime::{ServerError, run};
+mod ingestion_diagnostics;
 mod mutation_guard;
 mod operator_tenants;
 mod platform_access_administration;
@@ -97,6 +98,10 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(ingestion_diagnostics::router(
+            pool.clone(),
+            authentication.clone(),
+        ))
         .merge(protocol_routes::router(
             pool.clone(),
             authentication.clone(),
@@ -202,6 +207,7 @@ mod tests {
         let base = ServerConfig::from_values("postgres://localhost/test", "127.0.0.1:0")
             .expect("valid base configuration");
         let paths = [
+            "/api/v1/tenants/tenant-a/assets/device-a/ingestion-diagnostics",
             "/api/v1/me/tenants",
             "/api/v1/tenants/tenant-a/protocol-packages/custom.binary/versions/1",
             "/api/v1/tenants/tenant-a/assets/device-a/protocol-routes/tcp-a",
