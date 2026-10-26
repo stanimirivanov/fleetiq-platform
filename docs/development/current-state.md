@@ -489,3 +489,7 @@ host channel, immutable generations, historical retry receipts and explicit
 retirement. Internal lookup constrains tenant/issuer/channel/decoder and revalidates
 current eligibility before future bounded turns. Routing does not authenticate
 peers or activate network listeners. See the [commissioning guide](../operations/protocol-route-commissioning.md).
+
+## Bounded ingestion diagnostics
+
+The ingestion service and PostgreSQL adapter expose an authorized, read-only 64-frame diagnostic snapshot and bounded observed-source discovery. Durable processing states do not imply process/socket health; both liveness fields are explicitly unknown. The [real TCP/PostgreSQL measured fixture](../operations/ingestion-diagnostics.md) records transport/storage throughput, ACK latency and process memory separately from excluded Wasm/vendor costs. D06 and full-profile infrastructure qualification remain deferred.

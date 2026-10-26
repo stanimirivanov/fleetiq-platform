@@ -211,7 +211,7 @@ Merged as PR #324 (issue #323). D06 and full-profile qualification remain deferr
 
 ### PR 18: Accept bounded TCP sessions with durable ingestion
 
-Implementation tracked by issue #327. D06 and full-profile qualification remain deferred.
+Completed by PR #328 (issue #327). D06 and full-profile qualification remain deferred.
 
 **M03 · fleetiq-platform · Depends on PRs 15–17**
 
@@ -221,6 +221,8 @@ Implementation tracked by issue #327. D06 and full-profile qualification remain 
 - **Harness Gate:** P + C; real TCP/PostgreSQL journeys, slow peers, overload, disconnect/commit boundaries, reconnect, and graceful shutdown.
 
 ### PR 19: Expose ingestion diagnostics and measure bounded load
+
+Implementation tracked by issue #329: bounded durable evidence and measured transport/storage envelope; process/socket liveness remains explicitly unobserved.
 
 **M03 · fleetiq-platform · Depends on PRs 17–18**
 

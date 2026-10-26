@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH recent AS MATERIALIZED (\n                SELECT tenant_id,message_id,protocol_package_id,protocol_package_version,received_at_ms\n                FROM ingestion.accepted_messages WHERE tenant_id=$1 AND device_asset_id=$2\n                ORDER BY received_at_ms DESC,message_id DESC LIMIT $3\n            )\n            SELECT m.message_id,m.protocol_package_id,m.protocol_package_version,m.received_at_ms,\n                   d.observation_count,w.status,w.lease_until_ms\n            FROM recent m LEFT JOIN ingestion.decoded_message_results d\n                USING(tenant_id,message_id,protocol_package_id,protocol_package_version)\n            LEFT JOIN ingestion.replay_work w USING(tenant_id,message_id)\n            ORDER BY m.received_at_ms DESC,m.message_id DESC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "protocol_package_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "protocol_package_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "received_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "received_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "observation_count",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_message_results",
+            "name": "observation_count"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "lease_until_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "lease_until_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "1dd2f8b032fe76d65f171fdecfe1468e1d744cadc14e92840b848fd413ff25e5"
+}

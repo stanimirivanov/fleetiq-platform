@@ -341,3 +341,22 @@ Record build versus execution timing and complete failures; never enable automat
 retries, skip slow tests or increase connection limits to manufacture a speedup.
 Hosted cold and warm cache runs remain the authority for CI performance. See
 [ADR 0104](../adr/0104-bound-parallel-rust-tests-and-cache-dependencies.md).
+
+## Ingestion measurement artifacts
+
+The Rust job retains synthetic aggregate reports from
+`target/ingestion-measurements/*.json` with its verification evidence for 14 days.
+The ordinary test inventory runs the measured TCP/storage fixture; writing its
+report is part of test success. A failed prerequisite can legitimately leave no
+measurement report, and the coordinator still reports failed/not-run checks.
+These measured reports contain only fixed workload metadata, aggregate timing
+and process-resource observations. They are separate from coordinator metadata
+and contain no raw data, database URL or environment dump. See the
+[measurement procedure](../operations/ingestion-diagnostics.md).
+
+The exact measured TCP test reserves eight global slots and the PostgreSQL
+group while it runs. Other tests retain eight global, four PostgreSQL and two
+Wasmtime slots, with zero retries and no filtering. This is resource scheduling,
+not excluded coverage. The configuration sensor rejects changing/removing this
+exact reservation. Nextest applies `threads-required` to both global and group
+limits; see [the upstream scheduling documentation](https://www.nexte.st/docs/configuration/test-groups/).

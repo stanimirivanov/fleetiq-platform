@@ -16,6 +16,12 @@ retries = 0
 postgres = { max-threads = 4 }
 wasmtime = { max-threads = 2 }
 
+# Measurements reserve all global slots: no competing suite load distorts them.
+[[profile.default.overrides]]
+filter = 'package(fleetiq-server) & test(/^tcp_ingestion::tests::measured::measured_bounded_tcp_envelope$/)'
+test-group = "postgres"
+threads-required = 8
+
 # Classify whole adapter packages so future database tests inherit the bound.
 [[profile.default.overrides]]
 filter = 'package(fleetiq-postgres) | package(fleetiq-server)'

@@ -144,6 +144,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0116](0116-accept-bounded-durable-tcp-sessions.md) | Bounded live TCP ownership, isolated proposals and staged durable reply sequencing |
 
+| [0117](0117-publish-bounded-ingestion-evidence.md) | Bounded operational evidence and observed-source sampling without inferred liveness |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

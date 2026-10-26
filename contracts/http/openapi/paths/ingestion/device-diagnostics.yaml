@@ -1,0 +1,30 @@
+get:
+  operationId: getDeviceIngestionDiagnostics
+  summary: Inspect bounded device ingestion evidence and observed sources
+  description: 'Requires current tenant protocol.manage. Uses a consistent database snapshot, at most
+    64 recent accepted messages and the first 64 decoded outputs per message, then at most 128 distinct
+    source tuples. Coverage flags explicitly describe each truncation. Package references identify the
+    immutable decoder, not current admission or activation; use package/route endpoints for configuration.
+    No raw payload, checkpoint state, telemetry values, external identifiers or credentials are returned.
+    No process/socket heartbeat is collected: worker and connection liveness are explicitly not_observed.
+    Receipt age and pending/leased/expired/poisoned states are operational evidence, not a device-health
+    inference. All outcomes are no-store.'
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/protocol-tenant-id.yaml
+  - $ref: ../../components/parameters/exact-asset-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/IngestionDiagnosticsSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/ProtocolPackageForbidden.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

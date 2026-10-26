@@ -1,0 +1,25 @@
+type: object
+additionalProperties: false
+required:
+- frame_limit
+- output_limit_per_frame
+- source_limit
+- frames_truncated
+- observations_truncated
+- sources_truncated
+properties:
+  frame_limit:
+    type: integer
+    const: 64
+  output_limit_per_frame:
+    type: integer
+    const: 64
+  source_limit:
+    type: integer
+    const: 128
+  frames_truncated:
+    type: boolean
+  observations_truncated:
+    type: boolean
+  sources_truncated:
+    type: boolean

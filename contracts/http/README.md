@@ -176,3 +176,7 @@ catalogues. Existing exact reads remain unchanged. See [semantic commissioning](
 Baseline.14 adds protected revisioned device/channel protocol commissioning.
 GET inspects current configuration; PUT receipts may resolve historical exact
 retries and never roll back the head. See [route commissioning](../../docs/operations/protocol-route-commissioning.md).
+
+## Ingestion diagnostics baseline
+
+Baseline.15 adds `getDeviceIngestionDiagnostics` under exact tenant `protocol.manage`. It returns bounded durable processing evidence and sampled source identities; worker/connection liveness remain `not_observed`. See the [operator and measurement procedure](../../docs/operations/ingestion-diagnostics.md).

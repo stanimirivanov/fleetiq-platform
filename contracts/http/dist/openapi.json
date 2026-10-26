@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.14",
+    "version": "1.0.0-baseline.15",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device."
   },
   "servers": [
@@ -12,6 +12,49 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/ingestion-diagnostics": {
+      "get": {
+        "operationId": "getDeviceIngestionDiagnostics",
+        "summary": "Inspect bounded device ingestion evidence and observed sources",
+        "description": "Requires current tenant protocol.manage. Uses a consistent database snapshot, at most 64 recent accepted messages and the first 64 decoded outputs per message, then at most 128 distinct source tuples. Coverage flags explicitly describe each truncation. Package references identify the immutable decoder, not current admission or activation; use package/route endpoints for configuration. No raw payload, checkpoint state, telemetry values, external identifiers or credentials are returned. No process/socket heartbeat is collected: worker and connection liveness are explicitly not_observed. Receipt age and pending/leased/expired/poisoned states are operational evidence, not a device-health inference. All outcomes are no-store.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/protocol-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/exact-asset-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/IngestionDiagnosticsSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/ProtocolPackageForbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/protocol-routes/{channel_id}": {
       "get": {
         "operationId": "getDeviceProtocolRoute",
@@ -2719,6 +2762,172 @@
   },
   "components": {
     "schemas": {
+      "IngestionDiagnostics": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observed_at_ms",
+          "connection_liveness",
+          "worker_liveness",
+          "coverage",
+          "frames",
+          "sources"
+        ],
+        "properties": {
+          "observed_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "connection_liveness": {
+            "type": "string",
+            "const": "not_observed"
+          },
+          "worker_liveness": {
+            "type": "string",
+            "const": "not_observed"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/IngestionDiagnosticCoverage"
+          },
+          "frames": {
+            "type": "array",
+            "maxItems": 64,
+            "description": "Newest host receipt timestamp, then descending message identity. Not a freshness or connection guarantee.",
+            "items": {
+              "$ref": "#/components/schemas/IngestionDiagnosticFrame"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "maxItems": 128,
+            "description": "Distinct package/version/endpoint/signal tuples from the first 64 decoded positions in each sampled frame; lexicographically ordered. Not complete device capabilities.",
+            "items": {
+              "$ref": "#/components/schemas/IngestionObservedSource"
+            }
+          }
+        }
+      },
+      "IngestionDiagnosticCoverage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "frame_limit",
+          "output_limit_per_frame",
+          "source_limit",
+          "frames_truncated",
+          "observations_truncated",
+          "sources_truncated"
+        ],
+        "properties": {
+          "frame_limit": {
+            "type": "integer",
+            "const": 64
+          },
+          "output_limit_per_frame": {
+            "type": "integer",
+            "const": 64
+          },
+          "source_limit": {
+            "type": "integer",
+            "const": 128
+          },
+          "frames_truncated": {
+            "type": "boolean"
+          },
+          "observations_truncated": {
+            "type": "boolean"
+          },
+          "sources_truncated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "IngestionObservedSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package_id",
+          "package_version",
+          "endpoint_id",
+          "signal_id"
+        ],
+        "properties": {
+          "package_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "package_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "endpoint_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "signal_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      },
+      "IngestionDiagnosticFrame": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message_id",
+          "package_id",
+          "package_version",
+          "received_at_ms",
+          "processing",
+          "observation_count"
+        ],
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "package_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "package_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "received_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "processing": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "queued",
+              "leased",
+              "expired",
+              "poisoned",
+              "decoded"
+            ],
+            "description": "Durable evidence only. Leased does not prove a live worker; expired does not prove terminal failure."
+          },
+          "observation_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 4294967296,
+            "description": "Null without a decoded completion marker; zero is successful empty decoding."
+          }
+        }
+      },
       "ProtocolRouteSelection": {
         "type": "object",
         "additionalProperties": false,
@@ -5715,6 +5924,36 @@
       }
     },
     "responses": {
+      "IngestionDiagnosticsSucceeded": {
+        "description": "Bounded snapshot of persisted ingestion evidence; no traffic is an empty sample, not an error.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/IngestionDiagnostics"
+            },
+            "example": {
+              "observed_at_ms": 1000,
+              "connection_liveness": "not_observed",
+              "worker_liveness": "not_observed",
+              "coverage": {
+                "frame_limit": 64,
+                "output_limit_per_frame": 64,
+                "source_limit": 128,
+                "frames_truncated": false,
+                "observations_truncated": false,
+                "sources_truncated": false
+              },
+              "frames": [],
+              "sources": []
+            }
+          }
+        }
+      },
       "ProtocolRouteSucceeded": {
         "description": "Latest durable route generation, retaining the original actor and receipt time on exact retries.",
         "headers": {

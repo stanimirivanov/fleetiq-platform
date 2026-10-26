@@ -127,3 +127,7 @@ reply stages and durable sequencing; server adapters own sockets, private child
 IPC, quotas and shutdown. Historical replay has no transport reply port.
 See [ADR 0116](../adr/0116-accept-bounded-durable-tcp-sessions.md) and the
 [TCP runbook](../operations/tcp-ingestion.md).
+
+## Operational evidence
+
+Authorized [diagnostics](../operations/ingestion-diagnostics.md) expose bounded durable worker-state and observed-source evidence, with unknown process/connection liveness. See [ADR 0117](../adr/0117-publish-bounded-ingestion-evidence.md).

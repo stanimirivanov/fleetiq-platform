@@ -1,0 +1,24 @@
+type: object
+additionalProperties: false
+required:
+- package_id
+- package_version
+- endpoint_id
+- signal_id
+properties:
+  package_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  package_version:
+    type: string
+    minLength: 1
+    maxLength: 128
+  endpoint_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  signal_id:
+    type: string
+    minLength: 1
+    maxLength: 128
