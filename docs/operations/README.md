@@ -61,3 +61,5 @@ restore, and incident runbooks will be added when those capabilities exist.
 Protocol package operators: [storage and isolated admission](protocol-package-admission.md).
 
 - [Protocol route commissioning](protocol-route-commissioning.md): exact device/channel activation, retirement and host handoff validation.
+
+- [Stateful protocol replay](protocol-replay.md) — fenced durable recovery, isolated execution, upgrade compatibility and no historical replies.

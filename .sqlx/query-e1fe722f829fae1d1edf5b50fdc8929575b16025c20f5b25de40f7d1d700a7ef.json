@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ingestion.replay_work w\n            SET status='poisoned'\n            FROM (SELECT w.tenant_id,w.message_id\n            FROM ingestion.replay_work w\n            JOIN ingestion.replay_sessions s USING(tenant_id,session_id)\n            WHERE s.execution_sha256=$1\n            AND w.status='pending'\n            AND w.generation=3\n            AND lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint\n            ORDER BY lease_until_ms\n            FOR UPDATE OF w SKIP LOCKED\n            LIMIT 32) expired\n            WHERE w.tenant_id=expired.tenant_id\n            AND w.message_id=expired.message_id\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e1fe722f829fae1d1edf5b50fdc8929575b16025c20f5b25de40f7d1d700a7ef"
+}

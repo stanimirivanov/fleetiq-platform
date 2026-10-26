@@ -2,6 +2,11 @@
 
 ## TL;DR
 
+- [Stateful protocol replay](../operations/protocol-replay.md) now persists exact
+  accepted/pre-state inputs and fenced claims, and commits decoded effects and
+  checkpoints atomically through an isolated Linux worker. No listener is opened;
+  D06 and full-profile qualification remain deferred.
+
 - Kubernetes plan D02 adds source-owned immutable backend image qualification and explicit maintainer publication; no environment deployment is performed. See [image production](../operations/image-publication.md).
 
 - Kubernetes plan D01 adds [explicit migration and checked runtime commands](../operations/runtime-and-migrations.md), deterministic embedded migration inventory and bounded mounted OIDC CA trust. Image publication, Kubernetes packaging, release/recovery orchestration and real deployed browser qualification remain later slices.

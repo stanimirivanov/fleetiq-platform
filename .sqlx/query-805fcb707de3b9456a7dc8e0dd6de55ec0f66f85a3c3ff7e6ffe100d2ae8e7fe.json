@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT current_sequence,state,(device_asset_id=$3\n            AND protocol_package_id=$4\n            AND protocol_package_version=$5\n            AND artifact_sha256=$6\n            AND wit_world=$7\n            AND admission_policy=1\n            AND execution_policy=1\n            AND execution_sha256=$8) AS \"matches!\"\n            FROM ingestion.replay_sessions\n            WHERE tenant_id=$1\n            AND session_id=$2 FOR UPDATE\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "current_sequence",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_sessions",
+            "name": "current_sequence"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "state",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_sessions",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "805fcb707de3b9456a7dc8e0dd6de55ec0f66f85a3c3ff7e6ffe100d2ae8e7fe"
+}

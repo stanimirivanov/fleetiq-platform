@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ingestion.replay_sessions SET current_sequence=$3,state=$4 WHERE tenant_id=$1 AND session_id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d3c452d4d3b89e6e217d39ab4bd7fe1f320624544b5173a8ab42bbeae91e96a0"
+}

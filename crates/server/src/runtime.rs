@@ -94,7 +94,7 @@ async fn serve_listener(
     result
 }
 
-async fn shutdown_signal() {
+pub(crate) async fn shutdown_signal() {
     let interrupt = async {
         if let Err(error) = tokio::signal::ctrl_c().await {
             eprintln!("failed to install or receive the interrupt signal: {error}");

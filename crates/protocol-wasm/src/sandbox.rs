@@ -45,6 +45,24 @@ impl WasmSandbox {
         epoch_tick: Duration,
         max_wasm_stack_bytes: NonZeroUsize,
     ) -> Result<Self, SandboxCreationError> {
+        Self::configured(epoch_tick, max_wasm_stack_bytes, false)
+    }
+
+    /// Replay runs inside a two-GiB process ceiling. Wasmtime's default four-GiB
+    /// linear-memory reservation cannot fit, even for a tiny bounded guest.
+    pub(crate) fn for_replay() -> Result<Self, SandboxCreationError> {
+        Self::configured(
+            Duration::from_millis(10),
+            NonZeroUsize::new(64 * 1024).expect("nonzero stack"),
+            true,
+        )
+    }
+
+    fn configured(
+        epoch_tick: Duration,
+        max_wasm_stack_bytes: NonZeroUsize,
+        compact_memory: bool,
+    ) -> Result<Self, SandboxCreationError> {
         if epoch_tick.is_zero() {
             return Err(SandboxCreationError::ZeroEpochTick);
         }
@@ -54,6 +72,13 @@ impl WasmSandbox {
         config.epoch_interruption(true);
         config.max_wasm_stack(max_wasm_stack_bytes.get());
         config.wasm_memory64(false);
+        if compact_memory {
+            // Keep resource limiting separate from virtual reservation. Wasmtime
+            // emits the necessary bounds checks for the smaller guarded mapping.
+            config.memory_reservation(16 * 1024 * 1024);
+            config.memory_guard_size(64 * 1024);
+            config.memory_reservation_for_growth(0);
+        }
         let engine = Engine::new(&config).map_err(SandboxCreationError::Engine)?;
         let stop_ticker = Arc::new(AtomicBool::new(false));
         let ticker_engine = engine.clone();

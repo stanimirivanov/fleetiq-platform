@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT current_sequence FROM ingestion.replay_sessions WHERE tenant_id=$1 AND session_id=$2 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "current_sequence",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_sessions",
+            "name": "current_sequence"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "71548bbb6a9715d971378493d5bb3c32435c5d29e6155b037ee7dc3d6c50a524"
+}

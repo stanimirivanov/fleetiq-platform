@@ -274,3 +274,12 @@ reviewed sibling executable. See [ADR 0112](../adr/0112-store-and-isolate-protoc
 Protocol routing promotes postgres-to-protocol-sdk from development to normal
 ownership: its ingestion port consumes the bounded, redacted device identity
 claim. No Wasmtime dependency enters server or postgres; no new library is added.
+
+Stateful replay adds server-to-protocol-sdk for the private process envelope.
+The SDK uses existing workspace serde (derive/std) for closed DTOs and SHA-256
+for the versioned execution identity; the Wasm adapter owns serde_json encoding.
+These are existing audited library families, with no new resolver versions.
+The ingestion policy still has no database/process/Wasmtime dependency, and the
+server still does not link the Wasm adapter. JSON is confined to the supervised
+child boundary; native domain constructors validate its decoded values. See
+[ADR 0115](../adr/0115-persist-fenced-stateful-protocol-replay.md).

@@ -6,7 +6,7 @@
 //! by package code.
 //!
 //! This crate defines the semantic boundary. It deliberately does not define
-//! a stable binary or WebAssembly ABI.
+//! the guest WebAssembly ABI. A separate internal replay-process envelope is versioned explicitly.
 
 mod assembly;
 mod decoded_output;
@@ -28,3 +28,6 @@ pub use identity_claim::{DeviceIdentityClaim, InvalidIdentityClaim};
 pub use invocation::{FrameProcessingInput, FrameProcessingOutput, FramingInput};
 pub use reply::{ProposedReply, ProposedReplyError, ReplyRelease};
 pub use session_state::SessionStateAction;
+
+/// Internal bounded process envelopes; not a guest capability or public HTTP API.
+pub mod replay_wire;

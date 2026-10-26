@@ -20,7 +20,8 @@ RUN --mount=type=cache,id=fleetiq-cargo-registry,target=/usr/local/cargo/registr
     --mount=type=cache,id=fleetiq-target,target=/workspace/target,sharing=locked \
     SQLX_OFFLINE=true cargo build --locked --release -p fleetiq-server -p fleetiq-protocol-wasm --bins && \
     cp target/release/fleetiq-server /tmp/fleetiq-server && \
-    cp target/release/fleetiq-protocol-admission /tmp/fleetiq-protocol-admission
+    cp target/release/fleetiq-protocol-admission /tmp/fleetiq-protocol-admission && \
+    cp target/release/fleetiq-protocol-decode /tmp/fleetiq-protocol-decode
 
 # Generate the inventory before entering the shell-free runtime stage.
 RUN /tmp/fleetiq-server migration-inventory > /tmp/migrations.json
@@ -30,6 +31,7 @@ FROM gcr.io/distroless/cc-debian13:nonroot@sha256:3ee00291cf386ec52a552e6a858d55
 
 COPY --from=builder /tmp/fleetiq-server /usr/local/bin/fleetiq-server
 COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission
+COPY --from=builder /tmp/fleetiq-protocol-decode /usr/local/bin/fleetiq-protocol-decode
 COPY --from=builder /tmp/migrations.json /usr/share/fleetiq/migrations.json
 
 ENV FLEETIQ_BIND_ADDRESS=0.0.0.0:8080

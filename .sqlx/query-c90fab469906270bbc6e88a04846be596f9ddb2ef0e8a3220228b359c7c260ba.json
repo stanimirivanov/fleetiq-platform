@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ingestion.replay_work(tenant_id,message_id,session_id,sequence,pre_state) VALUES($1,$2,$3,$4,$5)\n            ON CONFLICT DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c90fab469906270bbc6e88a04846be596f9ddb2ef0e8a3220228b359c7c260ba"
+}

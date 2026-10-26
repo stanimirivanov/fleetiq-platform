@@ -1,6 +1,6 @@
 # M02, M03 and M04 delivery sequence
 
-Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring merged; PR 14 artifact storage/admission merged; PR 15 activation/routing merged; PR 16 Teltonika component in progress.
+Status: Approved sequence; original PRs 1–10 delivered; persistent installation qualification deferred; PR 13 guest authoring merged; PR 14 artifact storage/admission merged; PR 15 activation/routing merged; PR 16 Teltonika component merged; PR 17 durable stateful replay in progress (issue #323).
 
 ## TL;DR
 
@@ -189,7 +189,7 @@ Merged through issue #319 / PR #320; D06 remains deferred.
 
 ### PR 16: Implement the first Teltonika package
 
-Implementation tracked by issue #321. Bounded TCP Codec 8/8 Extended component; listeners, hardware and D06 remain separate.
+Merged through issue #321 / PR #322. Bounded TCP Codec 8/8 Extended component; listeners, hardware and D06 remain separate.
 
 **M03 · fleetiq-platform · Depends on PR 13; parallel with PRs 14–15**
 
@@ -199,6 +199,8 @@ Implementation tracked by issue #321. Bounded TCP Codec 8/8 Extended component; 
 - **Harness Gate:** P and component conformance; CRC/length errors, fragments, coalesced frames, unknown IO, bounds, and ACK conditions.
 
 ### PR 17: Persist decode work and recover stateful processing
+
+Implementation tracked by issue #323; listener, D06 and full-profile qualification remain deferred.
 
 **M03 · fleetiq-platform · Depends on PRs 14 and 16**
 

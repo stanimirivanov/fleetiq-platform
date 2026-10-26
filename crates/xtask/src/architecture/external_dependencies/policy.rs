@@ -108,13 +108,13 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     },
     ExternalPackagePolicy {
         name: "fleetiq-protocol-sdk",
-        normal: NONE,
+        normal: &["serde", "sha2"],
         development: NONE,
         build: NONE,
     },
     ExternalPackagePolicy {
         name: "fleetiq-protocol-wasm",
-        normal: &["rlimit", "sha2", "wasmtime"],
+        normal: &["rlimit", "serde_json", "sha2", "wasmtime"],
         development: &["wat", "wit-component", "wit-parser"],
         build: NONE,
     },
