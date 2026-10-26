@@ -17,3 +17,6 @@ pub use protocol_artifact_store::PostgresProtocolArtifactStore;
 
 mod protocol_routing;
 pub use protocol_routing::PostgresProtocolRoutingRepository;
+
+mod replay;
+pub use replay::{PostgresReplayError, PostgresReplayRepository};

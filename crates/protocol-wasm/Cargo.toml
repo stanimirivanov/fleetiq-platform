@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+serde_json.workspace = true
 fleetiq-domain = { path = "../domain" }
 fleetiq-protocol-host = { path = "../protocol-host" }
 fleetiq-protocol-sdk = { path = "../protocol-sdk" }
@@ -21,6 +22,11 @@ rlimit.workspace = true
 [[bin]]
 name = "fleetiq-protocol-admission"
 path = "src/bin/admission.rs"
+
+
+[[bin]]
+name = "fleetiq-protocol-decode"
+path = "src/bin/decode.rs"
 
 [dev-dependencies]
 # Fixture parser and encoder must use the same wasm-tools release.

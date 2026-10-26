@@ -39,3 +39,6 @@ pub use component_abi::{
 
 #[cfg(test)]
 mod tests;
+
+mod replay;
+pub use replay::{ReplayExecutionError, replay_frame};

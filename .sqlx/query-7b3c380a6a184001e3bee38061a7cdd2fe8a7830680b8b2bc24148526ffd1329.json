@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE ingestion.replay_work\n            SET generation=generation+1,lease_until_ms=floor(extract(epoch FROM clock_timestamp())*1000)::bigint+30000\n            WHERE tenant_id=$1\n            AND message_id=$2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b3c380a6a184001e3bee38061a7cdd2fe8a7830680b8b2bc24148526ffd1329"
+}

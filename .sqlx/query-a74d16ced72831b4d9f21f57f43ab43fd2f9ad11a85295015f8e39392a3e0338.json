@@ -1,0 +1,185 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT m.tenant_id,m.message_id,m.device_asset_id,m.protocol_package_id,m.protocol_package_version,m.received_at_ms,m.payload,w.session_id,w.sequence,s.artifact_sha256,s.wit_world,s.execution_sha256,w.pre_state,w.generation\n            FROM ingestion.replay_work w\n            JOIN ingestion.replay_sessions s USING(tenant_id,session_id)\n            JOIN ingestion.accepted_messages m ON m.tenant_id=w.tenant_id\n            AND m.message_id=w.message_id\n            WHERE w.tenant_id=$1\n            AND w.message_id=$2\n            AND s.execution_policy=1\n            AND s.admission_policy=1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "message_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "device_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "device_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "protocol_package_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "protocol_package_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "received_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "received_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "payload",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "session_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "session_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "sequence",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "sequence"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "artifact_sha256",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_sessions",
+            "name": "artifact_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "wit_world",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_sessions",
+            "name": "wit_world"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "execution_sha256",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_sessions",
+            "name": "execution_sha256"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "pre_state",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "pre_state"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "generation"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a74d16ced72831b4d9f21f57f43ab43fd2f9ad11a85295015f8e39392a3e0338"
+}

@@ -246,3 +246,6 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
     }
 }
+
+mod replay_worker;
+pub use replay_worker::{ReplayWorkerError, run_replay_worker};

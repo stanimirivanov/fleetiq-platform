@@ -8,6 +8,8 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+sha2.workspace = true
+serde = { workspace = true, features = ["std"] }
 fleetiq-domain = { path = "../domain" }
 fleetiq-telemetry = { path = "../telemetry" }
 

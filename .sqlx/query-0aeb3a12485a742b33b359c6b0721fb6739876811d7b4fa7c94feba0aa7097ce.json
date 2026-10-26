@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT status,generation,next_state,(lease_until_ms>floor(extract(epoch FROM clock_timestamp())*1000)::bigint) AS \"valid\"\n            FROM ingestion.replay_work\n            WHERE tenant_id=$1\n            AND message_id=$2 FOR UPDATE\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "status",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "status"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "next_state",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "ingestion.replay_work",
+            "name": "next_state"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "valid",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null
+    ]
+  },
+  "hash": "0aeb3a12485a742b33b359c6b0721fb6739876811d7b4fa7c94feba0aa7097ce"
+}

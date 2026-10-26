@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ingestion.replay_work SET status='completed',next_state=$3 WHERE tenant_id=$1 AND message_id=$2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "50f90851370ac41c04aacbc37dc2557feb6020ae918d9ac758e15cbcc8069d43"
+}

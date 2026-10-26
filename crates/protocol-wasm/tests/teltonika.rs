@@ -260,3 +260,72 @@ fn built_teltonika_identifies_frames_replays_and_preserves_ack_and_error_gates()
         );
     }
 }
+
+#[test]
+fn durable_replay_boundary_carries_state_and_outputs_but_never_replies() {
+    use fleetiq_protocol_sdk::replay_wire::{ReplayRequest, ReplayResponse};
+    let bytes = build();
+    let request = |frame, state| ReplayRequest {
+        policy: 1,
+        execution: fleetiq_protocol_sdk::replay_wire::replay_fingerprint(),
+        package_id: "teltonika.tcp".into(),
+        package_version: "1".into(),
+        world: "identity-v1".into(),
+        artifact: bytes.clone(),
+        frame,
+        state,
+    };
+    let hello = b"\x00\x0f123456789012345".to_vec();
+    #[cfg(target_os = "linux")]
+    {
+        // Real production binary installs RLIMIT_AS before Wasmtime allocates.
+        // This catches reservation/guard defaults that in-process tests miss.
+        use std::io::Write;
+        use std::process::Stdio;
+        let mut child = Command::new(env!("CARGO_BIN_EXE_fleetiq-protocol-decode"))
+            .env_clear()
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        child
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(&serde_json::to_vec(&request(hello.clone(), vec![])).unwrap())
+            .unwrap();
+        let result = child.wait_with_output().unwrap();
+        assert!(
+            result.status.success(),
+            "isolated replay must execute inside real process limits"
+        );
+        let response: ReplayResponse = serde_json::from_slice(&result.stdout).unwrap();
+        assert_eq!(response.state, [1]);
+        assert!(response.outputs.is_empty());
+    }
+    let accepted = fleetiq_protocol_wasm::replay_frame(request(hello, vec![])).unwrap();
+    assert_eq!(accepted.state, [1]);
+    assert!(accepted.outputs.is_empty());
+    let wire = fixture(include_str!(
+        "../../../packages/teltonika/tests/fixtures/codec8.hex"
+    ));
+    let output =
+        fleetiq_protocol_wasm::replay_frame(request(wire.clone(), accepted.state)).unwrap();
+    assert_eq!(output.state, [1]);
+    assert_eq!(output.outputs.len(), 26);
+    let json = serde_json::to_value(&output).unwrap();
+    assert_eq!(json.as_object().unwrap().len(), 4);
+    assert!(json.get("replies").is_none());
+    let response = ReplayResponse {
+        policy: 1,
+        execution: fleetiq_protocol_sdk::replay_wire::replay_fingerprint(),
+        state: vec![],
+        outputs: vec![],
+    };
+    let mut envelope = serde_json::to_value(response).unwrap();
+    assert!(serde_json::from_value::<ReplayResponse>(envelope.clone()).is_ok());
+    envelope["replies"] = serde_json::json!([1]);
+    assert!(serde_json::from_value::<ReplayResponse>(envelope).is_err());
+    assert!(fleetiq_protocol_wasm::replay_frame(request(wire, vec![])).is_err());
+}

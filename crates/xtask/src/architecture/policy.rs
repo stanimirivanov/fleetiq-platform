@@ -137,6 +137,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
             "fleetiq-domain",
             "fleetiq-identity",
             "fleetiq-ingestion",
+            "fleetiq-protocol-sdk",
             "fleetiq-telemetry",
             "fleetiq-metadata",
             "fleetiq-postgres",

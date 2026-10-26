@@ -90,6 +90,8 @@ test("floating bases, wrong Rust, root user, unchecked default and unlocked buil
     dockerfile.replace('["serve", "--check-schema"]', '["serve"]'),
     dockerfile.replace("cargo build --locked", "cargo build"),
     dockerfile.replace("-p fleetiq-protocol-wasm --bins", ""),
+    dockerfile.replace("cp target/release/fleetiq-protocol-decode /tmp/fleetiq-protocol-decode", ""),
+    dockerfile.replace("COPY --from=builder /tmp/fleetiq-protocol-decode /usr/local/bin/fleetiq-protocol-decode", ""),
     dockerfile.replace("COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission", ""),
   ]) {
     assert.notEqual(changed, dockerfile, "negative fixture must change the current Dockerfile");

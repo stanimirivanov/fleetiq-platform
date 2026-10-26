@@ -140,6 +140,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0114](0114-add-bounded-teltonika-protocol-component.md) | Source-built bounded Teltonika TCP decoding, source signals and gated ACK proposals |
 
+| [0115](0115-persist-fenced-stateful-protocol-replay.md) | Exact stateful replay inputs, fenced recovery and atomic decoded checkpoint completion |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

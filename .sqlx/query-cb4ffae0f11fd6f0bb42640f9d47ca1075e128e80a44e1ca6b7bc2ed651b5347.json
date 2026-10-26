@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO ingestion.replay_sessions(tenant_id,session_id,device_asset_id,protocol_package_id,protocol_package_version,artifact_sha256,wit_world,admission_policy,execution_policy,execution_sha256) VALUES($1,$2,$3,$4,$5,$6,$7,1,1,$8)\n            ON CONFLICT DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cb4ffae0f11fd6f0bb42640f9d47ca1075e128e80a44e1ca6b7bc2ed651b5347"
+}

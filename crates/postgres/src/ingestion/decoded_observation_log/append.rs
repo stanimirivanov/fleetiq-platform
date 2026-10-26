@@ -21,6 +21,19 @@ impl PostgresDecodedObservationLog {
         batch: &DecodedObservationBatch,
     ) -> Result<DecodedObservationAppendOutcome, PostgresDecodedObservationLogError> {
         let mut transaction = self.pool.begin().await.map_err(classify_database_error)?;
+        let outcome = Self::append_in_transaction(batch, &mut transaction).await?;
+        transaction
+            .commit()
+            .await
+            .map_err(classify_database_error)?;
+        Ok(outcome)
+    }
+    /// Shares the complete result append with replay's checkpoint transaction.
+    /// The caller owns commit/rollback; no partial marker may escape on failure.
+    pub(in crate::ingestion) async fn append_in_transaction(
+        batch: &DecodedObservationBatch,
+        transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    ) -> Result<DecodedObservationAppendOutcome, PostgresDecodedObservationLogError> {
         let message = batch.message();
         let package = message.protocol_package();
         let observation_count = i64::try_from(batch.len())
@@ -55,20 +68,16 @@ impl PostgresDecodedObservationLog {
             message.received_at().get(),
             message.payload().as_bytes(),
         )
-        .fetch_optional(&mut *transaction)
+        .fetch_optional(&mut **transaction)
         .await
         .map_err(classify_database_error)?;
 
         if inserted.is_some() {
             if !batch.is_empty() {
                 EncodedObservationColumns::from_batch(batch)
-                    .insert(batch, &mut transaction)
+                    .insert(batch, transaction)
                     .await?;
             }
-            transaction
-                .commit()
-                .await
-                .map_err(classify_database_error)?;
             return Ok(DecodedObservationAppendOutcome::Appended);
         }
 
@@ -77,18 +86,17 @@ impl PostgresDecodedObservationLog {
 
     async fn resolve_existing(
         batch: &DecodedObservationBatch,
-        mut transaction: sqlx::Transaction<'_, sqlx::Postgres>,
+        transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     ) -> Result<DecodedObservationAppendOutcome, PostgresDecodedObservationLogError> {
         let message = batch.message();
         let package = message.protocol_package();
-        let Some(existing_result) = DecodedResultRow::find(batch, &mut transaction).await? else {
+        let Some(existing_result) = DecodedResultRow::find(batch, transaction).await? else {
             return Err(accepted_message_mismatch(batch));
         };
         if !existing_result.message_matches {
             return Err(accepted_message_mismatch(batch));
         }
-        let existing_observations =
-            DecodedObservationRow::find_all(batch, &mut transaction).await?;
+        let existing_observations = DecodedObservationRow::find_all(batch, transaction).await?;
         let stored_count = usize::try_from(existing_result.observation_count)
             .map_err(|error| corrupt("decoded_message_results.observation_count", error))?;
 
@@ -120,10 +128,6 @@ impl PostgresDecodedObservationLog {
             });
         }
 
-        transaction
-            .commit()
-            .await
-            .map_err(classify_database_error)?;
         Ok(DecodedObservationAppendOutcome::AlreadyPresent)
     }
 }

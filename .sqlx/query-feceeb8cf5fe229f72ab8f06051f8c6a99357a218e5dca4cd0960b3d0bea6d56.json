@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT EXISTS(SELECT 1\n            FROM ingestion.accepted_messages\n            WHERE tenant_id=$1\n            AND message_id=$2\n            AND device_asset_id=$3\n            AND protocol_package_id=$4\n            AND protocol_package_version=$5\n            AND received_at_ms=$6\n            AND payload=$7) AS \"exact!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exact!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "feceeb8cf5fe229f72ab8f06051f8c6a99357a218e5dca4cd0960b3d0bea6d56"
+}

@@ -41,3 +41,10 @@ pub use protocol_routing::{
     ProtocolRouteCommand, ProtocolRouteSelection, ProtocolRouteWrite, ProtocolRoutingRepository,
     ProtocolRoutingService, ProtocolSessionRoute, RegisteredIdentityChannel,
 };
+
+mod replay;
+pub use replay::{
+    InvalidReplay, REPLAY_FRAME_LIMIT, REPLAY_OUTPUT_LIMIT, REPLAY_POLICY, REPLAY_STATE_LIMIT,
+    ReplayEffects, ReplayExecutor, ReplayFailure, ReplayLease, ReplayRepository, ReplayTick,
+    ReplayWork, ReplayWorker,
+};
