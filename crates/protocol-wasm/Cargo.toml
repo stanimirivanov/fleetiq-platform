@@ -24,9 +24,9 @@ path = "src/bin/admission.rs"
 
 [dev-dependencies]
 # Fixture parser and encoder must use the same wasm-tools release.
-wat = "=1.261.0"
-wit-component = { version = "=0.261.0", default-features = false, features = ["dummy-module"] }
-wit-parser = { version = "=0.261.0", default-features = false, features = ["std"] }
+wat = "=1.262.0"
+wit-component = { version = "=0.262.0", default-features = false, features = ["dummy-module"] }
+wit-parser = { version = "=0.262.0", default-features = false, features = ["std"] }
 
 [lints]
 workspace = true
