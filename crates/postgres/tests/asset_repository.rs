@@ -164,7 +164,7 @@ async fn catalogue_pages_asset_summaries_in_tenant_id_order(
             &AssetPageQuery::new(2, Some(AssetId::new("asset-z")?))?,
         )
         .await?;
-    assert!(empty.assets().is_empty());
+    assert_eq!(empty.assets().len(), 0);
     assert_eq!(empty.next_after(), None);
     Ok(())
 }

@@ -264,7 +264,7 @@ fn zero_length_regions_may_point_to_the_end_of_memory() {
         .invoke_transfer(&module, budget(65_536), limits(1, 1), b"")
         .expect("an empty region at memory end is valid");
 
-    assert!(output.as_bytes().is_empty());
+    assert_eq!(output.as_bytes().len(), 0);
 }
 
 #[test]

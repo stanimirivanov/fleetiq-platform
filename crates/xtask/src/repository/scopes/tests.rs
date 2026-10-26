@@ -57,7 +57,7 @@ fn accepts_plain_markdown_routes_with_independent_guide_text() {
         "# Sensor work",
         "# A different concise title\n\n<!-- Author-only review notes. -->\n\nAny useful guidance text may change.",
     );
-    assert!(check(&repository).is_empty());
+    assert_eq!(check(&repository).len(), 0);
 }
 
 #[test]
@@ -75,7 +75,7 @@ fn accepts_used_reference_links_and_relative_path_normalization() {
         "../crates/xtask/AGENTS.md",
         "../crates/xtask/./AGENTS.md",
     );
-    assert!(check(&repository).is_empty());
+    assert_eq!(check(&repository).len(), 0);
 }
 
 #[test]
@@ -190,7 +190,7 @@ fn permits_comments_and_html_examples_inside_code_without_counting_them() {
         "# Contract work",
         "# Contract work\n\n<!-- First comment. -->\n<!-- Another. -->\n\n```html\n<div hidden>Example</div>\n```",
     );
-    assert!(check(&repository).is_empty());
+    assert_eq!(check(&repository).len(), 0);
 }
 
 #[test]

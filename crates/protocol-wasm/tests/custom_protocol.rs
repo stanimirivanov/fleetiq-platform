@@ -99,7 +99,7 @@ fn source_built_guest_conforms_to_framing_state_and_reply_gates() {
         turn(&sandbox, component.protocol(), &mut state, &mut input),
         ProtocolSessionTurn::NeedMoreData { .. }
     ));
-    assert!(state.as_bytes().is_empty());
+    assert_eq!(state.as_bytes().len(), 0);
     assert_eq!(input.as_bytes(), &handshake[..2]);
     // Coalesced handshake + telemetry still consumes exactly one prefix per turn.
     input.push(&handshake[2..]).unwrap();
@@ -110,7 +110,7 @@ fn source_built_guest_conforms_to_framing_state_and_reply_gates() {
         panic!("complete handshake")
     };
     assert_eq!(state.as_bytes(), b"ABC");
-    assert!(hello.output().decoded_outputs().is_empty());
+    assert_eq!(hello.output().decoded_outputs().len(), 0);
     assert!(matches!(
         &hello.output().staged_replies()[0],
         StagedReply::Ready(_)
@@ -133,7 +133,7 @@ fn source_built_guest_conforms_to_framing_state_and_reply_gates() {
         &sample.output().staged_replies()[0],
         StagedReply::AwaitingDurableAcceptance(_)
     ));
-    assert!(input.as_bytes().is_empty());
+    assert_eq!(input.as_bytes().len(), 0);
     assert_eq!(state.as_bytes(), b"ABC");
     // Fresh instances produce identical semantic outputs from the same explicit state.
     let mut replay = SessionInputBuffer::new(nz(128));

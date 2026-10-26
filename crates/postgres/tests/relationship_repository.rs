@@ -176,7 +176,7 @@ async fn paged_snapshot_preserves_latest_known_revision_and_exclusive_cursor(
             .await?
             .is_none()
     );
-    assert!(
+    assert_eq!(
         repository
             .find_for_asset_page(
                 &other,
@@ -186,7 +186,8 @@ async fn paged_snapshot_preserves_latest_known_revision_and_exclusive_cursor(
             .await?
             .expect("other tenant asset exists")
             .relationships()
-            .is_empty()
+            .len(),
+        0
     );
     Ok(())
 }

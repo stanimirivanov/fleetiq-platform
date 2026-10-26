@@ -44,7 +44,7 @@ Tokio Rustls 0.26.6 (ring/tls12, defaults disabled) serves real HTTPS using the
 existing Rustls/ring family. Tokio io-util/sync are test-only feature additions.
 Their declared MSRVs are Rust 1.88 (rcgen) and 1.71 (Tokio Rustls).
 Both libraries are maintained MIT/Apache-2.0 crates from crates.io; verify locked
-advisories/licenses with cargo-deny. MSRV is checked on pinned Rust 1.98.1.
+advisories/licenses with cargo-deny. MSRV is checked on pinned Rust 1.99.1.
 No new runtime crypto stack, external openssl executable, static fixture key or
 secret-detector exception is required. Remove these dev edges with the fixture
 if an upstream real TLS fixture replaces it. The exact ownership sensor includes

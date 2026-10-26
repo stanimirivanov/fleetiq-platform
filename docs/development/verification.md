@@ -81,7 +81,7 @@ canonical workflow to determine the complete applicable gate.
 
 ## Prepare prerequisites
 
-The inventory reports the required versions. Rust is pinned to 1.98.1, Gitleaks
+The inventory reports the required versions. Rust is pinned to 1.99.1, Gitleaks
 to 8.30.1, cargo-deny to 0.20.2, cargo-machete to 0.9.2, SQLx CLI to 0.9.0, cargo-nextest to 0.9.145, and
 pnpm to 12.5.1. Node.js uses the reviewed major version 24; Git must be installed.
 The runner probes versions and records only numeric version tokens. An

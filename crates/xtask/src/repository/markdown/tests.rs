@@ -81,7 +81,7 @@ fn ignores_markdown_like_links_inside_code_and_raw_html() {
     );
     let repository = load(fixture.path()).expect("fixture should load");
 
-    assert!(check_links(&repository).is_empty());
+    assert_eq!(check_links(&repository).len(), 0);
 }
 
 #[test]
@@ -206,7 +206,7 @@ fn external_destinations_retain_their_existing_unvalidated_encoding_semantics() 
     );
     let repository = load(fixture.path()).expect("fixture should load");
 
-    assert!(check_links(&repository).is_empty());
+    assert_eq!(check_links(&repository).len(), 0);
 }
 
 #[test]

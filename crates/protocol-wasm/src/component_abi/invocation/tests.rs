@@ -65,9 +65,9 @@ fn processing_lifts_an_empty_atomic_proposal() {
         .unwrap();
     let (output, report) = result.into_parts();
 
-    assert!(output.decoded_outputs().is_empty());
+    assert_eq!(output.decoded_outputs().len(), 0);
     assert_eq!(output.session_state_action(), &SessionStateAction::Keep);
-    assert!(output.replies().is_empty());
+    assert_eq!(output.replies().len(), 0);
     assert!(report.fuel_consumed() > 0);
 }
 

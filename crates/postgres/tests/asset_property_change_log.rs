@@ -508,11 +508,12 @@ async fn observation_interpretation_page_is_bounded_and_exact(
     let view = PostgresAssetPropertyChangeView::new(pool.clone());
     let page =
         |limit, after| ObservationInterpretationPageQuery::new(source.id().clone(), limit, after);
-    assert!(
+    assert_eq!(
         view.list_for_observation(tenant, &page(2, None)?)
             .await?
             .changes()
-            .is_empty()
+            .len(),
+        0
     );
 
     let first = change(&pool, source.clone(), 150, EventTimeBasis::DeviceRecorded).await?;
@@ -552,11 +553,12 @@ async fn observation_interpretation_page_is_bounded_and_exact(
         cursor = result.next_after().cloned();
         assert_eq!(cursor.is_some(), id != corrected.id());
     }
-    assert!(
+    assert_eq!(
         view.list_for_observation(tenant, &page(1, Some(corrected.id().clone()))?)
             .await?
             .changes()
-            .is_empty()
+            .len(),
+        0
     );
     let full = view.list_for_observation(tenant, &page(3, None)?).await?;
     assert_eq!(full.changes().len(), 3);
@@ -571,11 +573,12 @@ async fn observation_interpretation_page_is_bounded_and_exact(
     );
 
     let foreign_tenant = TenantId::new("tenant-b")?;
-    assert!(
+    assert_eq!(
         view.list_for_observation(&foreign_tenant, &page(3, None)?)
             .await?
             .changes()
-            .is_empty()
+            .len(),
+        0
     );
     for other_source in [
         DecodedObservationId::new(
@@ -589,11 +592,12 @@ async fn observation_interpretation_page_is_bounded_and_exact(
         DecodedObservationId::new(source.id().message_id().clone(), package()?, 1),
     ] {
         let wrong = ObservationInterpretationPageQuery::new(other_source, 3, None)?;
-        assert!(
+        assert_eq!(
             view.list_for_observation(tenant, &wrong)
                 .await?
                 .changes()
-                .is_empty()
+                .len(),
+            0
         );
     }
     Ok(())

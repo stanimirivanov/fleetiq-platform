@@ -40,7 +40,7 @@ fn reads_the_rendered_milestone_table() {
             line: 7,
         }]
     );
-    assert!(violations.is_empty());
+    assert_eq!(violations.len(), 0);
 }
 
 #[test]
@@ -53,7 +53,7 @@ fn ignores_milestone_rows_hidden_in_code_blocks() {
 
     let (milestones, violations) = read_index(&document);
 
-    assert!(milestones.is_empty());
+    assert_eq!(milestones.len(), 0);
     assert!(
         violations
             .iter()

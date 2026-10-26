@@ -54,7 +54,7 @@ fn output_preserves_scope_times_target_value_and_unit() {
 fn empty_evaluation_can_produce_no_outputs() {
     let outputs = assemble_outputs(&evaluation(), []).expect("empty output should be valid");
 
-    assert!(outputs.is_empty());
+    assert_eq!(outputs.len(), 0);
 }
 
 #[test]

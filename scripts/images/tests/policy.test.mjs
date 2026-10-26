@@ -10,6 +10,7 @@ import {
   CHECKS,
 } from "../policy.mjs";
 const read = (path) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+const rust = read("rust-toolchain.toml").match(/channel = "([^"]+)"/)[1];
 test("current producer policy and CRLF workflow pass", () => {
   checkProducer();
   checkWorkflow(
@@ -73,10 +74,10 @@ test("major action updates pass but hashes, minor tags, mixed refs and substitut
 });
 test("floating bases, wrong Rust, root user, unchecked default and unlocked build fail", () => {
   const dockerfile = read("Dockerfile");
-  validateDockerfile(dockerfile, "1.98.1");
+  validateDockerfile(dockerfile, rust);
   for (const changed of [
     dockerfile.replace(/@sha256:[a-f0-9]{64}/g, ""),
-    dockerfile.replace("rust:1.98.1", "rust:1.99.0"),
+    dockerfile.replace(`rust:${rust}`, "rust:0.0.0"),
     dockerfile.replace("USER 10001:10001", "USER 0:0"),
     dockerfile.replace(
       "gcr.io/distroless/cc-debian13:nonroot",
@@ -90,8 +91,10 @@ test("floating bases, wrong Rust, root user, unchecked default and unlocked buil
     dockerfile.replace("cargo build --locked", "cargo build"),
     dockerfile.replace("-p fleetiq-protocol-wasm --bins", ""),
     dockerfile.replace("COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission", ""),
-  ])
-    assert.throws(() => validateDockerfile(changed, "1.98.1"));
+  ]) {
+    assert.notEqual(changed, dockerfile, "negative fixture must change the current Dockerfile");
+    assert.throws(() => validateDockerfile(changed, rust));
+  }
   const tools = JSON.parse(read("scripts/images/tools.json"));
   tools.scanner = "aquasec/trivy:latest";
   assert.throws(() => validateTools(tools));

@@ -29,7 +29,7 @@ fn one_turn_frames_and_processes_one_prefix_against_the_same_state() {
     assert_eq!(processed.frame().as_bytes(), b"abc");
     assert_eq!(processed.package(), component.package());
     assert_eq!(processed.artifact_digest(), component.artifact_digest());
-    assert!(processed.output().decoded_outputs().is_empty());
+    assert_eq!(processed.output().decoded_outputs().len(), 0);
     assert!(processed.framing_report().fuel_consumed() > 0);
     assert!(processed.processing_report().fuel_consumed() > 0);
     assert_eq!(state.as_bytes(), b"next");
@@ -42,7 +42,7 @@ fn one_turn_frames_and_processes_one_prefix_against_the_same_state() {
     assert_eq!(frame.as_bytes(), b"abc");
     assert_eq!(&package, component.package());
     assert_eq!(digest, component.artifact_digest());
-    assert!(output.staged_replies().is_empty());
+    assert_eq!(output.staged_replies().len(), 0);
     assert!(framing_report.fuel_consumed() > 0);
     assert!(processing_report.fuel_consumed() > 0);
 }

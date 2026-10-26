@@ -82,7 +82,7 @@ async fn pages_contain_complete_exact_actions_and_isolate_actors(
             &query(100, None),
         )
         .await?;
-    assert!(absent.tenants().is_empty());
+    assert_eq!(absent.tenants().len(), 0);
     assert!(absent.next_after().is_none());
     Ok(())
 }
@@ -122,7 +122,7 @@ async fn revocation_suspension_and_actor_deactivation_affect_fresh_pages(
             &query(100, None),
         )
         .await?;
-    assert!(inactive.tenants().is_empty());
+    assert_eq!(inactive.tenants().len(), 0);
     assert!(inactive.next_after().is_none());
     Ok(())
 }

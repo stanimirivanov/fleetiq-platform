@@ -35,7 +35,7 @@ $env:FLEETIQ_BIND_ADDRESS = "127.0.0.1:8080"
 cargo run -p fleetiq-server
 ```
 
-Rust 1.98.1, `rustfmt`, and Clippy are selected by `rust-toolchain.toml`.
+Rust 1.99.1, `rustfmt`, and Clippy are selected by `rust-toolchain.toml`.
 PostgreSQL 18.6 is the supported development and CI version. The local database
 is disposable; do not reuse its credentials outside local development.
 

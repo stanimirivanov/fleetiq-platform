@@ -183,7 +183,7 @@ async fn paged_target_snapshot_preserves_corrections_cursor_and_asset_existence(
     assert_eq!(moved.bindings()[0].id().as_str(), "binding-b");
     assert_eq!(moved.bindings()[0].revision().get(), 2);
     assert_eq!(moved.bindings().len(), 1);
-    assert!(
+    assert_eq!(
         repository
             .find_for_target_page(
                 &other,
@@ -193,9 +193,10 @@ async fn paged_target_snapshot_preserves_corrections_cursor_and_asset_existence(
             .await?
             .expect("other tenant owns an asset with the same ID")
             .bindings()
-            .is_empty()
+            .len(),
+        0
     );
-    assert!(
+    assert_eq!(
         repository
             .find_for_target_page(
                 &tenant,
@@ -205,7 +206,8 @@ async fn paged_target_snapshot_preserves_corrections_cursor_and_asset_existence(
             .await?
             .expect("unbound asset exists")
             .bindings()
-            .is_empty()
+            .len(),
+        0
     );
     assert!(
         repository
@@ -275,7 +277,7 @@ async fn paged_source_snapshot_preserves_corrections_cursor_and_tenant_scope(
         .await?;
     assert_eq!(corrected.bindings()[0].id().as_str(), "binding-c");
     assert!(corrected.next_after().is_none());
-    assert!(
+    assert_eq!(
         repository
             .find_for_source_page(
                 &other,
@@ -284,9 +286,10 @@ async fn paged_source_snapshot_preserves_corrections_cursor_and_tenant_scope(
             )
             .await?
             .bindings()
-            .is_empty()
+            .len(),
+        0
     );
-    assert!(
+    assert_eq!(
         repository
             .find_for_source_page(
                 &tenant,
@@ -295,7 +298,8 @@ async fn paged_source_snapshot_preserves_corrections_cursor_and_tenant_scope(
             )
             .await?
             .bindings()
-            .is_empty()
+            .len(),
+        0
     );
     Ok(())
 }
@@ -448,7 +452,7 @@ async fn semantic_binding_view_preserves_temporal_and_tenant_scope(
         SignalBindingSnapshotQuery::new(UnixTimeMillis::new(1_500), UnixTimeMillis::new(1_999)),
     )
     .await?;
-    assert!(before_recording.is_empty());
+    assert_eq!(before_recording.len(), 0);
 
     let other_tenant = fleetiq_semantics::SignalBindingView::find_for_source(
         &repository,
@@ -457,7 +461,7 @@ async fn semantic_binding_view_preserves_temporal_and_tenant_scope(
         query,
     )
     .await?;
-    assert!(other_tenant.is_empty());
+    assert_eq!(other_tenant.len(), 0);
     Ok(())
 }
 

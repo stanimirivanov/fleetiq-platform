@@ -102,7 +102,7 @@ async fn manage_tenant_lifecycle_authorization_allows_one_query() {
         .await
         .expect("authorized query should succeed");
 
-    assert!(page.entries().is_empty());
+    assert_eq!(page.entries().len(), 0);
     assert_eq!(*repository.calls.lock().expect("call lock poisoned"), 1);
 }
 

@@ -127,7 +127,7 @@ mod tests {
     fn empty_output_sequence_produces_no_observations() {
         let observations = assemble_observations(&accepted_message(), []).unwrap();
 
-        assert!(observations.is_empty());
+        assert_eq!(observations.len(), 0);
     }
 
     fn accepted_message() -> AcceptedMessage {

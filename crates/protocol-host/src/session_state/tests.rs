@@ -18,7 +18,7 @@ fn package_state_is_available_to_later_invocations_in_the_same_session() {
 
     state
         .update(|current| {
-            assert!(current.is_empty());
+            assert_eq!(current.len(), 0);
             Ok::<_, Infallible>(replace(b"awaiting-auth"))
         })
         .expect("initial state fits");

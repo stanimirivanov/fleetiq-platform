@@ -65,7 +65,7 @@ fn ignores_pull_request_structure_hidden_in_comments() {
     let document =
         crate::repository::markdown::parse_fragment(".github/PULL_REQUEST_TEMPLATE.md", body);
 
-    assert!(document_second_level_headings(&document).is_empty());
+    assert_eq!(document_second_level_headings(&document).len(), 0);
     assert!(!visible_body_contains(&document, "Closes #"));
     assert!(!visible_body_contains(
         &document,

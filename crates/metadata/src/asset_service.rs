@@ -293,7 +293,7 @@ mod tests {
             } if authorized_tenant_id.as_str() == "tenant-a"
                 && asset_tenant_id.as_str() == "tenant-b"
         ));
-        assert!(repository.calls().is_empty());
+        assert_eq!(repository.calls().len(), 0);
     }
 
     #[tokio::test]
@@ -326,7 +326,7 @@ mod tests {
             .await
             .expect("catalogue read should succeed");
 
-        assert!(page.assets().is_empty());
+        assert_eq!(page.assets().len(), 0);
         assert_eq!(
             repository.calls(),
             vec![RepositoryCall::ListPage(tenant_id("tenant-a"), query)]
