@@ -126,7 +126,7 @@ fn handshake(
         turn(s, c, &mut state, &mut input, 1200).unwrap(),
         ProtocolSessionTurn::NeedMoreData { .. }
     ));
-    assert!(state.as_bytes().is_empty());
+    assert_eq!(state.as_bytes().len(), 0);
     let avl = fixture(include_str!(
         "../../../packages/teltonika/tests/fixtures/codec8.hex"
     ));
@@ -137,7 +137,7 @@ fn handshake(
         panic!("handshake")
     };
     assert_eq!(state.as_bytes(), [1]);
-    assert!(hello.output().decoded_outputs().is_empty());
+    assert_eq!(hello.output().decoded_outputs().len(), 0);
     let StagedReply::Ready(ready) = &hello.output().staged_replies()[0] else {
         panic!("immediate handshake ACK")
     };
@@ -211,7 +211,7 @@ fn check_packet(
     let ProtocolSessionTurn::Processed(decoded) = turn(s, c, state, input, 1200).unwrap() else {
         panic!("AVL")
     };
-    assert!(input.as_bytes().is_empty());
+    assert_eq!(input.as_bytes().len(), 0);
     assert_eq!(state.as_bytes(), [1]);
     let accepted = check_outputs(&decoded, package, &frame);
     // Fresh instances with explicit state must replay the same outputs.

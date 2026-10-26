@@ -65,7 +65,7 @@ async fn actor_without_mappings_returns_an_empty_terminal_page(
             .find_page(manage_identity(&pool).await?, &query("actor-empty", None))
             .await?;
 
-    assert!(page.entries().is_empty());
+    assert_eq!(page.entries().len(), 0);
     assert!(page.next().is_none());
     Ok(())
 }

@@ -143,7 +143,7 @@ async fn rejects_wrong_tenant_before_registration() {
         } if authorized_tenant_id.as_str() == "tenant-a"
             && device_tenant_id.as_str() == "tenant-b"
     ));
-    assert!(repository.calls().is_empty());
+    assert_eq!(repository.calls().len(), 0);
 }
 
 #[tokio::test]

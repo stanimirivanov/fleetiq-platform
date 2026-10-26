@@ -23,15 +23,15 @@ fn valid_component_output_is_applied_to_the_same_session_state() {
         .unwrap();
 
     assert_eq!(state.as_bytes(), b"next");
-    assert!(processed.output().decoded_outputs().is_empty());
-    assert!(processed.output().staged_replies().is_empty());
+    assert_eq!(processed.output().decoded_outputs().len(), 0);
+    assert_eq!(processed.output().staged_replies().len(), 0);
     assert!(processed.report().fuel_consumed() > 0);
     assert_eq!(processed.package(), component.package());
     assert_eq!(processed.artifact_digest(), component.artifact_digest());
     let (package, digest, output, report) = processed.into_parts();
     assert_eq!(&package, component.package());
     assert_eq!(digest, component.artifact_digest());
-    assert!(output.decoded_outputs().is_empty());
+    assert_eq!(output.decoded_outputs().len(), 0);
     assert!(report.fuel_consumed() > 0);
 }
 

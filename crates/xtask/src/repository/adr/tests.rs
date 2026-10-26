@@ -34,7 +34,10 @@ fn requires_a_rendered_adr_title_on_the_first_line() {
     assert!(!record::has_canonical_heading(&hidden, 68));
     assert!(record::has_canonical_heading(&raw_html, 68));
     assert!(!record::has_canonical_heading(&zero_width, 68));
-    assert!(!record::validate_plain_required_headings(&raw_html, "example.md", &[]).is_empty());
+    assert_ne!(
+        record::validate_plain_required_headings(&raw_html, "example.md", &[]).len(),
+        0
+    );
 }
 
 #[test]
@@ -121,8 +124,8 @@ fn separates_same_line_supersedes_and_superseded_by_metadata() {
 
     let violations = supersession::read(&document, &lines, &mut decision);
 
-    assert!(violations.is_empty());
-    assert!(decision.supersedes.is_empty());
+    assert_eq!(violations.len(), 0);
+    assert_eq!(decision.supersedes.len(), 0);
     assert_eq!(decision.superseded_by, Some(53));
 }
 
@@ -191,8 +194,8 @@ fn ignores_supersession_text_outside_the_status_section() {
 
     let violations = supersession::read(&document, &lines, &mut decision);
 
-    assert!(violations.is_empty());
-    assert!(decision.supersedes.is_empty());
+    assert_eq!(violations.len(), 0);
+    assert_eq!(decision.supersedes.len(), 0);
     assert_eq!(decision.superseded_by, None);
 }
 
@@ -243,8 +246,8 @@ fn ignores_supersession_examples_after_context() {
 
     let violations = supersession::read(&document, &lines, &mut decision);
 
-    assert!(violations.is_empty());
-    assert!(decision.supersedes.is_empty());
+    assert_eq!(violations.len(), 0);
+    assert_eq!(decision.supersedes.len(), 0);
     assert_eq!(decision.superseded_by, None);
 }
 
@@ -265,7 +268,7 @@ fn ignores_supersession_metadata_hidden_in_inline_html() {
 
     let violations = supersession::read(&document, &lines, &mut decision);
 
-    assert!(violations.is_empty());
+    assert_eq!(violations.len(), 0);
     assert_eq!(decision.superseded_by, None);
 }
 
@@ -303,7 +306,7 @@ fn rejects_a_commented_out_adr_template() {
 
     let violations = template::validate_document(&document);
 
-    assert!(!violations.is_empty());
+    assert_ne!(violations.len(), 0);
 }
 
 #[test]

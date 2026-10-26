@@ -313,7 +313,7 @@ mod tests {
             .env("CARGO_MANIFEST_DIR", "launcher")
             .env("CARGO_BIN_NAME", "fleetiq-xtask")
             .env("DATABASE_URL", "fixture-connection")
-            .env("RUSTUP_TOOLCHAIN", "1.98.1");
+            .env("RUSTUP_TOOLCHAIN", "1.99.1");
         isolate_cargo_context(&mut command);
         let overrides: BTreeMap<_, _> = command.get_envs().collect();
         assert_eq!(overrides[std::ffi::OsStr::new("CARGO_PKG_NAME")], None);
@@ -325,7 +325,7 @@ mod tests {
         );
         assert_eq!(
             overrides[std::ffi::OsStr::new("RUSTUP_TOOLCHAIN")],
-            Some(std::ffi::OsStr::new("1.98.1"))
+            Some(std::ffi::OsStr::new("1.99.1"))
         );
     }
     #[test]

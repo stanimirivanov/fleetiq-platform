@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(asset.asset_type().id().as_str(), "industrial.machine");
         assert_eq!(asset.asset_type().version().get(), 1);
         assert_eq!(asset.name().as_str(), "Primary machine");
-        assert!(asset.external_identifiers().is_empty());
+        assert_eq!(asset.external_identifiers().len(), 0);
     }
 
     #[test]

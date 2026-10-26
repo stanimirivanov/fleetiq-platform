@@ -54,7 +54,12 @@ async fn explicit_process_migrates_without_http_or_identity_and_repeats_safely(
             String::from_utf8(output.stdout)?.trim(),
             "embedded migrations applied and verified"
         );
-        assert!(output.stderr.is_empty());
+        // Compare only byte counts so failures never print private child diagnostics.
+        assert_eq!(
+            output.stderr.len(),
+            0,
+            "migration must not emit diagnostics"
+        );
     }
     fleetiq_postgres::check_schema(&pool).await?;
     Ok(())

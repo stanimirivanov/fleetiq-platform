@@ -89,6 +89,19 @@ Each update follows the normal PR gate and must preserve architecture
 boundaries and protocol fixture compatibility.
 
 
+### Rust toolchain and builder updates
+
+A Rust builder-image update must be coordinated with `rust-toolchain.toml`,
+workspace `rust-version`, the verification catalogue, current development
+instructions, and regenerated CI. Keep the immutable image digest and compiler
+version consistent; do not bypass the producer-policy check to accept an isolated
+image update. Historical qualification records retain the compiler actually used.
+
+Run the xtask sensor tests, producer-policy fixtures, CI consistency check and
+Rust verification with the new compiler. Producer-test mutations derive their
+baseline from the canonical pin and must change the Dockerfile before asserting
+rejection, so a version bump cannot turn a negative fixture into a no-op.
+
 ### GitHub Actions updates
 
 Action major tags live only in the workflow. The template has no duplicate

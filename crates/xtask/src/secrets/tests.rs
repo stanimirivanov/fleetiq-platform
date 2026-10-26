@@ -101,10 +101,9 @@ fn report_metadata_cannot_escape_input_scope_or_inject_rule_text() {
 }
 #[test]
 fn empty_and_malformed_reports_do_not_invent_a_pass() {
-    assert!(
-        safe_findings(b"[]", Path::new("snapshot"))
-            .unwrap()
-            .is_empty()
+    assert_eq!(
+        safe_findings(b"[]", Path::new("snapshot")).unwrap().len(),
+        0
     );
     assert!(safe_findings(b"not JSON", Path::new("snapshot")).is_err());
     assert!(safe_findings(b"[{}]", Path::new("snapshot")).is_err());

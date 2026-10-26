@@ -148,7 +148,7 @@ async fn rejected_credentials_never_reach_identity_resolution() {
         .expect_err("rejected credentials must fail authentication");
 
     assert!(matches!(error, CallerAuthenticationError::Rejected));
-    assert!(resolver.calls().is_empty());
+    assert_eq!(resolver.calls().len(), 0);
 }
 
 #[tokio::test]

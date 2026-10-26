@@ -63,8 +63,8 @@ fn processing_output_preserves_order_and_complete_state_action() {
 fn processing_output_allows_a_frame_without_telemetry_or_replies() {
     let output = FrameProcessingOutput::new(Vec::new(), SessionStateAction::Keep, Vec::new());
 
-    assert!(output.decoded_outputs().is_empty());
-    assert!(output.replies().is_empty());
+    assert_eq!(output.decoded_outputs().len(), 0);
+    assert_eq!(output.replies().len(), 0);
     assert_eq!(output.session_state_action(), &SessionStateAction::Keep);
 }
 

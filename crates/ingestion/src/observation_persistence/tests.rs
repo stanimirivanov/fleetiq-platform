@@ -110,7 +110,7 @@ async fn empty_decoding_result_crosses_the_same_durability_boundary() {
         .persist(&StubObservationLog::new(ObservationLogMode::Appended))
         .await
         .expect("empty batch must be persisted");
-    assert!(persisted.observations().is_empty());
+    assert_eq!(persisted.observations().len(), 0);
     assert_eq!(persisted.released_replies().len(), 1);
 }
 

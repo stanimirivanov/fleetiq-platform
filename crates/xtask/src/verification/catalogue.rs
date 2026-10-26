@@ -115,7 +115,7 @@ impl Tool {
     /// Exact pins except Node's reviewed major and Git's installed-tool policy.
     pub(crate) const fn expected(self) -> &'static str {
         match self {
-            Self::Rust => "1.98.1",
+            Self::Rust => "1.99.1",
             Self::Git => "installed",
             Self::Gitleaks => crate::secrets::VERSION,
             Self::Deny => "0.20.2",
@@ -411,8 +411,8 @@ mod tests {
                 format!("{} {}", check.program, arguments.join(" ")),
                 check.command
             );
-            assert!(!check.outcome.is_empty());
-            assert!(!check.tools.is_empty());
+            assert_ne!(check.outcome.len(), 0);
+            assert_ne!(check.tools.len(), 0);
             assert_eq!(
                 check.args.contains(&"@base"),
                 check.prerequisites.contains(&Prerequisite::TrustedBase),
@@ -442,8 +442,27 @@ mod tests {
     }
 
     #[test]
+    fn rust_inventory_matches_toolchain_and_workspace_minimum() {
+        let toolchain: toml::Value =
+            toml::from_str(include_str!("../../../../rust-toolchain.toml"))
+                .expect("valid toolchain manifest");
+        let workspace: toml::Value = toml::from_str(include_str!("../../../../Cargo.toml"))
+            .expect("valid workspace manifest");
+        assert_eq!(
+            toolchain["toolchain"]["channel"].as_str(),
+            Some(Tool::Rust.expected()),
+            "upgrade the toolchain and verification inventory together"
+        );
+        assert_eq!(
+            workspace["workspace"]["package"]["rust-version"].as_str(),
+            Some(Tool::Rust.expected()),
+            "the workspace minimum must match the reviewed compiler"
+        );
+    }
+
+    #[test]
     fn tool_policies_keep_exact_pins_and_explicit_exceptions() {
-        assert_eq!(Tool::Rust.expected(), "1.98.1");
+        assert_eq!(Tool::Rust.expected(), "1.99.1");
         assert_eq!(Tool::Gitleaks.expected(), crate::secrets::VERSION);
         assert_eq!(Tool::Deny.expected(), "0.20.2");
         assert_eq!(Tool::Machete.expected(), "0.9.2");

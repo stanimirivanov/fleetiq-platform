@@ -195,7 +195,7 @@ or operator dashboard exists yet.
 
 ## Runtime and data
 
-The workspace is Rust 2024 on Rust 1.98.1. PostgreSQL adapters are organized
+The workspace is Rust 2024 on Rust 1.99.1. PostgreSQL adapters are organized
 by access, identity, metadata, ingestion, and history capability inside one crate. A
 private codec keeps persisted platform and tenant action names consistent
 across policy, administration, catalogue, and audit paths. PostgreSQL 18.6

@@ -103,19 +103,19 @@ mod tests {
 
     #[test]
     fn wrong_version_or_untrusted_version_text_cannot_pass_or_enter_report() {
-        assert!(version_matches(Tool::Rust, "1.98.1"));
+        assert!(version_matches(Tool::Rust, "1.99.1"));
         assert!(version_matches(Tool::Nextest, "0.9.145"));
         assert!(!version_matches(Tool::Nextest, "0.9.144"));
-        assert!(!version_matches(Tool::Rust, "1.98.0"));
+        assert!(!version_matches(Tool::Rust, "1.98.1"));
         assert!(version_matches(Tool::Node, "24.18.0"));
         assert!(!version_matches(Tool::Node, "25.0.0"));
         assert_eq!(parse_version("token=secret not-a-version"), None);
-        assert_eq!(parse_version("rustc 1.98.1 (hash date)"), Some("1.98.1"));
+        assert_eq!(parse_version("rustc 1.99.1 (hash date)"), Some("1.99.1"));
         assert_eq!(parse_version("v24.18.0"), Some("24.18.0"));
         assert_eq!(
             parse_version("git version 2.55.0.windows.3"),
             Some("2.55.0.windows.3")
         );
-        assert!(!version_matches(Tool::Rust, "1.98.1.windows.3"));
+        assert!(!version_matches(Tool::Rust, "1.99.1.windows.3"));
     }
 }

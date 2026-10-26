@@ -107,7 +107,7 @@ async fn derives_tenant_scope_from_manage_access_authorization() {
         .await
         .expect("authorized query should succeed");
 
-    assert!(page.entries().is_empty());
+    assert_eq!(page.entries().len(), 0);
     assert_eq!(
         repository
             .tenants
