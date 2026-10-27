@@ -244,7 +244,7 @@ Merged as [fleetiq-ui PR #82](https://github.com/stanimirivanov/fleetiq-ui/pull/
 
 ### PR 21: Run durable semantic processing
 
-Implementation tracked by issue #331: frozen time choices, durable selection, fenced recovery and atomic history completion. D06 and full-profile qualification remain deferred.
+Merged as PR #332 (issue #331): frozen time choices, durable selection, fenced recovery and atomic history completion. D06 and full-profile qualification remain deferred.
 
 **M04 · fleetiq-platform · Depends on PR 17; can develop alongside TCP work**
 
@@ -255,7 +255,7 @@ Implementation tracked by issue #331: frozen time choices, durable selection, fe
 
 ### PR 22: Expose bounded property history and provenance
 
-Implementation tracked by issue #333; stacked on PR #332 while that semantic-worker PR remains open. D06 and full-profile qualification remain deferred.
+Implementation tracked by issue #333 / PR #334, based on main after PR #332 merged. D06 and full-profile qualification remain deferred.
 
 **M04 · fleetiq-platform · Can develop alongside PR 21**
 
