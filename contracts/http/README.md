@@ -180,3 +180,15 @@ retries and never roll back the head. See [route commissioning](../../docs/opera
 ## Ingestion diagnostics baseline
 
 Baseline.15 adds `getDeviceIngestionDiagnostics` under exact tenant `protocol.manage`. It returns bounded durable processing evidence and sampled source identities; worker/connection liveness remain `not_observed`. See the [operator and measurement procedure](../../docs/operations/ingestion-diagnostics.md).
+
+## Property history baseline
+
+Baseline.16 adds protected asset/property-version history windows and exact
+interpretation provenance. Both require independently granted `telemetry.read`;
+metadata or protocol grants imply no access. Integer/decimal values, binding
+revisions and millisecond times are exact strings. Follow returned opaque
+cursors with unchanged tenant/target/window; restart to discover late appends
+behind a cursor. See [the operations contract](../../docs/operations/property-history.md).
+Deploy readers/client types for this expanded action vocabulary before issuing
+new grants. Online SQLx freshness, Rust/HTTP integration and OpenAPI gates run
+in CI for this task at the owner's request.

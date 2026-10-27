@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
 pub(super) enum Action {
     #[serde(rename = "metadata.read")]
     ReadMetadata,
+    #[serde(rename = "telemetry.read")]
+    ReadTelemetry,
     #[serde(rename = "metadata.manage")]
     ManageMetadata,
     #[serde(rename = "access.manage")]
@@ -23,6 +25,7 @@ impl From<Action> for TenantAction {
     fn from(action: Action) -> Self {
         match action {
             Action::ReadMetadata => Self::ReadMetadata,
+            Action::ReadTelemetry => Self::ReadTelemetry,
             Action::ManageMetadata => Self::ManageMetadata,
             Action::ManageAccess => Self::ManageAccess,
             Action::ManageProtocols => Self::ManageProtocols,
@@ -33,6 +36,7 @@ impl From<TenantAction> for Action {
     fn from(action: TenantAction) -> Self {
         match action {
             TenantAction::ReadMetadata => Self::ReadMetadata,
+            TenantAction::ReadTelemetry => Self::ReadTelemetry,
             TenantAction::ManageMetadata => Self::ManageMetadata,
             TenantAction::ManageAccess => Self::ManageAccess,
             TenantAction::ManageProtocols => Self::ManageProtocols,

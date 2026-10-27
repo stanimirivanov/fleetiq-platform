@@ -1,0 +1,5 @@
+type: string
+pattern: ^-?(0|[1-9][0-9]*)$
+maxLength: 20
+description: Exact signed 64-bit Unix milliseconds as a canonical decimal string; range is validated by
+  the server.

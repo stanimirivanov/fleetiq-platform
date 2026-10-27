@@ -1,0 +1,9 @@
+name: tenant_id
+in: path
+required: true
+description: Tenant selected for fresh exact telemetry.read authorization; no other action implies telemetry
+  access.
+schema:
+  type: string
+  minLength: 1
+  maxLength: 128

@@ -1,0 +1,7 @@
+name: after
+in: query
+required: false
+description: Exclusive cursor bound to tenant, asset, exact property version and window. Restart to see
+  late appends behind it.
+schema:
+  $ref: ../schemas/HistoryToken.yaml

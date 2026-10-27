@@ -67,3 +67,7 @@ canonical source or creates a recurring task without a route. Avoid listing
 short-lived implementation details. `cargo xtask repository` checks mechanical
 documentation policy and repository-local links; semantic accuracy and stale
 guidance still require review.
+
+For bounded asset/property history and immutable evidence, use the
+[property-history operations guide](operations/property-history.md) and
+[ADR 0119](adr/0119-expose-bounded-property-history.md).

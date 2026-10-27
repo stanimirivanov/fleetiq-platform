@@ -1,0 +1,6 @@
+name: end_at_ms
+in: query
+required: true
+description: Exclusive event-time end; this is not an arrival or metadata knowledge cutoff.
+schema:
+  $ref: ../schemas/HistoryMillis.yaml

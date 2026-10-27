@@ -12,6 +12,11 @@ use fleetiq_semantics::AssetPropertyChange;
 mod observation_interpretation_page;
 mod processing;
 mod property_change_view;
+mod property_history;
+pub use property_history::{
+    InvalidPropertyHistoryQuery, PropertyHistoryCursor, PropertyHistoryPage, PropertyHistoryQuery,
+    PropertyHistoryService, PropertyHistoryView,
+};
 mod stored_processing;
 
 pub use observation_interpretation_page::{

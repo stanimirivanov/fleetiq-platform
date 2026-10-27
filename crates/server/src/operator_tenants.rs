@@ -70,6 +70,7 @@ struct PageResponse<'a> {
 const fn action_name(action: TenantAction) -> &'static str {
     match action {
         TenantAction::ReadMetadata => "metadata.read",
+        TenantAction::ReadTelemetry => "telemetry.read",
         TenantAction::ManageMetadata => "metadata.manage",
         TenantAction::ManageAccess => "access.manage",
         TenantAction::ManageProtocols => "protocol.manage",
