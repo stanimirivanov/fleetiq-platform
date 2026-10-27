@@ -115,7 +115,15 @@ fn scope(
         start,
         end,
     ))?;
-    Ok(format!("{:x}", Sha256::digest(bytes)))
+    // sha2's digest array does not implement LowerHex; encode each byte to
+    // preserve the version-one lowercase, zero-padded scope representation.
+    use std::fmt::Write;
+    let digest = Sha256::digest(bytes);
+    let mut hex = String::with_capacity(64);
+    for byte in digest.iter() {
+        write!(&mut hex, "{byte:02x}").expect("writing to String cannot fail");
+    }
+    Ok(hex)
 }
 // Hex keeps opaque JSON keys URL-safe without another runtime dependency. The
 // prefix is a codec version, not a signature; every lookup rechecks scope/grant.
@@ -145,4 +153,28 @@ pub(super) fn decode<T: DeserializeOwned>(value: &str) -> Option<T> {
         .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).ok())
         .collect::<Option<Vec<_>>>()?;
     serde_json::from_slice(&bytes).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fleetiq_domain::{AssetId, DefinitionVersion, PropertyDefinitionId, PropertyDefinitionRef};
+
+    #[test]
+    fn scope_digest_preserves_the_version_one_cursor_representation() {
+        let tenant = TenantId::new("tenant-a").unwrap();
+        let target = SignalTarget::new(
+            AssetId::new("asset-a").unwrap(),
+            PropertyDefinitionRef::new(
+                PropertyDefinitionId::new("electrical.voltage").unwrap(),
+                DefinitionVersion::new(1).unwrap(),
+            ),
+        );
+        // Independent SHA-256 fixture for the exact serialized scope tuple;
+        // changing this representation requires a deliberate codec decision.
+        assert_eq!(
+            scope(&tenant, &target, 0, 3000).unwrap(),
+            "12552961965bac6cb8db952f45e8022cae0f5705baa9517800e64fefd47773da"
+        );
+    }
 }
