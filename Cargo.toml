@@ -9,6 +9,7 @@ members = [
     "crates/live",
     "crates/metadata",
     "crates/postgres",
+    "crates/projection",
     "crates/protocol-host",
     "crates/protocol-sdk",
     "crates/protocol-wasm",

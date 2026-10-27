@@ -75,3 +75,7 @@ For bounded asset/property history and immutable evidence, use the
 For bounded metadata exploration, use the
 [semantic graph operations guide](operations/semantic-graph.md) and
 [ADR 0120](adr/0120-explore-bounded-semantic-graphs.md).
+
+For durable current-property materialization, authorized snapshots and atomic replay,
+use the [current-state operations guide](operations/current-property-state.md) and
+[ADR 0121](adr/0121-materialize-durable-current-property-state.md).

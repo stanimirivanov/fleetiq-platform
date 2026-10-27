@@ -1,0 +1,18 @@
+[package]
+name = "fleetiq-projection"
+version = "0.1.0"
+description = "Application-owned durable current-property projection and authorized snapshots"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-access = { path = "../access" }
+fleetiq-domain = { path = "../domain" }
+fleetiq-semantics = { path = "../semantics" }
+fleetiq-history = { path = "../history" }
+fleetiq-live = { path = "../live" }
+
+[lints]
+workspace = true

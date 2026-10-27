@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history and live projections remain planned.
+- The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history and durable current-property snapshots now exist; live transport remains planned.
 
 - [Bounded TCP ingestion](../operations/tcp-ingestion.md) now accepts explicitly
   configured identity-v1 channels through isolated live execution and fenced durable
@@ -54,7 +54,7 @@
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and `fleetiq-live` projection
   contracts exist; property-change append and exact reads are durable, while production
-  calculator stores and live projections do not exist.
+  calculator stores and live transport do not exist; current-property materialization is durable.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
@@ -208,7 +208,7 @@ planned.
 ## Runtime and data
 
 The workspace is Rust 2024 on Rust 1.99.1. PostgreSQL adapters are organized
-by access, identity, metadata, ingestion, and history capability inside one crate. A
+by access, identity, metadata, ingestion, history and projection capability inside one crate. A
 private codec keeps persisted platform and tenant action names consistent
 across policy, administration, catalogue, and audit paths. PostgreSQL 18.6
 stores metadata and ingestion facts under checked SQL migrations. SQLx macros validate queries
@@ -505,7 +505,7 @@ statement timeout, and protected HTTP history/provenance routes. Page sizes are
 1–100 and mandatory half-open event windows span at most seven days. Cursors
 bind exact target and window; pages preserve late-data limitations, all original
 interpretations and precise string-encoded numeric values. See the
-[property history guide](../operations/property-history.md). Live/current state,
+[property history guide](../operations/property-history.md). Live delivery,
 archive completeness, D06 and full-profile qualification remain deferred.
 
 ## Bounded semantic graph exploration
@@ -518,3 +518,14 @@ at explicit effective/known cutoffs, with at most four hops, 100 assets and
 vertices retain their meaning; truncation is explicit and returned links have
 closed endpoints. See [the operations guide](../operations/semantic-graph.md).
 D06 and full-profile qualification remain deferred.
+
+## Durable current property state
+
+Delivery-plan PR 24 (issue #337) adds application-owned projection policy and
+ports, transactional interpretation enqueue/backfill, bounded per-tenant atomic
+batches, event-time/full-identity winner arbitration and consistent authorized
+exact-property snapshots. `project-current` and explicit `rebuild-current` process
+modes check schema without DDL. Rebuild advances generation/revision and preserves
+later pending commits. The [current-state guide](../operations/current-property-state.md)
+records role grants, deadlines, freshness, correction limits and recovery.
+Live subscriptions, D06 and full-profile qualification remain deferred.

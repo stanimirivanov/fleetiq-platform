@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+fleetiq-projection = { path = "../projection" }
 fleetiq-access = { path = "../access" }
 bigdecimal.workspace = true
 fleetiq-domain = { path = "../domain" }

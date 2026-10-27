@@ -83,6 +83,12 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
         build: NONE,
     },
     ExternalPackagePolicy {
+        name: "fleetiq-projection",
+        normal: NONE,
+        development: NONE,
+        build: NONE,
+    },
+    ExternalPackagePolicy {
         name: "fleetiq-live",
         normal: NONE,
         development: NONE,

@@ -19,7 +19,7 @@ pub(super) struct HistoryPageBody {
     pub(super) next_after: Option<String>,
 }
 #[derive(Serialize)]
-pub(super) struct ChangeBody {
+pub(crate) struct ChangeBody {
     interpretation: String,
     tenant_id: String,
     asset_id: String,
@@ -57,7 +57,7 @@ struct SourceBody {
     received_at_ms: String,
 }
 impl ChangeBody {
-    pub(super) fn new(change: &StoredPropertyChange) -> Result<Self, serde_json::Error> {
+    pub(crate) fn new(change: &StoredPropertyChange) -> Result<Self, serde_json::Error> {
         let source = change.observation();
         let id = change.id();
         Ok(Self {

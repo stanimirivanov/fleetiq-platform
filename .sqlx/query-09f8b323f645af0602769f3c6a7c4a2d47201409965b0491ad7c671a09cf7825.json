@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Only exact installed property versions exist in this snapshot namespace.\nSELECT EXISTS (\n    SELECT 1 FROM metadata.assets a JOIN metadata.asset_type_properties p\n      ON p.tenant_id=a.tenant_id AND p.type_id=a.type_id AND p.type_version=a.type_version\n    WHERE a.tenant_id=$1 AND a.asset_id=$2 AND p.property_id=$3 AND p.property_version=$4\n) AS \"exists!\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "09f8b323f645af0602769f3c6a7c4a2d47201409965b0491ad7c671a09cf7825"
+}

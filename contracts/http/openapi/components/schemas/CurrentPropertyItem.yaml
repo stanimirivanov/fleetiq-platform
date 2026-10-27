@@ -1,0 +1,10 @@
+type: object
+additionalProperties: false
+required: [freshness, change]
+properties:
+  freshness:
+    type: string
+    enum: [fresh, stale, future]
+    description: Selected event age at evaluated_at_ms. Fresh means age 0..30000 ms inclusive; future is explicit. Independent of quality and connectivity.
+  change:
+    $ref: ./PropertyHistoryChange.yaml

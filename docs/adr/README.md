@@ -152,6 +152,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0120](0120-explore-bounded-semantic-graphs.md) | Snapshot-consistent bounded semantic graph exploration |
 
+| [0121](0121-materialize-durable-current-property-state.md) | Atomic durable current-property projection, replay and authorized snapshots |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

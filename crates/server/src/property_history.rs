@@ -1,6 +1,6 @@
 //! Thin HTTP adapter for protected immutable history; no semantic resolution.
 mod cursor;
-mod dto;
+pub(crate) mod dto;
 mod handlers;
 #[cfg(test)]
 mod tests;
