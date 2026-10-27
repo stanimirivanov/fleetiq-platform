@@ -10,20 +10,20 @@ use crate::error::{PostgresRepositoryError, corrupt};
 use super::common::parse_revision;
 
 #[derive(Debug)]
-pub(super) struct RelationshipRevisionRow {
-    pub(super) relationship_id: String,
-    pub(super) revision: BigDecimal,
-    pub(super) recorded_at_ms: i64,
-    pub(super) relationship_type_id: String,
-    pub(super) relationship_type_version: i64,
-    pub(super) source_asset_id: String,
-    pub(super) target_asset_id: String,
-    pub(super) effective_start_ms: i64,
-    pub(super) effective_end_ms: Option<i64>,
+pub(in crate::metadata) struct RelationshipRevisionRow {
+    pub(in crate::metadata) relationship_id: String,
+    pub(in crate::metadata) revision: BigDecimal,
+    pub(in crate::metadata) recorded_at_ms: i64,
+    pub(in crate::metadata) relationship_type_id: String,
+    pub(in crate::metadata) relationship_type_version: i64,
+    pub(in crate::metadata) source_asset_id: String,
+    pub(in crate::metadata) target_asset_id: String,
+    pub(in crate::metadata) effective_start_ms: i64,
+    pub(in crate::metadata) effective_end_ms: Option<i64>,
 }
 
 impl RelationshipRevisionRow {
-    pub(super) fn into_domain(
+    pub(in crate::metadata) fn into_domain(
         self,
         tenant_id: TenantId,
     ) -> Result<AssetRelationship, PostgresRepositoryError> {

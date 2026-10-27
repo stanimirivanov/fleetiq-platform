@@ -73,3 +73,9 @@ pub use revision_command::{
     MetadataRevision, RevisionCommandError, RevisionCommandRepository, RevisionCommandService,
     RevisionOutcome, RevisionReceipt,
 };
+
+mod semantic_graph;
+pub use semantic_graph::{
+    GraphBudget, GraphExplorationError, GraphTruncation, InvalidGraphBudget, SemanticGraph,
+    SemanticGraphQuery, SemanticGraphRead, SemanticGraphRepository, SemanticGraphService,
+};

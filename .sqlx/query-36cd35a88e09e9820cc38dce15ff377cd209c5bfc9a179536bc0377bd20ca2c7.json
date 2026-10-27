@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Exact bounded-ID batch, not one catalogue lookup per discovered vertex.\nSELECT tenant_id, asset_id, type_id, type_version, display_name\nFROM metadata.assets\nWHERE tenant_id = $1 AND asset_id = ANY($2::text[])\nORDER BY asset_id COLLATE \"C\"\nLIMIT 100\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "type_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "type_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "type_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "type_version"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "display_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.assets",
+            "name": "display_name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "36cd35a88e09e9820cc38dce15ff377cd209c5bfc9a179536bc0377bd20ca2c7"
+}

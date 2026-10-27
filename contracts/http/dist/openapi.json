@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.16",
+    "version": "1.0.0-baseline.17",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
   },
   "servers": [
@@ -12,6 +12,67 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/semantic-graph": {
+      "get": {
+        "operationId": "exploreSemanticGraph",
+        "summary": "Explore a bounded semantic asset graph",
+        "description": "Requires current metadata.read. Expands both directions of typed relationships and signal bindings breadth-first; directed source/target meaning is preserved. Relationships are considered before bindings per layer, with bytewise identity ordering. Root depth is zero. Latest known revisions are selected before effective-time and endpoint filters, using one repeatable-read snapshot. Included links reference only included assets. Explicit depth/asset/link budgets can omit data; inspect truncation rather than inferring full graph or sensor inventory. Per-statement timeouts and an eight-second graph-operation deadline fail safely rather than returning a misleading partial success.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/metadata-read-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/relationship-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/effective-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/known-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/graph-depth"
+          },
+          {
+            "$ref": "#/components/parameters/graph-asset-limit"
+          },
+          {
+            "$ref": "#/components/parameters/graph-relationship-limit"
+          },
+          {
+            "$ref": "#/components/parameters/graph-binding-limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SemanticGraphSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/history": {
       "get": {
         "operationId": "listPropertyHistory",
@@ -2872,6 +2933,139 @@
   },
   "components": {
     "schemas": {
+      "SemanticGraphBudget": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "depth",
+          "assets",
+          "relationships",
+          "bindings"
+        ],
+        "properties": {
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "assets": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "relationships": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "bindings": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          }
+        }
+      },
+      "SemanticGraph": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "root_asset_id",
+          "effective_at_ms",
+          "known_at_ms",
+          "budget",
+          "assets",
+          "relationships",
+          "bindings",
+          "truncated",
+          "truncation"
+        ],
+        "properties": {
+          "root_asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "effective_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "known_at_ms": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "budget": {
+            "$ref": "#/components/schemas/SemanticGraphBudget"
+          },
+          "assets": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AssetSummary"
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "maxItems": 200,
+            "items": {
+              "$ref": "#/components/schemas/Relationship"
+            }
+          },
+          "bindings": {
+            "type": "array",
+            "maxItems": 200,
+            "items": {
+              "$ref": "#/components/schemas/SignalBinding"
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "truncation": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "enum": [
+                "depth",
+                "assets",
+                "relationships",
+                "bindings"
+              ]
+            }
+          }
+        },
+        "description": "One repeatable-read metadata subgraph. Traversal uses both endpoint directions but retains directed typed facts. No telemetry values or full-tenant inventory claim. Root catalogue existence is current; temporal cutoffs apply to revisioned relationships/bindings.",
+        "allOf": [
+          {
+            "if": {
+              "additionalProperties": true,
+              "properties": {
+                "truncated": {
+                  "const": false
+                }
+              }
+            },
+            "then": {
+              "additionalProperties": true,
+              "properties": {
+                "truncation": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "else": {
+              "additionalProperties": true,
+              "properties": {
+                "truncation": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ]
+      },
       "HistoryMillis": {
         "type": "string",
         "pattern": "^-?(0|[1-9][0-9]*)$",
@@ -5767,6 +5961,54 @@
       }
     },
     "parameters": {
+      "graph-depth": {
+        "name": "depth",
+        "in": "query",
+        "required": false,
+        "description": "Maximum hops, treating relationships and source-device/target bindings as adjacency. Root is depth zero; inspect boundary edges without adding external vertices.",
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4,
+          "default": 2
+        }
+      },
+      "graph-asset-limit": {
+        "name": "asset_limit",
+        "in": "query",
+        "required": false,
+        "description": "Unique asset budget including the root. Omit links that cannot include both endpoints; report assets truncation.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "graph-relationship-limit": {
+        "name": "relationship_limit",
+        "in": "query",
+        "required": false,
+        "description": "Relationship output/prefix budget across all layers; one private look-ahead detects omitted adjacency.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 100
+        }
+      },
+      "graph-binding-limit": {
+        "name": "binding_limit",
+        "in": "query",
+        "required": false,
+        "description": "Signal-binding output/prefix budget across all layers; never a sensor inventory or telemetry read.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 100
+        }
+      },
       "telemetry-tenant-id": {
         "name": "tenant_id",
         "in": "path",
@@ -6377,6 +6619,184 @@
       }
     },
     "responses": {
+      "SemanticGraphSucceeded": {
+        "description": "One tenant-owned bounded semantic graph at a consistent database snapshot. Check truncated and reasons; no pagination/continuity promise across requests.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SemanticGraph"
+            },
+            "example": {
+              "root_asset_id": "asset-a",
+              "effective_at_ms": 50,
+              "known_at_ms": 50,
+              "budget": {
+                "depth": 2,
+                "assets": 50,
+                "relationships": 100,
+                "bindings": 100
+              },
+              "assets": [
+                {
+                  "id": "asset-a",
+                  "tenant_id": "tenant-a",
+                  "name": "Asset A",
+                  "asset_type": {
+                    "id": "equipment",
+                    "version": 1
+                  }
+                },
+                {
+                  "id": "asset-b",
+                  "tenant_id": "tenant-a",
+                  "name": "Asset B",
+                  "asset_type": {
+                    "id": "equipment",
+                    "version": 1
+                  }
+                },
+                {
+                  "id": "asset-c",
+                  "tenant_id": "tenant-a",
+                  "name": "Asset C",
+                  "asset_type": {
+                    "id": "equipment",
+                    "version": 1
+                  }
+                },
+                {
+                  "id": "gateway-1",
+                  "tenant_id": "tenant-a",
+                  "name": "Gateway 1",
+                  "asset_type": {
+                    "id": "equipment",
+                    "version": 1
+                  }
+                }
+              ],
+              "relationships": [
+                {
+                  "id": "ab",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 10,
+                  "relationship_type": {
+                    "id": "connected",
+                    "version": 1
+                  },
+                  "source_asset_id": "asset-a",
+                  "target_asset_id": "asset-b",
+                  "effective_interval": {
+                    "start_ms": 0,
+                    "end_ms": 100
+                  }
+                },
+                {
+                  "id": "bc",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 10,
+                  "relationship_type": {
+                    "id": "connected",
+                    "version": 1
+                  },
+                  "source_asset_id": "asset-b",
+                  "target_asset_id": "asset-c",
+                  "effective_interval": {
+                    "start_ms": 0,
+                    "end_ms": null
+                  }
+                },
+                {
+                  "id": "ca",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 10,
+                  "relationship_type": {
+                    "id": "connected",
+                    "version": 1
+                  },
+                  "source_asset_id": "asset-c",
+                  "target_asset_id": "asset-a",
+                  "effective_interval": {
+                    "start_ms": 0,
+                    "end_ms": null
+                  }
+                },
+                {
+                  "id": "self",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 10,
+                  "relationship_type": {
+                    "id": "connected",
+                    "version": 1
+                  },
+                  "source_asset_id": "asset-a",
+                  "target_asset_id": "asset-a",
+                  "effective_interval": {
+                    "start_ms": 0,
+                    "end_ms": null
+                  }
+                }
+              ],
+              "bindings": [
+                {
+                  "id": "bind-1",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 10,
+                  "source": {
+                    "device_asset_id": "gateway-1",
+                    "endpoint_id": "can",
+                    "signal_id": "bus.voltage"
+                  },
+                  "target": {
+                    "asset_id": "asset-a",
+                    "property": {
+                      "id": "voltage",
+                      "version": 1
+                    }
+                  },
+                  "effective_interval": {
+                    "start_ms": 0,
+                    "end_ms": 100
+                  }
+                },
+                {
+                  "id": "bind-self",
+                  "tenant_id": "tenant-a",
+                  "revision": "1",
+                  "recorded_at_ms": 10,
+                  "source": {
+                    "device_asset_id": "gateway-1",
+                    "endpoint_id": "can",
+                    "signal_id": "self.voltage"
+                  },
+                  "target": {
+                    "asset_id": "gateway-1",
+                    "property": {
+                      "id": "voltage",
+                      "version": 1
+                    }
+                  },
+                  "effective_interval": {
+                    "start_ms": 0,
+                    "end_ms": null
+                  }
+                }
+              ],
+              "truncated": false,
+              "truncation": []
+            }
+          }
+        }
+      },
       "PropertyHistorySucceeded": {
         "description": "Bounded hot-history interpretations. Empty is no matching durable interpretation, not proof of a known asset/property or healthy ingestion.",
         "headers": {

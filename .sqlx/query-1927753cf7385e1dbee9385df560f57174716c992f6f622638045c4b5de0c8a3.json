@@ -1,0 +1,153 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Discover identities by either endpoint, then select each latest known\n-- revision BEFORE effective-time/endpoint filtering. A correction can move an\n-- edge away; prefiltering its latest revision would resurrect obsolete facts.\nWITH candidates AS (\n    SELECT DISTINCT binding_id\n    FROM metadata.signal_binding_revisions\n    WHERE tenant_id = $1 AND recorded_at_ms <= $4\n      AND (source_device_asset_id = ANY($2::text[]) OR target_asset_id = ANY($2::text[]))\n      AND NOT (binding_id = ANY($5::text[]))\n), known AS (\n    SELECT revision.*\n    FROM candidates AS candidate\n    CROSS JOIN LATERAL (\n        SELECT stored.* FROM metadata.signal_binding_revisions AS stored\n        WHERE stored.tenant_id = $1 AND stored.binding_id = candidate.binding_id\n          AND stored.recorded_at_ms <= $4\n        ORDER BY stored.revision DESC LIMIT 1\n    ) AS revision\n)\nSELECT binding_id, revision, recorded_at_ms, source_device_asset_id, source_endpoint_id, source_signal_id, target_asset_id, target_property_id, target_property_version, effective_start_ms, effective_end_ms\nFROM known\nWHERE (source_device_asset_id = ANY($2::text[]) OR target_asset_id = ANY($2::text[]))\n  AND effective_start_ms <= $3 AND (effective_end_ms IS NULL OR $3 < effective_end_ms)\nORDER BY binding_id COLLATE \"C\"\nLIMIT $6\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "binding_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "binding_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "revision",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "source_device_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "source_device_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "source_endpoint_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "source_endpoint_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "source_signal_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "source_signal_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "target_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "target_property_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "target_property_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_version"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "effective_start_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "effective_start_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "effective_end_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "effective_end_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Int8",
+        "Int8",
+        "TextArray",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "1927753cf7385e1dbee9385df560f57174716c992f6f622638045c4b5de0c8a3"
+}

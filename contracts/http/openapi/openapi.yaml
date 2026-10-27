@@ -1,12 +1,14 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.16"
+  version: "1.0.0-baseline.17"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/semantic-graph":
+    $ref: ./paths/assets/semantic-graph.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/history":
     $ref: ./paths/history/property-history.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/interpretations/{interpretation}":
@@ -97,6 +99,10 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    SemanticGraphBudget:
+      $ref: ./components/schemas/SemanticGraphBudget.yaml
+    SemanticGraph:
+      $ref: ./components/schemas/SemanticGraph.yaml
     HistoryMillis:
       $ref: ./components/schemas/HistoryMillis.yaml
     HistoryToken:
@@ -302,6 +308,14 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    graph-depth:
+      $ref: ./components/parameters/graph-depth.yaml
+    graph-asset-limit:
+      $ref: ./components/parameters/graph-asset-limit.yaml
+    graph-relationship-limit:
+      $ref: ./components/parameters/graph-relationship-limit.yaml
+    graph-binding-limit:
+      $ref: ./components/parameters/graph-binding-limit.yaml
     telemetry-tenant-id:
       $ref: ./components/parameters/telemetry-tenant-id.yaml
     history-asset-id:
@@ -419,6 +433,8 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    SemanticGraphSucceeded:
+      $ref: ./components/responses/SemanticGraphSucceeded.yaml
     PropertyHistorySucceeded:
       $ref: ./components/responses/PropertyHistorySucceeded.yaml
     PropertyProvenanceSucceeded:

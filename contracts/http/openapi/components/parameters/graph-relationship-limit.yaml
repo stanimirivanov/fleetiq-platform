@@ -1,0 +1,10 @@
+name: relationship_limit
+in: query
+required: false
+description: Relationship output/prefix budget across all layers; one private look-ahead detects omitted
+  adjacency.
+schema:
+  type: integer
+  minimum: 1
+  maximum: 200
+  default: 100

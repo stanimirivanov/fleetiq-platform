@@ -10,22 +10,22 @@ use crate::error::{PostgresRepositoryError, corrupt};
 use super::common::parse_revision;
 
 #[derive(Debug)]
-pub(super) struct SignalBindingRevisionRow {
-    pub(super) binding_id: String,
-    pub(super) revision: BigDecimal,
-    pub(super) recorded_at_ms: i64,
-    pub(super) source_device_asset_id: String,
-    pub(super) source_endpoint_id: String,
-    pub(super) source_signal_id: String,
-    pub(super) target_asset_id: String,
-    pub(super) target_property_id: String,
-    pub(super) target_property_version: i64,
-    pub(super) effective_start_ms: i64,
-    pub(super) effective_end_ms: Option<i64>,
+pub(in crate::metadata) struct SignalBindingRevisionRow {
+    pub(in crate::metadata) binding_id: String,
+    pub(in crate::metadata) revision: BigDecimal,
+    pub(in crate::metadata) recorded_at_ms: i64,
+    pub(in crate::metadata) source_device_asset_id: String,
+    pub(in crate::metadata) source_endpoint_id: String,
+    pub(in crate::metadata) source_signal_id: String,
+    pub(in crate::metadata) target_asset_id: String,
+    pub(in crate::metadata) target_property_id: String,
+    pub(in crate::metadata) target_property_version: i64,
+    pub(in crate::metadata) effective_start_ms: i64,
+    pub(in crate::metadata) effective_end_ms: Option<i64>,
 }
 
 impl SignalBindingRevisionRow {
-    pub(super) fn into_domain(
+    pub(in crate::metadata) fn into_domain(
         self,
         tenant_id: TenantId,
     ) -> Result<SignalBinding, PostgresRepositoryError> {

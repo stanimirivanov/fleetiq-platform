@@ -92,3 +92,14 @@ aggregates, or business authorization.
 
 See [ADR 0003](../adr/0003-explicit-semantic-resolution.md) and the metadata
 migrations for the detailed accepted contracts.
+
+## Bounded graph exploration
+
+The [graph read API](../operations/semantic-graph.md) uses metadata-owned
+breadth-first policy and a PostgreSQL read-only repeatable snapshot. It expands
+relationship and signal-binding adjacency in both directions, retaining typed
+directed facts. Validated depth/asset/link limits, unique vertices, closed
+endpoints and explicit truncation prevent unbounded traversal or implied
+inventory completeness. Latest-known selection precedes endpoint/effective
+filters. No graph database, telemetry read or projection is involved. See
+[ADR 0120](../adr/0120-explore-bounded-semantic-graphs.md).

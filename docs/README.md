@@ -71,3 +71,7 @@ guidance still require review.
 For bounded asset/property history and immutable evidence, use the
 [property-history operations guide](operations/property-history.md) and
 [ADR 0119](adr/0119-expose-bounded-property-history.md).
+
+For bounded metadata exploration, use the
+[semantic graph operations guide](operations/semantic-graph.md) and
+[ADR 0120](adr/0120-explore-bounded-semantic-graphs.md).

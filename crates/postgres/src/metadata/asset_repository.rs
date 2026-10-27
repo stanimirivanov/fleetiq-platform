@@ -209,16 +209,18 @@ impl AssetRepository for PostgresAssetRepository {
 }
 
 #[derive(Debug)]
-struct AssetRow {
-    tenant_id: String,
-    asset_id: String,
-    type_id: String,
-    type_version: i64,
-    display_name: String,
+pub(super) struct AssetRow {
+    pub(super) tenant_id: String,
+    pub(super) asset_id: String,
+    pub(super) type_id: String,
+    pub(super) type_version: i64,
+    pub(super) display_name: String,
 }
 
 impl AssetRow {
-    fn into_catalogue_entry(self) -> Result<AssetCatalogueEntry, PostgresRepositoryError> {
+    pub(super) fn into_catalogue_entry(
+        self,
+    ) -> Result<AssetCatalogueEntry, PostgresRepositoryError> {
         let version = u32::try_from(self.type_version)
             .map_err(|error| corrupt("assets.type_version", error))?;
         Ok(AssetCatalogueEntry::new(

@@ -12,7 +12,7 @@ use crate::error::PostgresRepositoryError;
 mod commands;
 mod common;
 mod queries;
-mod row;
+pub(super) mod row;
 
 /// PostgreSQL implementation of the revisioned relationship repository port.
 #[derive(Clone, Debug)]

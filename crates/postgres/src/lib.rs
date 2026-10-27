@@ -53,7 +53,8 @@ pub use ingestion::{
 pub use metadata::{
     PostgresAssetRepository, PostgresDefinitionRepository, PostgresDeviceRepository,
     PostgresRegistrationRepository, PostgresRelationshipRepository,
-    PostgresRevisionCommandRepository, PostgresSignalBindingRepository,
+    PostgresRevisionCommandRepository, PostgresSemanticGraphRead, PostgresSemanticGraphRepository,
+    PostgresSignalBindingRepository,
 };
 mod schema;
 pub use schema::{SchemaCompatibilityError, apply_migrations, check_schema};

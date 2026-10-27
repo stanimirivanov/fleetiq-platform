@@ -210,7 +210,7 @@ where
 }
 
 #[derive(Serialize)]
-struct RelationshipResponse<'a> {
+pub(crate) struct RelationshipResponse<'a> {
     id: &'a str,
     tenant_id: &'a str,
     // A decimal string preserves the full u64 revision range in JavaScript clients.

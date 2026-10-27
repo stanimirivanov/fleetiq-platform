@@ -1,0 +1,10 @@
+name: asset_limit
+in: query
+required: false
+description: Unique asset budget including the root. Omit links that cannot include both endpoints; report
+  assets truncation.
+schema:
+  type: integer
+  minimum: 1
+  maximum: 100
+  default: 50

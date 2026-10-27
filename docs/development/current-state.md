@@ -507,3 +507,14 @@ bind exact target and window; pages preserve late-data limitations, all original
 interpretations and precise string-encoded numeric values. See the
 [property history guide](../operations/property-history.md). Live/current state,
 archive completeness, D06 and full-profile qualification remain deferred.
+
+## Bounded semantic graph exploration
+
+Delivery-plan PR 23 (issue #335) adds metadata-owned graph budgets, traversal
+and consistent-read ports, set-based PostgreSQL frontier queries, and protected
+HTTP graph reads. Current `metadata.read` authority permits a root-scoped graph
+at explicit effective/known cutoffs, with at most four hops, 100 assets and
+200 links of each kind. Corrected revisions, cycles, self-links and shared
+vertices retain their meaning; truncation is explicit and returned links have
+closed endpoints. See [the operations guide](../operations/semantic-graph.md).
+D06 and full-profile qualification remain deferred.

@@ -255,7 +255,7 @@ Merged as PR #332 (issue #331): frozen time choices, durable selection, fenced r
 
 ### PR 22: Expose bounded property history and provenance
 
-Implementation tracked by issue #333 / PR #334, based on main after PR #332 merged. D06 and full-profile qualification remain deferred.
+Merged as PR #334 (issue #333); CI passed. D06 and full-profile qualification remain deferred.
 
 **M04 · fleetiq-platform · Can develop alongside PR 21**
 
@@ -265,6 +265,8 @@ Implementation tracked by issue #333 / PR #334, based on main after PR #332 merg
 - **Harness Gate:** P + O; late data, multiple interpretations, corrected metadata, pagination, precision, and cross-tenant denial.
 
 ### PR 23: Expose bounded semantic graph exploration
+
+Implementation tracked by issue #335. Heavy database/runtime/workspace gates remain with CI; D06 and full-profile qualification remain deferred.
 
 **M04 · fleetiq-platform · Depends on PR 10**
 

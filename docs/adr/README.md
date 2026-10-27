@@ -150,6 +150,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0119](0119-expose-bounded-property-history.md) | Bounded telemetry-authorized property history and immutable provenance |
 
+| [0120](0120-explore-bounded-semantic-graphs.md) | Snapshot-consistent bounded semantic graph exploration |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

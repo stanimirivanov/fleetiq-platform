@@ -1,0 +1,73 @@
+type: object
+additionalProperties: false
+required:
+- root_asset_id
+- effective_at_ms
+- known_at_ms
+- budget
+- assets
+- relationships
+- bindings
+- truncated
+- truncation
+properties:
+  root_asset_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  effective_at_ms:
+    type: integer
+    format: int64
+  known_at_ms:
+    type: integer
+    format: int64
+  budget:
+    $ref: ./SemanticGraphBudget.yaml
+  assets:
+    type: array
+    minItems: 1
+    maxItems: 100
+    items:
+      $ref: ./AssetSummary.yaml
+  relationships:
+    type: array
+    maxItems: 200
+    items:
+      $ref: ./Relationship.yaml
+  bindings:
+    type: array
+    maxItems: 200
+    items:
+      $ref: ./SignalBinding.yaml
+  truncated:
+    type: boolean
+  truncation:
+    type: array
+    uniqueItems: true
+    maxItems: 4
+    items:
+      type: string
+      enum:
+      - depth
+      - assets
+      - relationships
+      - bindings
+description: One repeatable-read metadata subgraph. Traversal uses both endpoint directions but retains
+  directed typed facts. No telemetry values or full-tenant inventory claim. Root catalogue existence is
+  current; temporal cutoffs apply to revisioned relationships/bindings.
+allOf:
+- if:
+    additionalProperties: true
+    properties:
+      truncated:
+        const: false
+  then:
+    additionalProperties: true
+    properties:
+      truncation:
+        maxItems: 0
+  else:
+    additionalProperties: true
+    properties:
+      truncation:
+        minItems: 1
