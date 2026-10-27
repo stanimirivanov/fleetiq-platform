@@ -36,6 +36,7 @@ mod protocol_packages;
 mod protocol_routes;
 mod registration;
 mod revision_commands;
+mod semantic_graph;
 mod tenant_access_administration;
 mod tenant_administration;
 
@@ -99,6 +100,7 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(semantic_graph::router(pool.clone(), authentication.clone()))
         .merge(property_history::router(
             pool.clone(),
             authentication.clone(),

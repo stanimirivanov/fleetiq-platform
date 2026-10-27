@@ -1,0 +1,10 @@
+name: depth
+in: query
+required: false
+description: Maximum hops, treating relationships and source-device/target bindings as adjacency. Root
+  is depth zero; inspect boundary edges without adding external vertices.
+schema:
+  type: integer
+  minimum: 0
+  maximum: 4
+  default: 2

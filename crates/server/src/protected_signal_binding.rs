@@ -231,7 +231,7 @@ where
 }
 
 #[derive(Serialize)]
-struct SignalBindingResponse<'a> {
+pub(crate) struct SignalBindingResponse<'a> {
     id: &'a str,
     tenant_id: &'a str,
     // Decimal text retains the complete u64 revision range in JavaScript.

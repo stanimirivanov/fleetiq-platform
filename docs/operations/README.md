@@ -71,3 +71,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Durable semantic worker](semantic-worker.md): checked startup, frozen interpretation choices, retained outcomes and recovery.
 
 - [Property history and provenance](property-history.md): telemetry authorization, bounded windows, cursor/precision rules and recovery.
+
+- [Bounded semantic graph](semantic-graph.md): rooted temporal exploration, traversal budgets and incompleteness.

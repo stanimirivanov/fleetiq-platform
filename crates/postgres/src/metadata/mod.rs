@@ -17,3 +17,6 @@ pub use registration_repository::PostgresRegistrationRepository;
 
 mod revision_command_repository;
 pub use revision_command_repository::PostgresRevisionCommandRepository;
+
+mod semantic_graph_repository;
+pub use semantic_graph_repository::{PostgresSemanticGraphRead, PostgresSemanticGraphRepository};

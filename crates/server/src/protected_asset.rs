@@ -77,7 +77,7 @@ struct AssetPageResponse<'a> {
 }
 
 #[derive(Serialize)]
-struct AssetSummaryResponse<'a> {
+pub(crate) struct AssetSummaryResponse<'a> {
     id: &'a str,
     tenant_id: &'a str,
     name: &'a str,

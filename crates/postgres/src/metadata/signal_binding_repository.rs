@@ -15,7 +15,7 @@ use crate::error::PostgresRepositoryError;
 mod commands;
 mod common;
 mod queries;
-mod row;
+pub(super) mod row;
 
 /// PostgreSQL implementation of revisioned signal attribution persistence.
 #[derive(Clone, Debug)]

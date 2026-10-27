@@ -192,3 +192,12 @@ behind a cursor. See [the operations contract](../../docs/operations/property-hi
 Deploy readers/client types for this expanded action vocabulary before issuing
 new grants. Online SQLx freshness, Rust/HTTP integration and OpenAPI gates run
 in CI for this task at the owner's request.
+
+## Semantic graph baseline
+
+Baseline.17 adds `exploreSemanticGraph` under the selected tenant/asset, using
+current `metadata.read`. Explicit effective/known cutoffs, depth and independent
+node/link limits govern a consistent bounded subgraph; truncation is mandatory
+and no pagination/completeness claim across requests is made. Existing asset,
+relationship and binding response shapes are reused. See
+[the graph operations guide](../../docs/operations/semantic-graph.md).
