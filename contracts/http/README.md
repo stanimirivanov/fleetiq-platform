@@ -201,3 +201,12 @@ node/link limits govern a consistent bounded subgraph; truncation is mandatory
 and no pagination/completeness claim across requests is made. Existing asset,
 relationship and binding response shapes are reused. See
 [the graph operations guide](../../docs/operations/semantic-graph.md).
+
+## Current property snapshot
+
+Baseline.18 adds `getCurrentPropertySnapshot` for one installed asset/property
+version with fresh telemetry.read. The complete zero/one-item snapshot carries
+tenant-scoped decimal generation/revision/processed counters, committed pending
+work and evaluation-time freshness while reusing immutable history evidence.
+No stream continuation or automatic correction retraction is promised. See the
+[current-state guide](../../docs/operations/current-property-state.md).

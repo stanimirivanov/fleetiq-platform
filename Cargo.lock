@@ -1137,12 +1137,24 @@ dependencies = [
  "fleetiq-identity",
  "fleetiq-ingestion",
  "fleetiq-metadata",
+ "fleetiq-projection",
  "fleetiq-protocol-host",
  "fleetiq-protocol-sdk",
  "fleetiq-semantics",
  "fleetiq-telemetry",
  "sqlx",
  "tokio",
+]
+
+[[package]]
+name = "fleetiq-projection"
+version = "0.1.0"
+dependencies = [
+ "fleetiq-access",
+ "fleetiq-domain",
+ "fleetiq-history",
+ "fleetiq-live",
+ "fleetiq-semantics",
 ]
 
 [[package]]
@@ -1203,6 +1215,7 @@ dependencies = [
  "fleetiq-ingestion",
  "fleetiq-metadata",
  "fleetiq-postgres",
+ "fleetiq-projection",
  "fleetiq-protocol-sdk",
  "fleetiq-semantics",
  "fleetiq-telemetry",

@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Read in the same repeatable view as existence and current source hydration.\nSELECT COALESCE((SELECT generation FROM projection.tenant_heads WHERE tenant_id=$1),0::bigint) AS \"generation!\",\n       COALESCE((SELECT revision FROM projection.tenant_heads WHERE tenant_id=$1),0::bigint) AS \"revision!\",\n       COALESCE((SELECT processed_count FROM projection.tenant_heads WHERE tenant_id=$1),0::bigint) AS \"processed_count!\",\n       EXISTS (SELECT 1 FROM projection.pending_changes WHERE tenant_id=$1) AS \"pending!\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "revision!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "processed_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "pending!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "b8f9a7e42f2ae28ef8f7e20ee442ee3b3c8344b540ae69e919aa41b5fd717684"
+}

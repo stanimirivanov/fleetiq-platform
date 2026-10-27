@@ -123,3 +123,11 @@ logs or public reports.
 transaction, retry and timestamp decisions. Public hot-history queries, live
 state, analytics, hardware qualification and production deployment are separate
 work.
+
+## Current-state enqueue handoff
+
+Migration 0037 adds an AFTER INSERT history trigger that queues current-state
+projection work in the same commit. Install the additional reviewed invoker
+privileges before resuming semantic writers, even when the projector is off.
+Missing grants fail the whole history append; they do not silently drop work.
+See the [current-state projector procedure](current-property-state.md).

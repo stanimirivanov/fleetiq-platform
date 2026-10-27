@@ -27,6 +27,7 @@
 | `fleetiq-metadata` | Application | Asset graph use cases and consumer-owned persistence ports |
 | `fleetiq-ingestion` | Application | Durable ingestion orchestration and consumer-owned persistence ports |
 | `fleetiq-history` | Application | Durable semantic work, exact observation processing and semantic history append/read ports |
+| `fleetiq-projection` | Application | Current-property policy, typed snapshots and atomic maintenance/read ports |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
@@ -292,3 +293,12 @@ The composition root also consumes semantic interpretation identities for the
 HTTP token codec; PostgreSQL retains set-based row mapping. These are explicit
 normal internal edges in the architecture inventory, with no new external
 package or policy exception. See [ADR 0119](../adr/0119-expose-bounded-property-history.md).
+
+## Current property projection
+
+`fleetiq-projection` is an application capability consuming access evidence, domain
+values, immutable history, semantic interpretation identities and live snapshot
+contracts. PostgreSQL and the server consume its narrow read/maintenance ports.
+It has no direct external dependencies; `fleetiq-live` remains a contract crate.
+The shared immutable history row mapper stays private to the PostgreSQL adapter.
+See [ADR 0121](../adr/0121-materialize-durable-current-property-state.md).

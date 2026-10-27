@@ -266,7 +266,7 @@ Merged as PR #334 (issue #333); CI passed. D06 and full-profile qualification re
 
 ### PR 23: Expose bounded semantic graph exploration
 
-Implementation tracked by issue #335. Heavy database/runtime/workspace gates remain with CI; D06 and full-profile qualification remain deferred.
+Merged as PR #336 (issue #335); CI passed. D06 and full-profile qualification remain deferred.
 
 **M04 · fleetiq-platform · Depends on PR 10**
 
@@ -276,6 +276,8 @@ Implementation tracked by issue #335. Heavy database/runtime/workspace gates rem
 - **Harness Gate:** P + O; cycles, high fan-out, depth/size limits, consistent cutoffs, and tenant-safe traversal.
 
 ### PR 24: Materialize durable current state and snapshots
+
+Implementation tracked by issue #337: exact-property snapshots, atomic pending/checkpoint batches and consistent tenant rebuild. Heavy gates run on CI; D06 and full-profile qualification remain deferred.
 
 **M04 · fleetiq-platform · Depends on PRs 21–22**
 

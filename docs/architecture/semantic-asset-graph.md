@@ -103,3 +103,11 @@ endpoints and explicit truncation prevent unbounded traversal or implied
 inventory completeness. Latest-known selection precedes endpoint/effective
 filters. No graph database, telemetry read or projection is involved. See
 [ADR 0120](../adr/0120-explore-bounded-semantic-graphs.md).
+
+## Current telemetry projection
+
+The [current-property projector](../operations/current-property-state.md) materializes
+immutable interpretations independently of graph traversal. Exact property
+snapshots require telemetry.read and preserve quality/provenance; metadata.read
+does not reveal telemetry. Event-time arbitration, atomic revisions and rebuild
+generations belong to projection, while live delivery remains a later slice.

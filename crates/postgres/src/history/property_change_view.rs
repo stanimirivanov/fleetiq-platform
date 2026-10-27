@@ -4,6 +4,7 @@ use std::future::Future;
 
 mod observation_page;
 mod property_page;
+pub(crate) mod row;
 
 use bigdecimal::BigDecimal;
 use fleetiq_domain::{

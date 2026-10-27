@@ -11,6 +11,8 @@ mod history;
 mod identity;
 mod ingestion;
 mod metadata;
+mod projection;
+pub use projection::PostgresCurrentStateRepository;
 
 pub use access::{
     PostgresActorIdentityResolver, PostgresActorIdentityResolverError,

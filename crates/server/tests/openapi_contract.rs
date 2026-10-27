@@ -24,6 +24,14 @@ struct PublishedOperation {
 
 const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/current",
+        id: "getCurrentPropertySnapshot",
+        post_id: None,
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/semantic-graph",
         id: "exploreSemanticGraph",
         post_id: None,

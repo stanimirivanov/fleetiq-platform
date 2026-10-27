@@ -1,0 +1,16 @@
+description: Exact-property snapshot with immutable quality/provenance, projection continuity and evaluation-time freshness.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/CurrentPropertySnapshot.yaml
+    example:
+      generation: "1"
+      revision: "0"
+      processed_count: "0"
+      pending: true
+      evaluated_at_ms: "2000"
+      stale_after_ms: 30000
+      items: []

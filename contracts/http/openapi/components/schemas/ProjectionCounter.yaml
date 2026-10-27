@@ -1,0 +1,4 @@
+type: string
+pattern: '^(0|[1-9][0-9]*)$'
+maxLength: 19
+description: Exact nonnegative decimal counter backed by signed 64-bit storage; never a JavaScript floating-point number. Compare numerically and only inside the same tenant projection.

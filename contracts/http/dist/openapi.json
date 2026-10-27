@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.17",
+    "version": "1.0.0-baseline.18",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
   },
   "servers": [
@@ -12,6 +12,55 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/current": {
+      "get": {
+        "operationId": "getCurrentPropertySnapshot",
+        "summary": "Read one exact property's committed current state",
+        "description": "Requires current telemetry.read before parameter validation and metadata discovery. The exact property version must be installed on the asset (otherwise 404). Empty items is a known property without a materialized value. Current precedence is greatest event time, then full immutable interpretation identity in C byte order, with numeric output/binding revision. Quality is preserved, never filtered into last-good semantics. Corrections create interpretations without implicitly retracting other targets. A repeatable-read view pairs value with tenant generation/revision and committed pending-work indication. Eight-second request and two-second statement deadlines fail safely rather than inventing empty state. Freshness is evaluated at server response time, independently of quality.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/history-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/property-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CurrentPropertySucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/semantic-graph": {
       "get": {
         "operationId": "exploreSemanticGraph",
@@ -2933,6 +2982,77 @@
   },
   "components": {
     "schemas": {
+      "ProjectionCounter": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]*)$",
+        "maxLength": 19,
+        "description": "Exact nonnegative decimal counter backed by signed 64-bit storage; never a JavaScript floating-point number. Compare numerically and only inside the same tenant projection."
+      },
+      "CurrentPropertyItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "freshness",
+          "change"
+        ],
+        "properties": {
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "stale",
+              "future"
+            ],
+            "description": "Selected event age at evaluated_at_ms. Fresh means age 0..30000 ms inclusive; future is explicit. Independent of quality and connectivity."
+          },
+          "change": {
+            "$ref": "#/components/schemas/PropertyHistoryChange"
+          }
+        }
+      },
+      "CurrentPropertySnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generation",
+          "revision",
+          "processed_count",
+          "pending",
+          "evaluated_at_ms",
+          "stale_after_ms",
+          "items"
+        ],
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "processed_count": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "pending": {
+            "type": "boolean",
+            "description": "At least one committed tenant interpretation remains pending in the current-state queue at this database snapshot. Not a source/semantic queue or device-health assertion."
+          },
+          "evaluated_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "stale_after_ms": {
+            "type": "integer",
+            "const": 30000
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/CurrentPropertyItem"
+            }
+          }
+        },
+        "description": "Complete exact installed asset/property/version state at one repeatable database view. Empty items means no value has been materialized, including pending work; it does not claim no observations or bindings exist. Generation changes on rebuild; revision advances on each committed nonempty batch and rebuild and never resets. Counters are scoped to the tenant, not the property. No live replay or cursor continuity is promised yet."
+      },
       "SemanticGraphBudget": {
         "type": "object",
         "additionalProperties": false,
@@ -6619,6 +6739,30 @@
       }
     },
     "responses": {
+      "CurrentPropertySucceeded": {
+        "description": "Exact-property snapshot with immutable quality/provenance, projection continuity and evaluation-time freshness.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CurrentPropertySnapshot"
+            },
+            "example": {
+              "generation": "1",
+              "revision": "0",
+              "processed_count": "0",
+              "pending": true,
+              "evaluated_at_ms": "2000",
+              "stale_after_ms": 30000,
+              "items": []
+            }
+          }
+        }
+      },
       "SemanticGraphSucceeded": {
         "description": "One tenant-owned bounded semantic graph at a consistent database snapshot. Check truncated and reasons; no pagination/continuity promise across requests.",
         "headers": {

@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Result exists only after one active tenant's <=100-fact atomic batch.\nSELECT applied_count AS \"applied_count!\" FROM projection.project_next()\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "applied_count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a154f6cf0b86bc559386213788526797e8fbdc735134063aae2f321b915a139a"
+}

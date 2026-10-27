@@ -10,6 +10,9 @@ mod bearer_authentication;
 mod bootstrap;
 mod browser_identity;
 mod command;
+mod current_state;
+mod projection_worker;
+pub use projection_worker::{ProjectionRunError, rebuild_current_state, run_projection_worker};
 mod config;
 #[cfg(test)]
 mod contract_test_support;
@@ -100,6 +103,7 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(current_state::router(pool.clone(), authentication.clone()))
         .merge(semantic_graph::router(pool.clone(), authentication.clone()))
         .merge(property_history::router(
             pool.clone(),

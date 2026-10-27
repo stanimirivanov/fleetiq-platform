@@ -1,0 +1,24 @@
+type: object
+additionalProperties: false
+required: [generation, revision, processed_count, pending, evaluated_at_ms, stale_after_ms, items]
+properties:
+  generation:
+    $ref: ./ProjectionCounter.yaml
+  revision:
+    $ref: ./ProjectionCounter.yaml
+  processed_count:
+    $ref: ./ProjectionCounter.yaml
+  pending:
+    type: boolean
+    description: At least one committed tenant interpretation remains pending in the current-state queue at this database snapshot. Not a source/semantic queue or device-health assertion.
+  evaluated_at_ms:
+    $ref: ./HistoryMillis.yaml
+  stale_after_ms:
+    type: integer
+    const: 30000
+  items:
+    type: array
+    maxItems: 1
+    items:
+      $ref: ./CurrentPropertyItem.yaml
+description: Complete exact installed asset/property/version state at one repeatable database view. Empty items means no value has been materialized, including pending work; it does not claim no observations or bindings exist. Generation changes on rebuild; revision advances on each committed nonempty batch and rebuild and never resets. Counters are scoped to the tenant, not the property. No live replay or cursor continuity is promised yet.

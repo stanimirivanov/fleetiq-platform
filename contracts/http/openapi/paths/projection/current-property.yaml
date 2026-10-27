@@ -1,0 +1,25 @@
+get:
+  operationId: getCurrentPropertySnapshot
+  summary: Read one exact property's committed current state
+  description: Requires current telemetry.read before parameter validation and metadata discovery. The exact property version must be installed on the asset (otherwise 404). Empty items is a known property without a materialized value. Current precedence is greatest event time, then full immutable interpretation identity in C byte order, with numeric output/binding revision. Quality is preserved, never filtered into last-good semantics. Corrections create interpretations without implicitly retracting other targets. A repeatable-read view pairs value with tenant generation/revision and committed pending-work indication. Eight-second request and two-second statement deadlines fail safely rather than inventing empty state. Freshness is evaluated at server response time, independently of quality.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/history-asset-id.yaml
+  - $ref: ../../components/parameters/property-id.yaml
+  - $ref: ../../components/parameters/definition-version.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/CurrentPropertySucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

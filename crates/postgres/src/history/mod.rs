@@ -3,6 +3,7 @@
 mod decoded_observation_view;
 mod property_change_log;
 mod property_change_view;
+pub(crate) use property_change_view::row::HistoryRow;
 
 pub use decoded_observation_view::PostgresDecodedObservationView;
 pub use property_change_view::PostgresAssetPropertyChangeView;
