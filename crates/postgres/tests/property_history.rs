@@ -182,10 +182,12 @@ async fn decimal_history_preserves_arbitrary_precision_without_float_conversion(
     else {
         panic!("exact decimal should retain its kind");
     };
-    assert_eq!(
-        value.to_string(),
-        "12345678901234567890.12345678901234567890123456789"
-    );
+    // SQLx reconstructs NUMERIC using base-10000 groups, which may append
+    // insignificant scale zeros. Compare the exact arbitrary-precision value,
+    // not its display scale; no floating-point conversion or tolerance is used.
+    let expected: bigdecimal::BigDecimal =
+        "12345678901234567890.12345678901234567890123456789".parse()?;
+    assert_eq!(value, &expected);
     assert_eq!(
         page.changes()[0].observation().quality(),
         fleetiq_telemetry::ObservationQuality::Uncertain
