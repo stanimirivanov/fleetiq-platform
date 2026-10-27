@@ -2,6 +2,8 @@
 
 ## TL;DR
 
+- The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history and live projections remain planned.
+
 - [Bounded TCP ingestion](../operations/tcp-ingestion.md) now accepts explicitly
   configured identity-v1 channels through isolated live execution and fenced durable
   results. Identifier routing is not device authentication; D06 remains deferred.
@@ -52,7 +54,7 @@
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and `fleetiq-live` projection
   contracts exist; property-change append and exact reads are durable, while production
-  semantic workers, calculator stores, and live projections do not exist.
+  calculator stores and live projections do not exist.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under

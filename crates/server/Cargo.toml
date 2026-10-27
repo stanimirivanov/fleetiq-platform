@@ -16,6 +16,7 @@ sha2.workspace = true
 url.workspace = true
 fleetiq-access = { path = "../access" }
 fleetiq-protocol-sdk = { path = "../protocol-sdk" }
+fleetiq-history = { path = "../history" }
 fleetiq-ingestion = { path = "../ingestion" }
 fleetiq-telemetry = { path = "../telemetry" }
 fleetiq-domain = { path = "../domain" }

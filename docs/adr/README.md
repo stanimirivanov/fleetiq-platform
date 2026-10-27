@@ -146,6 +146,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0117](0117-publish-bounded-ingestion-evidence.md) | Bounded operational evidence and observed-source sampling without inferred liveness |
 
+| [0118](0118-run-durable-semantic-processing.md) | Durable semantic claims, pinned selection and atomic history completion |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

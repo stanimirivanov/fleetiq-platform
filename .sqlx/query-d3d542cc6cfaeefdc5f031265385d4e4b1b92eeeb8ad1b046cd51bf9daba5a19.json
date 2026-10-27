@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE history.semantic_work SET binding_id=$6,binding_revision=$7\n            WHERE tenant_id=$1 AND message_id=$2 AND protocol_package_id=$3\n              AND protocol_package_version=$4 AND output_index=$5\n              AND (binding_id IS NULL OR (binding_id=$6 AND binding_revision=$7))\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d3d542cc6cfaeefdc5f031265385d4e4b1b92eeeb8ad1b046cd51bf9daba5a19"
+}

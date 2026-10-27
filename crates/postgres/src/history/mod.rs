@@ -10,3 +10,6 @@ pub use property_change_view::PostgresAssetPropertyChangeView;
 pub use property_change_log::{
     PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeLogError,
 };
+
+mod work;
+pub use work::{PostgresSemanticWorkError, PostgresSemanticWorkRepository};

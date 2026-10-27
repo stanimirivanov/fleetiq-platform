@@ -19,6 +19,8 @@ pub enum ProcessCommand {
     BootstrapPlatformOperatorChecked,
     /// Run bounded durable decoding without HTTP or schema mutation.
     ReplayWorker,
+    /// Interpret durable decoded observations without HTTP or schema mutation.
+    SemanticWorker,
     /// Accept bounded registered-device TCP sessions without HTTP or DDL.
     IngestTcp,
     /// Print command usage without reading runtime configuration.
@@ -51,6 +53,7 @@ impl ProcessCommand {
             "serve" => Self::Serve,
             "migrate" => Self::Migrate,
             "replay-worker" => Self::ReplayWorker,
+            "semantic-worker" => Self::SemanticWorker,
             "ingest-tcp" => Self::IngestTcp,
             "migration-inventory" => Self::MigrationInventory,
             "healthcheck" => Self::Healthcheck,
@@ -76,7 +79,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [serve [--check-schema]|migrate|migration-inventory|replay-worker|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
+        "Usage: fleetiq-server [serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -154,6 +157,7 @@ mod tests {
             (vec!["migrate"], ProcessCommand::Migrate),
             (vec!["healthcheck"], ProcessCommand::Healthcheck),
             (vec!["replay-worker"], ProcessCommand::ReplayWorker),
+            (vec!["semantic-worker"], ProcessCommand::SemanticWorker),
             (vec!["ingest-tcp"], ProcessCommand::IngestTcp),
             (
                 vec!["migration-inventory"],

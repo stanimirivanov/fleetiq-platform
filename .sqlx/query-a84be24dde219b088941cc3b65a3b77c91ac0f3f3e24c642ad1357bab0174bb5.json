@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE history.semantic_work SET status='unresolved',reason=$6\n            WHERE tenant_id=$1 AND message_id=$2 AND protocol_package_id=$3\n              AND protocol_package_version=$4 AND output_index=$5 AND binding_id IS NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a84be24dde219b088941cc3b65a3b77c91ac0f3f3e24c642ad1357bab0174bb5"
+}
