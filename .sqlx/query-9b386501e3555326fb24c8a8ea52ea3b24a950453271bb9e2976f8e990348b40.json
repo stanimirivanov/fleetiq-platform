@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT TRUE AS \"valid!\" FROM history.semantic_work\n            WHERE tenant_id=$1 AND message_id=$2 AND protocol_package_id=$3\n            AND protocol_package_version=$4 AND output_index=$5\n            AND status='pending' AND generation=$6 AND known_at_ms=$7 AND event_time_basis=$8\n            AND lease_until_ms>floor(extract(epoch FROM clock_timestamp())*1000)::bigint\n            FOR UPDATE\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "valid!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int4",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9b386501e3555326fb24c8a8ea52ea3b24a950453271bb9e2976f8e990348b40"
+}

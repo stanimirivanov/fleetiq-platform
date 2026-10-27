@@ -5,6 +5,7 @@
 Decoded observations preserve protocol facts and provenance. Semantic
 resolution converts compatible observations into asset property changes.
 The application can append resolved changes to immutable PostgreSQL history.
+The durable semantic worker is composed separately from ingestion.
 Versioned calculators and revisioned live projections have contracts; their
 production workers remain planned.
 
@@ -89,7 +90,7 @@ Projection consumers import these types from `fleetiq-live`. See
 Transport choice, subscription authorization, fan-out, backpressure, and
 offline recovery remain adapter and product decisions.
 
-## Planned storage path
+## Storage path
 
 ```mermaid
 flowchart LR
@@ -102,8 +103,7 @@ flowchart LR
 
 The append-only property-change history now persists exact semantic
 interpretation identities with tenant-safe decoded-observation and binding
-references. The production worker and asset-wide history read API remain
-planned. The
+references. The [durable worker](../operations/semantic-worker.md) now owns fenced claims, saved interpretation choices and atomic history completion; the asset-wide history read API remains planned. The
 initial design favors PostgreSQL for transactional history and a separate
 object archive only when volume and retention economics justify it. Query
 stores and caches are derived and rebuildable. The source facts and pinned

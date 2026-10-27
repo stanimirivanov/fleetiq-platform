@@ -233,7 +233,9 @@ Implementation tracked by issue #329: bounded durable evidence and measured tran
 
 ### PR 20: Deliver device onboarding and ingestion diagnostics UI
 
-**M03 · fleetiq-ux · Depends on PRs 3, 9, 15, and 19**
+Merged as [fleetiq-ui PR #82](https://github.com/stanimirivanov/fleetiq-ui/pull/82); CI passed.
+
+**M03 · fleetiq-ui · Depends on PRs 3, 9, 15, and 19**
 
 - **Objective & Scope:** Deliver one complete device console for registration, package assignment, connection state, observed sources, and processing diagnostics.
 - **Target Layers / Files:** New `features/devices/{model,api,ui}`, app navigation, generated client, device POM and guide procedures.
@@ -241,6 +243,8 @@ Implementation tracked by issue #329: bounded durable evidence and measured tran
 - **Harness Gate:** U; denied actions, package conflicts, missing sources, stale status, cancellation, narrow layouts, and onboarding journeys.
 
 ### PR 21: Run durable semantic processing
+
+Implementation tracked by issue #331: frozen time choices, durable selection, fenced recovery and atomic history completion. D06 and full-profile qualification remain deferred.
 
 **M04 · fleetiq-platform · Depends on PR 17; can develop alongside TCP work**
 

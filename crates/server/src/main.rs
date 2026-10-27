@@ -60,6 +60,7 @@ async fn execute() -> Result<(), Box<dyn Error>> {
                 .await?;
         }
         ProcessCommand::ReplayWorker => fleetiq_server::run_replay_worker().await?,
+        ProcessCommand::SemanticWorker => fleetiq_server::run_semantic_worker().await?,
         ProcessCommand::Help => println!("{}", ProcessCommand::usage()),
     }
     Ok(())

@@ -1,7 +1,7 @@
 //! Application-owned durability contract for semantic property history.
 //!
 //! Successfully resolved property changes are immutable facts. The semantic
-//! resolver remains read-only; a future worker can append its output here
+//! resolver remains read-only; a fenced worker appends its output here
 //! after decoded observations are durable. An exact read port exposes stored
 //! interpretations without selecting a latest value.
 
@@ -61,3 +61,9 @@ pub trait AssetPropertyChangeLog: Send + Sync {
         change: &'a AssetPropertyChange,
     ) -> impl Future<Output = Result<PropertyChangeAppendOutcome, Self::Error>> + Send + 'a;
 }
+
+mod work;
+pub use work::{
+    SemanticLease, SemanticTick, SemanticUnresolved, SemanticWorkRepository, SemanticWorker,
+    SemanticWorkerError,
+};

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE history.semantic_work w SET status='exhausted'\n            FROM (SELECT tenant_id,message_id,protocol_package_id,protocol_package_version,output_index\n                FROM history.semantic_work WHERE status='pending' AND generation=3\n                AND lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint\n                ORDER BY tenant_id,message_id,protocol_package_id,protocol_package_version,output_index\n                FOR UPDATE SKIP LOCKED LIMIT 32) x\n            WHERE (w.tenant_id,w.message_id,w.protocol_package_id,w.protocol_package_version,w.output_index)\n                = (x.tenant_id,x.message_id,x.protocol_package_id,x.protocol_package_version,x.output_index)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "81d8238c1aa518b8373c12cac6d3b64cae33ad81cf8582edd8b288c515bffb78"
+}

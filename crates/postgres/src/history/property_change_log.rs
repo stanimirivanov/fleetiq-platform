@@ -27,9 +27,9 @@ impl PostgresAssetPropertyChangeLog {
     /// direct SQL writers. This read additionally compares the caller's full
     /// decoded value, quality, timestamps, source, and target so a forged or
     /// stale in-memory candidate never receives an idempotent success result.
-    async fn matches_durable_facts(
-        &self,
+    pub(super) async fn matches_durable_facts(
         change: &AssetPropertyChange,
+        transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     ) -> Result<bool, PostgresRepositoryError> {
         let observation = change.bound_observation().observation();
         let binding = change.bound_observation().binding();
@@ -121,7 +121,7 @@ impl PostgresAssetPropertyChangeLog {
             context.known_at().get(),
             context.effective_at().get(),
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&mut **transaction)
         .await
         .map_err(classify_database_error)?;
         Ok(matches)
@@ -131,7 +131,22 @@ impl PostgresAssetPropertyChangeLog {
         &self,
         change: &AssetPropertyChange,
     ) -> Result<PropertyChangeAppendOutcome, PostgresAssetPropertyChangeLogError> {
-        if !self.matches_durable_facts(change).await? {
+        let mut transaction = self.pool.begin().await.map_err(classify_database_error)?;
+        let outcome = Self::append_in_transaction(change, &mut transaction).await?;
+        transaction
+            .commit()
+            .await
+            .map_err(classify_database_error)?;
+        Ok(outcome)
+    }
+
+    /// Shares lineage validation and idempotent append with fenced work completion.
+    /// The caller owns commit; errors roll back both history and progress.
+    pub(super) async fn append_in_transaction(
+        change: &AssetPropertyChange,
+        transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    ) -> Result<PropertyChangeAppendOutcome, PostgresAssetPropertyChangeLogError> {
+        if !Self::matches_durable_facts(change, transaction).await? {
             return Err(PostgresAssetPropertyChangeLogError::SourceMismatch);
         }
         let id = change.id();
@@ -163,7 +178,7 @@ impl PostgresAssetPropertyChangeLog {
             context.effective_at().get(),
             context.known_at().get(),
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(&mut **transaction)
         .await
         .map_err(classify_database_error)?;
         if inserted.is_some() {
@@ -191,7 +206,7 @@ impl PostgresAssetPropertyChangeLog {
             BigDecimal::from(id.binding_revision().get()),
             basis,
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(&mut **transaction)
         .await
         .map_err(classify_database_error)?
         .ok_or_else(|| corrupt("history.asset_property_changes", "missing conflict winner"))?;

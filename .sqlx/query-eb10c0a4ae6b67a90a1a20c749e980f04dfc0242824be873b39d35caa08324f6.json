@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE history.semantic_work SET status='completed'\n            WHERE tenant_id=$1 AND message_id=$2 AND protocol_package_id=$3\n              AND protocol_package_version=$4 AND output_index=$5\n              AND binding_id=$6 AND binding_revision=$7\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "eb10c0a4ae6b67a90a1a20c749e980f04dfc0242824be873b39d35caa08324f6"
+}

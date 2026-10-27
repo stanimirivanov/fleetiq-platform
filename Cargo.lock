@@ -1197,6 +1197,7 @@ dependencies = [
  "cookie",
  "fleetiq-access",
  "fleetiq-domain",
+ "fleetiq-history",
  "fleetiq-identity",
  "fleetiq-ingestion",
  "fleetiq-metadata",
