@@ -18,6 +18,7 @@ use fleetiq_domain::{
 use fleetiq_history::PropertyHistoryQuery;
 use std::sync::Arc;
 type ScopePath = (String, String, String, String);
+type InterpretationPath = (String, String, String, String, String);
 
 async fn authorize<A: RequestAuthenticator>(
     ctx: &Context<A>,
@@ -123,7 +124,7 @@ pub(super) async fn list<A: RequestAuthenticator>(
 pub(super) async fn find<A: RequestAuthenticator>(
     State(ctx): State<Arc<Context<A>>>,
     headers: HeaderMap,
-    path: Result<Path<(String, String, String, String, String)>, PathRejection>,
+    path: Result<Path<InterpretationPath>, PathRejection>,
 ) -> Result<Response, ProtectedRequestError> {
     let grant = authorize(&ctx, &headers, path.as_ref().map_or("", |p| p.0.0.as_str())).await?;
     let Ok(Path((_, asset, property, version, token))) = path else {

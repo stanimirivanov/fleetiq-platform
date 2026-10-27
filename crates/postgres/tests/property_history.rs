@@ -63,11 +63,11 @@ async fn history_has_exclusive_bounds_ties_precision_and_tenant_isolation(
             .len(),
         1
     );
-    assert!(
+    assert_eq!(
         view.list_property(&TenantId::new("tenant-b")?, &query(0, 3000, 100, None))
             .await?
-            .changes()
-            .is_empty()
+            .changes(),
+        []
     );
     // A second binding of the same output at the same event time remains distinct.
     sqlx::raw_sql("INSERT INTO metadata.signal_bindings (tenant_id,binding_id,latest_revision) VALUES ('tenant-a','binding-2',1); INSERT INTO metadata.signal_binding_revisions (tenant_id,binding_id,revision,recorded_at_ms,source_device_asset_id,source_endpoint_id,source_signal_id,target_asset_id,target_property_id,target_property_version,effective_start_ms,effective_end_ms) SELECT tenant_id,'binding-2',revision,recorded_at_ms,source_device_asset_id,source_endpoint_id,source_signal_id,target_asset_id,target_property_id,target_property_version,effective_start_ms,effective_end_ms FROM metadata.signal_binding_revisions WHERE binding_id='binding-1';").execute(&pool).await?;
@@ -148,7 +148,7 @@ async fn exact_property_version_does_not_merge_and_large_page_is_bounded(
         100,
         None,
     )?;
-    assert!(view.list_property(&tenant, &q).await?.changes().is_empty());
+    assert_eq!(view.list_property(&tenant, &q).await?.changes(), []);
     Ok(())
 }
 

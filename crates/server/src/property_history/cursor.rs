@@ -8,6 +8,7 @@ use fleetiq_telemetry::{
 };
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use sha2::{Digest, Sha256};
+use std::fmt::Write;
 
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -117,10 +118,9 @@ fn scope(
     ))?;
     // sha2's digest array does not implement LowerHex; encode each byte to
     // preserve the version-one lowercase, zero-padded scope representation.
-    use std::fmt::Write;
     let digest = Sha256::digest(bytes);
     let mut hex = String::with_capacity(64);
-    for byte in digest.iter() {
+    for byte in &digest {
         write!(&mut hex, "{byte:02x}").expect("writing to String cannot fail");
     }
     Ok(hex)
@@ -128,7 +128,6 @@ fn scope(
 // Hex keeps opaque JSON keys URL-safe without another runtime dependency. The
 // prefix is a codec version, not a signature; every lookup rechecks scope/grant.
 pub(super) fn encode<T: Serialize>(value: &T) -> Result<String, serde_json::Error> {
-    use std::fmt::Write;
     let bytes = serde_json::to_vec(value)?;
     let mut result = String::from("v1.");
     for byte in bytes {
