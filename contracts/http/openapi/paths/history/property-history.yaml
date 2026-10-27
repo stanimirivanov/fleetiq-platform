@@ -1,0 +1,31 @@
+get:
+  operationId: listPropertyHistory
+  summary: List bounded property history
+  description: 'Requires exact telemetry.read. Returns all interpretations for one pinned property in
+    a half-open event-time window of at most seven days. Ascending event time then full interpretation
+    key provides stable ties, not latest-state precedence. Pages are not a snapshot: restart the window
+    to observe late appends behind the cursor. No raw payload, archival history, correction collapse or
+    implicit unit conversion.'
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/history-asset-id.yaml
+  - $ref: ../../components/parameters/property-id.yaml
+  - $ref: ../../components/parameters/definition-version.yaml
+  - $ref: ../../components/parameters/history-start-at-ms.yaml
+  - $ref: ../../components/parameters/history-end-at-ms.yaml
+  - $ref: ../../components/parameters/history-limit.yaml
+  - $ref: ../../components/parameters/history-after.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/PropertyHistorySucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

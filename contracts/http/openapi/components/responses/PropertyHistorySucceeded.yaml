@@ -1,0 +1,38 @@
+description: Bounded hot-history interpretations. Empty is no matching durable interpretation, not proof
+  of a known asset/property or healthy ingestion.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/PropertyHistoryPage.yaml
+    example:
+      changes:
+      - interpretation: v1.7b226d6573736167655f6964223a226d6573736167652d31222c227061636b6167655f6964223a2276656e646f722e70726f746f636f6c222c227061636b6167655f76657273696f6e223a2231222c226f75747075745f696e646578223a302c2262696e64696e675f6964223a2262696e64696e672d31222c227265766973696f6e223a2231222c226261736973223a226465766963655f7265636f72646564227d
+        tenant_id: tenant-a
+        asset_id: asset-a
+        property_id: electrical.voltage
+        property_version: 1
+        binding_id: binding-1
+        binding_revision: '1'
+        event_time_basis: device_recorded
+        event_at_ms: '1000'
+        first_resolution_effective_at_ms: '1000'
+        first_resolution_known_at_ms: '150'
+        value:
+          kind: integer
+          value: '9223372036854775807'
+        source_unit: volt
+        quality: good
+        source:
+          message_id: message-1
+          protocol_package_id: vendor.protocol
+          protocol_package_version: '1'
+          output_index: 0
+          device_asset_id: gateway-1
+          endpoint_id: can-primary
+          signal_id: bus.voltage
+          device_recorded_at_ms: '1000'
+          received_at_ms: '2000'
+      next_after: null

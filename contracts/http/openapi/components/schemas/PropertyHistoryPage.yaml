@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required:
+- changes
+- next_after
+properties:
+  changes:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./PropertyHistoryChange.yaml
+  next_after:
+    oneOf:
+    - $ref: ./HistoryToken.yaml
+    - type: 'null'

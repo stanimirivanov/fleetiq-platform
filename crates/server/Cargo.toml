@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+fleetiq-semantics = { path = "../semantics" }
 axum.workspace = true
 cookie.workspace = true
 getrandom.workspace = true

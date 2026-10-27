@@ -1,0 +1,47 @@
+type: object
+additionalProperties: false
+required:
+- message_id
+- protocol_package_id
+- protocol_package_version
+- device_asset_id
+- endpoint_id
+- signal_id
+- output_index
+- device_recorded_at_ms
+- received_at_ms
+properties:
+  message_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  protocol_package_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  protocol_package_version:
+    type: string
+    minLength: 1
+    maxLength: 128
+  device_asset_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  endpoint_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  signal_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  output_index:
+    type: integer
+    minimum: 0
+    maximum: 4294967295
+  device_recorded_at_ms:
+    oneOf:
+    - $ref: ./HistoryMillis.yaml
+    - type: 'null'
+  received_at_ms:
+    $ref: ./HistoryMillis.yaml

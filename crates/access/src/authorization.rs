@@ -15,6 +15,8 @@ use crate::AuthenticatedActor;
 pub enum TenantAction {
     /// Read tenant-owned asset and semantic metadata.
     ReadMetadata,
+    /// Read tenant-owned telemetry history and interpretation provenance.
+    ReadTelemetry,
     /// Create or change tenant-owned asset and semantic metadata.
     ManageMetadata,
     /// Manage actors' access to a tenant.
@@ -43,6 +45,22 @@ pub struct ReadMetadata;
 impl sealed::Sealed for ReadMetadata {}
 impl TenantActionMarker for ReadMetadata {
     const ACTION: TenantAction = TenantAction::ReadMetadata;
+}
+
+/// Permission to read telemetry, independent of metadata or protocol management.
+///
+/// ```compile_fail
+/// use fleetiq_access::{AuthorizedTenant, ReadMetadata, ReadTelemetry};
+/// fn read_telemetry(_: AuthorizedTenant<ReadTelemetry>) {}
+/// fn metadata_is_not_telemetry(grant: AuthorizedTenant<ReadMetadata>) {
+///     read_telemetry(grant);
+/// }
+/// ```
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReadTelemetry;
+impl sealed::Sealed for ReadTelemetry {}
+impl TenantActionMarker for ReadTelemetry {
+    const ACTION: TenantAction = TenantAction::ReadTelemetry;
 }
 
 /// Permission to manage tenant-owned metadata.

@@ -1,0 +1,5 @@
+type: string
+pattern: ^v1\.[0-9a-f]+$
+maxLength: 8192
+description: Versioned opaque key, not a credential. Do not decode or edit; grants and scope are rechecked
+  on every request.

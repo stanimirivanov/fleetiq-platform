@@ -1,0 +1,28 @@
+get:
+  operationId: getPropertyInterpretation
+  summary: Read exact property interpretation provenance
+  description: Requires exact telemetry.read. Reads original source, binding revision, exact property
+    version and first-append resolution cutoffs. Corrections do not rewrite this fact. Another tenant/target
+    or absent interpretation yields no provenance; no fallback to current metadata.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/history-asset-id.yaml
+  - $ref: ../../components/parameters/property-id.yaml
+  - $ref: ../../components/parameters/definition-version.yaml
+  - $ref: ../../components/parameters/history-interpretation.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/PropertyProvenanceSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml

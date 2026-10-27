@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.15",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device."
+    "version": "1.0.0-baseline.16",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
   },
   "servers": [
     {
@@ -12,6 +12,116 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/history": {
+      "get": {
+        "operationId": "listPropertyHistory",
+        "summary": "List bounded property history",
+        "description": "Requires exact telemetry.read. Returns all interpretations for one pinned property in a half-open event-time window of at most seven days. Ascending event time then full interpretation key provides stable ties, not latest-state precedence. Pages are not a snapshot: restart the window to observe late appends behind the cursor. No raw payload, archival history, correction collapse or implicit unit conversion.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/history-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/property-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-version"
+          },
+          {
+            "$ref": "#/components/parameters/history-start-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/history-end-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/history-limit"
+          },
+          {
+            "$ref": "#/components/parameters/history-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PropertyHistorySucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/interpretations/{interpretation}": {
+      "get": {
+        "operationId": "getPropertyInterpretation",
+        "summary": "Read exact property interpretation provenance",
+        "description": "Requires exact telemetry.read. Reads original source, binding revision, exact property version and first-append resolution cutoffs. Corrections do not rewrite this fact. Another tenant/target or absent interpretation yields no provenance; no fallback to current metadata.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/history-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/property-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-version"
+          },
+          {
+            "$ref": "#/components/parameters/history-interpretation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PropertyProvenanceSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/ingestion-diagnostics": {
       "get": {
         "operationId": "getDeviceIngestionDiagnostics",
@@ -2762,6 +2872,278 @@
   },
   "components": {
     "schemas": {
+      "HistoryMillis": {
+        "type": "string",
+        "pattern": "^-?(0|[1-9][0-9]*)$",
+        "maxLength": 20,
+        "description": "Exact signed 64-bit Unix milliseconds as a canonical decimal string; range is validated by the server."
+      },
+      "HistoryToken": {
+        "type": "string",
+        "pattern": "^v1\\.[0-9a-f]+$",
+        "maxLength": 8192,
+        "description": "Versioned opaque key, not a credential. Do not decode or edit; grants and scope are rechecked on every request."
+      },
+      "HistoryValue": {
+        "description": "Integer and decimal values are strings to preserve precision in browser clients. Decimal exponents are permitted. No unit conversion is performed.",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "const": "boolean",
+                "type": "string"
+              },
+              "value": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "const": "integer",
+                "type": "string"
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^-?(0|[1-9][0-9]*)$",
+                "maxLength": 20
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "const": "decimal",
+                "type": "string"
+              },
+              "value": {
+                "type": "string",
+                "pattern": "^-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "const": "text",
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "PropertyHistorySource": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "message_id",
+          "protocol_package_id",
+          "protocol_package_version",
+          "device_asset_id",
+          "endpoint_id",
+          "signal_id",
+          "output_index",
+          "device_recorded_at_ms",
+          "received_at_ms"
+        ],
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "protocol_package_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "protocol_package_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "device_asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "endpoint_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "signal_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "output_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "device_recorded_at_ms": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HistoryMillis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "received_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          }
+        }
+      },
+      "PropertyHistoryChange": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tenant_id",
+          "asset_id",
+          "property_id",
+          "binding_id",
+          "interpretation",
+          "property_version",
+          "binding_revision",
+          "event_time_basis",
+          "event_at_ms",
+          "first_resolution_effective_at_ms",
+          "first_resolution_known_at_ms",
+          "value",
+          "source_unit",
+          "quality",
+          "source"
+        ],
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "property_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "binding_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "interpretation": {
+            "$ref": "#/components/schemas/HistoryToken"
+          },
+          "property_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "binding_revision": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 20
+          },
+          "event_time_basis": {
+            "type": "string",
+            "enum": [
+              "device_recorded",
+              "received_at"
+            ]
+          },
+          "event_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "first_resolution_effective_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "first_resolution_known_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "value": {
+            "$ref": "#/components/schemas/HistoryValue"
+          },
+          "source_unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "uncertain",
+              "invalid"
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/PropertyHistorySource"
+          }
+        }
+      },
+      "PropertyHistoryPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "changes",
+          "next_after"
+        ],
+        "properties": {
+          "changes": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/PropertyHistoryChange"
+            }
+          },
+          "next_after": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HistoryToken"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "IngestionDiagnostics": {
         "type": "object",
         "additionalProperties": false,
@@ -4669,7 +5051,8 @@
           "access.manage",
           "metadata.manage",
           "metadata.read",
-          "protocol.manage"
+          "protocol.manage",
+          "telemetry.read"
         ]
       },
       "OperatorTenant": {
@@ -5384,6 +5767,76 @@
       }
     },
     "parameters": {
+      "telemetry-tenant-id": {
+        "name": "tenant_id",
+        "in": "path",
+        "required": true,
+        "description": "Tenant selected for fresh exact telemetry.read authorization; no other action implies telemetry access.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "history-asset-id": {
+        "name": "asset_id",
+        "in": "path",
+        "required": true,
+        "description": "Asset receiving the original interpretation. Missing targets produce empty history pages.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "history-start-at-ms": {
+        "name": "start_at_ms",
+        "in": "query",
+        "required": true,
+        "description": "Inclusive event-time start; end must be later and at most seven days away.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryMillis"
+        }
+      },
+      "history-end-at-ms": {
+        "name": "end_at_ms",
+        "in": "query",
+        "required": true,
+        "description": "Exclusive event-time end; this is not an arrival or metadata knowledge cutoff.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryMillis"
+        }
+      },
+      "history-limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Maximum complete interpretations returned; a private look-ahead detects continuation.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "history-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "description": "Exclusive cursor bound to tenant, asset, exact property version and window. Restart to see late appends behind it.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryToken"
+        }
+      },
+      "history-interpretation": {
+        "name": "interpretation",
+        "in": "path",
+        "required": true,
+        "description": "Exact immutable interpretation token returned by a history entry; not a page cursor.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryToken"
+        }
+      },
       "protocol-channel-id": {
         "name": "channel_id",
         "in": "path",
@@ -5924,6 +6377,101 @@
       }
     },
     "responses": {
+      "PropertyHistorySucceeded": {
+        "description": "Bounded hot-history interpretations. Empty is no matching durable interpretation, not proof of a known asset/property or healthy ingestion.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PropertyHistoryPage"
+            },
+            "example": {
+              "changes": [
+                {
+                  "interpretation": "v1.7b226d6573736167655f6964223a226d6573736167652d31222c227061636b6167655f6964223a2276656e646f722e70726f746f636f6c222c227061636b6167655f76657273696f6e223a2231222c226f75747075745f696e646578223a302c2262696e64696e675f6964223a2262696e64696e672d31222c227265766973696f6e223a2231222c226261736973223a226465766963655f7265636f72646564227d",
+                  "tenant_id": "tenant-a",
+                  "asset_id": "asset-a",
+                  "property_id": "electrical.voltage",
+                  "property_version": 1,
+                  "binding_id": "binding-1",
+                  "binding_revision": "1",
+                  "event_time_basis": "device_recorded",
+                  "event_at_ms": "1000",
+                  "first_resolution_effective_at_ms": "1000",
+                  "first_resolution_known_at_ms": "150",
+                  "value": {
+                    "kind": "integer",
+                    "value": "9223372036854775807"
+                  },
+                  "source_unit": "volt",
+                  "quality": "good",
+                  "source": {
+                    "message_id": "message-1",
+                    "protocol_package_id": "vendor.protocol",
+                    "protocol_package_version": "1",
+                    "output_index": 0,
+                    "device_asset_id": "gateway-1",
+                    "endpoint_id": "can-primary",
+                    "signal_id": "bus.voltage",
+                    "device_recorded_at_ms": "1000",
+                    "received_at_ms": "2000"
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "PropertyProvenanceSucceeded": {
+        "description": "Original immutable interpretation and decoded lineage, without raw wire bytes or current-metadata reinterpretation.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PropertyHistoryChange"
+            },
+            "example": {
+              "interpretation": "v1.7b226d6573736167655f6964223a226d6573736167652d31222c227061636b6167655f6964223a2276656e646f722e70726f746f636f6c222c227061636b6167655f76657273696f6e223a2231222c226f75747075745f696e646578223a302c2262696e64696e675f6964223a2262696e64696e672d31222c227265766973696f6e223a2231222c226261736973223a226465766963655f7265636f72646564227d",
+              "tenant_id": "tenant-a",
+              "asset_id": "asset-a",
+              "property_id": "electrical.voltage",
+              "property_version": 1,
+              "binding_id": "binding-1",
+              "binding_revision": "1",
+              "event_time_basis": "device_recorded",
+              "event_at_ms": "1000",
+              "first_resolution_effective_at_ms": "1000",
+              "first_resolution_known_at_ms": "150",
+              "value": {
+                "kind": "integer",
+                "value": "9223372036854775807"
+              },
+              "source_unit": "volt",
+              "quality": "good",
+              "source": {
+                "message_id": "message-1",
+                "protocol_package_id": "vendor.protocol",
+                "protocol_package_version": "1",
+                "output_index": 0,
+                "device_asset_id": "gateway-1",
+                "endpoint_id": "can-primary",
+                "signal_id": "bus.voltage",
+                "device_recorded_at_ms": "1000",
+                "received_at_ms": "2000"
+              }
+            }
+          }
+        }
+      },
       "IngestionDiagnosticsSucceeded": {
         "description": "Bounded snapshot of persisted ingestion evidence; no traffic is an empty sample, not an error.",
         "headers": {

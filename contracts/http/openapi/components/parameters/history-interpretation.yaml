@@ -1,0 +1,6 @@
+name: interpretation
+in: path
+required: true
+description: Exact immutable interpretation token returned by a history entry; not a page cursor.
+schema:
+  $ref: ../schemas/HistoryToken.yaml

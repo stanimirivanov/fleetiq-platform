@@ -5,3 +5,4 @@ enum:
   - "metadata.manage"
   - "metadata.read"
   - "protocol.manage"
+  - "telemetry.read"

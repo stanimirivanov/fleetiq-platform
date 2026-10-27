@@ -25,6 +25,7 @@ mod ingestion_diagnostics;
 mod mutation_guard;
 mod operator_tenants;
 mod platform_access_administration;
+mod property_history;
 mod protected_asset;
 mod protected_definitions;
 mod protected_device;
@@ -98,6 +99,10 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(property_history::router(
+            pool.clone(),
+            authentication.clone(),
+        ))
         .merge(ingestion_diagnostics::router(
             pool.clone(),
             authentication.clone(),

@@ -148,6 +148,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0118](0118-run-durable-semantic-processing.md) | Durable semantic claims, pinned selection and atomic history completion |
 
+| [0119](0119-expose-bounded-property-history.md) | Bounded telemetry-authorized property history and immutable provenance |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

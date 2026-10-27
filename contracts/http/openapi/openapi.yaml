@@ -1,12 +1,16 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.15"
-  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device."
+  version: "1.0.0-baseline.16"
+  description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/history":
+    $ref: ./paths/history/property-history.yaml
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/interpretations/{interpretation}":
+    $ref: ./paths/history/property-provenance.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/ingestion-diagnostics":
     $ref: ./paths/ingestion/device-diagnostics.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/protocol-routes/{channel_id}":
@@ -93,6 +97,18 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    HistoryMillis:
+      $ref: ./components/schemas/HistoryMillis.yaml
+    HistoryToken:
+      $ref: ./components/schemas/HistoryToken.yaml
+    HistoryValue:
+      $ref: ./components/schemas/HistoryValue.yaml
+    PropertyHistorySource:
+      $ref: ./components/schemas/PropertyHistorySource.yaml
+    PropertyHistoryChange:
+      $ref: ./components/schemas/PropertyHistoryChange.yaml
+    PropertyHistoryPage:
+      $ref: ./components/schemas/PropertyHistoryPage.yaml
     IngestionDiagnostics:
       $ref: ./components/schemas/IngestionDiagnostics.yaml
     IngestionDiagnosticCoverage:
@@ -286,6 +302,20 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    telemetry-tenant-id:
+      $ref: ./components/parameters/telemetry-tenant-id.yaml
+    history-asset-id:
+      $ref: ./components/parameters/history-asset-id.yaml
+    history-start-at-ms:
+      $ref: ./components/parameters/history-start-at-ms.yaml
+    history-end-at-ms:
+      $ref: ./components/parameters/history-end-at-ms.yaml
+    history-limit:
+      $ref: ./components/parameters/history-limit.yaml
+    history-after:
+      $ref: ./components/parameters/history-after.yaml
+    history-interpretation:
+      $ref: ./components/parameters/history-interpretation.yaml
     protocol-channel-id:
       $ref: ./components/parameters/protocol-channel-id.yaml
     protocol-tenant-id:
@@ -389,6 +419,10 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    PropertyHistorySucceeded:
+      $ref: ./components/responses/PropertyHistorySucceeded.yaml
+    PropertyProvenanceSucceeded:
+      $ref: ./components/responses/PropertyProvenanceSucceeded.yaml
     IngestionDiagnosticsSucceeded:
       $ref: ./components/responses/IngestionDiagnosticsSucceeded.yaml
     ProtocolRouteSucceeded:

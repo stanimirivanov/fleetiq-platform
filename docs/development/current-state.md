@@ -196,13 +196,14 @@ processor preserves unresolved observations and safe retry input. An exact
 history read returns the immutable source, target, event time, and first-append
 resolution context without re-resolving corrected metadata. A bounded keyset
 page lists all immutable interpretations of one exact decoded output with a
-shared source read. No production worker invokes this operation yet.
+shared source read. The durable semantic worker now owns fenced recovery and
+atomic history completion; protected property-window reads remain separate.
 
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
-deltas, cursor continuity, and resnapshot reasons. No production semantic worker,
-asset-wide property history query, calculator runtime, subscription transport,
-or operator dashboard exists yet.
+deltas, cursor continuity, and resnapshot reasons. Calculator runtime, live
+subscription transport and installed operator dashboard qualification remain
+planned.
 
 ## Runtime and data
 
@@ -442,7 +443,7 @@ as production product behavior.
 
 - No Teltonika or other real device package is distributed.
 - No package activation, connection routing, network transport, or command path.
-- No asset-wide semantic history query or end-to-end ingestion worker; exact
+- No archival semantic history query or installed end-to-end qualification; exact
   observation processing, source-scoped keyset pages, and append-only
   persistence exist.
 - No tenant/user administration, authentication, authorization, or audit UI.
@@ -495,3 +496,14 @@ peers or activate network listeners. See the [commissioning guide](../operations
 ## Bounded ingestion diagnostics
 
 The ingestion service and PostgreSQL adapter expose an authorized, read-only 64-frame diagnostic snapshot and bounded observed-source discovery. Durable processing states do not imply process/socket health; both liveness fields are explicitly unknown. The [real TCP/PostgreSQL measured fixture](../operations/ingestion-diagnostics.md) records transport/storage throughput, ACK latency and process memory separately from excluded Wasm/vendor costs. D06 and full-profile infrastructure qualification remain deferred.
+
+## Bounded property history and provenance
+
+Delivery plan PR 22 (issue #333) adds exact tenant `telemetry.read`, typed history
+services, an indexed set-based PostgreSQL page query with a five-second local
+statement timeout, and protected HTTP history/provenance routes. Page sizes are
+1–100 and mandatory half-open event windows span at most seven days. Cursors
+bind exact target and window; pages preserve late-data limitations, all original
+interpretations and precise string-encoded numeric values. See the
+[property history guide](../operations/property-history.md). Live/current state,
+archive completeness, D06 and full-profile qualification remain deferred.

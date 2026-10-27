@@ -1,0 +1,330 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Exact immutable binding joins; no latest-revision or current-metadata filter.\nSELECT message.message_id, message.protocol_package_id, message.protocol_package_version,\n       observation.output_index, change.binding_id, change.binding_revision,\n       change.event_time_basis, change.event_at_ms, change.resolution_effective_at_ms,\n       change.resolution_known_at_ms, binding.target_asset_id, binding.target_property_id,\n       binding.target_property_version, message.device_asset_id, message.received_at_ms,\n       observation.endpoint_id, observation.signal_id, observation.device_recorded_at_ms,\n       observation.value_kind, observation.value_boolean, observation.value_integer,\n       observation.value_decimal, observation.value_text, observation.source_unit, observation.quality\nFROM metadata.signal_binding_revisions AS binding\nJOIN history.asset_property_changes AS change\n  ON change.tenant_id = binding.tenant_id AND change.binding_id = binding.binding_id\n AND change.binding_revision = binding.revision\nJOIN ingestion.decoded_observations AS observation\n  ON observation.tenant_id = change.tenant_id AND observation.message_id = change.message_id\n AND observation.protocol_package_id = change.protocol_package_id\n AND observation.protocol_package_version = change.protocol_package_version\n AND observation.output_index = change.output_index\nJOIN ingestion.accepted_messages AS message\n  ON message.tenant_id = observation.tenant_id AND message.message_id = observation.message_id\n AND message.protocol_package_id = observation.protocol_package_id\n AND message.protocol_package_version = observation.protocol_package_version\nWHERE binding.tenant_id = $1 AND binding.target_asset_id = $2\n  AND binding.target_property_id = $3 AND binding.target_property_version = $4\n  AND change.event_at_ms >= $5 AND change.event_at_ms < $6\n  AND (change.event_at_ms, change.message_id, change.protocol_package_id,\n       change.protocol_package_version, change.output_index, change.binding_id,\n       change.binding_revision, change.event_time_basis)\n    > ($7::bigint, $8::text, $9::text, $10::text, $11::bigint, $12::text, $13::numeric, $14::text)\nORDER BY change.event_at_ms, change.message_id, change.protocol_package_id,\n         change.protocol_package_version, change.output_index, change.binding_id,\n         change.binding_revision, change.event_time_basis\nLIMIT $15\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "message_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "protocol_package_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "protocol_package_version",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "protocol_package_version"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "output_index",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "output_index"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "binding_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "binding_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "binding_revision",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "binding_revision"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "event_time_basis",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "event_time_basis"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "event_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "resolution_effective_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "resolution_effective_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "resolution_known_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.asset_property_changes",
+            "name": "resolution_known_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "target_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "target_property_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_id"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "target_property_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "metadata.signal_binding_revisions",
+            "name": "target_property_version"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "device_asset_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "device_asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "received_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.accepted_messages",
+            "name": "received_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "endpoint_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "endpoint_id"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "signal_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "signal_id"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "device_recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "device_recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "value_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "value_boolean",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_boolean"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "value_integer",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_integer"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "value_decimal",
+        "type_info": "Numeric",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_decimal"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "value_text",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "value_text"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "source_unit",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "source_unit"
+          }
+        }
+      },
+      {
+        "ordinal": 24,
+        "name": "quality",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "ingestion.decoded_observations",
+            "name": "quality"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Numeric",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "d9318e9c4c88855d09a90a8397b6b1c2babcf7bc4741dbbda29bf2e01aee1fbc"
+}

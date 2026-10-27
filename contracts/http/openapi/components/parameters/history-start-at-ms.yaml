@@ -1,0 +1,6 @@
+name: start_at_ms
+in: query
+required: true
+description: Inclusive event-time start; end must be later and at most seven days away.
+schema:
+  $ref: ../schemas/HistoryMillis.yaml

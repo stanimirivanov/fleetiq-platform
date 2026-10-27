@@ -82,23 +82,23 @@ impl DecodedObservationView for PostgresDecodedObservationView {
 
 /// Persistence representation joined from the observation and its parent
 /// message. The selected columns deliberately omit the raw wire payload.
-struct StoredObservationRow {
-    device_asset_id: String,
-    received_at_ms: i64,
-    endpoint_id: String,
-    signal_id: String,
-    device_recorded_at_ms: Option<i64>,
-    value_kind: String,
-    value_boolean: Option<bool>,
-    value_integer: Option<i64>,
-    value_decimal: Option<BigDecimal>,
-    value_text: Option<String>,
-    source_unit: Option<String>,
-    quality: String,
+pub(super) struct StoredObservationRow {
+    pub(super) device_asset_id: String,
+    pub(super) received_at_ms: i64,
+    pub(super) endpoint_id: String,
+    pub(super) signal_id: String,
+    pub(super) device_recorded_at_ms: Option<i64>,
+    pub(super) value_kind: String,
+    pub(super) value_boolean: Option<bool>,
+    pub(super) value_integer: Option<i64>,
+    pub(super) value_decimal: Option<BigDecimal>,
+    pub(super) value_text: Option<String>,
+    pub(super) source_unit: Option<String>,
+    pub(super) quality: String,
 }
 
 impl StoredObservationRow {
-    fn into_domain(
+    pub(super) fn into_domain(
         self,
         tenant_id: &TenantId,
         id: &DecodedObservationId,

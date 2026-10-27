@@ -3,6 +3,7 @@
 use std::future::Future;
 
 mod observation_page;
+mod property_page;
 
 use bigdecimal::BigDecimal;
 use fleetiq_domain::{

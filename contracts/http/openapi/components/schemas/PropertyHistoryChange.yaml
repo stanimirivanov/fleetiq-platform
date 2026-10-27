@@ -1,0 +1,70 @@
+type: object
+additionalProperties: false
+required:
+- tenant_id
+- asset_id
+- property_id
+- binding_id
+- interpretation
+- property_version
+- binding_revision
+- event_time_basis
+- event_at_ms
+- first_resolution_effective_at_ms
+- first_resolution_known_at_ms
+- value
+- source_unit
+- quality
+- source
+properties:
+  tenant_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  asset_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  property_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  binding_id:
+    type: string
+    minLength: 1
+    maxLength: 128
+  interpretation:
+    $ref: ./HistoryToken.yaml
+  property_version:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  binding_revision:
+    type: string
+    pattern: ^[1-9][0-9]*$
+    maxLength: 20
+  event_time_basis:
+    type: string
+    enum:
+    - device_recorded
+    - received_at
+  event_at_ms:
+    $ref: ./HistoryMillis.yaml
+  first_resolution_effective_at_ms:
+    $ref: ./HistoryMillis.yaml
+  first_resolution_known_at_ms:
+    $ref: ./HistoryMillis.yaml
+  value:
+    $ref: ./HistoryValue.yaml
+  source_unit:
+    type:
+    - string
+    - 'null'
+  quality:
+    type: string
+    enum:
+    - good
+    - uncertain
+    - invalid
+  source:
+    $ref: ./PropertyHistorySource.yaml

@@ -24,6 +24,22 @@ struct PublishedOperation {
 
 const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/history",
+        id: "listPropertyHistory",
+        post_id: None,
+        protected: true,
+        can_be_missing: false,
+        snapshot: false,
+    },
+    PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/interpretations/{interpretation}",
+        id: "getPropertyInterpretation",
+        post_id: None,
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/ingestion-diagnostics",
         id: "getDeviceIngestionDiagnostics",
         post_id: None,

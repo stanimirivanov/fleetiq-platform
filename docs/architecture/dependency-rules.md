@@ -283,3 +283,12 @@ The ingestion policy still has no database/process/Wasmtime dependency, and the
 server still does not link the Wasm adapter. JSON is confined to the supervised
 child boundary; native domain constructors validate its decoded values. See
 [ADR 0115](../adr/0115-persist-fenced-stateful-protocol-replay.md).
+
+## Protected property history reads
+
+`fleetiq-history` consumes `fleetiq-access` for typed `ReadTelemetry` evidence
+at its service boundary. Its read ports remain transport/storage independent.
+The composition root also consumes semantic interpretation identities for the
+HTTP token codec; PostgreSQL retains set-based row mapping. These are explicit
+normal internal edges in the architecture inventory, with no new external
+package or policy exception. See [ADR 0119](../adr/0119-expose-bounded-property-history.md).

@@ -255,6 +255,8 @@ Implementation tracked by issue #331: frozen time choices, durable selection, fe
 
 ### PR 22: Expose bounded property history and provenance
 
+Implementation tracked by issue #333; stacked on PR #332 while that semantic-worker PR remains open. D06 and full-profile qualification remain deferred.
+
 **M04 · fleetiq-platform · Can develop alongside PR 21**
 
 - **Objective & Scope:** Publish asset/property-scoped hot-history queries and exact interpretation provenance needed by the inspector.

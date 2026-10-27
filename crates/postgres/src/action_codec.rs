@@ -35,6 +35,7 @@ pub(crate) fn parse_platform_action(
 pub(crate) const fn tenant_action_name(action: TenantAction) -> &'static str {
     match action {
         TenantAction::ReadMetadata => "metadata.read",
+        TenantAction::ReadTelemetry => "telemetry.read",
         TenantAction::ManageMetadata => "metadata.manage",
         TenantAction::ManageAccess => "access.manage",
         TenantAction::ManageProtocols => "protocol.manage",
@@ -48,6 +49,7 @@ pub(crate) fn parse_tenant_action(
 ) -> Result<TenantAction, PostgresRepositoryError> {
     match value {
         "metadata.read" => Ok(TenantAction::ReadMetadata),
+        "telemetry.read" => Ok(TenantAction::ReadTelemetry),
         "metadata.manage" => Ok(TenantAction::ManageMetadata),
         "access.manage" => Ok(TenantAction::ManageAccess),
         "protocol.manage" => Ok(TenantAction::ManageProtocols),
@@ -76,8 +78,9 @@ mod tests {
             "tenant.lifecycle.manage",
         ),
     ];
-    const TENANT_CASES: [(TenantAction, &str); 4] = [
+    const TENANT_CASES: [(TenantAction, &str); 5] = [
         (TenantAction::ReadMetadata, "metadata.read"),
+        (TenantAction::ReadTelemetry, "telemetry.read"),
         (TenantAction::ManageMetadata, "metadata.manage"),
         (TenantAction::ManageAccess, "access.manage"),
         (TenantAction::ManageProtocols, "protocol.manage"),
