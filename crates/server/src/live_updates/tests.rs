@@ -174,7 +174,7 @@ async fn identity_reassignment_cannot_switch_the_actor_of_an_open_stream(pool: P
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-    sqlx::raw_sql("INSERT INTO identity.actors (actor_id) VALUES ('replacement-operator'); INSERT INTO identity.tenant_actor_memberships (tenant_id, actor_id) VALUES ('tenant-a', 'replacement-operator'); INSERT INTO identity.tenant_action_grants (tenant_id, actor_id, action) VALUES ('tenant-a', 'replacement-operator', 'telemetry.read'); UPDATE identity.external_actor_identities SET actor_id = 'replacement-operator' WHERE authority_id = 'workload' AND subject = 'operator';")
+    sqlx::raw_sql("INSERT INTO identity.actors (actor_id) VALUES ('replacement-operator'); INSERT INTO identity.tenant_action_grants (tenant_id, actor_id, action) VALUES ('tenant-a', 'replacement-operator', 'telemetry.read'); UPDATE identity.external_actor_identities SET actor_id = 'replacement-operator' WHERE authority_id = 'workload' AND subject = 'operator';")
         .execute(&pool).await.unwrap();
     let mut body = response.into_body().into_data_stream();
     let bytes = body.next().await.unwrap().unwrap();

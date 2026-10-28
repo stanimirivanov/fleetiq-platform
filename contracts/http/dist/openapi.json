@@ -6938,19 +6938,19 @@
             "example": "event: snapshot\nid: v1.1535cab62f71cb719738d83cc270034cf630e9f7a1c2178cd3e7a5278ce09049.1.0\ndata: {\"generation\":\"1\",\"revision\":\"0\",\"processed_count\":\"0\",\"pending\":true,\"evaluated_at_ms\":\"2000\",\"stale_after_ms\":30000,\"items\":[]}\n\nevent: stream-ended\ndata: {\"reason\":\"lease_expired\"}\n\n",
             "x-fleetiq-event-data": {
               "snapshot": {
-                "$ref": "../schemas/CurrentPropertySnapshot.yaml"
+                "$ref": "#/components/schemas/CurrentPropertySnapshot"
               },
               "replace": {
-                "$ref": "../schemas/PropertyLiveReplacement.yaml"
+                "$ref": "#/components/schemas/PropertyLiveReplacement"
               },
               "heartbeat": {
-                "$ref": "../schemas/PropertyLiveHeartbeat.yaml"
+                "$ref": "#/components/schemas/PropertyLiveHeartbeat"
               },
               "resnapshot-required": {
-                "$ref": "../schemas/PropertyLiveRecovery.yaml"
+                "$ref": "#/components/schemas/PropertyLiveRecovery"
               },
               "stream-ended": {
-                "$ref": "../schemas/PropertyLiveEnd.yaml"
+                "$ref": "#/components/schemas/PropertyLiveEnd"
               }
             }
           }

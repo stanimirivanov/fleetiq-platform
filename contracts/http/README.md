@@ -99,6 +99,12 @@ and quoting do not add structural entries. Larger schemas belong in registered
 schema components. Recursive YAML aliases fail; ordinary schema `$ref` reuse
 remains supported.
 
+The `x-fleetiq-event-data` SSE metadata is literal extension data. Its schema
+pointers use `#/components/schemas/<Name>` against the assembled entrypoint;
+Redocly deliberately does not resolve or rewrite extension payloads. Register
+each named schema in the root index. Rust contract tests resolve every event
+pointer and validate the published event examples against those schemas.
+
 ## Sensor regression tests
 
 `pnpm test:openapi` runs database-independent Node tests without rewriting the

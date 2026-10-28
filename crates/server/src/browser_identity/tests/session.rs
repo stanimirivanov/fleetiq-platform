@@ -179,8 +179,6 @@ async fn live_delivery_reauthenticates_a_revoked_browser_session(
     ))
     .execute(&pool)
     .await?;
-    sqlx::query("INSERT INTO identity.tenant_actor_memberships (tenant_id, actor_id) VALUES ('tenant-a', 'actor-a');")
-        .execute(&pool).await?;
     sqlx::query("INSERT INTO identity.tenant_action_grants (tenant_id, actor_id, action) VALUES ('tenant-a', 'actor-a', 'telemetry.read')")
         .execute(&pool).await?;
     seed_session(
