@@ -11,6 +11,7 @@ rust-version.workspace = true
 fleetiq-projection = { path = "../projection" }
 fleetiq-semantics = { path = "../semantics" }
 axum.workspace = true
+futures-util.workspace = true
 cookie.workspace = true
 getrandom.workspace = true
 openidconnect.workspace = true

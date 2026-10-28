@@ -11,3 +11,6 @@ mod snapshot;
 pub use freshness::{Freshness, freshness};
 pub use ports::{CurrentStateRepository, ProjectionMaintenance, ProjectionTick};
 pub use snapshot::{CurrentPropertySnapshot, CurrentStateService};
+
+mod delivery;
+pub use delivery::{DeliveryDecision, DeliveryPosition, RESUME_REVISION_WINDOW, delivery_decision};

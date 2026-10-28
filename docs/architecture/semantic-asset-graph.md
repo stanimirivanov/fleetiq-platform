@@ -110,4 +110,5 @@ The [current-property projector](../operations/current-property-state.md) materi
 immutable interpretations independently of graph traversal. Exact property
 snapshots require telemetry.read and preserve quality/provenance; metadata.read
 does not reveal telemetry. Event-time arbitration, atomic revisions and rebuild
-generations belong to projection, while live delivery remains a later slice.
+generations belong to projection. The [live transport](../operations/property-live-updates.md)
+synchronizes complete exact-property state without reinterpreting the graph.

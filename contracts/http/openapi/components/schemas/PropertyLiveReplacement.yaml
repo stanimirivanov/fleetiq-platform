@@ -1,0 +1,9 @@
+type: object
+additionalProperties: false
+required: [base_revision, snapshot]
+properties:
+  base_revision:
+    $ref: ./ProjectionCounter.yaml
+  snapshot:
+    $ref: ./CurrentPropertySnapshot.yaml
+description: Replace the complete exact-property state only when the held generation and revision match this base. The replacement snapshot revision advances and its generation is unchanged. Intermediate committed interpretations may coalesce; use history for event evidence. Persist the SSE id only after successful application.

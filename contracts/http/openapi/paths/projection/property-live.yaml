@@ -1,0 +1,28 @@
+get:
+  operationId: streamCurrentProperty
+  summary: Resume authorized latest-state updates for one installed property
+  description: Requires fresh telemetry.read before cursor/scope discovery and again before every emitted data or heartbeat. Uses the durable consistent current projection, not a process-local broadcast buffer. Reconnect cursors bind exact scope and generation/revision; replacements safely coalesce at most 256 forward tenant revisions. Rebuilds, future positions and expired windows terminate with explicit resnapshot. Scope changes need a fresh baseline. There is no historical event replay guarantee, broker or projection write. Browser sessions, identity mappings, actor activation and grants are revalidated, never cached for the connection. Reads have an eight-second deadline; cancellation drops their futures. Connection count is capped at 64 per process and frames/lease/demand are bounded. Already serialized bytes cannot be revoked from network buffers; proxy socket-write/idle deadlines remain deployment responsibilities.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/history-asset-id.yaml
+  - $ref: ../../components/parameters/property-id.yaml
+  - $ref: ../../components/parameters/definition-version.yaml
+  - $ref: ../../components/parameters/live-last-event-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/PropertyLiveSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '429':
+      $ref: ../../components/responses/LiveCapacityExceeded.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

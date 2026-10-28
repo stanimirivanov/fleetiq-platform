@@ -1,5 +1,5 @@
 //! Protected exact-property snapshots; no projection writes or metadata resolution.
-mod dto;
+pub(crate) mod dto;
 #[cfg(test)]
 mod tests;
 use crate::protected_request::{self, ProtectedRequestError, RequestAuthenticator};
@@ -85,7 +85,7 @@ async fn snapshot<A: RequestAuthenticator>(
         .map_err(|_| ProtectedRequestError::Internal)?;
     Ok(protected_request::no_store(Json(body).into_response()))
 }
-fn target(asset: String, property: String, version: &str) -> Option<SignalTarget> {
+pub(crate) fn target(asset: String, property: String, version: &str) -> Option<SignalTarget> {
     if version.is_empty() || !version.bytes().all(|b| b.is_ascii_digit()) {
         return None;
     }

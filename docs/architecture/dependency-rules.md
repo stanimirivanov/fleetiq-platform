@@ -302,3 +302,13 @@ contracts. PostgreSQL and the server consume its narrow read/maintenance ports.
 It has no direct external dependencies; `fleetiq-live` remains a contract crate.
 The shared immutable history row mapper stays private to the PostgreSQL adapter.
 See [ADR 0121](../adr/0121-materialize-durable-current-property-state.md).
+
+
+## Current-property live delivery
+
+The server owns the explicit normal futures-util dependency for pull-driven SSE
+unfolding. Its version is already locked; it does not enter domain, live-contract
+or projection policy crates. Projection owns pure coalesced continuity policy
+using its existing dependencies and read port. No persistence edge, grant
+exception, detached producer or new broker is added. See
+[ADR 0122](../adr/0122-deliver-authorized-property-state-over-sse.md).

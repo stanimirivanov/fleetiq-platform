@@ -167,3 +167,46 @@ async fn logout_requires_exact_origin_and_custom_csrf_header_then_revokes(
     assert_eq!(after.status(), StatusCode::UNAUTHORIZED);
     Ok(())
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn live_delivery_reauthenticates_a_revoked_browser_session(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    use futures_util::StreamExt;
+    seed_identity(&pool).await?;
+    sqlx::raw_sql(include_str!(
+        "../../../../postgres/tests/property_history/topology.sql"
+    ))
+    .execute(&pool)
+    .await?;
+    sqlx::query("INSERT INTO identity.tenant_action_grants (tenant_id, actor_id, action) VALUES ('tenant-a', 'actor-a', 'telemetry.read')")
+        .execute(&pool).await?;
+    seed_session(
+        &pool,
+        UnixTimeMillis::new(now().expect("test clock").get() + 60_000),
+    )
+    .await?;
+    let app = crate::live_updates::router(
+        pool.clone(),
+        BrowserRequestAuthenticator::new(pool.clone(), &config()),
+    );
+    let response = app
+        .oneshot(request(
+            "/api/v1/tenants/tenant-a/assets/asset-a/properties/electrical.voltage/versions/1/live",
+            Some(&secret_cookie(SESSION_COOKIE, SESSION_SECRET)),
+        ))
+        .await?;
+    assert_eq!(response.status(), StatusCode::OK);
+    let mut body = response.into_body().into_data_stream();
+    let first = body.next().await.ok_or("missing initial event")??;
+    assert!(std::str::from_utf8(&first)?.contains("event: snapshot"));
+    PostgresBrowserIdentityRepository::new(pool)
+        .delete_session(&digest(SESSION_SECRET))
+        .await?;
+    let control = tokio::time::timeout(std::time::Duration::from_secs(15), body.next())
+        .await?
+        .ok_or("missing session control")??;
+    assert!(std::str::from_utf8(&control)?.contains("authentication_required"));
+    assert!(!std::str::from_utf8(&control)?.contains("id:"));
+    Ok(())
+}

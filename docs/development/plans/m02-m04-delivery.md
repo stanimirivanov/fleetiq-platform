@@ -297,6 +297,8 @@ Implementation tracked by issue #337: exact-property snapshots, atomic pending/c
 
 ### PR 26: Deliver authorized resumable live updates
 
+Implementation tracked by issue #339: exact-property demand-driven SSE, durable-position coalesced replacements and explicit recovery. Heavy gates run on CI; D06/full-profile qualification remain deferred.
+
 **M04 · fleetiq-platform · Depends on PR 24**
 
 - **Objective & Scope:** Implement one initial live transport with bounded delivery, reconnect continuity, and explicit resnapshot recovery.

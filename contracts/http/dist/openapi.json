@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.18",
+    "version": "1.0.0-baseline.19",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
   },
   "servers": [
@@ -12,6 +12,61 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/live": {
+      "get": {
+        "operationId": "streamCurrentProperty",
+        "summary": "Resume authorized latest-state updates for one installed property",
+        "description": "Requires fresh telemetry.read before cursor/scope discovery and again before every emitted data or heartbeat. Uses the durable consistent current projection, not a process-local broadcast buffer. Reconnect cursors bind exact scope and generation/revision; replacements safely coalesce at most 256 forward tenant revisions. Rebuilds, future positions and expired windows terminate with explicit resnapshot. Scope changes need a fresh baseline. There is no historical event replay guarantee, broker or projection write. Browser sessions, identity mappings, actor activation and grants are revalidated, never cached for the connection. Reads have an eight-second deadline; cancellation drops their futures. Connection count is capped at 64 per process and frames/lease/demand are bounded. Already serialized bytes cannot be revoked from network buffers; proxy socket-write/idle deadlines remain deployment responsibilities.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/history-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/property-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-version"
+          },
+          {
+            "$ref": "#/components/parameters/live-last-event-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PropertyLiveSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/LiveCapacityExceeded"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/current": {
       "get": {
         "operationId": "getCurrentPropertySnapshot",
@@ -2982,6 +3037,92 @@
   },
   "components": {
     "schemas": {
+      "PropertyLiveStream": {
+        "type": "string",
+        "description": "UTF-8 SSE wire stream with blank-line-delimited events. Event data schemas are declared in the response x-fleetiq-event-data map. Only snapshot/replace events assign an opaque id. Parse complete events independently of HTTP chunk boundaries and id/data ordering."
+      },
+      "PropertyLiveEnd": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "authentication_required",
+              "access_denied",
+              "scope_missing",
+              "unavailable",
+              "lease_expired",
+              "payload_limit"
+            ]
+          }
+        },
+        "description": "Terminal stream-ended event without an id. Close the stream. Authentication/access/scope failures invalidate displayed state and must not trigger blind reconnect. After lease expiry, reconnect with the last successfully applied cursor; unavailable errors need bounded backoff. Payload-limit failure needs operator action, not a retry loop."
+      },
+      "PropertyLiveRecovery": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "projection_reset",
+              "revision_mismatch",
+              "resume_window_exceeded",
+              "slow_consumer"
+            ]
+          }
+        },
+        "description": "Terminal resnapshot-required event without an id or a new revision. Close this stream, discard its baseline/cursor and open a new connection without Last-Event-ID. Never repeatedly reconnect using the rejected cursor."
+      },
+      "PropertyLiveHeartbeat": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generation",
+          "revision",
+          "evaluated_at_ms",
+          "pending"
+        ],
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "evaluated_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "pending": {
+            "type": "boolean"
+          }
+        },
+        "description": "Freshly authorized sampled pending/evaluation status at the unchanged projection position. No SSE id is assigned; this never advances the applied cursor. Evaluate age using the held change event time and the snapshot stale_after_ms, independently of quality."
+      },
+      "PropertyLiveReplacement": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "base_revision",
+          "snapshot"
+        ],
+        "properties": {
+          "base_revision": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/CurrentPropertySnapshot"
+          }
+        },
+        "description": "Replace the complete exact-property state only when the held generation and revision match this base. The replacement snapshot revision advances and its generation is unchanged. Intermediate committed interpretations may coalesce; use history for event evidence. Persist the SSE id only after successful application."
+      },
       "ProjectionCounter": {
         "type": "string",
         "pattern": "^(0|[1-9][0-9]*)$",
@@ -3051,7 +3192,7 @@
             }
           }
         },
-        "description": "Complete exact installed asset/property/version state at one repeatable database view. Empty items means no value has been materialized, including pending work; it does not claim no observations or bindings exist. Generation changes on rebuild; revision advances on each committed nonempty batch and rebuild and never resets. Counters are scoped to the tenant, not the property. No live replay or cursor continuity is promised yet."
+        "description": "Complete exact installed asset/property/version state at one repeatable database view. Empty items means no value has been materialized, including pending work; it does not claim no observations or bindings exist. Generation changes on rebuild; revision advances on each committed nonempty batch and rebuild and never resets. Counters are scoped to the tenant, not the property. The REST snapshot has no SSE cursor; the live operation issues its own scope-bound position and coalesced replacement contract."
       },
       "SemanticGraphBudget": {
         "type": "object",
@@ -6081,6 +6222,17 @@
       }
     },
     "parameters": {
+      "live-last-event-id": {
+        "name": "Last-Event-ID",
+        "in": "header",
+        "required": false,
+        "description": "Opaque v1 scope-bound generation/revision cursor from the last successfully applied snapshot or replacement. Never construct or modify it. Duplicate headers or a cursor from another tenant/asset/property/version are invalid. It is not authorization. Future, rebuilt or more than 256 tenant revisions old positions require a new snapshot. Resume replaces latest complete state, not every intermediate event.",
+        "schema": {
+          "type": "string",
+          "maxLength": 110,
+          "pattern": "^v1\\.[a-f0-9]{64}\\.(0|[1-9][0-9]{0,18})\\.(0|[1-9][0-9]{0,18})$"
+        }
+      },
       "graph-depth": {
         "name": "depth",
         "in": "query",
@@ -6739,6 +6891,71 @@
       }
     },
     "responses": {
+      "LiveCapacityExceeded": {
+        "description": "This process already holds 64 live streams. No waiting queue is allocated. Close unused subscriptions and retry with bounded backoff.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Retry-After": {
+            "schema": {
+              "type": "integer",
+              "const": 2
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:live-capacity",
+              "title": "Live connection capacity reached",
+              "status": 429
+            }
+          }
+        }
+      },
+      "PropertyLiveSucceeded": {
+        "description": "Authorized exact-property SSE state synchronization. Event data is compact JSON under 60 KiB; total frames are below 64 KiB. Only snapshot/replace carry opaque id fields. A healthy demanded stream samples every two seconds, emits unchanged-status heartbeats about every 16 seconds and has a 60-second lease. More than 30 seconds between demands requires resnapshot. No detached producer or buffered change queue exists. Stop/recovery controls close the stream; clients must close native EventSource on terminal events. Browser cookies stay same-origin; never place credentials in URLs. After headers, failures are terminal events rather than HTTP problem responses.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "X-Accel-Buffering": {
+            "schema": {
+              "type": "string",
+              "const": "no"
+            }
+          }
+        },
+        "content": {
+          "text/event-stream": {
+            "schema": {
+              "$ref": "#/components/schemas/PropertyLiveStream"
+            },
+            "example": "event: snapshot\nid: v1.1535cab62f71cb719738d83cc270034cf630e9f7a1c2178cd3e7a5278ce09049.1.0\ndata: {\"generation\":\"1\",\"revision\":\"0\",\"processed_count\":\"0\",\"pending\":true,\"evaluated_at_ms\":\"2000\",\"stale_after_ms\":30000,\"items\":[]}\n\nevent: stream-ended\ndata: {\"reason\":\"lease_expired\"}\n\n",
+            "x-fleetiq-event-data": {
+              "snapshot": {
+                "$ref": "#/components/schemas/CurrentPropertySnapshot"
+              },
+              "replace": {
+                "$ref": "#/components/schemas/PropertyLiveReplacement"
+              },
+              "heartbeat": {
+                "$ref": "#/components/schemas/PropertyLiveHeartbeat"
+              },
+              "resnapshot-required": {
+                "$ref": "#/components/schemas/PropertyLiveRecovery"
+              },
+              "stream-ended": {
+                "$ref": "#/components/schemas/PropertyLiveEnd"
+              }
+            }
+          }
+        }
+      },
       "CurrentPropertySucceeded": {
         "description": "Exact-property snapshot with immutable quality/provenance, projection continuity and evaluation-time freshness.",
         "headers": {

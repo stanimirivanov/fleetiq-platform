@@ -135,6 +135,7 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
         normal: &[
             "axum",
             "cookie",
+            "futures-util",
             "getrandom",
             "openidconnect",
             "serde",

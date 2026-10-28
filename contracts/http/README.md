@@ -99,6 +99,12 @@ and quoting do not add structural entries. Larger schemas belong in registered
 schema components. Recursive YAML aliases fail; ordinary schema `$ref` reuse
 remains supported.
 
+The `x-fleetiq-event-data` SSE metadata is literal extension data. Its schema
+pointers use `#/components/schemas/<Name>` against the assembled entrypoint;
+Redocly deliberately does not resolve or rewrite extension payloads. Register
+each named schema in the root index. Rust contract tests resolve every event
+pointer and validate the published event examples against those schemas.
+
 ## Sensor regression tests
 
 `pnpm test:openapi` runs database-independent Node tests without rewriting the
@@ -210,3 +216,11 @@ tenant-scoped decimal generation/revision/processed counters, committed pending
 work and evaluation-time freshness while reusing immutable history evidence.
 No stream continuation or automatic correction retraction is promised. See the
 [current-state guide](../../docs/operations/current-property-state.md).
+
+
+Baseline.19 adds `streamCurrentProperty`, the exact-property `/live` SSE sibling.
+Only snapshot/replacement events advance their opaque SSE id; terminal recovery
+requires discarding the baseline. The response's `x-fleetiq-event-data` extension
+publishes the five JSON data schemas while the wire content remains
+text/event-stream. This is coalesced latest-state replacement, not replay of all
+interpretations. See the [live protocol guide](../../docs/operations/property-live-updates.md).

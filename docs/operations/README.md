@@ -75,3 +75,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Bounded semantic graph](semantic-graph.md): rooted temporal exploration, traversal budgets and incompleteness.
 
 - [Current property state and projector](current-property-state.md): atomic batches, snapshots, freshness, role grants and tenant rebuild.
+
+- [Exact-property live updates](property-live-updates.md) — authorized SSE, coalesced resume, terminal recovery and resource bounds.

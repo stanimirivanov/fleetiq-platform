@@ -21,4 +21,4 @@ properties:
     maxItems: 1
     items:
       $ref: ./CurrentPropertyItem.yaml
-description: Complete exact installed asset/property/version state at one repeatable database view. Empty items means no value has been materialized, including pending work; it does not claim no observations or bindings exist. Generation changes on rebuild; revision advances on each committed nonempty batch and rebuild and never resets. Counters are scoped to the tenant, not the property. No live replay or cursor continuity is promised yet.
+description: Complete exact installed asset/property/version state at one repeatable database view. Empty items means no value has been materialized, including pending work; it does not claim no observations or bindings exist. Generation changes on rebuild; revision advances on each committed nonempty batch and rebuild and never resets. Counters are scoped to the tenant, not the property. The REST snapshot has no SSE cursor; the live operation issues its own scope-bound position and coalesced replacement contract.
