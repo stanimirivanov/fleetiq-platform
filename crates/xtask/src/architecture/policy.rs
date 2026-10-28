@@ -79,6 +79,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
             "fleetiq-history",
             "fleetiq-live",
             "fleetiq-semantics",
+            "fleetiq-telemetry",
         ],
         development: NONE,
         build: NONE,

@@ -1,0 +1,16 @@
+type: object
+additionalProperties: false
+required:
+- assets
+- communication_devices
+- mapped_assets
+- assets_with_current_properties
+properties:
+  assets:
+    $ref: ./ProjectionCounter.yaml
+  communication_devices:
+    $ref: ./ProjectionCounter.yaml
+  mapped_assets:
+    $ref: ./ProjectionCounter.yaml
+  assets_with_current_properties:
+    $ref: ./ProjectionCounter.yaml

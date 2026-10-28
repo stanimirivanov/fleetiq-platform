@@ -1,4 +1,5 @@
 //! Rebuildable current state; database functions own atomic set-based writes.
+mod fleet;
 mod maintenance;
 mod snapshot;
 use sqlx::PgPool;

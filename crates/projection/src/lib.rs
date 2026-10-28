@@ -14,3 +14,10 @@ pub use snapshot::{CurrentPropertySnapshot, CurrentStateService};
 
 mod delivery;
 pub use delivery::{DeliveryDecision, DeliveryPosition, RESUME_REVISION_WINDOW, delivery_decision};
+
+mod fleet;
+pub use fleet::{
+    CoordinateEncoding, FleetAsset, FleetQuery, FleetReadError, FleetReadRepository,
+    FleetReadService, FleetSnapshot, FleetSummary, InvalidFleetQuery, LocationMapping,
+    LocationState, ObservedLocation, classify_location,
+};

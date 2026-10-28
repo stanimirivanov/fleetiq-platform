@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history and durable current-property snapshots now exist; live transport remains planned.
+- The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history, durable current-property snapshots and authorized exact-property SSE now exist.
 
 - [Bounded TCP ingestion](../operations/tcp-ingestion.md) now accepts explicitly
   configured identity-v1 channels through isolated live execution and fenced durable
@@ -54,7 +54,7 @@
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and `fleetiq-live` projection
   contracts exist; property-change append and exact reads are durable, while production
-  calculator stores and live transport do not exist; current-property materialization is durable.
+  calculator stores remain planned; current-property materialization and authorized SSE are durable-state consumers.
 - The complete development stack runs through Compose on isolated loopback
   ports; production deployment remains a later milestone.
 - The HTTP surface exposes version discovery and bounded problem details under
@@ -201,9 +201,8 @@ atomic history completion; protected property-window reads remain separate.
 
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
-deltas, cursor continuity, and resnapshot reasons. Calculator runtime, live
-subscription transport and installed operator dashboard qualification remain
-planned.
+deltas, cursor continuity, and resnapshot reasons. Calculator runtime and installed operator dashboard qualification remain
+planned. Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data
 
@@ -528,7 +527,7 @@ exact-property snapshots. `project-current` and explicit `rebuild-current` proce
 modes check schema without DDL. Rebuild advances generation/revision and preserves
 later pending commits. The [current-state guide](../operations/current-property-state.md)
 records role grants, deadlines, freshness, correction limits and recovery.
-Inspector live activation (PR 27), D06 and full-profile qualification remain deferred.
+Inspector live activation is implemented in fleetiq-ui PR #89. D06 and full-profile qualification remain deferred.
 
 
 ## Authorized current-property SSE
@@ -539,5 +538,16 @@ resnapshot/terminal controls and fresh authority around reads. The stream is
 pull-driven, with bounded connection/payload/time budgets and no new SQL state
 or background producer queue. See the [live operations guide](../operations/property-live-updates.md).
 Heavy PostgreSQL/transport/Rust execution remains on CI; D06 and full-profile
-qualification remain deferred. Inspector activation is PR 27. This is latest-state
+qualification remain deferred. Inspector activation is implemented in fleetiq-ui PR #89. This is latest-state
 synchronization, not lossless history replay or a capacity/deployment qualification.
+
+## Observed fleet locations and coverage
+
+Product-plan PR 28 (issue #341) adds one dual-authorized tenant fleet read with
+explicit exact-version coordinate mapping, conservative source/device-time
+coherence, exact coordinates, unlocated asset rows and whole-tenant inventory /
+projection coverage counts. Reads reuse existing metadata/history/current state
+in a bounded repeatable view without new schema or a fleet worker. See the
+[fleet snapshot guide](../operations/fleet-location-snapshots.md). Geodetic map
+and overview consumers are PRs 29–30. D06 and full-profile qualification remain
+deferred; no device-health or connectivity inference is provided.

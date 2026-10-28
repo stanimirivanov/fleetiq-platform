@@ -1,0 +1,35 @@
+type: object
+additionalProperties: false
+required:
+- latitude
+- longitude
+- quality
+- freshness
+- latitude_change
+- longitude_change
+properties:
+  latitude:
+    type: string
+    minLength: 1
+    maxLength: 128
+    description: Exact signed degrees in [-90,90]; no floating-point conversion.
+  longitude:
+    type: string
+    minLength: 1
+    maxLength: 128
+    description: Exact signed degrees in [-180,180].
+  quality:
+    type: string
+    enum:
+    - good
+    - uncertain
+  freshness:
+    type: string
+    enum:
+    - fresh
+    - stale
+    - future
+  latitude_change:
+    $ref: ./PropertyHistoryChange.yaml
+  longitude_change:
+    $ref: ./PropertyHistoryChange.yaml

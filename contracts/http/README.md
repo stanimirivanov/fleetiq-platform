@@ -224,3 +224,13 @@ requires discarding the baseline. The response's `x-fleetiq-event-data` extensio
 publishes the five JSON data schemas while the wire content remains
 text/event-stream. This is coalesced latest-state replacement, not replay of all
 interpretations. See the [live protocol guide](../../docs/operations/property-live-updates.md).
+
+## Fleet snapshot
+
+Baseline.20 adds the dual-authorized tenant fleet read. Explicit property/version
+mapping and encoding, unlocated asset states, conservative coordinate provenance,
+whole-tenant inventory/coverage totals and bounded C-ordered pages follow
+[ADR 0123](../../docs/adr/0123-expose-observed-fleet-locations-and-coverage.md).
+The [operations guide](../../docs/operations/fleet-location-snapshots.md) defines
+query context, quality/age, receipt-time exclusions and count semantics. No map,
+health or installation qualification follows from publishing this contract.

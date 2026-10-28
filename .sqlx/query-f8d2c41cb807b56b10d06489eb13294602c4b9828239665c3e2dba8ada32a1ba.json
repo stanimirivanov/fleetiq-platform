@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Exact immutable mapping definitions. Missing definitions differ from unsupported\n-- representation. No property-name or vendor convention supplies units/scaling.\nSELECT COUNT(*) AS \"found!\",\n       COALESCE(bool_and(CASE WHEN $6::boolean THEN value_kind='integer' AND canonical_unit IS NULL\n                            ELSE value_kind IN ('integer','decimal') AND canonical_unit IS NOT DISTINCT FROM 'deg' END), false) AS \"supported!\"\nFROM metadata.property_definitions\nWHERE tenant_id=$1 AND ((property_id=$2 AND version=$3) OR (property_id=$4 AND version=$5))\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "found!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "supported!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "f8d2c41cb807b56b10d06489eb13294602c4b9828239665c3e2dba8ada32a1ba"
+}

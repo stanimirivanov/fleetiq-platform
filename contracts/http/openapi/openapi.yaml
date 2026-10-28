@@ -1,12 +1,14 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.19"
+  version: "1.0.0-baseline.20"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/fleet":
+    $ref: ./paths/projection/fleet.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/live":
     $ref: ./paths/projection/property-live.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/current":
@@ -103,6 +105,18 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    FleetLocationMapping:
+      $ref: ./components/schemas/FleetLocationMapping.yaml
+    FleetSummary:
+      $ref: ./components/schemas/FleetSummary.yaml
+    FleetPoint:
+      $ref: ./components/schemas/FleetPoint.yaml
+    FleetLocation:
+      $ref: ./components/schemas/FleetLocation.yaml
+    FleetAsset:
+      $ref: ./components/schemas/FleetAsset.yaml
+    FleetSnapshot:
+      $ref: ./components/schemas/FleetSnapshot.yaml
     PropertyLiveStream:
       $ref: ./components/schemas/PropertyLiveStream.yaml
     PropertyLiveEnd:
@@ -328,6 +342,20 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    fleet-latitude-property:
+      $ref: ./components/parameters/fleet-latitude-property.yaml
+    fleet-longitude-property:
+      $ref: ./components/parameters/fleet-longitude-property.yaml
+    fleet-latitude-version:
+      $ref: ./components/parameters/fleet-latitude-version.yaml
+    fleet-longitude-version:
+      $ref: ./components/parameters/fleet-longitude-version.yaml
+    fleet-encoding:
+      $ref: ./components/parameters/fleet-encoding.yaml
+    fleet-limit:
+      $ref: ./components/parameters/fleet-limit.yaml
+    fleet-after:
+      $ref: ./components/parameters/fleet-after.yaml
     live-last-event-id:
       $ref: ./components/parameters/live-last-event-id.yaml
     graph-depth:
@@ -455,6 +483,8 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    FleetSnapshotSucceeded:
+      $ref: ./components/responses/FleetSnapshotSucceeded.yaml
     LiveCapacityExceeded:
       $ref: ./components/responses/LiveCapacityExceeded.yaml
     PropertyLiveSucceeded:

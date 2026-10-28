@@ -1,0 +1,8 @@
+name: encoding
+in: query
+required: true
+schema:
+  type: string
+  enum:
+  - degrees
+  - e7

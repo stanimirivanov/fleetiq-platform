@@ -20,7 +20,7 @@ slices retain the dependencies and milestone boundaries below.
 
 ## Approved sequence
 
-The approved sequence contains **33 PR-sized slices**, based on the [milestone scopes](../../../docs/roadmap/milestones.md), the implemented backend, and the `fleetiq-ux/docs/PLANS.md` (UX execution plan).
+The approved sequence contains **33 PR-sized slices**, based on the [milestone scopes](../../../docs/roadmap/milestones.md), the implemented backend, and the `fleetiq-ui/docs/PLANS.md` (UX execution plan).
 
 | Milestone | PRs | Completion outcome |
 |---|---:|---|
@@ -44,10 +44,10 @@ Every backend API slice includes its DTOs, OpenAPI definitions, examples, author
 
 ### PR 1: Complete the connected operator user guide
 
-**M04 · fleetiq-ux · Available immediately**
+**M04 · fleetiq-ui · Available immediately**
 
 - **Objective & Scope:** Complete the previously agreed guide for the connected metadata experience. Keep sample-only operational workflows clearly separated.
-- **Target Layers / Files:** `fleetiq-ux/apps/web-e2e` (apps/web-e2e), `fleetiq-ux/tools/user-guide` (tools/user-guide), execution and frontend documentation.
+- **Target Layers / Files:** `fleetiq-ui/apps/web-e2e` (apps/web-e2e), `fleetiq-ui/tools/user-guide` (tools/user-guide), execution and frontend documentation.
 - **Contracts & Boundaries:** Existing APIs only. Cover sign-in/account/sign-out, tenant selection and denial, catalogue navigation, inspector definitions, temporal relationships, source/target bindings, recovery, keyboard use, narrow layouts, and themes.
 - **Harness Gate:** U, `pnpm guide:generate`, artifact inspection, and publication qualification against the final source.
 
@@ -62,10 +62,10 @@ Every backend API slice includes its DTOs, OpenAPI definitions, examples, author
 
 ### PR 3: Add tenant selection and capability-aware navigation
 
-**M02 · fleetiq-ux · Depends on PR 2**
+**M02 · fleetiq-ui · Depends on PR 2**
 
 - **Objective & Scope:** Replace manual-only tenant entry with a complete bounded selection workflow and capability-aware controls.
-- **Target Layers / Files:** `fleetiq-ux/apps/web/src/features/identity` (identity feature), app composition, metadata context controls, generated client, browser journeys.
+- **Target Layers / Files:** `fleetiq-ui/apps/web/src/features/identity` (identity feature), app composition, metadata context controls, generated client, browser journeys.
 - **Contracts & Boundaries:** Preserve tenant selection in the URL. Clear superseded evidence on account or tenant changes; never treat enabled controls as authorization.
 - **Harness Gate:** U; expired-session, revoked-access, empty catalogue, pagination, URL/history, and account-switch tests.
 
@@ -288,10 +288,10 @@ Implementation tracked by issue #337: exact-property snapshots, atomic pending/c
 
 ### PR 25: Connect inspector readings, provenance, and hot history
 
-**M04 · fleetiq-ux · Depends on PRs 22–24**
+**M04 · fleetiq-ui · Depends on PRs 22–24**
 
 - **Objective & Scope:** Replace unavailable operational panels with complete property evidence and bounded historical exploration.
-- **Target Layers / Files:** `fleetiq-ux/apps/web/src/features/assets` (assets feature), connected inspector/controllers, history presentation, generated client, POM.
+- **Target Layers / Files:** `fleetiq-ui/apps/web/src/features/assets` (assets feature), connected inspector/controllers, history presentation, generated client, POM.
 - **Contracts & Boundaries:** Missing, stale, denied, and unresolved values remain distinct. Preserve exact definitions, units, times, and provenance; charts have accessible table parity.
 - **Harness Gate:** U; malformed/unsafe values, stale results, cancellation, empty history, permissions, responsive layouts, and inspector procedures.
 
@@ -308,14 +308,18 @@ Implementation tracked by issue #339: exact-property demand-driven SSE, durable-
 
 ### PR 27: Connect live subscriptions and recovery in the inspector
 
-**M04 · fleetiq-ux · Depends on PRs 25–26**
+UI implementation merged in fleetiq-ui PR #89 (issue #88). The known upstream-dependent go-jose v3 image finding remains separate from this product slice.
+
+**M04 · fleetiq-ui · Depends on PRs 25–26**
 
 - **Objective & Scope:** Deliver fine-grained live updates with complete lifecycle and recovery behavior.
-- **Target Layers / Files:** `fleetiq-ux/apps/web/src/features/assets` (assets feature), production stream adapter, live controllers, shared runtime where appropriate.
+- **Target Layers / Files:** `fleetiq-ui/apps/web/src/features/assets` (assets feature), production stream adapter, live controllers, shared runtime where appropriate.
 - **Contracts & Boundaries:** Reconcile snapshots/deltas, duplicates, gaps, and resnapshots. Dispose streams on account/tenant/asset changes; keep Effect execution outside presentation.
 - **Harness Gate:** U; real transport fixtures, dropped connections, late messages, disposal, bounded reconnect, and high-rate rendering/resource measurements.
 
 ### PR 28: Expose observed locations and fleet summaries
+
+Implementation tracked by issue #341: explicit location mapping, conservative coordinate pairing and consistent inventory/coverage summaries. Heavy gates run on CI.
 
 **M04 · fleetiq-platform · Depends on PRs 19 and 24**
 
@@ -326,37 +330,37 @@ Implementation tracked by issue #339: exact-property demand-driven SSE, durable-
 
 ### PR 29: Deliver the connected geodetic map workbench
 
-**M04 · fleetiq-ux · Depends on PR 28**
+**M04 · fleetiq-ui · Depends on PR 28**
 
 - **Objective & Scope:** Replace the schematic canvas with a MapLibre adapter and configured self-hosted basemap, preserving list/selection/context parity.
-- **Target Layers / Files:** `fleetiq-ux/apps/web/src/features/assets/ui/map` (map UI), location models/adapters, map lifecycle owner, browser scenarios.
+- **Target Layers / Files:** `fleetiq-ui/apps/web/src/features/assets/ui/map` (map UI), location models/adapters, map lifecycle owner, browser scenarios.
 - **Contracts & Boundaries:** Consume observed geodetic positions. Missing positions remain selectable; tile configuration is deployment-owned. Keep SDK calls isolated and map code route-loadable.
 - **Harness Gate:** U; coordinate validation, map/list/URL parity, allowed network destinations, WebGL cleanup, SDK footprint review, and measured map workloads.
 
 ### PR 30: Connect fleet overview and operational navigation
 
-**M04 · fleetiq-ux · Depends on PRs 25, 28, and 29**
+**M04 · fleetiq-ui · Depends on PRs 25, 28, and 29**
 
 - **Objective & Scope:** Connect overview summaries, data coverage, and location context while preserving the approved visual hierarchy.
-- **Target Layers / Files:** `fleetiq-ux/apps/web/src/features/assets/ui/overview` (overview UI), summary adapters/models, route composition, POM and guide.
+- **Target Layers / Files:** `fleetiq-ui/apps/web/src/features/assets/ui/overview` (overview UI), summary adapters/models, route composition, POM and guide.
 - **Contracts & Boundaries:** Use server-owned aggregates rather than accumulated page counts. Keep alert, utilization, and health claims unavailable until their defined M05 counterparts exist.
 - **Harness Gate:** U; partial/stale summaries, scope consistency, navigation/history, responsive layouts, and representative fleet-size measurements.
 
 ### PR 31: Add asset and relationship commissioning to the registry
 
-**M04 · fleetiq-ux · Depends on PRs 3, 8–10, and 23**
+**M04 · fleetiq-ui · Depends on PRs 3, 8–10, and 23**
 
 - **Objective & Scope:** Deliver complete asset creation and temporal relationship workflows, including forms, conflicts, cancellation, and authoritative refresh.
-- **Target Layers / Files:** `fleetiq-ux/apps/web/src/features/assets` (assets feature), connected registry sections, command adapters, POM and guide.
+- **Target Layers / Files:** `fleetiq-ui/apps/web/src/features/assets` (assets feature), connected registry sections, command adapters, POM and guide.
 - **Contracts & Boundaries:** Select discoverable exact definition versions. Preserve relationship direction, tenant ownership, explicit temporal semantics, and audit references.
 - **Harness Gate:** U; denied writes, stale revisions, ambiguous outcomes, double submission, navigation cancellation, and commissioning journeys.
 
 ### PR 32: Add signal-binding authoring and attribution review
 
-**M04 · fleetiq-ux · Depends on PRs 10, 19, and 31**
+**M04 · fleetiq-ui · Depends on PRs 10, 19, and 31**
 
 - **Objective & Scope:** Deliver the full source-to-property mapping workflow with explicit append/correction and lineage review.
-- **Target Layers / Files:** `fleetiq-ux/apps/web/src/features/assets` (assets feature), source/target evidence panels, mapping forms, adapters, POM.
+- **Target Layers / Files:** `fleetiq-ui/apps/web/src/features/assets` (assets feature), source/target evidence panels, mapping forms, adapters, POM.
 - **Contracts & Boundaries:** Use registered/observed source discovery and pinned target properties. Empty binding results do not establish sensor inventory; corrections create new revisions.
 - **Harness Gate:** U; exact-source scoping, incompatible properties, temporal conflicts, denied writes, cancellation, and mapping procedures.
 
@@ -372,4 +376,3 @@ Implementation tracked by issue #339: exact-property demand-driven SSE, durable-
 Parallel work can begin immediately with **PR 1, PR 2, PR 11, and PR 13**. After the shared administration boundary, identity, grant, definition, and deployment work can proceed independently. Teltonika development can run alongside artifact activation; semantic workers and read models can develop against durable fixtures while TCP work continues. Once backend contracts merge, inspector, mapping, map, and overview teams can work on separate complete slices.
 
 By M04’s end, **overview, map, inspector, and registry** gain connected operational capabilities. The **Alerts** concept retains its completed visual preview and explicit unavailable production state until M05 provides real evaluation and lifecycle semantics.
-

@@ -11,6 +11,7 @@ mod bootstrap;
 mod browser_identity;
 mod command;
 mod current_state;
+mod fleet;
 mod live_updates;
 mod projection_worker;
 pub use projection_worker::{ProjectionRunError, rebuild_current_state, run_projection_worker};
@@ -104,6 +105,7 @@ where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
     Router::new()
+        .merge(fleet::router(pool.clone(), authentication.clone()))
         .merge(live_updates::router(pool.clone(), authentication.clone()))
         .merge(current_state::router(pool.clone(), authentication.clone()))
         .merge(semantic_graph::router(pool.clone(), authentication.clone()))

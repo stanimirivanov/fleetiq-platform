@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+fleetiq-telemetry = { path = "../telemetry" }
 fleetiq-access = { path = "../access" }
 fleetiq-domain = { path = "../domain" }
 fleetiq-semantics = { path = "../semantics" }
