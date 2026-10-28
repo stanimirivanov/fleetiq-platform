@@ -312,3 +312,11 @@ or projection policy crates. Projection owns pure coalesced continuity policy
 using its existing dependencies and read port. No persistence edge, grant
 exception, detached producer or new broker is added. See
 [ADR 0122](../adr/0122-deliver-authorized-property-state-over-sse.md).
+
+## Fleet location evidence
+
+Projection policy directly consumes the telemetry contract's source-quality
+vocabulary while validating coordinate grouping and precision. This adds one
+explicit inward `fleetiq-projection -> fleetiq-telemetry` edge, with no external
+library or transport dependency. Metadata/history reconstruction and set-based
+query ownership remain in PostgreSQL; see [ADR 0123](../adr/0123-expose-observed-fleet-locations-and-coverage.md).

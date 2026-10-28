@@ -1,0 +1,38 @@
+description: Consistent bounded tenant inventory and conservative observed-location evidence. Counts cover the full tenant,
+  not the page suffix. No connectivity/health inference.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/FleetSnapshot.yaml
+    example:
+      generation: '1'
+      revision: '0'
+      pending: true
+      evaluated_at_ms: '2000'
+      stale_after_ms: 30000
+      mapping:
+        latitude:
+          id: position.latitude
+          version: 1
+        longitude:
+          id: position.longitude
+          version: 1
+        encoding: e7
+      mapping_supported: true
+      summary:
+        assets: '1'
+        communication_devices: '0'
+        mapped_assets: '1'
+        assets_with_current_properties: '0'
+      assets:
+      - asset_id: asset-a
+        display_name: Equipment A
+        asset_type:
+          id: equipment
+          version: 1
+        location:
+          status: missing
+      next_after: null

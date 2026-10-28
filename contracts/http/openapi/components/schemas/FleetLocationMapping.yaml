@@ -1,0 +1,28 @@
+type: object
+additionalProperties: false
+required:
+- latitude
+- longitude
+- encoding
+properties:
+  latitude: &id001
+    type: object
+    additionalProperties: false
+    required:
+    - id
+    - version
+    properties:
+      id:
+        type: string
+        minLength: 1
+        maxLength: 128
+      version:
+        type: integer
+        minimum: 1
+        maximum: 4294967295
+  longitude: *id001
+  encoding:
+    type: string
+    enum:
+    - degrees
+    - e7

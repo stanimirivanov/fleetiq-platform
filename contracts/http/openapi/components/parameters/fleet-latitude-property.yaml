@@ -1,0 +1,8 @@
+name: latitude_property
+in: query
+required: true
+description: Explicit property identity; no name or vehicle convention is assumed.
+schema:
+  type: string
+  minLength: 1
+  maxLength: 128

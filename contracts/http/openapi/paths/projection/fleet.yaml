@@ -1,0 +1,37 @@
+get:
+  operationId: getFleetSnapshot
+  summary: Read bounded observed locations and tenant fleet coverage
+  description: Requires both fresh metadata.read and telemetry.read for the same actor/tenant before mapping discovery. Explicit
+    immutable axis mapping and encoding; no persisted mapping write. Coordinates require distinct source outputs/signals,
+    the same accepted message, decoder release, device, endpoint and device-recorded event time, without repeated signal/timestamp
+    ambiguity. Receipt-only pairing is unavailable. Invalid quality never falls back to older good values. Degrees require
+    numeric deg definitions/source units; E7 requires unitless integer definitions/source values. Full tenant inventory/projection
+    counts and bounded asset rows share a repeatable read snapshot. Unsupported mappings, missing/stale/future/invalid positions
+    and unlocated assets remain explicit. No online/health inference. C-ordered exclusive after cursor; preserve all mapping
+    parameters across pages. SQL statements have 2s deadlines and the read has an 8s total deadline. No last-good fallback
+    or hidden interpolation.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/fleet-latitude-property.yaml
+  - $ref: ../../components/parameters/fleet-longitude-property.yaml
+  - $ref: ../../components/parameters/fleet-latitude-version.yaml
+  - $ref: ../../components/parameters/fleet-longitude-version.yaml
+  - $ref: ../../components/parameters/fleet-encoding.yaml
+  - $ref: ../../components/parameters/fleet-limit.yaml
+  - $ref: ../../components/parameters/fleet-after.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/FleetSnapshotSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

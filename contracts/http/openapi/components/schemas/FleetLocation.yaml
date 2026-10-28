@@ -1,0 +1,26 @@
+oneOf:
+- type: object
+  additionalProperties: false
+  required:
+  - status
+  properties:
+    status:
+      type: string
+      enum:
+      - unmapped
+      - incompatible_mapping
+      - missing
+      - incoherent
+      - invalid_coordinates
+      - invalid_quality
+- type: object
+  additionalProperties: false
+  required:
+  - status
+  - point
+  properties:
+    status:
+      type: string
+      const: observed
+    point:
+      $ref: ./FleetPoint.yaml

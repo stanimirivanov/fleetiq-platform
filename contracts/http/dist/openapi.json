@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.19",
+    "version": "1.0.0-baseline.20",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
   },
   "servers": [
@@ -12,6 +12,67 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/fleet": {
+      "get": {
+        "operationId": "getFleetSnapshot",
+        "summary": "Read bounded observed locations and tenant fleet coverage",
+        "description": "Requires both fresh metadata.read and telemetry.read for the same actor/tenant before mapping discovery. Explicit immutable axis mapping and encoding; no persisted mapping write. Coordinates require distinct source outputs/signals, the same accepted message, decoder release, device, endpoint and device-recorded event time, without repeated signal/timestamp ambiguity. Receipt-only pairing is unavailable. Invalid quality never falls back to older good values. Degrees require numeric deg definitions/source units; E7 requires unitless integer definitions/source values. Full tenant inventory/projection counts and bounded asset rows share a repeatable read snapshot. Unsupported mappings, missing/stale/future/invalid positions and unlocated assets remain explicit. No online/health inference. C-ordered exclusive after cursor; preserve all mapping parameters across pages. SQL statements have 2s deadlines and the read has an 8s total deadline. No last-good fallback or hidden interpolation.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/fleet-latitude-property"
+          },
+          {
+            "$ref": "#/components/parameters/fleet-longitude-property"
+          },
+          {
+            "$ref": "#/components/parameters/fleet-latitude-version"
+          },
+          {
+            "$ref": "#/components/parameters/fleet-longitude-version"
+          },
+          {
+            "$ref": "#/components/parameters/fleet-encoding"
+          },
+          {
+            "$ref": "#/components/parameters/fleet-limit"
+          },
+          {
+            "$ref": "#/components/parameters/fleet-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/FleetSnapshotSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/live": {
       "get": {
         "operationId": "streamCurrentProperty",
@@ -3037,6 +3098,262 @@
   },
   "components": {
     "schemas": {
+      "FleetLocationMapping": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "latitude",
+          "longitude",
+          "encoding"
+        ],
+        "properties": {
+          "latitude": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4294967295
+              }
+            }
+          },
+          "longitude": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "version"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4294967295
+              }
+            }
+          },
+          "encoding": {
+            "type": "string",
+            "enum": [
+              "degrees",
+              "e7"
+            ]
+          }
+        }
+      },
+      "FleetSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assets",
+          "communication_devices",
+          "mapped_assets",
+          "assets_with_current_properties"
+        ],
+        "properties": {
+          "assets": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "communication_devices": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "mapped_assets": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "assets_with_current_properties": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          }
+        }
+      },
+      "FleetPoint": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "latitude",
+          "longitude",
+          "quality",
+          "freshness",
+          "latitude_change",
+          "longitude_change"
+        ],
+        "properties": {
+          "latitude": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Exact signed degrees in [-90,90]; no floating-point conversion."
+          },
+          "longitude": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Exact signed degrees in [-180,180]."
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "good",
+              "uncertain"
+            ]
+          },
+          "freshness": {
+            "type": "string",
+            "enum": [
+              "fresh",
+              "stale",
+              "future"
+            ]
+          },
+          "latitude_change": {
+            "$ref": "#/components/schemas/PropertyHistoryChange"
+          },
+          "longitude_change": {
+            "$ref": "#/components/schemas/PropertyHistoryChange"
+          }
+        }
+      },
+      "FleetLocation": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "unmapped",
+                  "incompatible_mapping",
+                  "missing",
+                  "incoherent",
+                  "invalid_coordinates",
+                  "invalid_quality"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "point"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "const": "observed"
+              },
+              "point": {
+                "$ref": "#/components/schemas/FleetPoint"
+              }
+            }
+          }
+        ]
+      },
+      "FleetAsset": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "asset_id",
+          "display_name",
+          "asset_type",
+          "location"
+        ],
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "asset_type": {
+            "$ref": "#/components/schemas/AssetTypeRef"
+          },
+          "location": {
+            "$ref": "#/components/schemas/FleetLocation"
+          }
+        }
+      },
+      "FleetSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generation",
+          "revision",
+          "pending",
+          "evaluated_at_ms",
+          "stale_after_ms",
+          "mapping",
+          "mapping_supported",
+          "summary",
+          "assets",
+          "next_after"
+        ],
+        "properties": {
+          "generation": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/ProjectionCounter"
+          },
+          "pending": {
+            "type": "boolean"
+          },
+          "evaluated_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "stale_after_ms": {
+            "type": "integer",
+            "const": 30000
+          },
+          "mapping": {
+            "$ref": "#/components/schemas/FleetLocationMapping"
+          },
+          "mapping_supported": {
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/FleetSummary"
+          },
+          "assets": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/FleetAsset"
+            }
+          },
+          "next_after": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 1,
+            "maxLength": 128
+          }
+        }
+      },
       "PropertyLiveStream": {
         "type": "string",
         "description": "UTF-8 SSE wire stream with blank-line-delimited events. Event data schemas are declared in the response x-fleetiq-event-data map. Only snapshot/replace events assign an opaque id. Parse complete events independently of HTTP chunk boundaries and id/data ordering."
@@ -6222,6 +6539,81 @@
       }
     },
     "parameters": {
+      "fleet-latitude-property": {
+        "name": "latitude_property",
+        "in": "query",
+        "required": true,
+        "description": "Explicit property identity; no name or vehicle convention is assumed.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "fleet-longitude-property": {
+        "name": "longitude_property",
+        "in": "query",
+        "required": true,
+        "description": "Explicit property identity; no name or vehicle convention is assumed.",
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "fleet-latitude-version": {
+        "name": "latitude_version",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
+      "fleet-longitude-version": {
+        "name": "longitude_version",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
+      "fleet-encoding": {
+        "name": "encoding",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "degrees",
+            "e7"
+          ]
+        }
+      },
+      "fleet-limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "fleet-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
       "live-last-event-id": {
         "name": "Last-Event-ID",
         "in": "header",
@@ -6891,6 +7283,60 @@
       }
     },
     "responses": {
+      "FleetSnapshotSucceeded": {
+        "description": "Consistent bounded tenant inventory and conservative observed-location evidence. Counts cover the full tenant, not the page suffix. No connectivity/health inference.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/FleetSnapshot"
+            },
+            "example": {
+              "generation": "1",
+              "revision": "0",
+              "pending": true,
+              "evaluated_at_ms": "2000",
+              "stale_after_ms": 30000,
+              "mapping": {
+                "latitude": {
+                  "id": "position.latitude",
+                  "version": 1
+                },
+                "longitude": {
+                  "id": "position.longitude",
+                  "version": 1
+                },
+                "encoding": "e7"
+              },
+              "mapping_supported": true,
+              "summary": {
+                "assets": "1",
+                "communication_devices": "0",
+                "mapped_assets": "1",
+                "assets_with_current_properties": "0"
+              },
+              "assets": [
+                {
+                  "asset_id": "asset-a",
+                  "display_name": "Equipment A",
+                  "asset_type": {
+                    "id": "equipment",
+                    "version": 1
+                  },
+                  "location": {
+                    "status": "missing"
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
       "LiveCapacityExceeded": {
         "description": "This process already holds 64 live streams. No waiting queue is allocated. Close unused subscriptions and retry with bounded backoff.",
         "headers": {

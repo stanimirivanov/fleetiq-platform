@@ -159,3 +159,5 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.
+
+| [0123](0123-expose-observed-fleet-locations-and-coverage.md) | Explicit observed locations and consistent fleet inventory/coverage reads |

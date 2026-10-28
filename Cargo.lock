@@ -1155,6 +1155,7 @@ dependencies = [
  "fleetiq-history",
  "fleetiq-live",
  "fleetiq-semantics",
+ "fleetiq-telemetry",
 ]
 
 [[package]]

@@ -77,3 +77,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Current property state and projector](current-property-state.md): atomic batches, snapshots, freshness, role grants and tenant rebuild.
 
 - [Exact-property live updates](property-live-updates.md) — authorized SSE, coalesced resume, terminal recovery and resource bounds.
+
+- [Observed fleet locations and coverage](fleet-location-snapshots.md): explicit mapping, coherent source evidence and bounded snapshot interpretation.
