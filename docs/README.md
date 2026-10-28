@@ -79,3 +79,7 @@ For bounded metadata exploration, use the
 For durable current-property materialization, authorized snapshots and atomic replay,
 use the [current-state operations guide](operations/current-property-state.md) and
 [ADR 0121](adr/0121-materialize-durable-current-property-state.md).
+
+For demand-driven current-property SSE, scoped resume and recovery, use the
+[live operations guide](operations/property-live-updates.md) and
+[ADR 0122](adr/0122-deliver-authorized-property-state-over-sse.md).

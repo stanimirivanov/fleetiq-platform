@@ -1,0 +1,8 @@
+name: Last-Event-ID
+in: header
+required: false
+description: Opaque v1 scope-bound generation/revision cursor from the last successfully applied snapshot or replacement. Never construct or modify it. Duplicate headers or a cursor from another tenant/asset/property/version are invalid. It is not authorization. Future, rebuilt or more than 256 tenant revisions old positions require a new snapshot. Resume replaces latest complete state, not every intermediate event.
+schema:
+  type: string
+  maxLength: 110
+  pattern: '^v1\.[a-f0-9]{64}\.(0|[1-9][0-9]{0,18})\.(0|[1-9][0-9]{0,18})$'

@@ -1,0 +1,13 @@
+type: object
+additionalProperties: false
+required: [generation, revision, evaluated_at_ms, pending]
+properties:
+  generation:
+    $ref: ./ProjectionCounter.yaml
+  revision:
+    $ref: ./ProjectionCounter.yaml
+  evaluated_at_ms:
+    $ref: ./HistoryMillis.yaml
+  pending:
+    type: boolean
+description: Freshly authorized sampled pending/evaluation status at the unchanged projection position. No SSE id is assigned; this never advances the applied cursor. Evaluate age using the held change event time and the snapshot stale_after_ms, independently of quality.

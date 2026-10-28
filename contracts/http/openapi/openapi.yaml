@@ -1,12 +1,14 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.18"
+  version: "1.0.0-baseline.19"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/live":
+    $ref: ./paths/projection/property-live.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/current":
     $ref: ./paths/projection/current-property.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/semantic-graph":
@@ -101,6 +103,16 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    PropertyLiveStream:
+      $ref: ./components/schemas/PropertyLiveStream.yaml
+    PropertyLiveEnd:
+      $ref: ./components/schemas/PropertyLiveEnd.yaml
+    PropertyLiveRecovery:
+      $ref: ./components/schemas/PropertyLiveRecovery.yaml
+    PropertyLiveHeartbeat:
+      $ref: ./components/schemas/PropertyLiveHeartbeat.yaml
+    PropertyLiveReplacement:
+      $ref: ./components/schemas/PropertyLiveReplacement.yaml
     ProjectionCounter:
       $ref: ./components/schemas/ProjectionCounter.yaml
     CurrentPropertyItem:
@@ -316,6 +328,8 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    live-last-event-id:
+      $ref: ./components/parameters/live-last-event-id.yaml
     graph-depth:
       $ref: ./components/parameters/graph-depth.yaml
     graph-asset-limit:
@@ -441,6 +455,10 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    LiveCapacityExceeded:
+      $ref: ./components/responses/LiveCapacityExceeded.yaml
+    PropertyLiveSucceeded:
+      $ref: ./components/responses/PropertyLiveSucceeded.yaml
     CurrentPropertySucceeded:
       $ref: ./components/responses/CurrentPropertySucceeded.yaml
     SemanticGraphSucceeded:

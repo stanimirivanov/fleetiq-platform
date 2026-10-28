@@ -1,0 +1,2 @@
+type: string
+description: UTF-8 SSE wire stream with blank-line-delimited events. Event data schemas are declared in the response x-fleetiq-event-data map. Only snapshot/replace events assign an opaque id. Parse complete events independently of HTTP chunk boundaries and id/data ordering.

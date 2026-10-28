@@ -4,7 +4,7 @@ use fleetiq_domain::UnixTimeMillis;
 use fleetiq_projection::{CurrentPropertySnapshot, Freshness, freshness};
 use serde::Serialize;
 #[derive(Serialize)]
-pub(super) struct Body {
+pub(crate) struct Body {
     generation: String,
     revision: String,
     processed_count: String,
@@ -19,7 +19,7 @@ struct Item {
     change: ChangeBody,
 }
 impl Body {
-    pub(super) fn new(
+    pub(crate) fn new(
         snapshot: &CurrentPropertySnapshot,
         at: UnixTimeMillis,
     ) -> Result<Self, serde_json::Error> {

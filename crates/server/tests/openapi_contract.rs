@@ -24,6 +24,14 @@ struct PublishedOperation {
 
 const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/live",
+        id: "streamCurrentProperty",
+        post_id: None,
+        protected: true,
+        can_be_missing: true,
+        snapshot: false,
+    },
+    PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/current",
         id: "getCurrentPropertySnapshot",
         post_id: None,
@@ -517,10 +525,10 @@ fn published_examples_satisfy_their_response_schemas() -> Result<(), Box<dyn Err
             .expect("documented operation must have responses");
         for (status, response) in responses {
             let response = resolve_component(&contract, response);
-            let media = if status == "200" {
-                "application/json"
-            } else {
-                "application/problem+json"
+            let media = match (status.as_str(), expected.id) {
+                ("200", "streamCurrentProperty") => "text/event-stream",
+                ("200", _) => "application/json",
+                _ => "application/problem+json",
             };
             let body = &response["content"][media];
             let schema_ref = body["schema"]["$ref"]
@@ -726,5 +734,57 @@ fn discovery_contract_rejects_invented_or_empty_capabilities() -> Result<(), Box
             .iter()
             .any(|parameter| parameter["name"] == "after" && parameter["in"] == "query")
     );
+    Ok(())
+}
+
+#[test]
+fn live_contract_publishes_cursor_limits_and_terminal_event_schemas() -> Result<(), Box<dyn Error>>
+{
+    let spec = contract()?;
+    let path = "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/live";
+    let operation = &spec["paths"][path]["get"];
+    let parameters = operation["parameters"].as_array().unwrap();
+    let cursor = parameters
+        .iter()
+        .map(|p| resolve_component(&spec, p))
+        .find(|p| p["name"] == "Last-Event-ID")
+        .unwrap();
+    assert_eq!(cursor["in"], "header");
+    assert_eq!(cursor["schema"]["maxLength"], 110);
+    let response = resolve_component(&spec, &operation["responses"]["200"]);
+    let content = &response["content"]["text/event-stream"];
+    assert!(content["example"].as_str().unwrap().ends_with("\n\n"));
+    let events = &content["x-fleetiq-event-data"];
+    assert_eq!(events.as_object().unwrap().len(), 5);
+    for name in [
+        "snapshot",
+        "replace",
+        "heartbeat",
+        "resnapshot-required",
+        "stream-ended",
+    ] {
+        assert!(resolve_component(&spec, &events[name]).is_object());
+    }
+    assert!(operation["responses"]["429"].is_object());
+    // Unlike the wire string schema, event-data validation checks actual DTOs.
+    for event in content["example"]
+        .as_str()
+        .unwrap()
+        .split("\n\n")
+        .filter(|e| !e.is_empty())
+    {
+        let name = event
+            .lines()
+            .find_map(|line| line.strip_prefix("event: "))
+            .unwrap();
+        let data = event
+            .lines()
+            .find_map(|line| line.strip_prefix("data: "))
+            .unwrap();
+        let reference = events[name]["$ref"].as_str().unwrap();
+        let component = reference.strip_prefix("#/components/schemas/").unwrap();
+        let data: Value = serde_json::from_str(data)?;
+        assert!(validate_component_example(&spec, component, &data)?);
+    }
     Ok(())
 }

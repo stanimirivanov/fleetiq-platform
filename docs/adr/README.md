@@ -154,6 +154,8 @@ when relevant. Link the code, schema, or contract whose meaning the ADR governs.
 
 | [0121](0121-materialize-durable-current-property-state.md) | Atomic durable current-property projection, replay and authorized snapshots |
 
+| [0122](0122-deliver-authorized-property-state-over-sse.md) | Demand-driven authorized SSE replacement delivery and scoped recovery |
+
 The range links open the first record in that group; neighboring numbered files
 contain the subsequent decisions. Search this directory by concept before
 introducing a new record.

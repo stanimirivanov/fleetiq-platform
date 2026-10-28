@@ -1,0 +1,8 @@
+type: object
+additionalProperties: false
+required: [reason]
+properties:
+  reason:
+    type: string
+    enum: [authentication_required, access_denied, scope_missing, unavailable, lease_expired, payload_limit]
+description: Terminal stream-ended event without an id. Close the stream. Authentication/access/scope failures invalidate displayed state and must not trigger blind reconnect. After lease expiry, reconnect with the last successfully applied cursor; unavailable errors need bounded backoff. Payload-limit failure needs operator action, not a retry loop.

@@ -1,0 +1,31 @@
+description: Authorized exact-property SSE state synchronization. Event data is compact JSON under 60 KiB; total frames are below 64 KiB. Only snapshot/replace carry opaque id fields. A healthy demanded stream samples every two seconds, emits unchanged-status heartbeats about every 16 seconds and has a 60-second lease. More than 30 seconds between demands requires resnapshot. No detached producer or buffered change queue exists. Stop/recovery controls close the stream; clients must close native EventSource on terminal events. Browser cookies stay same-origin; never place credentials in URLs. After headers, failures are terminal events rather than HTTP problem responses.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+  X-Accel-Buffering:
+    schema:
+      type: string
+      const: "no"
+content:
+  text/event-stream:
+    schema:
+      $ref: ../schemas/PropertyLiveStream.yaml
+    example: |+
+      event: snapshot
+      id: v1.1535cab62f71cb719738d83cc270034cf630e9f7a1c2178cd3e7a5278ce09049.1.0
+      data: {"generation":"1","revision":"0","processed_count":"0","pending":true,"evaluated_at_ms":"2000","stale_after_ms":30000,"items":[]}
+
+      event: stream-ended
+      data: {"reason":"lease_expired"}
+
+    x-fleetiq-event-data:
+      snapshot:
+        $ref: ../schemas/CurrentPropertySnapshot.yaml
+      replace:
+        $ref: ../schemas/PropertyLiveReplacement.yaml
+      heartbeat:
+        $ref: ../schemas/PropertyLiveHeartbeat.yaml
+      resnapshot-required:
+        $ref: ../schemas/PropertyLiveRecovery.yaml
+      stream-ended:
+        $ref: ../schemas/PropertyLiveEnd.yaml

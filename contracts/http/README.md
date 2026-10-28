@@ -210,3 +210,11 @@ tenant-scoped decimal generation/revision/processed counters, committed pending
 work and evaluation-time freshness while reusing immutable history evidence.
 No stream continuation or automatic correction retraction is promised. See the
 [current-state guide](../../docs/operations/current-property-state.md).
+
+
+Baseline.19 adds `streamCurrentProperty`, the exact-property `/live` SSE sibling.
+Only snapshot/replacement events advance their opaque SSE id; terminal recovery
+requires discarding the baseline. The response's `x-fleetiq-event-data` extension
+publishes the five JSON data schemas while the wire content remains
+text/event-stream. This is coalesced latest-state replacement, not replay of all
+interpretations. See the [live protocol guide](../../docs/operations/property-live-updates.md).

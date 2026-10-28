@@ -1,0 +1,8 @@
+type: object
+additionalProperties: false
+required: [reason]
+properties:
+  reason:
+    type: string
+    enum: [projection_reset, revision_mismatch, resume_window_exceeded, slow_consumer]
+description: Terminal resnapshot-required event without an id or a new revision. Close this stream, discard its baseline/cursor and open a new connection without Last-Event-ID. Never repeatedly reconnect using the rejected cursor.

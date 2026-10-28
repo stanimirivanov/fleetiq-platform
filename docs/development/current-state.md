@@ -528,4 +528,16 @@ exact-property snapshots. `project-current` and explicit `rebuild-current` proce
 modes check schema without DDL. Rebuild advances generation/revision and preserves
 later pending commits. The [current-state guide](../operations/current-property-state.md)
 records role grants, deadlines, freshness, correction limits and recovery.
-Live subscriptions, D06 and full-profile qualification remain deferred.
+Inspector live activation (PR 27), D06 and full-profile qualification remain deferred.
+
+
+## Authorized current-property SSE
+
+Delivery-plan PR 26 (issue #339) adds one exact-property live operation with
+scope-bound generation/revision ids, complete coalesced replacements, explicit
+resnapshot/terminal controls and fresh authority around reads. The stream is
+pull-driven, with bounded connection/payload/time budgets and no new SQL state
+or background producer queue. See the [live operations guide](../operations/property-live-updates.md).
+Heavy PostgreSQL/transport/Rust execution remains on CI; D06 and full-profile
+qualification remain deferred. Inspector activation is PR 27. This is latest-state
+synchronization, not lossless history replay or a capacity/deployment qualification.

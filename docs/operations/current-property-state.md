@@ -66,8 +66,9 @@ SECURITY DEFINER elevation or permissions to unrelated consumers.
 4. Inspect pending, items, quality, freshness and original provenance separately.
    No item means no materialized value for this known property. An uninstalled
    property returns 404; storage failure returns safe 500 rather than empty data.
-5. Compare repeated reads only within the same tenant. There is no live cursor,
-   resumable delta stream or global ordering in this slice.
+5. Compare repeated reads only within the same tenant. These REST reads do not
+   issue live cursors or establish global ordering. Use the separate
+   [SSE live operation](property-live-updates.md) for scoped replacement/resume.
 
 ```mermaid
 flowchart LR

@@ -1,0 +1,16 @@
+description: This process already holds 64 live streams. No waiting queue is allocated. Close unused subscriptions and retry with bounded backoff.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+  Retry-After:
+    schema:
+      type: integer
+      const: 2
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:live-capacity
+      title: Live connection capacity reached
+      status: 429
