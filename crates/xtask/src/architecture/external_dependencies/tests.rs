@@ -4,9 +4,15 @@ use cargo_metadata::{Dependency, DependencyKind, Package};
 
 use super::*;
 
+// An explicit reviewed baseline, independent of the metadata being mutated.
+const REVIEWED_EXTERNAL_EDGES: usize = 46;
+
 #[test]
 fn current_workspace_matches_exact_external_ownership() {
-    assert_eq!(check(&metadata()).expect("external ownership matches"), 45);
+    assert_eq!(
+        check(&metadata()).expect("external ownership matches"),
+        REVIEWED_EXTERNAL_EDGES
+    );
 }
 
 #[test]
@@ -17,7 +23,7 @@ fn renamed_approved_dependency_keeps_canonical_identity() {
 
     assert_eq!(
         check(&metadata).expect("aliases do not change ownership"),
-        45
+        REVIEWED_EXTERNAL_EDGES
     );
 }
 
@@ -29,7 +35,7 @@ fn renamed_internal_dependency_is_not_external() {
 
     assert_eq!(
         check(&metadata).expect("member paths establish identity"),
-        45
+        REVIEWED_EXTERNAL_EDGES
     );
 }
 
@@ -305,4 +311,30 @@ fn assert_violation(result: Result<usize, Vec<String>>, expected: &str) -> Vec<S
     );
     assert!(violations.iter().all(|violation| violation.contains(GUIDE)));
     violations
+}
+
+#[test]
+fn removing_the_stream_dependency_leaves_a_stale_reviewed_edge() {
+    let mut metadata = metadata();
+    package_mut(&mut metadata, "fleetiq-server")
+        .dependencies
+        .retain(|dependency| dependency.name != "futures-util");
+    assert_violation(
+        check(&metadata),
+        "stale external dependency rule: fleetiq-server -[normal]-> futures-util",
+    );
+}
+
+#[test]
+fn stream_dependency_approval_does_not_extend_to_projection_policy() {
+    let mut metadata = metadata();
+    let mut dependency = dependency_mut(&mut metadata, "fleetiq-server", "futures-util").clone();
+    dependency.rename = Some("application_events".to_owned());
+    package_mut(&mut metadata, "fleetiq-projection")
+        .dependencies
+        .push(dependency);
+    assert_violation(
+        check(&metadata),
+        "unapproved external dependency: fleetiq-projection -[normal]-> futures-util",
+    );
 }

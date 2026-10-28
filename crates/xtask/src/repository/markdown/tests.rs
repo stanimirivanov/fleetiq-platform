@@ -416,3 +416,37 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.root).expect("fixture should be removed");
     }
 }
+
+#[test]
+fn patched_wikilink_parser_has_linear_event_output_for_empty_display_links() {
+    use pulldown_cmark::{Options, Parser};
+    let markdown = "[[a|]] ".repeat(16);
+    // RUSTSEC-2026-0414: fixed output is 65 events. Bound consumption at the
+    // first excess event so a downgrade fails without expanding the full attack.
+    let events = Parser::new_ext(&markdown, Options::ENABLE_WIKILINKS)
+        .take(66)
+        .count();
+    assert_eq!(
+        events, 65,
+        "wikilinks must not duplicate the following event chain"
+    );
+}
+
+#[test]
+fn adversarial_wikilink_text_does_not_duplicate_following_policy_content() {
+    let markdown = format!(
+        "# Guide\n\n{}\n\n## After\n\n[ordinary link](target.md)\n",
+        "[[a|]] ".repeat(16)
+    );
+    let document = parse("guide.md".to_owned(), markdown);
+    assert_eq!(document.headings.len(), 2);
+    assert_eq!(document.headings[1].anchor, "after");
+    assert_eq!(
+        document
+            .links
+            .iter()
+            .filter(|link| link.destination == "target.md")
+            .count(),
+        1
+    );
+}
