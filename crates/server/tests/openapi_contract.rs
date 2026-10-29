@@ -796,3 +796,42 @@ fn live_contract_publishes_cursor_limits_and_terminal_event_schemas() -> Result<
     }
     Ok(())
 }
+
+/// Discovery may advertise every exact grant; an old three-action cap hid valid tenants.
+#[test]
+fn tenant_discovery_accepts_complete_grants_and_rejects_invalid_arrays()
+-> Result<(), Box<dyn Error>> {
+    let contract = contract()?;
+    let actions = contract["components"]["schemas"]["TenantAction"]["enum"]
+        .as_array()
+        .expect("closed tenant action vocabulary");
+    assert_eq!(actions.len(), 5, "review changes to the action vocabulary");
+    assert_eq!(
+        contract["components"]["schemas"]["OperatorTenant"]["properties"]["actions"]["maxItems"],
+        json!(actions.len()),
+        "discovery must support the complete existing vocabulary"
+    );
+    for count in 1..=actions.len() {
+        let page = json!({"tenants": [{"tenant_id": "tenant-a", "actions": &actions[..count]}], "next_after": null});
+        assert!(
+            validate_component_example(&contract, "OperatorTenantPage", &page)?,
+            "valid {count}-grant tenant rejected"
+        );
+    }
+    let mut excessive = actions.clone();
+    excessive.push(actions[0].clone());
+    for invalid in [
+        json!([]),
+        json!(["metadata.read", "metadata.read"]),
+        json!(["unknown.action"]),
+        json!(excessive),
+    ] {
+        let page =
+            json!({"tenants": [{"tenant_id": "tenant-a", "actions": invalid}], "next_after": null});
+        assert!(
+            !validate_component_example(&contract, "OperatorTenantPage", &page)?,
+            "invalid action array accepted"
+        );
+    }
+    Ok(())
+}
