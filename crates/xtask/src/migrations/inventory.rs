@@ -150,7 +150,7 @@ fn executable(metadata: &fs::Metadata) -> bool {
 
 #[cfg(not(unix))]
 fn executable(_metadata: &fs::Metadata) -> bool {
-    // Windows does not expose Unix executable bits; the Git index carries the
+    // The Git index carries the
     // tracked mode and is checked separately on every platform.
     false
 }

@@ -13,8 +13,8 @@ fn extracts_canonical_issue_body_from_backtick_fence() {
 
 #[test]
 fn extracts_cargo_commands_from_every_verification_fence() {
-    let body = "# Policy\n\n## Verification\n\n```powershell\ncargo xtask repository\n\
-                $env:DATABASE_URL = 'ignored'\n```\nText.\n~~~powershell\n\
+    let body = "# Policy\n\n## Verification\n\n```bash\ncargo xtask repository\n\
+                export DATABASE_URL='ignored'\n```\nText.\n~~~bash\n\
                 cargo test --workspace\n~~~\n\n## Documentation\n";
     assert_eq!(
         fenced_commands_under_heading(

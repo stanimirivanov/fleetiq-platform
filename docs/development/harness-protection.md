@@ -17,12 +17,11 @@
 Use the pinned Rust toolchain, Git, and Node.js 22.12 or newer. The installer
 needs HTTPS access to the official release and a `tar` executable supporting its
 archive format. It verifies a reviewed SHA-256 archive digest and exact binary
-version before installing under ignored `target/tools/gitleaks`. Linux and
-Windows x64 and arm64 archives are supported. Other platforms can install the
+version before installing under ignored `target/tools/gitleaks`. Linux x64 and arm64 archives are supported. Other platforms can install the
 exact version through their supported tooling; the sensor rejects any other
 version on PATH. No PostgreSQL is needed.
 
-```powershell
+```bash
 git fetch origin
 node scripts/install-gitleaks.mjs
 cargo xtask migrations --base origin/main

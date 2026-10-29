@@ -196,10 +196,9 @@ pub(super) fn sanitize_environment(command: &mut Command) {
             command.env_remove(name);
         }
     }
-    command.env("GIT_CONFIG_NOSYSTEM", "1").env(
-        "GIT_CONFIG_GLOBAL",
-        if cfg!(windows) { "NUL" } else { "/dev/null" },
-    );
+    command
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", "/dev/null");
 }
 
 pub(super) fn reject_ignore(relative: &Path) -> Result<(), SecretsError> {
@@ -275,13 +274,5 @@ pub(super) fn trusted_root(root: &Path) -> Result<String, SecretsError> {
     let display = canonical
         .to_str()
         .ok_or_else(|| failure("authorized Git root must be UTF-8"))?;
-    if cfg!(windows) {
-        let normalized = display.replace(std::path::MAIN_SEPARATOR, "/");
-        Ok(normalized
-            .strip_prefix("//?/")
-            .unwrap_or(&normalized)
-            .to_owned())
-    } else {
-        Ok(display.to_owned())
-    }
+    Ok(display.to_owned())
 }

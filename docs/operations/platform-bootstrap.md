@@ -43,13 +43,13 @@ a person. Keep both out of scripts, command arguments, logs, and source control.
 
 ## Run the command
 
-For a locally built executable in PowerShell:
+For a locally built executable in Bash:
 
-```powershell
-$env:DATABASE_URL = '<installation database URL>'
-$env:FLEETIQ_BOOTSTRAP_ACTOR_ID = '<stable internal actor ID>'
-$env:FLEETIQ_BOOTSTRAP_AUTHORITY_ID = '<configured authority ID>'
-$env:FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT = '<exact external subject>'
+```bash
+export DATABASE_URL='<installation database URL>'
+export FLEETIQ_BOOTSTRAP_ACTOR_ID='<stable internal actor ID>'
+export FLEETIQ_BOOTSTRAP_AUTHORITY_ID='<configured authority ID>'
+export FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT='<exact external subject>'
 
 cargo run --locked -p fleetiq-server -- bootstrap-platform-operator
 ```
@@ -82,12 +82,12 @@ administration capability; bootstrap is not an authority-replacement mechanism.
 ## Clear the environment
 
 After success or investigation, remove the command-specific values from the
-PowerShell session:
+Bash session:
 
-```powershell
-Remove-Item Env:FLEETIQ_BOOTSTRAP_ACTOR_ID
-Remove-Item Env:FLEETIQ_BOOTSTRAP_AUTHORITY_ID
-Remove-Item Env:FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT
+```bash
+unset FLEETIQ_BOOTSTRAP_ACTOR_ID
+unset FLEETIQ_BOOTSTRAP_AUTHORITY_ID
+unset FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT
 ```
 
 Manage `DATABASE_URL` according to the deployment's normal secret-injection

@@ -126,7 +126,7 @@ impl Executor for System<'_> {
     fn execute(&mut self, check: &Check) -> Outcome {
         let args = execution_arguments(check, self.base.as_ref().ok().and_then(Option::as_deref));
         if is_xtask(check) {
-            // Rebuilding the running executable fails on Windows. Launch the
+            // Reuse the built executable to avoid a recursive rebuild. Launch the
             // exact compiled task instead of recursively invoking cargo run.
             match env::current_exe() {
                 Ok(executable) => {
@@ -208,23 +208,10 @@ fn valid_hash(value: &str) -> bool {
     matches!(value.len(), 40 | 64) && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
-fn program_name(program: &str) -> &str {
-    if cfg!(windows) && program == "pnpm" {
-        "pnpm.cmd"
-    } else {
-        program
-    }
-}
-
 /// Standard tool output stays on the console; it is not copied into artifacts.
-/// Only the fixed pnpm arguments use its Windows command shim. Dynamic Git
-/// references are resolved before execution and passed directly to cargo.
+/// Dynamic Git references are resolved before execution and passed directly to cargo.
 fn run_program(root: &Path, program: &str, args: &[String]) -> Outcome {
-    execute_command(
-        Command::new(program_name(program))
-            .current_dir(root)
-            .args(args),
-    )
+    execute_command(Command::new(program).current_dir(root).args(args))
 }
 
 fn execute_command(command: &mut Command) -> Outcome {

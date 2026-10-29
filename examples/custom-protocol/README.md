@@ -11,7 +11,7 @@
 Run from the repository root with the pinned Rust toolchain and installed
 `wasm32-unknown-unknown` target (declared in `rust-toolchain.toml`):
 
-```powershell
+```bash
 cargo build --locked --release --target wasm32-unknown-unknown -p fleetiq-custom-protocol-example --target-dir target/protocol-guest
 cargo run --locked -p fleetiq-protocol-wasm --example componentize -- target/protocol-guest/wasm32-unknown-unknown/release/fleetiq_custom_protocol_example.wasm target/protocol-guest/custom-protocol.component.wasm
 cargo test --locked -p fleetiq-protocol-wasm --test custom_protocol

@@ -21,14 +21,14 @@
 
 Install the same CLI versions used by CI with the pinned Rust toolchain:
 
-```powershell
+```bash
 cargo install cargo-deny --version 0.20.2 --locked
 cargo install cargo-machete --version 0.9.2 --locked
 ```
 
 From the workspace root, run:
 
-```powershell
+```bash
 cargo deny check
 cargo machete --with-metadata --skip-target-dir
 ```

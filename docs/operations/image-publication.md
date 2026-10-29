@@ -40,7 +40,7 @@ source-read PAT. Never paste credentials into commands, build arguments or issue
 
 From a clean reviewed checkout, or a dirty candidate explicitly labelled as such:
 
-```powershell
+```bash
 node --test scripts/images/tests/*.test.mjs
 node scripts/images/qualify.mjs
 ```

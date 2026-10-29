@@ -21,11 +21,7 @@ pub(super) struct Detector(PathBuf);
 
 impl Detector {
     pub(super) fn discover(root: &Path) -> Result<Self, SecretsError> {
-        let local = root.join("target/tools/gitleaks").join(if cfg!(windows) {
-            "gitleaks.exe"
-        } else {
-            "gitleaks"
-        });
+        let local = root.join("target/tools/gitleaks").join("gitleaks");
         let executable = if local.is_file() {
             local
         } else {

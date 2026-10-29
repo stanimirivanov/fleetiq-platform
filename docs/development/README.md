@@ -17,21 +17,21 @@
 
 Start the complete local stack from the repository root:
 
-```powershell
-$env:FLEETIQ_POSTGRES_PORT = "55432"
-$env:FLEETIQ_HTTP_PORT = "58080"
+```bash
+export FLEETIQ_POSTGRES_PORT="55432"
+export FLEETIQ_HTTP_PORT="58080"
 docker compose -f deploy/local/compose.yaml up --build --wait
-Invoke-WebRequest http://127.0.0.1:$env:FLEETIQ_HTTP_PORT/health/ready
+curl --fail --head "http://127.0.0.1:${FLEETIQ_HTTP_PORT}/health/ready"
 ```
 
 When running Rust processes on the host, start PostgreSQL by itself:
 
-```powershell
+```bash
 docker compose -f deploy/local/compose.yaml up -d postgres
-$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@127.0.0.1:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
+export DATABASE_URL="postgres://fleetiq:fleetiq-local-only@127.0.0.1:${FLEETIQ_POSTGRES_PORT}/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
-$env:FLEETIQ_BIND_ADDRESS = "127.0.0.1:8080"
+export FLEETIQ_BIND_ADDRESS="127.0.0.1:8080"
 cargo run -p fleetiq-server
 ```
 
@@ -43,9 +43,9 @@ Compose publishes PostgreSQL on `127.0.0.1:55432` and the backend on
 `127.0.0.1:58080` by default. Choose other free host ports before starting the
 project when required:
 
-```powershell
-$env:FLEETIQ_POSTGRES_PORT = "55433"
-$env:FLEETIQ_HTTP_PORT = "58081"
+```bash
+export FLEETIQ_POSTGRES_PORT="55433"
+export FLEETIQ_HTTP_PORT="58081"
 ```
 
 Use the PostgreSQL value in host-side `DATABASE_URL`. Changing host ports does
@@ -54,10 +54,7 @@ not modify the database volume or container-side configuration.
 string when a developer intentionally targets another database on the Compose
 network.
 
-On Windows, unexpectedly slow SQLx startup or test database setup can result
-from `localhost` trying IPv6 `::1` before falling back to Compose's published
-IPv4 port. Use `127.0.0.1` in the host-side `DATABASE_URL` to avoid that delay;
-keep the same port, database, credentials, and database settings.
+Use `127.0.0.1` in host-side `DATABASE_URL` to match the published IPv4 port.
 
 Production deployments must select `serve --check-schema` after an explicit
 `migrate` process with separate credentials. See [runtime and migrations](../operations/runtime-and-migrations.md).
@@ -95,7 +92,7 @@ or require access to a running database. After changing a checked query or
 migration, regenerate and commit the metadata against the fully migrated
 supported PostgreSQL version:
 
-```powershell
+```bash
 cargo sqlx prepare --workspace -- --all-targets --all-features
 ```
 
@@ -105,7 +102,7 @@ Install the reviewed detector once, fetch trusted remote history, and use the
 [harness protection guide](harness-protection.md) for the exact scan scope, base
 selection, and safe correction workflow:
 
-```powershell
+```bash
 git fetch origin
 node scripts/install-gitleaks.mjs
 cargo xtask migrations --base origin/main
@@ -121,7 +118,7 @@ a pass.
 
 Start with the fast structural checks:
 
-```powershell
+```bash
 cargo xtask repository
 cargo xtask architecture
 ```
@@ -132,7 +129,7 @@ Then run the complete database-backed Rust gate from
 gate and writes fresh metadata-only reports. Focused groups do not replace the
 full gate. Its Rust commands include:
 
-```powershell
+```bash
 cargo fmt --all --check
 cargo sqlx prepare --check --workspace -- --all-targets --all-features
 cargo clippy --workspace --all-targets --all-features -- -D warnings

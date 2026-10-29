@@ -192,34 +192,16 @@ pub(crate) fn command(root: &Path) -> Command {
             command.env_remove(name);
         }
     }
-    command.env("GIT_CONFIG_NOSYSTEM", "1").env(
-        "GIT_CONFIG_GLOBAL",
-        if cfg!(windows) { "NUL" } else { "/dev/null" },
-    );
+    command
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", "/dev/null");
     command
 }
 
 fn trusted_directory(root: &Path) -> String {
     let directory = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let display = directory.to_string_lossy();
-    #[cfg(windows)]
-    {
-        // Windows canonical paths use the extended-length prefix. Git's safe
-        // directory comparison expects an ordinary drive or UNC path.
-        let normalized = display.replace(std::path::MAIN_SEPARATOR, "/");
-        if let Some(unc) = normalized.strip_prefix("//?/UNC/") {
-            format!("//{unc}")
-        } else {
-            normalized
-                .strip_prefix("//?/")
-                .unwrap_or(&normalized)
-                .to_owned()
-        }
-    }
-    #[cfg(not(windows))]
-    {
-        display.into_owned()
-    }
+    display.into_owned()
 }
 
 fn run(root: &Path, arguments: &[&str]) -> Result<Output, MigrationCheckError> {

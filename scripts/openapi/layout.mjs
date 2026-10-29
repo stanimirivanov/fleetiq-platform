@@ -34,7 +34,7 @@ export function inspectLayout({ rootDirectory, document, resolveDocument }) {
   const report = (file, parts, message) => issues.push({ file: display(file), parts, message });
 
   function collect(directory) {
-    // lstat intentionally rejects both Unix symlinks and Windows junctions.
+    // lstat intentionally rejects both symlinks.
     const metadata = lstatSync(directory);
     if (metadata.isSymbolicLink() || !metadata.isDirectory()) {
       report(directory, [], 'source directories must be real directories, never symlinks or junctions');
@@ -82,7 +82,7 @@ export function inspectLayout({ rootDirectory, document, resolveDocument }) {
       report(file, parts, '$ref must directly target a YAML file below openapi/');
       return undefined;
     }
-    // Match the collected spelling exactly even on case-insensitive Windows.
+    // Match the collected spelling exactly.
     if (!files.has(target)) {
       report(file, parts, `$ref target ${reference} is absent, nonregular, or has incorrect filename casing`);
       return undefined;

@@ -42,7 +42,7 @@ pub(super) fn write(root: &Path, group: Group, report: &Value) -> Result<String,
     let relative = Path::new("target/verification");
     for part in [root.join("target"), root.join(relative)] {
         match fs::symlink_metadata(&part) {
-            Ok(metadata) if metadata.file_type().is_symlink() || redirected(&metadata) => {
+            Ok(metadata) if metadata.file_type().is_symlink() => {
                 return Err(
                     "verification evidence directory must not be a symlink or junction".into(),
                 );
@@ -78,17 +78,6 @@ pub(super) fn write(root: &Path, group: Group, report: &Value) -> Result<String,
     file.write_all(&bytes)
         .map_err(|_| "cannot write verification evidence")?;
     Ok(format!("target/verification/{name}"))
-}
-
-#[cfg(windows)]
-fn redirected(metadata: &fs::Metadata) -> bool {
-    use std::os::windows::fs::MetadataExt;
-    metadata.file_attributes() & 0x400 != 0
-}
-
-#[cfg(not(windows))]
-fn redirected(_: &fs::Metadata) -> bool {
-    false
 }
 
 #[cfg(test)]
@@ -137,27 +126,6 @@ mod tests {
         assert!(fs::read_dir(&outside.0).unwrap().next().is_none());
     }
 
-    #[cfg(windows)]
-    #[test]
-    fn redirected_evidence_parent_cannot_write_outside_owned_checkout() {
-        let root = Fixture::new();
-        let outside = Fixture::new();
-        let status = std::process::Command::new("cmd")
-            .args(["/C", "mklink", "/J"])
-            .arg(root.0.join("target"))
-            .arg(&outside.0)
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .status()
-            .unwrap();
-        assert!(
-            status.success(),
-            "junction fixture must be created rather than skipped"
-        );
-        assert!(write(&root.0, Group::Rust, &json!({})).is_err());
-        assert!(fs::read_dir(&outside.0).unwrap().next().is_none());
-        fs::remove_dir(root.0.join("target")).unwrap();
-    }
     #[test]
     fn non_directory_evidence_parent_fails_without_overwriting_it() {
         let root = Fixture::new();

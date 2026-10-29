@@ -143,7 +143,6 @@ test("scanner matches private evidence ownership and retains its hardened sandbo
             assert.ok(
               args.includes("/cache:rw,noexec,nosuid,size=4g,mode=1777"),
             );
-            if (process.platform !== "win32")
               assert.equal(
                 statSync(join(f.directory, "private-scan")).mode & 0o777,
                 0o700,

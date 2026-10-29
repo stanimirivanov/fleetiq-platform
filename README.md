@@ -1,5 +1,8 @@
 # FleetIQ Platform
 
+Development and repository verification are supported on Linux.
+
+
 FleetIQ is an asset-centric telemetry and fleet-management platform. It models
 vehicles, machines, infrastructure, sensors, and communication devices without
 assuming an industry, hardware vendor, or universal identifier such as a VIN.
@@ -44,18 +47,18 @@ Requirements:
 
 Start the complete local stack:
 
-```powershell
-$env:FLEETIQ_POSTGRES_PORT = "55432"
-$env:FLEETIQ_HTTP_PORT = "58080"
+```bash
+export FLEETIQ_POSTGRES_PORT="55432"
+export FLEETIQ_HTTP_PORT="58080"
 docker compose -f deploy/local/compose.yaml up --build --wait
-Invoke-WebRequest http://127.0.0.1:$env:FLEETIQ_HTTP_PORT/health/ready
+curl --fail --head "http://127.0.0.1:${FLEETIQ_HTTP_PORT}/health/ready"
 ```
 
 For Rust development, start only PostgreSQL and configure checked SQL queries:
 
-```powershell
+```bash
 docker compose -f deploy/local/compose.yaml up -d postgres
-$env:DATABASE_URL = "postgres://fleetiq:fleetiq-local-only@localhost:$env:FLEETIQ_POSTGRES_PORT/fleetiq"
+export DATABASE_URL="postgres://fleetiq:fleetiq-local-only@localhost:${FLEETIQ_POSTGRES_PORT}/fleetiq"
 cargo install sqlx-cli --version 0.9.0 --locked --no-default-features --features rustls,postgres
 sqlx migrate run --source migrations
 cargo run -p fleetiq-server
@@ -63,7 +66,7 @@ cargo run -p fleetiq-server
 
 Run the immediate, database-independent harness checks:
 
-```powershell
+```bash
 cargo xtask repository
 cargo xtask architecture
 ```

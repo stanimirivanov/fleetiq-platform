@@ -159,19 +159,7 @@ mod tests {
         fs::remove_dir(owned.0.join(".config")).unwrap();
         #[cfg(unix)]
         std::os::unix::fs::symlink(owned.0.join("policy"), owned.0.join(".config")).unwrap();
-        #[cfg(windows)]
-        {
-            let status = Command::new("cmd")
-                .args(["/C", "mklink", "/J"])
-                .arg(owned.0.join(".config"))
-                .arg(owned.0.join("policy"))
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .status()
-                .unwrap();
-            assert!(status.success(), "junction fixture must succeed");
-        }
-        #[cfg(any(unix, windows))]
+        #[cfg(unix)]
         {
             let error = check(&owned.0).expect_err("redirected policy must fail");
             assert!(error.contains("symlink or junction"));
@@ -184,16 +172,6 @@ mod tests {
             #[cfg(unix)]
             {
                 let _ = std::fs::remove_file(self.0.join(".config"));
-            }
-            #[cfg(windows)]
-            {
-                let path = self.0.join(".config");
-                if std::fs::symlink_metadata(&path).is_ok_and(|m| {
-                    use std::os::windows::fs::MetadataExt;
-                    m.file_attributes() & 0x400 != 0
-                }) {
-                    let _ = std::fs::remove_dir(path);
-                }
             }
             for relative in [".config/nextest.toml", "policy/nextest.toml"] {
                 let _ = std::fs::remove_file(self.0.join(relative));
