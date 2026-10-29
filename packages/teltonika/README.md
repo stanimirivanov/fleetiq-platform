@@ -12,7 +12,7 @@
 
 From the repository root:
 
-```powershell
+```bash
 cargo test --locked -p fleetiq-teltonika
 cargo clippy --locked -p fleetiq-teltonika --all-targets -- -D warnings
 cargo clippy --locked -p fleetiq-teltonika --target wasm32-unknown-unknown -- -D warnings

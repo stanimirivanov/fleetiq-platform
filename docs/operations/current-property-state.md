@@ -28,7 +28,7 @@
 
 Local opt-in composition, after migrating the existing database:
 
-```powershell
+```bash
 docker compose -f deploy/local/compose.yaml --profile projection up --build current-state
 ```
 

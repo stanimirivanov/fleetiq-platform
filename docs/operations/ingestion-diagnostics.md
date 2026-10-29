@@ -77,7 +77,7 @@ and `DATABASE_URL` pointing only to a disposable test database. SQLx test create
 an isolated database. Do not run this against a customer's database. Docker is
 an optional way to provide PostgreSQL; no Kubernetes or D06 environment is used.
 
-```powershell
+```bash
 cargo nextest run -p fleetiq-server --lib --locked --profile ci -E 'test(measured_bounded_tcp_envelope)' --success-output immediate
 ```
 

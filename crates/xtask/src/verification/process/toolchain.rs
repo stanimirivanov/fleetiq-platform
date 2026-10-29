@@ -5,18 +5,14 @@
 
 use std::{path::Path, process::Command};
 
-use super::{isolate_cargo_context, program_name};
+use super::isolate_cargo_context;
 use crate::verification::catalogue::Tool;
 pub(super) fn probe(root: &Path, tool: Tool) -> Result<String, String> {
     let (program, args): (&str, &[&str]) = match tool {
         Tool::Rust => ("rustc", &["--version"]),
         Tool::Git => ("git", &["--version"]),
         Tool::Gitleaks => {
-            let name = if cfg!(windows) {
-                "gitleaks.exe"
-            } else {
-                "gitleaks"
-            };
+            let name = "gitleaks";
             let local = root.join("target/tools/gitleaks").join(name);
             let program = if local.is_file() {
                 local.into_os_string()
@@ -30,7 +26,7 @@ pub(super) fn probe(root: &Path, tool: Tool) -> Result<String, String> {
         Tool::Sqlx => ("cargo", &["sqlx", "--version"]),
         Tool::Nextest => ("cargo", &["nextest", "--version"]),
         Tool::Node => ("node", &["--version"]),
-        Tool::Pnpm => (program_name("pnpm"), &["--version"]),
+        Tool::Pnpm => ("pnpm", &["--version"]),
     };
     probe_command(Command::new(program).current_dir(root).args(args), tool)
 }
@@ -72,14 +68,7 @@ fn parse_version(value: &str) -> Option<&str> {
         .map(|part| part.strip_prefix('v').unwrap_or(part))
         .find(|part| {
             let part = *part;
-            let core = part.split_once(".windows.").map_or(part, |(core, suffix)| {
-                if !suffix.is_empty() && suffix.bytes().all(|byte| byte.is_ascii_digit()) {
-                    core
-                } else {
-                    part
-                }
-            });
-            let fields: Vec<_> = core.split('.').collect();
+            let fields: Vec<_> = part.split('.').collect();
             fields.len() == 3
                 && fields.iter().all(|field| {
                     !field.is_empty() && field.bytes().all(|byte| byte.is_ascii_digit())
@@ -112,10 +101,7 @@ mod tests {
         assert_eq!(parse_version("token=secret not-a-version"), None);
         assert_eq!(parse_version("rustc 1.99.1 (hash date)"), Some("1.99.1"));
         assert_eq!(parse_version("v24.18.0"), Some("24.18.0"));
-        assert_eq!(
-            parse_version("git version 2.55.0.windows.3"),
-            Some("2.55.0.windows.3")
-        );
+        assert_eq!(parse_version("git version 2.55.0.windows.3"), None);
         assert!(!version_matches(Tool::Rust, "1.99.1.windows.3"));
     }
 }

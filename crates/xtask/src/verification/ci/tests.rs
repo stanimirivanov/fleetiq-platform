@@ -130,7 +130,7 @@ fn verification_jobs_are_independent_and_migrations_use_the_pinned_cli() {
         .split_once("\n  architecture:\n")
         .unwrap()
         .1
-        .split_once("\n  harness-windows:\n")
+        .split_once("\n  openapi:\n")
         .unwrap()
         .0;
     let auxiliary_setup = architecture
@@ -143,8 +143,7 @@ fn verification_jobs_are_independent_and_migrations_use_the_pinned_cli() {
         );
     }
     let jobs = [
-        ("architecture", "harness-windows"),
-        ("harness-windows", "openapi"),
+        ("architecture", "openapi"),
         ("openapi", "supply-chain"),
         ("supply-chain", "rust"),
         ("rust", "local-compose"),
@@ -302,27 +301,15 @@ fn policy_file_symlinks_are_rejected_without_reading_or_overwriting_targets() {
 }
 
 #[test]
-fn windows_sensor_coverage_cannot_be_disabled_or_replaced() {
+fn linux_sensor_coverage_cannot_be_disabled_or_replaced() {
     let expected = generated();
-    assert!(expected.contains("name: Windows harness sensors"));
-    assert!(expected.contains("runs-on: windows-2025"));
-    for changed in [
-        expected.replace("runs-on: windows-2025", "runs-on: ubuntu-26.04"),
-        expected.replace(
-            "        run: cargo test -p fleetiq-xtask --locked",
-            "        run: cargo --version",
-        ),
-        expected.replace(
-            "      - name: Exercise Windows repository sensor fixtures",
-            "      - name: Exercise Windows repository sensor fixtures\n        if: false",
-        ),
-    ] {
-        assert_ne!(changed, expected);
-        assert!(check_document(&changed, &expected).is_err());
-    }
+    assert!(!expected.contains("harness-windows"));
+    let changed = expected.replace("runs-on: ubuntu-26.04", "runs-on: windows-2025");
+    assert_ne!(changed, expected);
+    assert!(check_document(&changed, &expected).is_err());
 }
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 #[test]
 fn redirected_policy_parent_cannot_be_read_or_regenerated() {
     let fixture = Fixture::new();
@@ -340,18 +327,6 @@ fn redirected_policy_parent_cannot_be_read_or_regenerated() {
     let target = outside.0.join(".github");
     #[cfg(unix)]
     std::os::unix::fs::symlink(&target, &link).unwrap();
-    #[cfg(windows)]
-    {
-        let status = std::process::Command::new("cmd")
-            .args(["/C", "mklink", "/J"])
-            .arg(&link)
-            .arg(&target)
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .status()
-            .unwrap();
-        assert!(status.success(), "policy junction setup must succeed");
-    }
     // Remove only this owned redirect before either fixture's cleanup runs.
     let _redirect = PolicyParentLink(link);
     let error = check(&fixture.0).expect_err("redirected policy fails closed");
@@ -364,16 +339,14 @@ fn redirected_policy_parent_cannot_be_read_or_regenerated() {
     );
 }
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 struct PolicyParentLink(std::path::PathBuf);
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 impl Drop for PolicyParentLink {
     fn drop(&mut self) {
         #[cfg(unix)]
         fs::remove_file(&self.0).expect("remove only the owned policy symlink");
-        #[cfg(windows)]
-        fs::remove_dir(&self.0).expect("remove only the owned policy junction");
     }
 }
 

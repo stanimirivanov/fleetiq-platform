@@ -47,7 +47,7 @@ export async function run(
     return await new Promise((resolve, reject) => {
       const child = spawn(program, args, {
         shell: false,
-        windowsHide: true,
+
         env,
         stdio: [
           "ignore",
@@ -130,7 +130,7 @@ export async function run(
     if (descriptor !== undefined) closeSync(descriptor);
   }
 }
-// Match bind-mounted file ownership on Linux; Docker Desktop maps Windows ACLs.
+// Match bind-mounted file ownership on Linux.
 export function containerUser(
   uid = process.getuid?.() ?? 0,
   gid = process.getgid?.() ?? 0,

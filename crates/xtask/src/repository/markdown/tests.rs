@@ -236,7 +236,7 @@ fn percent_encoded_local_paths_preserve_casing_and_validate_escapes() {
     }
 }
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 #[test]
 fn directory_links_preserve_valid_targets_and_detect_broken_anchors() {
     let fixture = Fixture::new();
@@ -259,7 +259,7 @@ fn directory_links_preserve_valid_targets_and_detect_broken_anchors() {
     assert!(violations[0].message.contains("#missing"));
 }
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 #[test]
 fn directory_links_cannot_escape_the_repository_root() {
     let fixture = Fixture::new();
@@ -290,43 +290,25 @@ fn directory_links_cannot_escape_the_repository_root() {
     );
 }
 
-// Directory junctions exercise the Windows redirection boundary without requiring
-// symbolic-link privileges. Both platforms fail fixture creation rather than skip.
-#[cfg(any(unix, windows))]
+// Real symlinks exercise directory redirection boundaries.
+#[cfg(unix)]
 struct DirectoryLink(PathBuf);
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 impl DirectoryLink {
     fn new(link: PathBuf, target: &Path) -> Self {
         #[cfg(unix)]
         std::os::unix::fs::symlink(target, &link)
             .expect("fixture directory symlink should be created");
-        #[cfg(windows)]
-        {
-            let status = std::process::Command::new("cmd")
-                .args(["/C", "mklink", "/J"])
-                .arg(&link)
-                .arg(target)
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .status()
-                .expect("junction fixture creation should execute");
-            assert!(
-                status.success(),
-                "junction fixture must be created rather than skipped"
-            );
-        }
         Self(link)
     }
 }
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 impl Drop for DirectoryLink {
     fn drop(&mut self) {
         #[cfg(unix)]
         fs::remove_file(&self.0).expect("fixture directory symlink should be removed");
-        #[cfg(windows)]
-        fs::remove_dir(&self.0).expect("fixture directory junction should be removed");
     }
 }
 

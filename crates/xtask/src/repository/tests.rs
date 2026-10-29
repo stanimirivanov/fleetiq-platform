@@ -79,7 +79,7 @@ fn template_drift_reports_issue_and_pull_request_structure() {
         "# Contributing\n\n## Issues and milestones\n\n```markdown\n\
          **Milestone:** MNN - Outcome\n\n## Goal\n\nGoal.\n\n\
          ## Acceptance criteria\n\n- [ ] Result.\n```\n\n## Verification\n\n\
-         ```powershell\ncargo xtask repository\n```\n",
+         ```bash\ncargo xtask repository\n```\n",
     );
     fixture.write(
         ".github/ISSUE_TEMPLATE/implementation.md",

@@ -142,7 +142,7 @@ is deterministic.
 
 Run the fast, database-independent structural checks during editing:
 
-```powershell
+```bash
 cargo xtask repository
 cargo xtask architecture
 ```
@@ -150,7 +150,7 @@ cargo xtask architecture
 Before handoff, run the complete Rust acceptance gate with `DATABASE_URL`
 pointing to the fully migrated supported PostgreSQL database:
 
-```powershell
+```bash
 cargo xtask repository
 cargo xtask architecture
 cargo xtask migrations --base origin/main
@@ -177,7 +177,7 @@ handling. Missing tools, unavailable bases, or scan failures cannot be skipped.
 When changing the published HTTP contract, use the [OpenAPI maintenance
 skill](.agents/skills/openapi/SKILL.md), then run:
 
-```powershell
+```bash
 pnpm install --frozen-lockfile
 pnpm lint:openapi
 pnpm bundle:openapi

@@ -22,7 +22,7 @@ full-profile qualification remain deferred.
 For local development, the existing PostgreSQL service uses loopback port
 55432. After migrations, start the opt-in worker:
 
-```powershell
+```bash
 docker compose -f deploy/local/compose.yaml --profile semantic up --build semantic-worker
 ```
 

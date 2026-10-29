@@ -33,7 +33,7 @@ The runner coordinates the inventoried tools, including Nextest for runtime
 test scheduling; it adds no independent test implementation or business policy. Each check remains individually runnable for investigation.
 Execution uses fixed program and argument vectors. Repository-owned xtask checks
 launch the current compiled xtask with the equivalent task arguments, avoiding
-recursive Cargo rebuilds of the executable that Windows has locked. Other checks
+recursive Cargo rebuilds of the current executable. Other checks
 invoke their inventoried tools directly. Child tools do not inherit Cargo run's
 launcher package metadata; that metadata otherwise changes cargo-machete's
 argument interpretation. Toolchain, jobserver, and database configuration remain
@@ -66,10 +66,8 @@ inspection; it is not a result report. Run a group from the repository root:
 Scope is explicit; the runner does not guess from changed files. Acceptance
 includes scanner fixtures, but focused xtask sensor tests and OpenAPI remain
 separate inventory entries. The CI architecture group runs the sensor tests,
-and the full workspace Nextest command also includes them. The Windows harness
-job also runs the inventoried repository, architecture, and sensor-test commands,
-followed by the same OpenAPI group. Its extra coverage does not replace the
-Linux, PostgreSQL-backed, or Compose gates.
+and the full workspace Nextest command also includes them. The OpenAPI job runs
+the contract group independently. Neither replaces PostgreSQL-backed or Compose gates.
 
 A selected group's success says only that all selected checks passed. When the
 published HTTP contract changes, the OpenAPI group is also required. Deployment,
@@ -145,8 +143,7 @@ separate invocation is run. Do not rewrite a previous report to hide failure.
 Each invocation creates a distinct JSON file under ignored
 `target/verification/`. Names identify the group, process, and timestamp; reports
 are created afresh rather than overwriting stale results. The owned evidence
-parents must be directories and may not redirect through a symlink or Windows
-junction. There is no caller-selected artifact destination.
+parents must be directories and may not redirect through a symlink. There is no caller-selected artifact destination.
 
 A report contains its schema version, selected group, complete-pass flag,
 starting and ending Git HEAD and dirty-state observations, a run-level blocker
@@ -182,15 +179,10 @@ merge-validation boundary. Other workflows and repository branch rules are
 configured separately.
 
 CI invokes the same architecture, supply-chain, Rust, and OpenAPI groups after
-its explicit prerequisite setup. The additional `Windows harness sensors` job
-executes the existing inventory-owned repository, architecture, and sensor-test
-commands on Windows, and the same OpenAPI group with its Node fixtures. Windows
-junction cases and Unix symlink cases run on their actual platforms without
-silently skipping a failed fixture setup. The Windows JSON artifact covers only
-its OpenAPI group; Rust fixture results remain in the step output and job status.
-This extra job requires no database and changes no acceptance membership. Existing job names and the full applicable
-gates remain in place; Compose smoke verification retains its own job. That job now qualifies one production OCI artifact, scans it and exercises actual development Compose using the same bytes; it runs the producer negative fixtures and retains redacted image evidence. The Windows job also executes these database-independent producer fixtures.
-The six jobs start independently so a scanner installer or action failure in
+explicit prerequisite setup. Unix symlink fixtures exercise actual filesystem
+redirects. Compose qualification retains its own job and producer negative
+fixtures, scanned OCI artifact and redacted image evidence.
+The five jobs start independently so a scanner installer or action failure in
 architecture cannot skip Rust, supply-chain, OpenAPI, or Compose evidence.
 Branch protection must require each applicable job; job independence does not
 make an unsuccessful architecture result acceptable.
@@ -201,9 +193,8 @@ cleanup. Workflow-owned action major tags fill version-free template slots. Cata
 supply group commands and pinned tool versions. `cargo xtask verify --check-ci`
 compares the entire rendered document with the checked-in workflow, normalizing
 LF/CRLF line endings. This checks repository wiring, not external GitHub behavior
-or merge protections. The new `Windows harness sensors` status also needs explicit
-administrator review when configuring required checks; adding a job does not
-make it required for merge. Every group performs the same preflight comparison.
+or merge protections. Every group performs the same preflight comparison.
+Administrators must remove the retired Windows status from external required checks.
 
 For an intentional CI policy change, edit the template or catalogue, review the
 policy diff, then explicitly run `cargo xtask verify --write-ci`. Commit the
@@ -243,7 +234,7 @@ or rolling a Dependabot proposal back. Ordinary checks never repair policy.
 | Job | Explicit tools and state |
 |:--|:--|
 | Architecture policy | Rust and Git run CI, repository, and architecture policy checks before Node 24 installs checksum-verified Gitleaks |
-| Windows harness sensors / OpenAPI contract | Rust, Git, pinned pnpm, Node 24, and locked local Redocly installation |
+| OpenAPI contract | Rust, Git, pinned pnpm, Node 24, and locked local Redocly installation |
 | Supply-chain policy | Rust and the inventoried cargo-deny/cargo-machete versions; no Node or npm setup |
 | Rust quality gate | Repository-selected Rust, exact Nextest, SQLx CLI, Rust dependency caching, and migrated PostgreSQL; DATABASE_URL is scoped to this job |
 | Local Compose smoke test | Docker Compose and the separately declared image build tools |
@@ -254,7 +245,7 @@ their own declared runtime; that does not install Node tooling for Rust commands
 Each job owns its setup and runs without a `needs` edge to architecture.
 The Rust job applies migrations with its pinned SQLx CLI, the same tool used in
 local setup, rather than an ambient PostgreSQL client from the runner image.
-Jobs select the Ubuntu 26.04 and Windows 2025 image families explicitly;
+Jobs select the Ubuntu 26.04 image family explicitly;
 GitHub still updates each hosted image within its family.
 Every applicable job remains a required review gate; dependency qualification
 never implies permission to bypass architecture policy.
@@ -312,7 +303,7 @@ or protected-branch settings passed.
 The canonical runtime check is `cargo nextest run --workspace --all-features --locked --profile ci`.
 Cargo doctests remain a separate required check: `cargo test --workspace --all-features --locked --doc`.
 Rustdoc generation still runs afterward. The full gate now has thirteen checks;
-no existing acceptance behavior is dropped. Supplemental Windows and architecture
+no existing acceptance behavior is dropped. Supplemental architecture
 sensor commands continue to use Cargo and do not require Nextest.
 
 Install the exact local tool with `cargo install cargo-nextest --version 0.9.145 --locked`,

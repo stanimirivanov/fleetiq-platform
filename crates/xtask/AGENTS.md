@@ -23,8 +23,7 @@ parallel command or a second policy authority.
 
 For a structural defect, prove the bypass at the actual Markdown, filesystem,
 Git, manifest, or process boundary. Pair rejection cases with valid inputs and
-assert useful diagnostics. Exercise Windows junctions and Unix symlinks where
-they represent different supported filesystem behavior; fixture setup failures
+assert useful diagnostics. Exercise Unix symlinks at supported filesystem boundaries; fixture setup failures
 are failures, never silent passes.
 
 Preserve the canonical acceptance order, fixed command arguments, honest

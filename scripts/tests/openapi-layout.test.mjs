@@ -209,7 +209,7 @@ test('rejects real directory symlinks/junctions on every supported host', (conte
   const outside = join(sample.directory, 'outside');
   mkdirSync(outside);
   const linked = join(sample.root, 'paths', 'linked');
-  symlinkSync(outside, linked, process.platform === 'win32' ? 'junction' : 'dir');
+  symlinkSync(outside, linked, 'dir');
   assert.equal(lstatSync(linked).isSymbolicLink(), true);
   assert.match(messages(sample.inspect()), /symlinks or junctions/u);
   assert.deepEqual(readdirSync(outside), []);
@@ -218,7 +218,7 @@ test('rejects real directory symlinks/junctions on every supported host', (conte
 test('rejects the modular root itself when it is a directory symlink/junction', (context) => {
   const sample = fixture(context);
   const linked = join(sample.directory, 'linked-root');
-  symlinkSync(sample.root, linked, process.platform === 'win32' ? 'junction' : 'dir');
+  symlinkSync(sample.root, linked, 'dir');
   const result = inspectLayout({ rootDirectory: linked, document: sample.document, resolveDocument() {} });
   assert.match(messages(result), /real directories/u);
 });
@@ -275,7 +275,7 @@ test('malformed YAML fails the ordinary parser gate', (context) => {
 test('rejects a junction/symlink in a source parent before invoking the parser', (context) => {
   const sample = fixture(context);
   const redirected = join(sample.directory, 'redirected-http');
-  symlinkSync(sample.directory, redirected, process.platform === 'win32' ? 'junction' : 'dir');
+  symlinkSync(sample.directory, redirected, 'dir');
   assert.throws(() => assertRealSourcePath(join(redirected, 'openapi/openapi.yaml'), sample.directory), /never symlinks or junctions/u);
   assert.doesNotThrow(() => assertRealSourcePath(join(sample.root, 'openapi.yaml'), sample.directory));
 });

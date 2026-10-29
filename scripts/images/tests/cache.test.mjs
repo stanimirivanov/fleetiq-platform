@@ -28,7 +28,7 @@ test("explicit cache optimization cannot admit outside paths, links or missing i
       "type=local,src=" + cache,
     ]);
     const link = join(target, "link");
-    symlinkSync(cache, link, process.platform === "win32" ? "junction" : "dir");
+    symlinkSync(cache, link, 'dir');
     assert.throws(() => localBuildCache(root, link));
     rmSync(link);
     writeFileSync(

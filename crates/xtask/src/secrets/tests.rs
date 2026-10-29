@@ -191,18 +191,6 @@ fn replaced_ancestor_link_is_rejected_before_external_bytes_are_copied() {
     fs::write(outside.join("file.txt"), "outside bytes must remain unread").unwrap();
     #[cfg(unix)]
     std::os::unix::fs::symlink(&outside, &folder).unwrap();
-    #[cfg(windows)]
-    {
-        // Junction creation needs no Windows symlink privilege or developer mode.
-        let status = std::process::Command::new("cmd")
-            .args(["/d", "/c", "mklink", "/J"])
-            .arg(&folder)
-            .arg(&outside)
-            .output()
-            .unwrap()
-            .status;
-        assert!(status.success(), "fixture junction creation must succeed");
-    }
     let snapshot = temporary.path().join("snapshot");
     let error = super::snapshot::copy_candidates(&root, &snapshot).unwrap_err();
     assert!(

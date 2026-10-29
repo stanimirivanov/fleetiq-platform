@@ -272,7 +272,7 @@ fn published_symlink_is_rejected_without_reading_its_target() {
     fixture.rejects("ordinary non-executable SQL file");
 }
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 #[test]
 fn substituted_migration_directory_is_rejected() {
     let fixture = Fixture::new();
@@ -289,18 +289,6 @@ fn substituted_migration_directory_is_rejected() {
     let target = fixture.root.join("original");
     #[cfg(unix)]
     std::os::unix::fs::symlink(&target, &link).expect("fixture symlink can be created");
-    #[cfg(windows)]
-    {
-        let status = Command::new("cmd")
-            .args(["/C", "mklink", "/J"])
-            .arg(&link)
-            .arg(&target)
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .status()
-            .expect("junction fixture creation executes");
-        assert!(status.success(), "junction setup must succeed, never skip");
-    }
     let _redirect = MigrationDirectoryLink(link);
     fixture.rejects("must be a real directory");
     assert_eq!(
@@ -310,16 +298,14 @@ fn substituted_migration_directory_is_rejected() {
     );
 }
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 struct MigrationDirectoryLink(PathBuf);
 
-#[cfg(any(unix, windows))]
+#[cfg(unix)]
 impl Drop for MigrationDirectoryLink {
     fn drop(&mut self) {
         #[cfg(unix)]
         fs::remove_file(&self.0).expect("remove only the owned migration symlink");
-        #[cfg(windows)]
-        fs::remove_dir(&self.0).expect("remove only the owned migration junction");
     }
 }
 

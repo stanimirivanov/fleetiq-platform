@@ -46,7 +46,7 @@ pub(super) fn read_regular(root: &Path, relative: &str) -> Result<String, String
         candidate.push(component);
         let metadata = fs::symlink_metadata(&candidate)
             .map_err(|error| format!("cannot read {relative}: {}", error.kind()))?;
-        if metadata.file_type().is_symlink() || redirected(&metadata) {
+        if metadata.file_type().is_symlink() {
             return Err(format!("{relative} must not use a symlink or junction"));
         }
     }
@@ -57,17 +57,6 @@ pub(super) fn read_regular(root: &Path, relative: &str) -> Result<String, String
         .map_err(|error| format!("cannot read {relative} as UTF-8: {}", error.kind()))
 }
 
-// Windows directory junctions can redirect a regular-looking policy path.
-#[cfg(windows)]
-fn redirected(metadata: &fs::Metadata) -> bool {
-    use std::os::windows::fs::MetadataExt;
-    metadata.file_attributes() & 0x400 != 0
-}
-
-#[cfg(not(windows))]
-fn redirected(_: &fs::Metadata) -> bool {
-    false
-}
 fn normalize(document: &str) -> Result<String, String> {
     let normalized = document.replace("\r\n", "\n");
     if normalized.contains('\r') {
@@ -91,25 +80,24 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
         if group == Group::Architecture {
             invocation.push_str(" --base \"$HARNESS_BASE\"");
         }
-        let count = if group == Group::Openapi { 2 } else { 1 };
+        let count = 1;
         replace_token(&mut result, &token, &invocation, count)?;
     }
-    // Supplemental Windows steps use existing inventory commands rather than
-    // maintaining a second command list or pretending to run the full gate.
-    for id in ["repository", "architecture", "sensor-tests"] {
+    // Linux structural steps use the existing inventory commands.
+    for id in ["repository", "architecture"] {
         let check = CHECKS
             .iter()
             .find(|check| check.id == id)
             .ok_or_else(|| format!("verification catalogue is missing {id}"))?;
-        let count = if id == "sensor-tests" { 1 } else { 2 };
+        let count = 1;
         replace_token(&mut result, &format!("@check:{id}@"), check.command, count)?;
     }
     for (name, tool, count) in [
         ("deny", Tool::Deny, 1),
         ("machete", Tool::Machete, 1),
         ("sqlx", Tool::Sqlx, 1),
-        ("pnpm", Tool::Pnpm, 2),
-        ("node", Tool::Node, 4),
+        ("pnpm", Tool::Pnpm, 1),
+        ("node", Tool::Node, 3),
         ("nextest", Tool::Nextest, 1),
     ] {
         replace_token(
