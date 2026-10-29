@@ -13,7 +13,9 @@ cookies or configured workload bearer plus current tenant `metadata.read` access
 publication, registration and revision commands require exact tenant `metadata.manage`. Protocol artifact storage/admission requires separate exact `protocol.manage`; baseline.13 expands the closed action vocabulary, so regenerate clients before delegating it. No existing grant is upgraded automatically. Registration atomically retains original actor/time evidence on exact retries; see [commissioning](../../docs/operations/metadata-registration.md). A server listener selects
 exactly one mode. Operator discovery uses that same
 authentication boundary and returns only the caller's current active tenant
-grants, without requiring a tenant to be selected first.
+grants, without requiring a tenant to be selected first. Baseline.21 corrects
+the discovery action-array bound to all five supported grants; clients pinned to
+the earlier three-action limit must regenerate before consuming such operators.
 
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
