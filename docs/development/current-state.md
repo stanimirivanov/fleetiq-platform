@@ -200,7 +200,10 @@ shared source read. The durable semantic worker now owns fenced recovery and
 atomic history completion; protected property-window reads remain separate.
 
 Analytics contracts represent versioned calculator evaluations and typed
-semantic outputs. The `fleetiq-live` crate owns full snapshots, forward-only
+semantic outputs, plus bounded canonical input manifests, finalized event-time
+windows, immutable configuration identities and logical replay keys. Terminal
+classifications distinguish completion, insufficient evidence and bounded failure;
+persistence and runners must enforce their cross-record invariants. The `fleetiq-live` crate owns full snapshots, forward-only
 deltas, cursor continuity, and resnapshot reasons. Calculator runtime and installed operator dashboard qualification remain
 planned. Exact-property subscription transport now uses the authorized SSE boundary.
 

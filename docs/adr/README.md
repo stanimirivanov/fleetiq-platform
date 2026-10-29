@@ -161,3 +161,5 @@ contain the subsequent decisions. Search this directory by concept before
 introducing a new record.
 
 | [0123](0123-expose-observed-fleet-locations-and-coverage.md) | Explicit observed locations and consistent fleet inventory/coverage reads |
+
+| [0124](0124-pin-calculator-execution-evidence.md) | Bounded canonical input evidence, finalized windows and immutable calculator replay keys |
