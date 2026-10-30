@@ -1,0 +1,42 @@
+put:
+  operationId: acknowledgeAlert
+  summary: Acknowledge an expected open alert version
+  description: Requires independent current alerts.acknowledge; alerts.read/manage and other grants imply
+    no authority. Browser mutations require exact Origin and X-FleetIQ-CSRF. Rechecks active actor, tenant
+    and grant transactionally even for retries. First commands require the current pending/firing version.
+    Exact same-author retries return original actor/time even after resolution; another author or stale/closed/missing/foreign/unobserved
+    target conflicts. Pins the existing lifecycle version without incrementing it, resolving, silencing,
+    changing timers or suppressing notification intents. Body is closed and bounded to 1024 bytes; query
+    parameters are rejected.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/alert-rule-id.yaml
+  - $ref: ../../components/parameters/alert-identity-revision.yaml
+  - $ref: ../../components/parameters/admin-mutation-origin.yaml
+  - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/AlertAcknowledgementRequest.yaml
+        example:
+          expected_version: '2'
+  responses:
+    '200':
+      $ref: ../../components/responses/AlertAcknowledgementSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/AlertAcknowledgementMethodNotAllowed.yaml
+    '409':
+      $ref: ../../components/responses/AlertAcknowledgementConflict.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

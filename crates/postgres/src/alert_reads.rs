@@ -1,9 +1,10 @@
 //! Authorized read-only queue, detail and immutable transition projections.
+use crate::AlertAcknowledgement;
 use fleetiq_access::{AuthorizedTenant, ReadAlerts};
 use fleetiq_analytics::{
     AlertLifecycle, AlertPhase, AlertRuleDefinition, AlertRuleId, CalculatorEvaluationId,
 };
-use fleetiq_domain::UnixTimeMillis;
+use fleetiq_domain::{ActorId, UnixTimeMillis};
 use serde_json::Value;
 use sqlx::PgPool;
 /// Retained transition with exact source identity; no raw calculator payload.
@@ -22,6 +23,8 @@ pub struct AlertTransitionRead {
     pub evaluation: CalculatorEvaluationId,
     /// Whether the selected output was usable, rather than explicit unknown evidence.
     pub output_available: bool,
+    /// Independent current acknowledgement annotation for this exact version.
+    pub acknowledgement: Option<AlertAcknowledgement>,
 }
 /// One observed revision-local alert and its pinned condition.
 pub struct AlertRead {
@@ -55,6 +58,8 @@ struct Row {
     activation_generation: i64,
     evaluation_id: String,
     disposition: String,
+    ack_actor_id: Option<String>,
+    ack_recorded_at_ms: Option<i64>,
 }
 struct TransitionRow {
     version: i64,
@@ -64,6 +69,8 @@ struct TransitionRow {
     activation_generation: i64,
     evaluation_id: String,
     disposition: String,
+    ack_actor_id: Option<String>,
+    ack_recorded_at_ms: Option<i64>,
 }
 /// Existing alert history adapter; every read consumes explicit alert authority.
 pub struct PostgresAlertReads(PgPool);
@@ -95,12 +102,14 @@ impl PostgresAlertReads {
           SELECT a.rule_id,a.revision,a.phase,t.phase AS transition_phase,a.version,a.candidate_since_ms,a.last_event_at_ms,
             COALESCE(h.active_revision=a.revision,false) AS "selected!",r.definition,
             t.event_at_ms,(floor(extract(epoch FROM t.recorded_at)*1000)::bigint) AS "recorded_at_ms!",
-            p.activation_generation,t.evaluation_id,p.disposition
+            p.activation_generation,t.evaluation_id,p.disposition,k.actor_id AS "ack_actor_id?",
+            (floor(extract(epoch FROM k.recorded_at)*1000)::bigint) AS "ack_recorded_at_ms?"
           FROM analytics.alert_lifecycles a
           JOIN analytics.alert_rules h USING(tenant_id,rule_id)
           JOIN analytics.alert_rule_revisions r ON r.tenant_id=a.tenant_id AND r.rule_id=a.rule_id AND r.revision=a.revision
           JOIN analytics.alert_transitions t ON t.tenant_id=a.tenant_id AND t.rule_id=a.rule_id AND t.revision=a.revision AND t.version=a.version
           JOIN analytics.alert_evaluation_receipts p ON p.tenant_id=t.tenant_id AND p.rule_id=t.rule_id AND p.revision=t.revision AND p.evaluation_id=t.evaluation_id
+          LEFT JOIN analytics.alert_acknowledgements k ON k.tenant_id=t.tenant_id AND k.rule_id=t.rule_id AND k.revision=t.revision AND k.version=t.version
           WHERE a.tenant_id=$1 AND a.version>0
             AND (($2::text IS NULL AND a.phase IN ('pending','firing')) OR a.phase=$2)
             AND ($3::text IS NULL OR (a.rule_id COLLATE "C",a.revision)>($3 COLLATE "C",$4))
@@ -122,12 +131,14 @@ impl PostgresAlertReads {
           SELECT a.rule_id,a.revision,a.phase,t.phase AS transition_phase,a.version,a.candidate_since_ms,a.last_event_at_ms,
             COALESCE(h.active_revision=a.revision,false) AS "selected!",r.definition,
             t.event_at_ms,(floor(extract(epoch FROM t.recorded_at)*1000)::bigint) AS "recorded_at_ms!",
-            p.activation_generation,t.evaluation_id,p.disposition
+            p.activation_generation,t.evaluation_id,p.disposition,k.actor_id AS "ack_actor_id?",
+            (floor(extract(epoch FROM k.recorded_at)*1000)::bigint) AS "ack_recorded_at_ms?"
           FROM analytics.alert_lifecycles a
           JOIN analytics.alert_rules h USING(tenant_id,rule_id)
           JOIN analytics.alert_rule_revisions r ON r.tenant_id=a.tenant_id AND r.rule_id=a.rule_id AND r.revision=a.revision
           JOIN analytics.alert_transitions t ON t.tenant_id=a.tenant_id AND t.rule_id=a.rule_id AND t.revision=a.revision AND t.version=a.version
           JOIN analytics.alert_evaluation_receipts p ON p.tenant_id=t.tenant_id AND p.rule_id=t.rule_id AND p.revision=t.revision AND p.evaluation_id=t.evaluation_id
+          LEFT JOIN analytics.alert_acknowledgements k ON k.tenant_id=t.tenant_id AND k.rule_id=t.rule_id AND k.revision=t.revision AND k.version=t.version
           WHERE a.tenant_id=$1 AND a.rule_id=$2 AND a.revision=$3 AND a.version>0
         "#,auth.tenant_id().as_str(),rule.as_str(),revision).fetch_optional(&self.0).await.map_err(AlertReadError::Database)?;
         row.map(convert).transpose()
@@ -153,9 +164,11 @@ impl PostgresAlertReads {
         let rows=sqlx::query_as!(TransitionRow,r#"
           SELECT t.version,t.phase,t.event_at_ms,
             (floor(extract(epoch FROM t.recorded_at)*1000)::bigint) AS "recorded_at_ms!",
-            p.activation_generation,t.evaluation_id,p.disposition
+            p.activation_generation,t.evaluation_id,p.disposition,k.actor_id AS "ack_actor_id?",
+            (floor(extract(epoch FROM k.recorded_at)*1000)::bigint) AS "ack_recorded_at_ms?"
           FROM analytics.alert_transitions t JOIN analytics.alert_evaluation_receipts p
             ON p.tenant_id=t.tenant_id AND p.rule_id=t.rule_id AND p.revision=t.revision AND p.evaluation_id=t.evaluation_id
+          LEFT JOIN analytics.alert_acknowledgements k ON k.tenant_id=t.tenant_id AND k.rule_id=t.rule_id AND k.revision=t.revision AND k.version=t.version
           WHERE t.tenant_id=$1 AND t.rule_id=$2 AND t.revision=$3 AND t.version>$4
           ORDER BY t.version LIMIT $5
         "#,auth.tenant_id().as_str(),rule.as_str(),revision,after,count).fetch_all(&self.0).await.map_err(AlertReadError::Database)?;
@@ -175,7 +188,17 @@ fn transition(r: TransitionRow) -> Result<AlertTransitionRead, AlertReadError> {
     if r.version <= 0 {
         return Err(AlertReadError::Invalid);
     }
+    let acknowledgement = match (r.ack_actor_id, r.ack_recorded_at_ms) {
+        (None, None) => None,
+        (Some(actor), Some(time)) => Some(AlertAcknowledgement {
+            version: r.version,
+            actor: ActorId::new(actor).map_err(|_| AlertReadError::Invalid)?,
+            recorded_at: UnixTimeMillis::new(time),
+        }),
+        _ => return Err(AlertReadError::Invalid),
+    };
     Ok(AlertTransitionRead {
+        acknowledgement,
         version: r.version,
         phase: phase(&r.phase)?,
         event_at: UnixTimeMillis::new(r.event_at_ms),
@@ -208,6 +231,8 @@ fn convert(r: Row) -> Result<AlertRead, AlertReadError> {
         activation_generation: r.activation_generation,
         evaluation_id: r.evaluation_id,
         disposition: r.disposition,
+        ack_actor_id: r.ack_actor_id,
+        ack_recorded_at_ms: r.ack_recorded_at_ms,
     })?;
     if latest.phase != state.phase() || state.last_event().is_none_or(|last| last < latest.event_at)
     {

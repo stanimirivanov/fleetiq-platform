@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n          SELECT a.rule_id,a.revision,a.phase,t.phase AS transition_phase,a.version,a.candidate_since_ms,a.last_event_at_ms,\n            COALESCE(h.active_revision=a.revision,false) AS \"selected!\",r.definition,\n            t.event_at_ms,(floor(extract(epoch FROM t.recorded_at)*1000)::bigint) AS \"recorded_at_ms!\",\n            p.activation_generation,t.evaluation_id,p.disposition\n          FROM analytics.alert_lifecycles a\n          JOIN analytics.alert_rules h USING(tenant_id,rule_id)\n          JOIN analytics.alert_rule_revisions r ON r.tenant_id=a.tenant_id AND r.rule_id=a.rule_id AND r.revision=a.revision\n          JOIN analytics.alert_transitions t ON t.tenant_id=a.tenant_id AND t.rule_id=a.rule_id AND t.revision=a.revision AND t.version=a.version\n          JOIN analytics.alert_evaluation_receipts p ON p.tenant_id=t.tenant_id AND p.rule_id=t.rule_id AND p.revision=t.revision AND p.evaluation_id=t.evaluation_id\n          WHERE a.tenant_id=$1 AND a.rule_id=$2 AND a.revision=$3 AND a.version>0\n        ",
+  "query": "\n          SELECT a.rule_id,a.revision,a.phase,t.phase AS transition_phase,a.version,a.candidate_since_ms,a.last_event_at_ms,\n            COALESCE(h.active_revision=a.revision,false) AS \"selected!\",r.definition,\n            t.event_at_ms,(floor(extract(epoch FROM t.recorded_at)*1000)::bigint) AS \"recorded_at_ms!\",\n            p.activation_generation,t.evaluation_id,p.disposition,k.actor_id AS \"ack_actor_id?\",\n            (floor(extract(epoch FROM k.recorded_at)*1000)::bigint) AS \"ack_recorded_at_ms?\"\n          FROM analytics.alert_lifecycles a\n          JOIN analytics.alert_rules h USING(tenant_id,rule_id)\n          JOIN analytics.alert_rule_revisions r ON r.tenant_id=a.tenant_id AND r.rule_id=a.rule_id AND r.revision=a.revision\n          JOIN analytics.alert_transitions t ON t.tenant_id=a.tenant_id AND t.rule_id=a.rule_id AND t.revision=a.revision AND t.version=a.version\n          JOIN analytics.alert_evaluation_receipts p ON p.tenant_id=t.tenant_id AND p.rule_id=t.rule_id AND p.revision=t.revision AND p.evaluation_id=t.evaluation_id\n          LEFT JOIN analytics.alert_acknowledgements k ON k.tenant_id=t.tenant_id AND k.rule_id=t.rule_id AND k.revision=t.revision AND k.version=t.version\n          WHERE a.tenant_id=$1 AND a.version>0\n            AND (($2::text IS NULL AND a.phase IN ('pending','firing')) OR a.phase=$2)\n            AND ($3::text IS NULL OR (a.rule_id COLLATE \"C\",a.revision)>($3 COLLATE \"C\",$4))\n          ORDER BY a.rule_id COLLATE \"C\",a.revision LIMIT $5\n        ",
   "describe": {
     "columns": [
       {
@@ -146,12 +146,31 @@
             "name": "disposition"
           }
         }
+      },
+      {
+        "ordinal": 14,
+        "name": "ack_actor_id?",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_acknowledgements",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "ack_recorded_at_ms?",
+        "type_info": "Int8",
+        "origin": "Expression"
       }
     ],
     "parameters": {
       "Left": [
         "Text",
         "Text",
+        "Text",
+        "Int8",
         "Int8"
       ]
     },
@@ -169,8 +188,10 @@
       null,
       false,
       false,
-      false
+      false,
+      false,
+      null
     ]
   },
-  "hash": "45e1957e5cd3b768865555cfe368815f30f78ec3c4b32ec06726f78781b461e7"
+  "hash": "a8256e0b84725ea1c2c7a9c25982d171921c4723674d70f6d13661b3a8f952c8"
 }

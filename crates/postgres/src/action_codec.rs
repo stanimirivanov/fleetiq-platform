@@ -42,6 +42,7 @@ pub(crate) const fn tenant_action_name(action: TenantAction) -> &'static str {
         TenantAction::ManageAnalytics => "analytics.manage",
         TenantAction::ReadAlerts => "alerts.read",
         TenantAction::ManageAlerts => "alerts.manage",
+        TenantAction::AcknowledgeAlerts => "alerts.acknowledge",
     }
 }
 
@@ -59,6 +60,7 @@ pub(crate) fn parse_tenant_action(
         "analytics.manage" => Ok(TenantAction::ManageAnalytics),
         "alerts.read" => Ok(TenantAction::ReadAlerts),
         "alerts.manage" => Ok(TenantAction::ManageAlerts),
+        "alerts.acknowledge" => Ok(TenantAction::AcknowledgeAlerts),
         _ => Err(corrupt(field, value)),
     }
 }
@@ -84,7 +86,7 @@ mod tests {
             "tenant.lifecycle.manage",
         ),
     ];
-    const TENANT_CASES: [(TenantAction, &str); 8] = [
+    const TENANT_CASES: [(TenantAction, &str); 9] = [
         (TenantAction::ReadMetadata, "metadata.read"),
         (TenantAction::ReadTelemetry, "telemetry.read"),
         (TenantAction::ManageMetadata, "metadata.manage"),
@@ -93,6 +95,7 @@ mod tests {
         (TenantAction::ManageAnalytics, "analytics.manage"),
         (TenantAction::ReadAlerts, "alerts.read"),
         (TenantAction::ManageAlerts, "alerts.manage"),
+        (TenantAction::AcknowledgeAlerts, "alerts.acknowledge"),
     ];
 
     #[test]

@@ -29,6 +29,8 @@ pub enum TenantAction {
     ReadAlerts,
     /// Configure tenant-owned alert rules and their activation.
     ManageAlerts,
+    /// Record operator acknowledgement independently of rule management.
+    AcknowledgeAlerts,
 }
 
 mod sealed {
@@ -116,6 +118,14 @@ pub struct ManageAlerts;
 impl sealed::Sealed for ManageAlerts {}
 impl TenantActionMarker for ManageAlerts {
     const ACTION: TenantAction = TenantAction::ManageAlerts;
+}
+
+/// Independent authority to acknowledge an observed alert; implies no reads or rule edits.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct AcknowledgeAlerts;
+impl sealed::Sealed for AcknowledgeAlerts {}
+impl TenantActionMarker for AcknowledgeAlerts {
+    const ACTION: TenantAction = TenantAction::AcknowledgeAlerts;
 }
 
 /// Describes one actor's attempt to perform an action in a selected tenant.

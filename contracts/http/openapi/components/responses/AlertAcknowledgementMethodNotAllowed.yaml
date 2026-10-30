@@ -1,0 +1,16 @@
+description: Only PUT is supported. Read acknowledgement annotations through existing alert reads.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+  Allow:
+    schema:
+      type: string
+    description: PUT.
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:alert-acknowledgement
+      title: Method not allowed
+      status: 405

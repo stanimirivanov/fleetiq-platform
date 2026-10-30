@@ -9,3 +9,4 @@ enum:
   - "metadata.read"
   - "protocol.manage"
   - "telemetry.read"
+  - "alerts.acknowledge"

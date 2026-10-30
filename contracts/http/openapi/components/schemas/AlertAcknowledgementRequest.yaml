@@ -1,0 +1,7 @@
+type: object
+additionalProperties: false
+required:
+- expected_version
+properties:
+  expected_version:
+    $ref: ./AlertLifecycleVersion.yaml

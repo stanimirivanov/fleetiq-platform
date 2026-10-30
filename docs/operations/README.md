@@ -87,3 +87,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Alert lifecycle](alert-lifecycle.md): event-time transitions, durable evidence receipts, replay suppression and notification intents without delivery.
 
 - [Tenant alert reads](alert-reads.md): bounded queue/detail/history, exact evidence references, grant and cursor semantics.
+
+- [Alert acknowledgement](alert-acknowledgement.md): exact-version operator intent, independent authority, original receipts and resolve races.
