@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT (replay_key=$3 AND evaluated_at_ms=$4 AND outcome=$5 AND outputs=$6 AND minimum_samples=$7) AS \"matches!\"\n            FROM analytics.evaluations WHERE tenant_id=$1 AND evaluation_id=$2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int8",
+        "Text",
+        "Jsonb",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "577522b1b875a32041ff635bbace8dac3cdd6ff56254831bfe330283daa936e8"
+}

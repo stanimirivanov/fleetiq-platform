@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO analytics.evaluations (tenant_id,evaluation_id,replay_key,key_digest,evaluated_at_ms,outcome,outputs,minimum_samples)\n            VALUES ($1,$2,$3,sha256(convert_to($3::jsonb::text,'UTF8')),$4,$5,$6,$7)\n            ON CONFLICT DO NOTHING RETURNING TRUE AS \"inserted!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "inserted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int8",
+        "Text",
+        "Jsonb",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3ff9b65950e10200c3c7f3c4769898859a8eacc3af592147c95470d9058cddb5"
+}
