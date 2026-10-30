@@ -92,7 +92,7 @@ impl<A: RequestAuthenticator> State<A> {
 struct RequiredUnit(Option<String>);
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Parameters {
+pub(crate) struct Parameters {
     kind: String,
     calculator: String,
     version: String,
@@ -146,7 +146,7 @@ impl Parameters {
         };
         d.is_valid().then_some(d)
     }
-    fn from_definition(d: &AlertRuleDefinition) -> Self {
+    pub(crate) fn from_definition(d: &AlertRuleDefinition) -> Self {
         Self {
             kind: fleetiq_analytics::ALERT_RULE_GRAMMAR.into(),
             calculator: d.calculator.id().to_string(),

@@ -1,0 +1,10 @@
+type: object
+additionalProperties: false
+required:
+- alert
+- definition
+properties:
+  alert:
+    $ref: ./AlertSummary.yaml
+  definition:
+    $ref: ./AlertRuleDefinition.yaml

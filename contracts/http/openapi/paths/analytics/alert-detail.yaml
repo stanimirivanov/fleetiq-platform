@@ -1,0 +1,30 @@
+get:
+  operationId: getAlert
+  summary: Read an exact pinned alert lifecycle
+  description: Requires exact current alerts.read before discovery. Metadata, telemetry, analytics and
+    alerts.manage grants imply no access. Returns the current checkpoint, latest phase-changing evaluation
+    reference and exact pinned condition. Missing, foreign and never-transitioned revisions return 404.
+    No acknowledgement or mutation is implied. All evidence references target existing calculator reads
+    that retain separate telemetry.read authority; no raw output or input payload is expanded.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/alert-rule-id.yaml
+  - $ref: ../../components/parameters/alert-identity-revision.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/AlertDetailSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml

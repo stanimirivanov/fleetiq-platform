@@ -1,0 +1,31 @@
+get:
+  operationId: listAlerts
+  summary: Read the tenant alert queue
+  description: Requires exact current alerts.read before discovery. Metadata, telemetry, analytics and
+    alerts.manage grants imply no access. Omission of phase selects pending/firing; exact filters include
+    retained resolved/inactive history. Newly initialized version-zero checkpoints are not alerts. Queue
+    order uses stable rule identity and revision, not mutable phase/time. Inserts before the cursor or
+    changing filters can enter/leave traversal; this is not a live snapshot. All evidence references target
+    existing calculator reads that retain separate telemetry.read authority; no raw output or input payload
+    is expanded.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/alert-phase.yaml
+  - $ref: ../../components/parameters/alert-page-limit.yaml
+  - $ref: ../../components/parameters/alert-read-after.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/AlertPageSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

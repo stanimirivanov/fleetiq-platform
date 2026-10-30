@@ -1,0 +1,8 @@
+name: limit
+in: query
+description: Maximum records returned; one extra record is fetched to determine continuation.
+schema:
+  type: integer
+  minimum: 1
+  maximum: 100
+  default: 50

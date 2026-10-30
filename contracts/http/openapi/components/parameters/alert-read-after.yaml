@@ -1,0 +1,5 @@
+name: after
+in: query
+description: Resume strictly after the opaque tenant/resource/filter-bound position.
+schema:
+  $ref: ../schemas/AlertReadCursor.yaml

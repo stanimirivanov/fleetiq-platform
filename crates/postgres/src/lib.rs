@@ -121,3 +121,6 @@ pub use alert_rules::{
 
 mod alerts;
 pub use alerts::{AlertProcessingError, PostgresAlertLifecycle};
+
+mod alert_reads;
+pub use alert_reads::{AlertRead, AlertReadError, AlertTransitionRead, PostgresAlertReads};

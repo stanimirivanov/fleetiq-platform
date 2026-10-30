@@ -1,0 +1,99 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          SELECT t.version,t.phase,t.event_at_ms,\n            (floor(extract(epoch FROM t.recorded_at)*1000)::bigint) AS \"recorded_at_ms!\",\n            p.activation_generation,t.evaluation_id,p.disposition\n          FROM analytics.alert_transitions t JOIN analytics.alert_evaluation_receipts p\n            ON p.tenant_id=t.tenant_id AND p.rule_id=t.rule_id AND p.revision=t.revision AND p.evaluation_id=t.evaluation_id\n          WHERE t.tenant_id=$1 AND t.rule_id=$2 AND t.revision=$3 AND t.version>$4\n          ORDER BY t.version LIMIT $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "phase",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "event_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "recorded_at_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "activation_generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_evaluation_receipts",
+            "name": "activation_generation"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "evaluation_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "evaluation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "disposition",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_evaluation_receipts",
+            "name": "disposition"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "95a0646d3744778ca011fb408b783742faefc8b0fcfe8e63282ef26cf94ea4ec"
+}

@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required:
+- alerts
+- next_after
+properties:
+  alerts:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./AlertSummary.yaml
+  next_after:
+    anyOf:
+    - $ref: ./AlertReadCursor.yaml
+    - type: 'null'
