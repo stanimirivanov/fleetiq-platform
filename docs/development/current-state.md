@@ -211,7 +211,10 @@ ordered calculated outputs with provenance checks and exact retry comparison; se
 [calculator evaluation storage](calculator-evaluation-storage.md).
 The checked-schema `calculate-once` command now runs the first-party window mean
 with immutable preparation, explicit decimal truncation and atomic terminal append.
-Background scheduling and installed operator dashboard qualification remain planned. Exact-property subscription transport now uses the authorized SSE boundary.
+The explicit checked-schema [analytics worker](../operations/analytics-worker.md) now
+enumerates bounded fixed windows with durable cursors, database-clock claims,
+three-attempt fencing and atomic terminal completion. HTTP activation, operator
+recovery controls and installed dashboard qualification remain planned. Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data
 

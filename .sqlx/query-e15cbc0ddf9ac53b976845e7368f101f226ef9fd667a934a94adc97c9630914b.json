@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO analytics.calculator_schedules\n              (tenant_id,schedule_id,calculator_id,calculator_version,configuration_id,scope_asset_id,target_asset_id,first_start_ms,window_ms,lateness_ms,minimum_samples,next_start_ms)\n            SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$8 FROM analytics.calculator_definitions d\n            JOIN metadata.assets a ON a.tenant_id=d.tenant_id AND a.asset_id=$7\n            JOIN metadata.asset_type_properties p ON p.tenant_id=a.tenant_id AND p.type_id=a.type_id AND p.type_version=a.type_version AND p.property_id=d.output_id AND p.property_version=d.output_version\n            WHERE d.tenant_id=$1 AND d.calculator_id=$3 AND d.calculator_version=$4\n              AND EXISTS(SELECT 1 FROM metadata.assets WHERE tenant_id=$1 AND asset_id=$6)\n            ON CONFLICT DO NOTHING RETURNING TRUE AS \"inserted!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "inserted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e15cbc0ddf9ac53b976845e7368f101f226ef9fd667a934a94adc97c9630914b"
+}

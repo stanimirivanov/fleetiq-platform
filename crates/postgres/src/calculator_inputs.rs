@@ -42,7 +42,7 @@ impl CalculatorPreparation for PostgresCalculatorPreparation {
         }
         let tenant = request.evaluation.tenant_id().as_str();
         let id = request.evaluation.id().as_str();
-        let encoded = json!({"scope":request.evaluation.scope_asset_id().as_str(),"calculator":request.evaluation.calculator().id().as_str(),"version":request.evaluation.calculator().version().as_str(),"configuration":request.configuration.as_str(),"start":request.window.start().get(),"end":request.window.end().get(),"finalize":request.window.finalize_at().get(),"known":request.known_at.get(),"evaluated":request.evaluation.evaluated_at().get(),"minimum":request.minimum_samples,"target":request.target.as_str()});
+        let encoded = request_json(request);
         if let Some((original, selection)) = self.saved(tenant, id).await? {
             if original != encoded {
                 return Err(PreparationError);
@@ -136,3 +136,7 @@ impl std::fmt::Display for PreparationError {
     }
 }
 impl std::error::Error for PreparationError {}
+
+pub(crate) fn request_json(request: &CalculatorRunRequest) -> Value {
+    json!({"scope":request.evaluation.scope_asset_id().as_str(),"calculator":request.evaluation.calculator().id().as_str(),"version":request.evaluation.calculator().version().as_str(),"configuration":request.configuration.as_str(),"start":request.window.start().get(),"end":request.window.end().get(),"finalize":request.window.finalize_at().get(),"known":request.known_at.get(),"evaluated":request.evaluation.evaluated_at().get(),"minimum":request.minimum_samples,"target":request.target.as_str()})
+}

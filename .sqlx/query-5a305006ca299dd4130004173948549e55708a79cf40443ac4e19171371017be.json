@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT (to_jsonb(s)-'next_start_ms'=$3) AS \"matches!\" FROM analytics.calculator_schedules s WHERE tenant_id=$1 AND schedule_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5a305006ca299dd4130004173948549e55708a79cf40443ac4e19171371017be"
+}
