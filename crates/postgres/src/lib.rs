@@ -90,3 +90,6 @@ pub use ingestion::{PostgresReplayError, PostgresReplayRepository};
 pub use ingestion::PostgresIngestionDiagnostics;
 
 pub use history::{PostgresSemanticWorkError, PostgresSemanticWorkRepository};
+
+mod analytics;
+pub use analytics::{CalculatorRegistryError, PostgresCalculatorRegistry};

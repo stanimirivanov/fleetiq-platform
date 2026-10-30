@@ -23,3 +23,9 @@ pub use output::{
     CalculatedProperty, CalculatedPropertyError, CalculatorEvaluation, CalculatorOutput,
     CalculatorOutputId, CalculatorRef,
 };
+
+mod definitions;
+pub use definitions::{
+    CalculatorDefinition, CalculatorDefinitionRegistry, CalculatorImplementation,
+    CalculatorRegistrationOutcome, UnknownCalculatorImplementation,
+};

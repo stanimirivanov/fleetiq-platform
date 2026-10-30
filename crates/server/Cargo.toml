@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+fleetiq-analytics = { path = "../analytics" }
 fleetiq-projection = { path = "../projection" }
 fleetiq-semantics = { path = "../semantics" }
 axum.workspace = true

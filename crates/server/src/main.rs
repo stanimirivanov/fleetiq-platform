@@ -63,6 +63,10 @@ async fn execute() -> Result<(), Box<dyn Error>> {
         ProcessCommand::SemanticWorker => fleetiq_server::run_semantic_worker().await?,
         ProcessCommand::ProjectionWorker => fleetiq_server::run_projection_worker().await?,
         ProcessCommand::RebuildCurrent => fleetiq_server::rebuild_current_state().await?,
+        ProcessCommand::RegisterCalculator => {
+            fleetiq_server::register_calculator_definition().await?;
+            println!("calculator declaration registered or already present");
+        }
         ProcessCommand::Help => println!("{}", ProcessCommand::usage()),
     }
     Ok(())

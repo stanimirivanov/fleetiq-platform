@@ -102,6 +102,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         name: "fleetiq-postgres",
         role: CrateRole::Adapter,
         normal: &[
+            "fleetiq-analytics",
             "fleetiq-access",
             "fleetiq-domain",
             "fleetiq-history",
@@ -153,6 +154,7 @@ pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
         name: "fleetiq-server",
         role: CrateRole::CompositionRoot,
         normal: &[
+            "fleetiq-analytics",
             "fleetiq-access",
             "fleetiq-semantics",
             "fleetiq-domain",

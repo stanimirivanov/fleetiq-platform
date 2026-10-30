@@ -204,7 +204,9 @@ semantic outputs, plus bounded canonical input manifests, finalized event-time
 windows, immutable configuration identities and logical replay keys. Terminal
 classifications distinguish completion, insufficient evidence and bounded failure;
 persistence and runners must enforce their cross-record invariants. The `fleetiq-live` crate owns full snapshots, forward-only
-deltas, cursor continuity, and resnapshot reasons. Calculator runtime and installed operator dashboard qualification remain
+deltas, cursor continuity, and resnapshot reasons. A tenant-owned immutable first-party calculator registry and checked-schema
+`register-calculator` command now persist exact input/output declarations.
+Calculator runtime and installed operator dashboard qualification remain
 planned. Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data

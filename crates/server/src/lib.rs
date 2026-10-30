@@ -277,3 +277,6 @@ pub use tcp_ingestion::{TcpIngestionConfig, TcpIngestionError, run_tcp_ingestion
 
 mod semantic_worker;
 pub use semantic_worker::{SemanticWorkerRunError, run_semantic_worker};
+
+mod calculator_registration;
+pub use calculator_registration::register_calculator_definition;

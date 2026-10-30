@@ -79,3 +79,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Exact-property live updates](property-live-updates.md) — authorized SSE, coalesced resume, terminal recovery and resource bounds.
 
 - [Observed fleet locations and coverage](fleet-location-snapshots.md): explicit mapping, coherent source evidence and bounded snapshot interpretation.
+
+- [Calculator registration](calculator-registration.md): trusted immutable first-party declarations, without activation.
