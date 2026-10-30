@@ -1,0 +1,79 @@
+get:
+  operationId: getAlertRuleRevision
+  summary: Read one retained alert-rule revision
+  description: Requires exact alerts.read before resource discovery; management, metadata or telemetry
+    grants do not imply this read. Returns retained exact content and original authenticated actor/time.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/alert-rule-id.yaml
+  - $ref: ../../components/parameters/alert-rule-revision.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/AlertRuleRevisionSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/AlertRuleMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+put:
+  operationId: createAlertRuleRevision
+  summary: Append one immutable alert-rule revision
+  description: Requires exact alerts.manage, independently delegated; browser mutations require matching
+    Origin and X-FleetIQ-CSRF. Current actor, tenant and grant are rechecked transactionally. Create only
+    the next immutable revision; equivalent canonical numeric text and same author retry exactly. New
+    revisions remain inactive while any prior selected revision remains selected.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/alert-rule-id.yaml
+  - $ref: ../../components/parameters/alert-rule-revision.yaml
+  - $ref: ../../components/parameters/admin-mutation-origin.yaml
+  - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/AlertRuleRevisionCreated.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/AlertRuleMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '409':
+      $ref: ../../components/responses/AlertRuleConflict.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/AlertRuleDefinition.yaml
+        example:
+          kind: numeric-threshold-v1
+          calculator: mean
+          version: '1'
+          scope: asset-a
+          target: result
+          output_property: mean.voltage
+          output_version: 1
+          output_index: 0
+          comparison: gt
+          threshold: '50'
+          threshold_unit: volt
+          hold_ms: 1000
+          resolution: resolve_on_false
+          resolve_after_ms: 2000

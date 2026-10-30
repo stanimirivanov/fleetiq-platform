@@ -1,0 +1,39 @@
+put:
+  operationId: changeAlertRuleActivation
+  summary: Select or deactivate an alert-rule revision
+  description: Requires exact alerts.manage, independently delegated; browser mutations require matching
+    Origin and X-FleetIQ-CSRF. Current actor, tenant and grant are rechecked transactionally. Selection
+    uses expected_generation; exact same-author retries return original receipt without restoring old
+    state. This endpoint configures intent only; no alert worker or notification delivery is started.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/alert-rule-id.yaml
+  - $ref: ../../components/parameters/admin-mutation-origin.yaml
+  - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/AlertRuleActivationSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/AlertRuleMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '409':
+      $ref: ../../components/responses/AlertRuleConflict.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/AlertRuleActivationRequest.yaml
+        example:
+          expected_generation: 0
+          revision: 1

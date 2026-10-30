@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT analytics.change_alert_rule_activation($1,$2,$3,$4,$5) AS \"generation!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b2ad40bc7f6164577a72ec9d99e93a54c787bdbde4a0d012b3e70fb850730a2b"
+}

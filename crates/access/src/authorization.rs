@@ -25,6 +25,10 @@ pub enum TenantAction {
     ManageProtocols,
     /// Create calculator configuration revisions and control their scheduling.
     ManageAnalytics,
+    /// Read tenant-owned alert rules and alert evidence.
+    ReadAlerts,
+    /// Configure tenant-owned alert rules and their activation.
+    ManageAlerts,
 }
 
 mod sealed {
@@ -97,6 +101,21 @@ pub struct ManageAnalytics;
 impl sealed::Sealed for ManageAnalytics {}
 impl TenantActionMarker for ManageAnalytics {
     const ACTION: TenantAction = TenantAction::ManageAnalytics;
+}
+
+/// Independent authority to read alert configuration and alert records.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReadAlerts;
+impl sealed::Sealed for ReadAlerts {}
+impl TenantActionMarker for ReadAlerts {
+    const ACTION: TenantAction = TenantAction::ReadAlerts;
+}
+/// Independent authority to configure alert rules; does not imply read access.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageAlerts;
+impl sealed::Sealed for ManageAlerts {}
+impl TenantActionMarker for ManageAlerts {
+    const ACTION: TenantAction = TenantAction::ManageAlerts;
 }
 
 /// Describes one actor's attempt to perform an action in a selected tenant.

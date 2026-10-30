@@ -1,0 +1,31 @@
+type: object
+additionalProperties: false
+required:
+- generation
+- revision
+- actor_id
+- recorded_at_ms
+properties:
+  generation:
+    type: integer
+    minimum: 0
+    maximum: 4294967295
+  revision:
+    type:
+    - integer
+    - 'null'
+    minimum: 1
+    maximum: 4294967295
+  actor_id:
+    anyOf:
+    - $ref: ./AdministrationIdentifier.yaml
+    - type: 'null'
+  recorded_at_ms:
+    type:
+    - integer
+    - 'null'
+    format: int64
+    minimum: -9223372036854775808
+    maximum: 9223372036854775807
+description: Generation zero is inactive with null attribution/time. A retry returns its original receipt
+  without restoring old state.

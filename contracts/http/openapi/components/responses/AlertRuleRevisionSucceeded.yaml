@@ -1,0 +1,27 @@
+description: Exact immutable definition and original actor/time.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/AlertRuleRevision.yaml
+    example:
+      revision: 1
+      definition:
+        kind: numeric-threshold-v1
+        calculator: mean
+        version: '1'
+        scope: asset-a
+        target: result
+        output_property: mean.voltage
+        output_version: 1
+        output_index: 0
+        comparison: gt
+        threshold: '50'
+        threshold_unit: volt
+        hold_ms: 1000
+        resolution: resolve_on_false
+        resolve_after_ms: 2000
+      actor_id: operator-a
+      recorded_at_ms: 1000

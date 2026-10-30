@@ -1,0 +1,27 @@
+get:
+  operationId: getAlertRuleHead
+  summary: Read alert-rule authoring head and current selection
+  description: Requires exact alerts.read before resource discovery; management, metadata or telemetry
+    grants do not imply this read. Latest revision and activation are separate version counters. A newly
+    created rule is inactive.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/alert-rule-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/AlertRuleHeadSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/AlertRuleMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml

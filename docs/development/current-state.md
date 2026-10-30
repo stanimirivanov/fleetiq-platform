@@ -220,7 +220,11 @@ separate `analytics.manage` with metadata-read discovery. Protected
 [evaluation/output evidence](../operations/calculator-evidence.md) now provides
 bounded terminal summary pages, exact input manifests and separate output pages
 under `telemetry.read`, without raw preparation expansion. Operator recovery controls
-and installed dashboard qualification remain planned. Exact-property subscription transport now uses the authorized SSE boundary.
+and installed dashboard qualification remain planned. Protected
+[alert-rule configuration](../operations/alert-rule-configuration.md) now retains
+closed numeric-threshold-v1 revisions with independent alerts.read/manage grants
+and optimistic selection, inactive by default. Missing evidence remains unknown;
+alert execution, transitions and delivery remain planned. Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data
 
