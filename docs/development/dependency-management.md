@@ -114,15 +114,27 @@ structural regeneration, tooling isolation, and cache policy.
 ### Wasmtime security patch qualification
 
 The protocol adapter retains the same Wasmtime features and owning layer, with
-the minimum version raised to 49.0.4. Its coordinated Cranelift/internal patches
-address RUSTSEC-2026-0378 and RUSTSEC-2026-0379, including component-stream payload
-validation and AArch64 branch generation; see the
-[upstream release](https://github.com/bytecodealliance/wasmtime/releases/tag/v49.0.4).
-No WASI or network capabilities, new direct dependencies, or advisory exceptions
-are added. Existing protocol admission, fuel, memory, deadline, cancellation,
-and cleanup tests qualify the patch, followed by the full workspace gate.
-Future advisories still fail cargo-deny. Rollback must not restore the vulnerable
-runtime; use a qualified patched successor if a regression is found.
+minimum version 49.0.5 and coordinated Cranelift 0.136.5/internal runtime patches.
+This fixes the three advisories published on 29 October 2026:
+
+- [GHSA-3982-jqvv-277m](https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-3982-jqvv-277m): insufficient typed-function checks for i31/nullref.
+- [GHSA-qw58-7h65-crq2](https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-qw58-7h65-crq2): cross-engine struct/supertype confusion.
+- [GHSA-6fr9-xmw9-5352](https://github.com/bytecodealliance/wasmtime/security/advisories/GHSA-6fr9-xmw9-5352): uncharged memory for borrowed component resources.
+
+The [49.0.5 release](https://github.com/bytecodealliance/wasmtime/releases/tag/v49.0.5)
+also retains the earlier 49.0.4 fixes for RUSTSEC-2026-0378/0379. The owner remains
+`fleetiq-protocol-wasm`; alternatives are affected 49.0.4 or a broader major-version
+migration, so this is the narrow compatible patch. Features remain `anyhow`,
+`component-model`, `cranelift`, `runtime` and `std`, with defaults disabled. Upstream
+MSRV is 1.96.0, within the pinned project compiler 1.99.1; license remains
+`Apache-2.0 WITH LLVM-exception` from crates.io. The maintained upstream patch
+updates 27 existing package versions, adding/removing no package names.
+
+No WASI/network capability, new direct dependency, advisory exception or policy
+weakening is added. Existing protocol admission, fuel, memory, deadline,
+cancellation and cleanup tests qualify the patch, followed by the full workspace
+gate and authoritative supply-chain group. Future advisories still fail cargo-deny.
+Rollback must use a qualified patched successor, never restore the vulnerable runtime.
 
 The protocol component fixture parser and encoder (`wit-parser` and
 `wit-component`) must pin the same exact wasm-tools release. The repository
