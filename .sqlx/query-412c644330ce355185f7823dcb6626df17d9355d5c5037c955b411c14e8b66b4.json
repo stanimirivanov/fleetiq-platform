@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE analytics.alert_lifecycles SET phase=$4,candidate_since_ms=$5,last_event_at_ms=$6,\n              activation_generation=$7,version=$8,last_turn_at=clock_timestamp()\n            WHERE tenant_id=$1 AND rule_id=$2 AND revision=$3\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "412c644330ce355185f7823dcb6626df17d9355d5c5037c955b411c14e8b66b4"
+}

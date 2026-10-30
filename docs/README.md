@@ -83,3 +83,7 @@ use the [current-state operations guide](operations/current-property-state.md) a
 For demand-driven current-property SSE, scoped resume and recovery, use the
 [live operations guide](operations/property-live-updates.md) and
 [ADR 0122](adr/0122-deliver-authorized-property-state-over-sse.md).
+
+For selected numeric alert rules and durable evidence-driven lifecycle execution,
+use [alert lifecycle operation](operations/alert-lifecycle.md) and
+[ADR 0131](adr/0131-evaluate-durable-alert-lifecycles.md).

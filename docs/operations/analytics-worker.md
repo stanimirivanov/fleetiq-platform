@@ -49,6 +49,16 @@ pauses unclaimed work; issued claims may complete atomically with their original
 evidence. Switching revisions retains old pending work without running it. Selecting
 the old revision again resumes its original cursor and saved requests.
 
+## Alert lifecycle
+
+Each turn also independently consumes one selected alert-rule evidence item.
+Checkpoint, evidence receipt, optional transition and notification intent commit
+atomically; failure in calculator execution does not block this consumer. Only
+completed scheduled work at/after the rule's activation boundary can affect live
+state; one-shot/historical evidence cannot silently notify. No network delivery
+runs. See [alert lifecycle operation](alert-lifecycle.md) for timing, missing-data,
+replay, deactivation and migration rules.
+
 ## Rollout and rollback
 
 Stop old workers, apply 0043 and deploy updated checked-schema binaries. Read imported

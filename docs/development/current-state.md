@@ -224,7 +224,10 @@ and installed dashboard qualification remain planned. Protected
 [alert-rule configuration](../operations/alert-rule-configuration.md) now retains
 closed numeric-threshold-v1 revisions with independent alerts.read/manage grants
 and optimistic selection, inactive by default. Missing evidence remains unknown;
-alert execution, transitions and delivery remain planned. Exact-property subscription transport now uses the authorized SSE boundary.
+the explicit analytics worker now persists event-time alert lifecycle transitions,
+deduplicated evidence receipts and atomic notification intents. Historical/one-shot
+evidence cannot create live transitions. Alert reads, acknowledgement and network
+delivery remain planned; see [lifecycle operation](../operations/alert-lifecycle.md). Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data
 

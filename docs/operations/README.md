@@ -83,3 +83,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Calculator registration](calculator-registration.md): trusted immutable first-party declarations, without activation.
 
 - [One-shot calculators](calculator-once.md): checked-schema execution with durable input pinning and retry.
+
+- [Alert lifecycle](alert-lifecycle.md): event-time transitions, durable evidence receipts, replay suppression and notification intents without delivery.

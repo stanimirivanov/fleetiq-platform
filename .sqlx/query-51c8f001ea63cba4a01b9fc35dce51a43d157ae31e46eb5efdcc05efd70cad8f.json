@@ -1,0 +1,162 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT a.revision,a.phase,a.candidate_since_ms,a.last_event_at_ms,\n              a.activation_generation,a.version,h.generation,r.definition,\n              GREATEST(a.live_from_ms,c.recorded_at_ms) AS \"live_from_ms!\",\n              e.evaluation_id AS \"evaluation_id!\",e.start_ms AS \"start_ms!\",\n              e.end_ms AS \"end_ms!\",e.evaluated_ms AS \"evaluated_ms!\",e.value,e.scheduled AS \"scheduled!\"\n            FROM analytics.alert_rules h\n            JOIN analytics.alert_rule_revisions r ON r.tenant_id=h.tenant_id AND r.rule_id=h.rule_id AND r.revision=h.active_revision\n            JOIN analytics.alert_lifecycles a ON a.tenant_id=r.tenant_id AND a.rule_id=r.rule_id AND a.revision=r.revision\n            JOIN analytics.alert_rule_activation_changes c ON c.tenant_id=h.tenant_id AND c.rule_id=h.rule_id AND c.generation=h.generation\n            CROSS JOIN LATERAL analytics.next_alert_evidence(h.tenant_id,h.rule_id,h.active_revision) e\n            WHERE h.tenant_id=$1 AND h.rule_id=$2 FOR UPDATE OF a\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "phase",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "candidate_since_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "candidate_since_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "last_event_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "last_event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "activation_generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "activation_generation"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rules",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "definition",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_revisions",
+            "name": "definition"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "live_from_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "evaluation_id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 10,
+        "name": "start_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "end_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "evaluated_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "value",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "scheduled!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "51c8f001ea63cba4a01b9fc35dce51a43d157ae31e46eb5efdcc05efd70cad8f"
+}
