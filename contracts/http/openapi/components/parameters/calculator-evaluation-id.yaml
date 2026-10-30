@@ -1,0 +1,6 @@
+name: evaluation_id
+in: path
+required: true
+description: Exact retained calculator evaluation identity.
+schema:
+  $ref: ../schemas/AdministrationIdentifier.yaml

@@ -1,0 +1,13 @@
+type: object
+additionalProperties: false
+required:
+- evaluation
+- inputs
+properties:
+  evaluation:
+    $ref: ./CalculatorEvaluationSummary.yaml
+  inputs:
+    type: array
+    maxItems: 1024
+    items:
+      $ref: ./CalculatorInputReference.yaml

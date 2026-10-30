@@ -106,7 +106,10 @@ where
 {
     let calculators =
         calculator_configuration::router(pool.clone(), authentication.clone(), mutation.clone());
-    protected_capability_routers(pool, authentication, mutation).merge(calculators)
+    let evidence = calculator_evidence::router(pool.clone(), authentication.clone());
+    protected_capability_routers(pool, authentication, mutation)
+        .merge(calculators)
+        .merge(evidence)
 }
 
 fn protected_capability_routers<A>(
@@ -301,3 +304,6 @@ mod analytics_worker;
 pub use analytics_worker::run_analytics_worker;
 
 mod calculator_configuration;
+
+mod calculator_evidence;
+mod cursor_codec;

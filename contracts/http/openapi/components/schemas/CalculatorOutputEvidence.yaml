@@ -1,0 +1,47 @@
+type: object
+additionalProperties: false
+required:
+- evaluation_id
+- calculator_id
+- calculator_version
+- output_index
+- asset_id
+- property_id
+- property_version
+- kind
+- value
+- unit
+properties:
+  evaluation_id:
+    $ref: ./AdministrationIdentifier.yaml
+  calculator_id:
+    $ref: ./AdministrationIdentifier.yaml
+  calculator_version:
+    $ref: ./AdministrationIdentifier.yaml
+  output_index:
+    type: integer
+    minimum: 0
+    maximum: 1023
+  asset_id:
+    $ref: ./AdministrationIdentifier.yaml
+  property_id:
+    $ref: ./AdministrationIdentifier.yaml
+  property_version:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  kind:
+    type: string
+    const: decimal
+  value:
+    type: string
+    minLength: 1
+    maxLength: 4096
+    description: Exact finite decimal text, potentially exponent notation. Never convert through binary
+      float.
+  unit:
+    anyOf:
+    - $ref: ./AdministrationIdentifier.yaml
+    - type: 'null'
+description: Identity is tenant/evaluation/calculator release/output_index; target/property/unit and stored
+  decimal text are retained.

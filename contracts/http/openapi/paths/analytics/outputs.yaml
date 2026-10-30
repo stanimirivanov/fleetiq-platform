@@ -1,0 +1,31 @@
+get:
+  operationId: listCalculatorEvaluationOutputs
+  summary: listCalculatorEvaluationOutputs
+  description: Requires fresh exact telemetry.read before discovery; metadata.read or analytics.manage
+    does not imply access. Strict query fields, no-store, at most 1 MiB serialized response, no raw preparation/payload
+    expansion. Exact evaluation must belong to the tenant and input scope. Cursor binds this evaluation
+    and resource; it cannot be used on another output page.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/calculator-evidence-asset-id.yaml
+  - $ref: ../../components/parameters/calculator-evaluation-id.yaml
+  - $ref: ../../components/parameters/calculator-output-limit.yaml
+  - $ref: ../../components/parameters/calculator-evidence-after.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/CalculatorOutputPageSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml

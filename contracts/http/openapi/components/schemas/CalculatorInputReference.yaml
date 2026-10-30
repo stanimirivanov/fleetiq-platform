@@ -1,0 +1,13 @@
+type: object
+additionalProperties: false
+required:
+- evidence_id
+- event_at_ms
+properties:
+  evidence_id:
+    type: string
+    pattern: ^[0-9a-f]{64}$
+  event_at_ms:
+    $ref: ./HistoryMillis.yaml
+description: Exact immutable semantic evidence identity and event time. Does not expand decoded payloads
+  or prepared values; semantic history reads use the pinned scope/property/window.

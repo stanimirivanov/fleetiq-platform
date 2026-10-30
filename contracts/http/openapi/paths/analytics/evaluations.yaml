@@ -1,0 +1,30 @@
+get:
+  operationId: listCalculatorEvaluations
+  summary: listCalculatorEvaluations
+  description: Requires fresh exact telemetry.read before discovery; metadata.read or analytics.manage
+    does not imply access. Strict query fields, no-store, at most 1 MiB serialized response, no raw preparation/payload
+    expansion. Half-open event-time range is [start_at_ms,end_at_ms), at most seven days; event time is
+    window end. Cursors bind tenant/asset/range; new backdated appends are not a paging snapshot.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/calculator-evidence-asset-id.yaml
+  - $ref: ../../components/parameters/history-start-at-ms.yaml
+  - $ref: ../../components/parameters/history-end-at-ms.yaml
+  - $ref: ../../components/parameters/calculator-evaluation-limit.yaml
+  - $ref: ../../components/parameters/calculator-evidence-after.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/CalculatorEvaluationPageSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

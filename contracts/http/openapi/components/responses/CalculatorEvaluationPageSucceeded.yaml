@@ -1,0 +1,31 @@
+description: Bounded terminal summaries in ascending window-end/evaluation-ID C order. No snapshot guarantee.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/CalculatorEvaluationPage.yaml
+    example:
+      evaluations:
+      - evaluation_id: evaluation-a
+        scope_asset_id: asset-a
+        calculator:
+          id: mean
+          version: '1'
+          implementation: window-mean-v1
+        configuration_id: execution-a
+        input_property:
+          id: electrical.voltage
+          version: 1
+        window:
+          start_at_ms: '0'
+          end_at_ms: '3000'
+          finalize_at_ms: '3000'
+          known_at_ms: '3000'
+        evaluated_at_ms: '3500'
+        outcome: complete
+        minimum_samples: 1
+        input_count: 1
+        output_count: 1
+      next_after: null

@@ -1,0 +1,5 @@
+type: string
+maxLength: 8192
+pattern: ^v1\.(?:[0-9a-f]{2})+$
+description: Opaque bounded public position, not a signature or authority. Bound to tenant, asset, resource,
+  time range for lists and exact evaluation for outputs. Page size may change; pages are not snapshots.

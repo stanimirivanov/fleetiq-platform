@@ -1,0 +1,6 @@
+name: after
+in: query
+description: Versioned position bound to this exact read scope; malformed or foreign positions return
+  400.
+schema:
+  $ref: ../schemas/CalculatorEvidenceCursor.yaml

@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required:
+- outputs
+- next_after
+properties:
+  outputs:
+    type: array
+    maxItems: 20
+    items:
+      $ref: ./CalculatorOutputEvidence.yaml
+  next_after:
+    anyOf:
+    - $ref: ./CalculatorEvidenceCursor.yaml
+    - type: 'null'
