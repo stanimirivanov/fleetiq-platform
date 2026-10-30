@@ -13,7 +13,7 @@ impl PostgresCalculatorRegistry {
     /// # Errors
     /// Returns a bounded error for invalid/missing references, content collision
     /// or database failure. Property definitions are immutable; SELECT validates
-    /// numeric input, decimal output and matching units before insertion.
+    /// numeric input, decimal output and ABI-specific units before insertion.
     pub async fn register(
         &self,
         d: &CalculatorDefinition,
@@ -34,7 +34,8 @@ impl PostgresCalculatorRegistry {
             WHERE i.tenant_id = $1 AND i.property_id = $5 AND i.version = $6
               AND o.property_id = $7 AND o.version = $8
               AND i.value_kind IN ('integer', 'decimal') AND o.value_kind = 'decimal'
-              AND i.canonical_unit IS NOT DISTINCT FROM o.canonical_unit
+              AND (($4='window-mean-v1' AND i.canonical_unit IS NOT DISTINCT FROM o.canonical_unit)
+                OR ($4='window-mad-v1' AND o.canonical_unit IS NULL))
             ON CONFLICT DO NOTHING RETURNING TRUE AS "inserted!"
         "#,tenant,id,version,implementation,input,iv,output,ov).fetch_optional(&self.0).await.map_err(|_|CalculatorRegistryError::Database)?;
         if inserted.is_some() {

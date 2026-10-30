@@ -9,6 +9,9 @@ pub enum CalculatorImplementation {
     /// One numeric input, decimal mean output in the same canonical unit.
     /// Configuration uses PR1's window/input limits; minimum samples is 1..=1024.
     WindowMeanV1,
+    /// Latest point versus at least three baseline points; strict deviation > 6 MAD.
+    /// Output is a dimensionless decimal flag, zero or one.
+    WindowMadV1,
 }
 impl CalculatorImplementation {
     /// Resolves only a reviewed first-party implementation identifier.
@@ -17,12 +20,16 @@ impl CalculatorImplementation {
     pub fn parse(value: &str) -> Result<Self, UnknownCalculatorImplementation> {
         match value {
             "window-mean-v1" => Ok(Self::WindowMeanV1),
+            "window-mad-v1" => Ok(Self::WindowMadV1),
             _ => Err(UnknownCalculatorImplementation),
         }
     }
     /// Returns the immutable implementation/configuration contract identifier.
     pub const fn as_str(self) -> &'static str {
-        "window-mean-v1"
+        match self {
+            Self::WindowMeanV1 => "window-mean-v1",
+            Self::WindowMadV1 => "window-mad-v1",
+        }
     }
 }
 /// An implementation is not admitted by this binary.
@@ -36,7 +43,7 @@ impl fmt::Display for UnknownCalculatorImplementation {
 impl Error for UnknownCalculatorImplementation {}
 
 /// Tenant-owned release with exact input/output property versions.
-/// The store verifies reference ownership, numeric kinds and matching units.
+/// The store verifies ownership, numeric kinds and implementation-specific units.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CalculatorDefinition {
     /// Tenant whose property catalogue owns both references.
@@ -47,7 +54,7 @@ pub struct CalculatorDefinition {
     pub implementation: CalculatorImplementation,
     /// Exact semantic input definition; role is `input`.
     pub input: PropertyDefinitionRef,
-    /// Exact semantic output definition; role is `mean`.
+    /// Exact decimal output: mean with matching units, or dimensionless anomaly flag.
     pub output: PropertyDefinitionRef,
 }
 /// Result of registering immutable definition content.
@@ -83,7 +90,14 @@ mod tests {
                 .as_str(),
             "window-mean-v1"
         );
+        assert_eq!(
+            CalculatorImplementation::parse("window-mad-v1")
+                .unwrap()
+                .as_str(),
+            "window-mad-v1"
+        );
         for invalid in [
+            "window-mad-v2",
             "",
             "window-mean-v2",
             " window-mean-v1",
