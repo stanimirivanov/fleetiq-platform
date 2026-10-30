@@ -1,0 +1,13 @@
+description: Open version acknowledged, or original same-author receipt returned without reapplying or
+  changing health.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/AlertAcknowledgement.yaml
+    example:
+      version: '2'
+      actor_id: operator-a
+      recorded_at_ms: '2010'

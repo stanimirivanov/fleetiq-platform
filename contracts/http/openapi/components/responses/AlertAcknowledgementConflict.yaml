@@ -1,0 +1,13 @@
+description: Expected version, open phase, original author or target identity conflicts. Foreign/missing/unobserved
+  targets are not distinguished.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:alert-acknowledgement
+      title: Alert acknowledgement version, phase or author conflicts
+      status: 409

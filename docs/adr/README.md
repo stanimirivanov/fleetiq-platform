@@ -175,3 +175,5 @@ introducing a new record.
 | [0131](0131-evaluate-durable-alert-lifecycles.md) | Event-time lifecycle checkpoints, immutable evidence receipts and atomic notification intents |
 
 | [0132](0132-publish-bounded-alert-reads.md) | Authorized observed-alert queue, exact detail, bounded transition history and evidence references |
+
+| [0133](0133-acknowledge-exact-alert-versions.md) | Independent acknowledgement authority, immutable exact-version receipts and annotated reads |

@@ -1,7 +1,7 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.25"
+  version: "1.0.0-baseline.26"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
 servers:
   - url: "/"
@@ -125,8 +125,14 @@ paths:
     $ref: ./paths/analytics/alert-detail.yaml
   /api/v1/tenants/{tenant_id}/alerts/{rule_id}/revisions/{revision}/transitions:
     $ref: ./paths/analytics/alert-transitions.yaml
+  /api/v1/tenants/{tenant_id}/alerts/{rule_id}/revisions/{revision}/acknowledgement:
+    $ref: ./paths/analytics/alert-acknowledgement.yaml
 components:
   schemas:
+    AlertAcknowledgementRequest:
+      $ref: ./components/schemas/AlertAcknowledgementRequest.yaml
+    AlertAcknowledgement:
+      $ref: ./components/schemas/AlertAcknowledgement.yaml
     AlertPhase:
       $ref: ./components/schemas/AlertPhase.yaml
     AlertLifecycleVersion:
@@ -591,6 +597,12 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    AlertAcknowledgementSucceeded:
+      $ref: ./components/responses/AlertAcknowledgementSucceeded.yaml
+    AlertAcknowledgementConflict:
+      $ref: ./components/responses/AlertAcknowledgementConflict.yaml
+    AlertAcknowledgementMethodNotAllowed:
+      $ref: ./components/responses/AlertAcknowledgementMethodNotAllowed.yaml
     AlertPageSucceeded:
       $ref: ./components/responses/AlertPageSucceeded.yaml
     AlertDetailSucceeded:

@@ -26,6 +26,8 @@ pub(super) enum Action {
     ReadAlerts,
     #[serde(rename = "alerts.manage")]
     ManageAlerts,
+    #[serde(rename = "alerts.acknowledge")]
+    AcknowledgeAlerts,
 }
 impl From<Action> for TenantAction {
     fn from(action: Action) -> Self {
@@ -38,6 +40,7 @@ impl From<Action> for TenantAction {
             Action::ManageAnalytics => Self::ManageAnalytics,
             Action::ReadAlerts => Self::ReadAlerts,
             Action::ManageAlerts => Self::ManageAlerts,
+            Action::AcknowledgeAlerts => Self::AcknowledgeAlerts,
         }
     }
 }
@@ -52,6 +55,7 @@ impl From<TenantAction> for Action {
             TenantAction::ManageAnalytics => Self::ManageAnalytics,
             TenantAction::ReadAlerts => Self::ReadAlerts,
             TenantAction::ManageAlerts => Self::ManageAlerts,
+            TenantAction::AcknowledgeAlerts => Self::AcknowledgeAlerts,
         }
     }
 }

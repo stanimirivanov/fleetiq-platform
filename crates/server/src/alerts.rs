@@ -1,7 +1,7 @@
 //! Protected observed-alert queue, exact detail and bounded immutable history.
 mod dto;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 use crate::{
     cursor_codec,
     protected_request::{self, ProtectedRequestError, RequestAuthenticator},

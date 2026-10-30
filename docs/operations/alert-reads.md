@@ -60,5 +60,7 @@ checkpoint index uses explicit C ordering without rewriting facts/grants/state.
 Measure retained volume and choose an idle deployment window because transactional
 index creation can block worker updates. Regenerate clients from baseline.25.
 Rollback stops affected traffic and retains schema/history; older checked-schema
-binaries reject the newer ledger. Acknowledgement, alert SSE, aggregates, delivery
-and connected UI remain later slices. No new dependency or permission is added.
+binaries reject the newer ledger. Baseline.26 adds optional nullable acknowledgement
+annotations per transition version; see [acknowledgement](alert-acknowledgement.md).
+Phase/evidence remain immutable while annotations can arrive later. Alert SSE,
+aggregates, delivery and connected UI remain later slices. No new dependency or permission is added.

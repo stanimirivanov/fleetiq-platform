@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT actor_id,(floor(extract(epoch FROM recorded_at)*1000)::bigint) AS \"recorded_at_ms!\"\n            FROM analytics.alert_acknowledgements WHERE tenant_id=$1 AND rule_id=$2 AND revision=$3 AND version=$4\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_acknowledgements",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "recorded_at_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "5ec525dc9f2cff058b6298071a865a0f548e7c03d09052c06c81d700aea71c3d"
+}

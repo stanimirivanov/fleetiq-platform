@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.25",
+    "version": "1.0.0-baseline.26",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -3878,10 +3878,111 @@
           }
         }
       }
+    },
+    "/api/v1/tenants/{tenant_id}/alerts/{rule_id}/revisions/{revision}/acknowledgement": {
+      "put": {
+        "operationId": "acknowledgeAlert",
+        "summary": "Acknowledge an expected open alert version",
+        "description": "Requires independent current alerts.acknowledge; alerts.read/manage and other grants imply no authority. Browser mutations require exact Origin and X-FleetIQ-CSRF. Rechecks active actor, tenant and grant transactionally even for retries. First commands require the current pending/firing version. Exact same-author retries return original actor/time even after resolution; another author or stale/closed/missing/foreign/unobserved target conflicts. Pins the existing lifecycle version without incrementing it, resolving, silencing, changing timers or suppressing notification intents. Body is closed and bounded to 1024 bytes; query parameters are rejected.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-identity-revision"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertAcknowledgementRequest"
+              },
+              "example": {
+                "expected_version": "2"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertAcknowledgementSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/AlertAcknowledgementMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/AlertAcknowledgementConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AlertAcknowledgementRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_version"
+        ],
+        "properties": {
+          "expected_version": {
+            "$ref": "#/components/schemas/AlertLifecycleVersion"
+          }
+        }
+      },
+      "AlertAcknowledgement": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "actor_id",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "version": {
+            "$ref": "#/components/schemas/AlertLifecycleVersion"
+          },
+          "actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "recorded_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          }
+        },
+        "description": "Original immutable acknowledgement of this phase-transition version, not condition resolution, silence or suppression. Same-author exact retries retain actor/time even after later phases. A later version requires a separate acknowledgement."
+      },
       "AlertPhase": {
         "type": "string",
         "enum": [
@@ -3964,6 +4065,17 @@
           },
           "evidence": {
             "$ref": "#/components/schemas/AlertEvaluationRef"
+          },
+          "acknowledgement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlertAcknowledgement"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Independent optional operator annotation for this exact version. May arrive after a page was read; original phase/evidence remain immutable."
           }
         }
       },
@@ -7512,7 +7624,8 @@
           "metadata.manage",
           "metadata.read",
           "protocol.manage",
-          "telemetry.read"
+          "telemetry.read",
+          "alerts.acknowledge"
         ]
       },
       "OperatorTenant": {
@@ -7531,7 +7644,7 @@
           "actions": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 8,
+            "maxItems": 9,
             "uniqueItems": true,
             "description": "Explicit current grants ordered by action name; never reusable authorization.",
             "items": {
@@ -9097,6 +9210,72 @@
       }
     },
     "responses": {
+      "AlertAcknowledgementSucceeded": {
+        "description": "Open version acknowledged, or original same-author receipt returned without reapplying or changing health.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertAcknowledgement"
+            },
+            "example": {
+              "version": "2",
+              "actor_id": "operator-a",
+              "recorded_at_ms": "2010"
+            }
+          }
+        }
+      },
+      "AlertAcknowledgementConflict": {
+        "description": "Expected version, open phase, original author or target identity conflicts. Foreign/missing/unobserved targets are not distinguished.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:alert-acknowledgement",
+              "title": "Alert acknowledgement version, phase or author conflicts",
+              "status": 409
+            }
+          }
+        }
+      },
+      "AlertAcknowledgementMethodNotAllowed": {
+        "description": "Only PUT is supported. Read acknowledgement annotations through existing alert reads.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "PUT."
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:alert-acknowledgement",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
       "AlertPageSucceeded": {
         "description": "Bounded observed alerts in C-collated rule/revision order; no snapshot guarantee.",
         "headers": {

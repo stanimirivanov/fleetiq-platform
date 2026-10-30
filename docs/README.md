@@ -91,3 +91,7 @@ use [alert lifecycle operation](operations/alert-lifecycle.md) and
 For authorized observed-alert queue/detail and bounded transition history, use
 [tenant alert reads](operations/alert-reads.md) and
 [ADR 0132](adr/0132-publish-bounded-alert-reads.md).
+
+For audited alert operator intent and exact-version command retry semantics, use
+[alert acknowledgement](operations/alert-acknowledgement.md) and
+[ADR 0133](adr/0133-acknowledge-exact-alert-versions.md).

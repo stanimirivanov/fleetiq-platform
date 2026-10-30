@@ -6,7 +6,7 @@ use axum::{
 use tower::ServiceExt;
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const ROOT: &str = "/api/v1/tenants/tenant-a/alerts";
-async fn setup(pool: &PgPool) -> Router {
+pub(crate) async fn setup(pool: &PgPool) -> Router {
     sqlx::raw_sql(include_str!(
         "../../../postgres/tests/property_history/topology.sql"
     ))
@@ -38,7 +38,7 @@ async fn setup(pool: &PgPool) -> Router {
 fn definition(threshold: &str, hold: u32) -> Value {
     json!({"kind":"numeric-threshold-v1","calculator":"mean","version":"1","scope":"asset-a","target":"result","output_property":"mean.voltage","output_version":1,"output_index":0,"comparison":"gt","threshold":threshold,"threshold_unit":"volt","hold_ms":hold,"resolution":"resolve_on_false","resolve_after_ms":0})
 }
-async fn rule(pool: &PgPool, id: &str, threshold: &str, hold: u32) {
+pub(crate) async fn rule(pool: &PgPool, id: &str, threshold: &str, hold: u32) {
     sqlx::query("SELECT analytics.create_alert_rule_revision('tenant-a',$1,1,'operator-a',$2)")
         .bind(id)
         .bind(definition(threshold, hold))
@@ -51,10 +51,10 @@ async fn rule(pool: &PgPool, id: &str, threshold: &str, hold: u32) {
         .await
         .unwrap();
 }
-async fn boundary(pool: &PgPool) -> i64 {
+pub(crate) async fn boundary(pool: &PgPool) -> i64 {
     sqlx::query_scalar("SELECT GREATEST(max(recorded_at_ms),9007199254740993::bigint) FROM analytics.alert_rule_activation_changes").fetch_one(pool).await.unwrap()
 }
-async fn publish(pool: &PgPool, id: &str, start: i64, value: Option<&str>) {
+pub(crate) async fn append_evidence(pool: &PgPool, id: &str, start: i64, value: Option<&str>) {
     let outputs=value.map_or_else(||json!([]),|v|json!([{"asset":"result","property":"mean.voltage","version":1,"kind":"decimal","value":v,"unit":"volt"}]));
     let key = json!({"scope":"asset-a","calculator":"mean","version":"1","configuration":id,"start":start,"end":start+1000,"finalize":start+1000,"known":start+1000,"inputs":[]});
     sqlx::query("INSERT INTO analytics.evaluations(tenant_id,evaluation_id,replay_key,key_digest,evaluated_at_ms,outcome,outputs,minimum_samples) VALUES('tenant-a',$1,$2,sha256(convert_to($2::jsonb::text,'UTF8')),$3,$4,$5,1)")
@@ -62,6 +62,9 @@ async fn publish(pool: &PgPool, id: &str, start: i64, value: Option<&str>) {
     sqlx::query("INSERT INTO analytics.calculator_schedules(tenant_id,schedule_id,calculator_id,calculator_version,configuration_id,scope_asset_id,target_asset_id,first_start_ms,window_ms,lateness_ms,minimum_samples,next_start_ms) VALUES('tenant-a',$1,'mean','1',$1,'asset-a','result',$2,1000,0,1,$2)")
         .bind(id).bind(start).execute(pool).await.unwrap();
     sqlx::query("INSERT INTO analytics.calculator_work(tenant_id,evaluation_id,schedule_id,start_ms,request,generation,status) VALUES('tenant-a',$1,$1,$2,'{\"target\":\"result\"}',1,'done')").bind(id).bind(start).execute(pool).await.unwrap();
+}
+pub(crate) async fn publish(pool: &PgPool, id: &str, start: i64, value: Option<&str>) {
+    append_evidence(pool, id, start, value).await;
     let work = fleetiq_postgres::PostgresAlertLifecycle::new(pool.clone());
     while work.advance_one().await.unwrap() {}
 }
@@ -80,7 +83,7 @@ async fn response(app: &Router, request: Request<Body>) -> (StatusCode, Value) {
     }
     (status, body)
 }
-async fn get(app: &Router, suffix: &str) -> (StatusCode, Value) {
+pub(crate) async fn get(app: &Router, suffix: &str) -> (StatusCode, Value) {
     let request = Request::builder()
         .uri(format!("{ROOT}{suffix}"))
         .header("authorization", format!("Bearer {TOKEN}"))

@@ -1,0 +1,16 @@
+type: object
+additionalProperties: false
+required:
+- version
+- actor_id
+- recorded_at_ms
+properties:
+  version:
+    $ref: ./AlertLifecycleVersion.yaml
+  actor_id:
+    $ref: ./AdministrationIdentifier.yaml
+  recorded_at_ms:
+    $ref: ./HistoryMillis.yaml
+description: Original immutable acknowledgement of this phase-transition version, not condition resolution,
+  silence or suppression. Same-author exact retries retain actor/time even after later phases. A later
+  version requires a separate acknowledgement.

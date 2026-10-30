@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT analytics.acknowledge_alert($1,$2,$3,$4,$5)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "acknowledge_alert",
+        "type_info": "Void",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e4425cc430f7e418c63de72494b889ec88fdb8e91c51230f9d888250bd92bf81"
+}

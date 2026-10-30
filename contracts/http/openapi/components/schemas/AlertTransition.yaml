@@ -22,3 +22,9 @@ properties:
     maximum: 4294967295
   evidence:
     $ref: ./AlertEvaluationRef.yaml
+  acknowledgement:
+    anyOf:
+    - $ref: ./AlertAcknowledgement.yaml
+    - type: 'null'
+    description: Independent optional operator annotation for this exact version. May arrive after a page
+      was read; original phase/evidence remain immutable.

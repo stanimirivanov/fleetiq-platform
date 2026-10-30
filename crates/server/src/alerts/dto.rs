@@ -7,7 +7,8 @@ pub(super) fn transition(r: &AlertTransitionRead, d: &AlertRuleDefinition) -> Va
     json!({"version":r.version.to_string(),"phase":r.phase.as_str(),"event_at_ms":r.event_at.get().to_string(),
         "recorded_at_ms":r.recorded_at.get().to_string(),"activation_generation":r.activation_generation,
         "evidence":{"evaluation_id":r.evaluation.as_str(),"scope_asset_id":d.scope.as_str(),
-            "output_index":r.output_available.then_some(d.output_index)}})
+            "output_index":r.output_available.then_some(d.output_index)},
+        "acknowledgement":r.acknowledgement.as_ref().map(crate::alert_acknowledgement::receipt)})
 }
 pub(super) fn summary(r: &AlertRead) -> Result<Value, ()> {
     let last = r.state.last_event().ok_or(())?;
