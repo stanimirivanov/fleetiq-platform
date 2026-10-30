@@ -42,7 +42,24 @@ rejected. This is trusted operator functionality, not tenant HTTP authorization.
 The command checks schema, sets five-second statement deadlines and a 15-second
 turn deadline, and never prints raw errors, values, file paths or credentials.
 
-Apply migration 0040 before deploying this command. Its table is additive and
-immutable. Roll back by stopping command use and retaining preparations/terminal
-facts. Background scheduling, recursive calculated inputs and anomaly detection
-remain later slices. See [evaluation storage](../development/calculator-evaluation-storage.md).
+Apply current migrations separately before deploying this checked-schema command;
+0040 introduced immutable preparation and 0042 admits MAD declarations. Roll back
+by stopping command use and retaining preparations/terminal facts. Recursive
+calculated inputs remain a later slice; scheduling uses `analytics-worker`. See [evaluation storage](../development/calculator-evaluation-storage.md).
+
+## Median/MAD detector
+
+Register `window-mad-v1` through the existing declaration file, using an exact
+numeric input and a dimensionless decimal output property declared on the target.
+Both `calculate-once` and `analytics-worker` dispatch the registered ABI. There are
+no new request fields: minimum counts the entire window, with an effective floor
+of four for MAD. The newest canonical point is compared with all preceding points.
+Strict deviation above six raw MAD emits 1; otherwise 0. Flat baselines flag only
+nonzero departures. Sparse/unusable evidence produces no output.
+
+The pure `detect_mad` policy returns median, MAD, observed value, deviation and
+threshold. The persisted flag, release version and retained preparation reproduce
+that explanation; this slice adds no separate explanation endpoint. Thresholds
+are fixed by ABI, not learned. Upgrade all checked-schema workers before installing
+detector releases; stop workers for rollback and retain schema and evidence. See
+[ADR 0127](../adr/0127-explain-window-mad-anomalies.md) for precision and edge cases.

@@ -29,6 +29,7 @@ fn prepared(values: &[&str], minimum: u16) -> PreparedCalculatorEvaluation {
         target: AssetId::new("a").unwrap(),
     };
     PreparedCalculatorEvaluation {
+        implementation: CalculatorImplementation::WindowMeanV1,
         request,
         manifest: CalculatorInputManifest::new(
             window,
@@ -100,4 +101,29 @@ fn missing_unusable_and_resource_limited_inputs_never_become_healthy_values() {
     let mut mismatch = prepared(&["1"], 1);
     mismatch.samples.clear();
     assert_eq!(calculate_mean(mismatch), Err(CalculatorRunError::Context));
+}
+
+#[test]
+fn mad_dispatch_retains_evidence_and_never_runs_as_a_mean() {
+    let mut input = prepared(&["9", "10", "11", "17"], 4);
+    input.implementation = CalculatorImplementation::WindowMadV1;
+    assert_eq!(
+        calculate_mean(input.clone()),
+        Err(CalculatorRunError::Context)
+    );
+    let record = calculate_prepared(input.clone()).unwrap();
+    assert_eq!(record.outcome(), CalculatorExecutionOutcome::Complete);
+    assert_eq!(record.key().manifest(), &input.manifest);
+    assert_eq!(
+        record.outputs()[0].property().value(),
+        &PropertyValue::Decimal(1.into())
+    );
+    assert_eq!(calculate_prepared(input.clone()).unwrap(), record);
+    input.samples[0] = None;
+    let insufficient = calculate_prepared(input).unwrap();
+    assert_eq!(
+        insufficient.outcome(),
+        CalculatorExecutionOutcome::InsufficientEvidence
+    );
+    assert_eq!(insufficient.outputs(), []);
 }

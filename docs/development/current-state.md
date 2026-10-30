@@ -211,6 +211,8 @@ ordered calculated outputs with provenance checks and exact retry comparison; se
 [calculator evaluation storage](calculator-evaluation-storage.md).
 The checked-schema `calculate-once` command now runs the first-party window mean
 with immutable preparation, explicit decimal truncation and atomic terminal append.
+The same execution paths now support the versioned [median/MAD detector](../adr/0127-explain-window-mad-anomalies.md),
+with exact explanation values, dimensionless 0/1 output and replayable input evidence.
 The explicit checked-schema [analytics worker](../operations/analytics-worker.md) now
 enumerates bounded fixed windows with durable cursors, database-clock claims,
 three-attempt fencing and atomic terminal completion. HTTP activation, operator

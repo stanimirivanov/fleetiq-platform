@@ -1,7 +1,7 @@
 //! Single-snapshot semantic input selection, pinned before execution.
 use fleetiq_analytics::{
-    CalculatorEvidenceId, CalculatorInput, CalculatorInputManifest, CalculatorPreparation,
-    CalculatorRunRequest, PreparedCalculatorEvaluation,
+    CalculatorEvidenceId, CalculatorImplementation, CalculatorInput, CalculatorInputManifest,
+    CalculatorPreparation, CalculatorRunRequest, PreparedCalculatorEvaluation,
 };
 use fleetiq_domain::{
     DefinitionName, DefinitionVersion, PropertyDefinition, PropertyDefinitionId,
@@ -51,7 +51,7 @@ impl CalculatorPreparation for PostgresCalculatorPreparation {
         }
         sqlx::query!(r#"
             WITH candidate AS (
-              SELECT jsonb_build_object('output',jsonb_build_object('id',p.property_id,'version',p.version,'name',p.display_name,'unit',p.canonical_unit),
+              SELECT jsonb_build_object('implementation',d.implementation,'output',jsonb_build_object('id',p.property_id,'version',p.version,'name',p.display_name,'unit',p.canonical_unit),
                 'samples', COALESCE((
                   SELECT jsonb_agg(jsonb_build_array(s.evidence,s.event_at_ms,s.value) ORDER BY s.event_at_ms,s.evidence COLLATE "C") FROM (
                     SELECT analytics.semantic_evidence_id(h.tenant_id,h.message_id,h.protocol_package_id,h.protocol_package_version,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis) AS evidence,
@@ -70,7 +70,7 @@ impl CalculatorPreparation for PostgresCalculatorPreparation {
               JOIN metadata.property_definitions p ON p.tenant_id=d.tenant_id AND p.property_id=d.output_id AND p.version=d.output_version
               JOIN metadata.assets a ON a.tenant_id=d.tenant_id AND a.asset_id=($3::jsonb)->>'target'
               JOIN metadata.asset_type_properties ap ON ap.tenant_id=a.tenant_id AND ap.type_id=a.type_id AND ap.type_version=a.type_version AND ap.property_id=p.property_id AND ap.property_version=p.version
-              WHERE d.tenant_id=$1 AND d.calculator_id=($3::jsonb)->>'calculator' AND d.calculator_version=($3::jsonb)->>'version' AND d.implementation='window-mean-v1'
+              WHERE d.tenant_id=$1 AND d.calculator_id=($3::jsonb)->>'calculator' AND d.calculator_version=($3::jsonb)->>'version' AND d.implementation IN ('window-mean-v1','window-mad-v1')
                 AND EXISTS(SELECT 1 FROM metadata.assets scope WHERE scope.tenant_id=$1 AND scope.asset_id=($3::jsonb)->>'scope')
             )
             INSERT INTO analytics.prepared_evaluations(tenant_id,evaluation_id,request,selection)
@@ -120,6 +120,13 @@ fn decode(
         }
         Ok(PreparedCalculatorEvaluation {
             request: request.clone(),
+            // All preparations written before MAD admission were window-mean-v1.
+            implementation: CalculatorImplementation::parse(
+                match selection.get("implementation") {
+                    None => "window-mean-v1",
+                    Some(value) => value.as_str().ok_or(PreparationError)?,
+                },
+            )?,
             manifest: CalculatorInputManifest::new(request.window, request.known_at, inputs)?,
             samples,
             output: property,

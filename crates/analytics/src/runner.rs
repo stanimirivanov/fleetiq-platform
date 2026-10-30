@@ -2,8 +2,8 @@
 use crate::{
     CalculatedProperty, CalculatorConfigurationId, CalculatorEvaluation,
     CalculatorEvaluationRecord, CalculatorEvaluationStore, CalculatorExecutionFailure,
-    CalculatorExecutionKey, CalculatorExecutionOutcome, CalculatorInputManifest, CalculatorWindow,
-    EvaluationAppendOutcome, assemble_outputs,
+    CalculatorExecutionKey, CalculatorExecutionOutcome, CalculatorImplementation,
+    CalculatorInputManifest, CalculatorWindow, EvaluationAppendOutcome, assemble_outputs,
 };
 use bigdecimal::BigDecimal;
 use fleetiq_domain::{AssetId, PropertyDefinition, PropertyValue, UnixTimeMillis};
@@ -22,7 +22,7 @@ pub struct CalculatorRunRequest {
     pub known_at: UnixTimeMillis,
     /// Required sample count, from 1 through 1024.
     pub minimum_samples: u16,
-    /// Tenant-owned asset receiving the exact registered mean property.
+    /// Tenant-owned asset receiving the exact registered output property.
     pub target: AssetId,
 }
 /// Durable preparation returned only after committing the exact selection.
@@ -30,6 +30,8 @@ pub struct CalculatorRunRequest {
 pub struct PreparedCalculatorEvaluation {
     /// Original request, compared on every retry.
     pub request: CalculatorRunRequest,
+    /// Reviewed ABI pinned by the immutable registered release.
+    pub implementation: CalculatorImplementation,
     /// Canonical exact semantic references.
     pub manifest: CalculatorInputManifest,
     /// Values in the same canonical order; None is unusable quality/type/size.
@@ -57,6 +59,9 @@ pub trait CalculatorPreparation: Send + Sync {
 pub fn calculate_mean(
     prepared: PreparedCalculatorEvaluation,
 ) -> Result<CalculatorEvaluationRecord, CalculatorRunError> {
+    if prepared.implementation != CalculatorImplementation::WindowMeanV1 {
+        return Err(CalculatorRunError::Context);
+    }
     let request = prepared.request;
     if prepared.samples.len() != prepared.manifest.inputs().len()
         || request.window != prepared.manifest.window()
@@ -94,7 +99,7 @@ pub fn calculate_mean(
             let mean = BigDecimal::new(coefficient / count, 18);
             properties.push(
                 CalculatedProperty::new(
-                    request.target,
+                    request.target.clone(),
                     &prepared.output,
                     PropertyValue::Decimal(mean),
                     prepared.output.canonical_unit().cloned(),
@@ -104,12 +109,20 @@ pub fn calculate_mean(
             outcome = CalculatorExecutionOutcome::Complete;
         }
     }
+    finish(request, prepared.manifest, outcome, properties)
+}
+pub(crate) fn finish(
+    request: CalculatorRunRequest,
+    manifest: CalculatorInputManifest,
+    outcome: CalculatorExecutionOutcome,
+    properties: Vec<CalculatedProperty>,
+) -> Result<CalculatorEvaluationRecord, CalculatorRunError> {
     let key = CalculatorExecutionKey::new(
         request.evaluation.tenant_id().clone(),
         request.evaluation.scope_asset_id().clone(),
         request.evaluation.calculator().clone(),
         request.configuration,
-        prepared.manifest,
+        manifest,
     );
     let outputs = assemble_outputs(&request.evaluation, properties)
         .map_err(|_| CalculatorRunError::Context)?;
@@ -121,6 +134,42 @@ pub fn calculate_mean(
         request.minimum_samples,
     )
     .map_err(|_| CalculatorRunError::Context)
+}
+/// Dispatches the exact admitted first-party ABI, preserving terminal evidence.
+/// # Errors
+/// Rejects incompatible host context; missing data never becomes a healthy flag.
+pub fn calculate_prepared(
+    prepared: PreparedCalculatorEvaluation,
+) -> Result<CalculatorEvaluationRecord, CalculatorRunError> {
+    match prepared.implementation {
+        CalculatorImplementation::WindowMeanV1 => return calculate_mean(prepared),
+        CalculatorImplementation::WindowMadV1 => {}
+    }
+    if prepared.samples.len() != prepared.manifest.inputs().len()
+        || prepared.request.window != prepared.manifest.window()
+        || prepared.request.known_at != prepared.manifest.known_at()
+        || prepared.output.canonical_unit().is_some()
+    {
+        return Err(CalculatorRunError::Context);
+    }
+    let mut properties = Vec::new();
+    let outcome = match crate::detect_mad(&prepared.samples, prepared.request.minimum_samples) {
+        Ok(Some(evidence)) => {
+            properties.push(
+                CalculatedProperty::new(
+                    prepared.request.target.clone(),
+                    &prepared.output,
+                    PropertyValue::Decimal(BigDecimal::from(u8::from(evidence.anomalous))),
+                    None,
+                )
+                .map_err(|_| CalculatorRunError::Context)?,
+            );
+            CalculatorExecutionOutcome::Complete
+        }
+        Ok(None) => CalculatorExecutionOutcome::InsufficientEvidence,
+        Err(failure) => CalculatorExecutionOutcome::Failed(failure),
+    };
+    finish(prepared.request, prepared.manifest, outcome, properties)
 }
 /// Executes one prepared evaluation and atomically appends its terminal record.
 /// # Errors
@@ -134,7 +183,7 @@ pub async fn run_calculator_once<P: CalculatorPreparation, S: CalculatorEvaluati
         .prepare(request)
         .await
         .map_err(|_| CalculatorRunError::Preparation)?;
-    let record = calculate_mean(prepared)?;
+    let record = calculate_prepared(prepared)?;
     store
         .append(&record)
         .await

@@ -39,8 +39,11 @@ pub use evaluation_store::{
 mod runner;
 pub use runner::{
     CalculatorPreparation, CalculatorRunError, CalculatorRunRequest, PreparedCalculatorEvaluation,
-    calculate_mean, run_calculator_once,
+    calculate_mean, calculate_prepared, run_calculator_once,
 };
 
 mod work;
 pub use work::{CalculatorSchedule, CalculatorWorkLease};
+
+mod detectors;
+pub use detectors::{MadEvidence, detect_mad};

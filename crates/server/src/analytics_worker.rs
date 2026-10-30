@@ -1,7 +1,7 @@
 //! Explicit trusted fixed-window scheduling; no HTTP activation or automatic DDL.
 use fleetiq_analytics::{
     CalculatorConfigurationId, CalculatorId, CalculatorPreparation, CalculatorRef,
-    CalculatorSchedule, CalculatorVersion, calculate_mean,
+    CalculatorSchedule, CalculatorVersion, calculate_prepared,
 };
 use fleetiq_domain::{AssetId, TenantId, UnixTimeMillis};
 use fleetiq_postgres::{PostgresCalculatorPreparation, PostgresCalculatorWork};
@@ -95,7 +95,7 @@ pub async fn run_analytics_worker() -> Result<(), Box<dyn Error>> {
                 work.seed().await?;
                 if let Some(lease) = work.claim().await? {
                     let prepared = preparation.prepare(&lease.request).await.map_err(|_| "calculator preparation failed")?;
-                    let record = calculate_mean(prepared).map_err(|_| "calculator calculation failed")?;
+                    let record = calculate_prepared(prepared).map_err(|_| "calculator calculation failed")?;
                     work.complete(&lease, &record).await?;
                 }
                 Ok::<(), Box<dyn Error>>(())
