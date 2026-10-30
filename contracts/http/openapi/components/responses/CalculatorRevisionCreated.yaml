@@ -1,0 +1,10 @@
+description: The next revision was committed, or exact same-author content was already present. No activation.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/CalculatorRevisionReceipt.yaml
+    example:
+      revision: 1

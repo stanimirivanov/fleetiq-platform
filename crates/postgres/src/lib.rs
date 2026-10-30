@@ -102,3 +102,9 @@ pub use calculator_inputs::{PostgresCalculatorPreparation, PreparationError};
 
 mod calculator_work;
 pub use calculator_work::{CalculatorWorkError, PostgresCalculatorWork};
+
+mod calculator_configuration;
+pub use calculator_configuration::{
+    CalculatorActivationRecord, CalculatorConfigurationError, CalculatorConfigurationRecord,
+    PostgresCalculatorConfiguration,
+};

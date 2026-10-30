@@ -1,0 +1,13 @@
+description: Current selection or original same-author retry receipt. No-store.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/CalculatorActivationState.yaml
+    example:
+      generation: 1
+      revision: 1
+      actor_id: operator-a
+      recorded_at_ms: 1000

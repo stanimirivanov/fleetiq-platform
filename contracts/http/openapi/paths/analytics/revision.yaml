@@ -1,0 +1,75 @@
+get:
+  operationId: getCalculatorConfigurationRevision
+  summary: getCalculatorConfigurationRevision
+  description: Requires current metadata.read before resource discovery. Immutable revision creation leaves
+    the active selection unchanged; exact same-author retries preserve original evidence.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - &id001
+    $ref: ../../components/parameters/admin-tenant-id.yaml
+  - &id002
+    $ref: ../../components/parameters/calculator-configuration-id.yaml
+  - $ref: ../../components/parameters/calculator-configuration-revision.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/CalculatorRevisionSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorConfigurationMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+put:
+  operationId: createCalculatorConfigurationRevision
+  summary: createCalculatorConfigurationRevision
+  description: Requires exact analytics.manage, never implied by metadata/protocol grants. Browser mutations
+    require matching Origin and X-FleetIQ-CSRF. Transactionally rechecks current actor, tenant and grant.
+    Immutable revision creation leaves the active selection unchanged; exact same-author retries preserve
+    original evidence.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - *id001
+  - *id002
+  - $ref: ../../components/parameters/calculator-configuration-revision.yaml
+  - $ref: ../../components/parameters/admin-mutation-origin.yaml
+  - $ref: ../../components/parameters/admin-mutation-csrf.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/CalculatorRevisionCreated.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorConfigurationMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '409':
+      $ref: ../../components/responses/CalculatorConfigurationConflict.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/CalculatorParameters.yaml
+        example:
+          calculator: mean
+          version: '1'
+          scope: asset-a
+          target: result
+          first_start: 0
+          window_ms: 3000
+          lateness_ms: 0
+          minimum_samples: 1

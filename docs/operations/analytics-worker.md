@@ -1,47 +1,59 @@
-# Trusted calculator worker
+# Calculator configuration and worker
 
 ## TL;DR
 
-`cargo run -p fleetiq-server --locked -- analytics-worker` is an explicit opt-in
-worker for existing first-party declarations. Apply migrations separately, supply
-`DATABASE_URL`, and optionally set `FLEETIQ_CALCULATOR_SCHEDULE_FILE` to install one
-immutable trusted schedule. Normal HTTP startup never starts this worker.
+Apply migrations separately, supply `DATABASE_URL`, then run
+`cargo run -p fleetiq-server --locked -- analytics-worker`. Only explicitly activated
+configuration revisions run. Normal HTTP startup never starts this worker.
+Migration 0043 imports old trusted schedules as **inactive** revision 1 and rejects
+the transitional `FLEETIQ_CALCULATOR_SCHEDULE_FILE` option.
 
-## Schedule installation
+## Configuration API
 
-The file is strict JSON, at most 4096 bytes. For synthetic identifiers, its shape is:
+Under `/api/v1/tenants/{tenant_id}/calculator-configurations/{configuration_id}`:
 
-```json
-{"tenant":"tenant-a","schedule":"voltage-mean","calculator":"mean","version":"1","configuration":"mean-config","scope":"asset-a","target":"result","first_start":0,"window_ms":3000,"lateness_ms":0,"minimum":1}
-```
+- `PUT /revisions/{revision}` creates the next revision, starting at 1. The JSON
+  fields are `calculator`, `version`, `scope`, `target`, `first_start`, `window_ms`,
+  `lateness_ms` and `minimum_samples`. No actor or receipt time is accepted.
+- `GET /revisions/{revision}` returns exact parameters and original attribution.
+- `GET /activation` returns generation, selected revision, author and receipt time.
+- `PUT /activation` accepts `{"expected_generation":0,"revision":1}` to select a
+  revision; explicit `"revision":null` deactivates. Omission is invalid.
 
-Use a deliberate first start: zero requests historical catch-up from the epoch.
-All times are integer Unix milliseconds. Window size is 1..604800000, lateness
-0..604800000, minimum 1..1024. The calculator and both assets must already exist;
-the target must declare the calculator's output property. Exact installation retries
-are accepted; changing an existing schedule ID fails. Protect the file and database
-credentials as trusted operator inputs. No HTTP activation is exposed here.
+Reads require `metadata.read`, writes require separate `analytics.manage`. Delegate
+through existing audited tenant grant administration; other grants do not imply
+this capability. Browser writes require the configured Origin and CSRF header.
+Baseline.22 expands the closed action vocabulary; regenerate clients before
+advertising the sixth action. JSON is strict and bounded to 4096 bytes.
+
+A revision pins an admitted calculator and tenant-owned scope/output target with
+registered property membership. Window size is 1..604800000 milliseconds, lateness
+0..604800000, minimum 1..1024. Times are signed Unix milliseconds. Choose a deliberate
+first_start: zero requests epoch catch-up. The mean/MAD implementation keeps its
+own versioned minimum and unit semantics.
+
+Stale revisions/generations or unavailable compatible references return 409.
+Same-author/content retries return original receipts and never restore old active
+state. New revisions are inactive while an already selected revision keeps running.
 
 ## Processing and recovery
 
-The worker processes all installed schedules for active tenants. Each turn queues
-at most 32 finalized half-open windows for the oldest due schedule and claims one
-work item. Known-at equals end plus lateness; first processing time is captured
-once during enumeration. Multiple workers coordinate with database row locks.
-Statements are limited to five seconds, turns to fifteen; each turn pauses 250 ms.
+Each turn queues at most 32 finalized half-open windows for the oldest due active
+revision and claims one item. Known-at equals end plus lateness; first processing
+time and preparation are retained. Statements have five-second deadlines, turns
+fifteen seconds and pauses 250 ms. Database-clock leases last 30 seconds with at
+most three generations; exhaustion is retained without an operator reset API.
 
-Claims last 30 seconds according to database time. Crashes, preparation errors and
-ambiguous completion leave durable evidence. Expired claims can retry up to three
-generations with the original request and committed preparation. Exhausted work is
-retained in `analytics.calculator_work`; there is no operator reset command yet.
-Preparation overflow therefore exhausts rather than silently dropping inputs.
-Terminal output and done state commit together under the current unexpired fence.
-Suspended tenants cannot seed, claim or complete work.
+Activation shares the configuration lock with enumeration/claims. Deactivation
+pauses unclaimed work; issued claims may complete atomically with their original
+evidence. Switching revisions retains old pending work without running it. Selecting
+the old revision again resumes its original cursor and saved requests.
 
 ## Rollout and rollback
 
-Apply migration 0041 before starting the checked-schema worker. Start without a
-schedule file to resume existing schedules. SIGINT/SIGTERM cancels the current turn;
-its claim can recover after expiry. Stop the worker to roll back execution, keeping
-schema, schedules, preparations and terminal evidence. This slice adds no Compose
-service, production rollout or dashboard. See [ADR 0126](../adr/0126-schedule-fenced-calculator-work.md).
+Stop old workers, apply 0043 and deploy updated checked-schema binaries. Read imported
+legacy schedules using their schedule ID as configuration ID and revision 1; null
+author means unknown trusted installation attribution. Explicitly grant and activate.
+SIGINT/SIGTERM cancels a turn; its lease recovers after expiry. Stop the worker to
+roll back execution, retaining schema, revisions, preparations and output evidence.
+No production service or editor UI is packaged here. See [ADR 0128](../adr/0128-activate-calculator-configurations.md).

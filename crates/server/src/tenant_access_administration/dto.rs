@@ -20,6 +20,8 @@ pub(super) enum Action {
     ManageAccess,
     #[serde(rename = "protocol.manage")]
     ManageProtocols,
+    #[serde(rename = "analytics.manage")]
+    ManageAnalytics,
 }
 impl From<Action> for TenantAction {
     fn from(action: Action) -> Self {
@@ -29,6 +31,7 @@ impl From<Action> for TenantAction {
             Action::ManageMetadata => Self::ManageMetadata,
             Action::ManageAccess => Self::ManageAccess,
             Action::ManageProtocols => Self::ManageProtocols,
+            Action::ManageAnalytics => Self::ManageAnalytics,
         }
     }
 }
@@ -40,6 +43,7 @@ impl From<TenantAction> for Action {
             TenantAction::ManageMetadata => Self::ManageMetadata,
             TenantAction::ManageAccess => Self::ManageAccess,
             TenantAction::ManageProtocols => Self::ManageProtocols,
+            TenantAction::ManageAnalytics => Self::ManageAnalytics,
         }
     }
 }

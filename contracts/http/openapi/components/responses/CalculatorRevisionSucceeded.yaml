@@ -1,0 +1,21 @@
+description: Retained exact configuration revision and original receipt.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/CalculatorConfigurationRevision.yaml
+    example:
+      revision: 1
+      parameters:
+        calculator: mean
+        version: '1'
+        scope: asset-a
+        target: result
+        first_start: 0
+        window_ms: 3000
+        lateness_ms: 0
+        minimum_samples: 1
+      actor_id: operator-a
+      recorded_at_ms: 1000

@@ -167,3 +167,4 @@ introducing a new record.
 | [0125](0125-execute-pinned-window-means.md) | Durable one-shot input preparation and explicit bounded mean arithmetic |
 | [0126](0126-schedule-fenced-calculator-work.md) | Durable fixed-window scheduling and generation-fenced completion |
 | [0127](0127-explain-window-mad-anomalies.md) | Exact latest-point median/MAD anomalies with replayable evidence |
+| [0128](0128-activate-calculator-configurations.md) | Authorized immutable calculator revisions and serialized activation |

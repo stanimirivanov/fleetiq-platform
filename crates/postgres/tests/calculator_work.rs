@@ -47,6 +47,9 @@ async fn registration_and_concurrent_catchup_are_bounded_and_immutable(
     changed = original.clone();
     changed.tenant = TenantId::new("tenant-b")?;
     assert!(work.register(&changed).await.is_err());
+    sqlx::raw_sql(include_str!("calculator_configuration/activate.sql"))
+        .execute(&pool)
+        .await?;
     let (a, b) = tokio::join!(work.seed(), work.seed());
     let count = a? + b?;
     assert!(count == 32 || count == 64);
@@ -79,7 +82,7 @@ async fn stale_and_expired_claims_cannot_publish_and_retries_reuse_preparation(
     seed(&pool).await?;
     let work = PostgresCalculatorWork::new(pool.clone());
     work.register(&schedule()).await?;
-    assert_eq!(work.seed().await?, 32);
+    assert_eq!(fixture_seed(&pool, &work).await?, 32);
     let first = work.claim().await?.unwrap();
     let preparation = PostgresCalculatorPreparation::new(pool.clone());
     let prepared = preparation.prepare(&first.request).await?;
@@ -117,7 +120,7 @@ async fn failed_checkpoint_rolls_back_terminal_output(pool: PgPool) -> Result<()
     seed(&pool).await?;
     let work = PostgresCalculatorWork::new(pool.clone());
     work.register(&schedule()).await?;
-    work.seed().await?;
+    fixture_seed(&pool, &work).await?;
     let lease = work.claim().await?.unwrap();
     let record = calculate_mean(
         PostgresCalculatorPreparation::new(pool.clone())
@@ -143,7 +146,7 @@ async fn retries_exhaust_after_three_generations_without_sleeping(
     seed(&pool).await?;
     let work = PostgresCalculatorWork::new(pool.clone());
     work.register(&schedule()).await?;
-    work.seed().await?;
+    fixture_seed(&pool, &work).await?;
     for generation in 1..=3 {
         let lease = work.claim().await?.unwrap();
         assert_eq!(lease.generation, generation);
@@ -170,7 +173,7 @@ async fn expiry_during_append_rolls_back_both_terminal_and_checkpoint(
     seed(&pool).await?;
     let work = PostgresCalculatorWork::new(pool.clone());
     work.register(&schedule()).await?;
-    work.seed().await?;
+    fixture_seed(&pool, &work).await?;
     let lease = work.claim().await?.unwrap();
     let record = calculate_mean(
         PostgresCalculatorPreparation::new(pool.clone())
@@ -197,7 +200,7 @@ async fn suspended_tenant_cannot_seed_claim_or_complete(
     seed(&pool).await?;
     let work = PostgresCalculatorWork::new(pool.clone());
     work.register(&schedule()).await?;
-    work.seed().await?;
+    fixture_seed(&pool, &work).await?;
     let lease = work.claim().await?.unwrap();
     let record = calculate_mean(
         PostgresCalculatorPreparation::new(pool.clone())
@@ -215,4 +218,14 @@ async fn suspended_tenant_cannot_seed_claim_or_complete(
         .await?;
     work.complete(&lease, &record).await?;
     Ok(())
+}
+
+async fn fixture_seed(
+    pool: &PgPool,
+    work: &fleetiq_postgres::PostgresCalculatorWork,
+) -> Result<i64, Box<dyn Error>> {
+    sqlx::raw_sql(include_str!("calculator_configuration/activate.sql"))
+        .execute(pool)
+        .await?;
+    Ok(work.seed().await?)
 }

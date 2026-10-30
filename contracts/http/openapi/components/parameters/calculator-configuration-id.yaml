@@ -1,0 +1,6 @@
+name: configuration_id
+in: path
+required: true
+description: Tenant-owned opaque calculator configuration identity.
+schema:
+  $ref: ../schemas/AdministrationIdentifier.yaml

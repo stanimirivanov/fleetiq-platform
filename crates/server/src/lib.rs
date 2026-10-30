@@ -104,6 +104,19 @@ fn protected_application_router<A>(
 where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
+    let calculators =
+        calculator_configuration::router(pool.clone(), authentication.clone(), mutation.clone());
+    protected_capability_routers(pool, authentication, mutation).merge(calculators)
+}
+
+fn protected_capability_routers<A>(
+    pool: PgPool,
+    authentication: A,
+    mutation: mutation_guard::MutationGuard,
+) -> Router
+where
+    A: protected_request::RequestAuthenticator + Clone + 'static,
+{
     Router::new()
         .merge(fleet::router(pool.clone(), authentication.clone()))
         .merge(live_updates::router(pool.clone(), authentication.clone()))
@@ -286,3 +299,5 @@ pub use calculator_once::calculate_once;
 
 mod analytics_worker;
 pub use analytics_worker::run_analytics_worker;
+
+mod calculator_configuration;

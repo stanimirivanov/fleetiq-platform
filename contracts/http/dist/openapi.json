@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.21",
-    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants."
+    "version": "1.0.0-baseline.22",
+    "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
     {
@@ -12,6 +12,238 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/calculator-configurations/{configuration_id}/revisions/{revision}": {
+      "get": {
+        "operationId": "getCalculatorConfigurationRevision",
+        "summary": "getCalculatorConfigurationRevision",
+        "description": "Requires current metadata.read before resource discovery. Immutable revision creation leaves the active selection unchanged; exact same-author retries preserve original evidence.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-configuration-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-configuration-revision"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CalculatorRevisionSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorConfigurationMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "createCalculatorConfigurationRevision",
+        "summary": "createCalculatorConfigurationRevision",
+        "description": "Requires exact analytics.manage, never implied by metadata/protocol grants. Browser mutations require matching Origin and X-FleetIQ-CSRF. Transactionally rechecks current actor, tenant and grant. Immutable revision creation leaves the active selection unchanged; exact same-author retries preserve original evidence.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-configuration-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-configuration-revision"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CalculatorRevisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorConfigurationMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/CalculatorConfigurationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculatorParameters"
+              },
+              "example": {
+                "calculator": "mean",
+                "version": "1",
+                "scope": "asset-a",
+                "target": "result",
+                "first_start": 0,
+                "window_ms": 3000,
+                "lateness_ms": 0,
+                "minimum_samples": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/calculator-configurations/{configuration_id}/activation": {
+      "get": {
+        "operationId": "getCalculatorActivation",
+        "summary": "getCalculatorActivation",
+        "description": "Requires current metadata.read before resource discovery. Inactive by default. Selection serializes with enumeration and claims; deactivation pauses unclaimed work, while already issued claims may complete with original evidence. A stale exact retry returns its original receipt without restoring selection.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-configuration-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CalculatorActivationSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorConfigurationMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "changeCalculatorActivation",
+        "summary": "changeCalculatorActivation",
+        "description": "Requires exact analytics.manage, never implied by metadata/protocol grants. Browser mutations require matching Origin and X-FleetIQ-CSRF. Transactionally rechecks current actor, tenant and grant. Inactive by default. Selection serializes with enumeration and claims; deactivation pauses unclaimed work, while already issued claims may complete with original evidence. A stale exact retry returns its original receipt without restoring selection.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-configuration-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CalculatorActivationSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorConfigurationMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/CalculatorConfigurationConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculatorActivationRequest"
+              },
+              "example": {
+                "expected_generation": 0,
+                "revision": 1
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/fleet": {
       "get": {
         "operationId": "getFleetSnapshot",
@@ -3098,6 +3330,176 @@
   },
   "components": {
     "schemas": {
+      "CalculatorParameters": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "calculator",
+          "version",
+          "scope",
+          "target",
+          "first_start",
+          "window_ms",
+          "lateness_ms",
+          "minimum_samples"
+        ],
+        "properties": {
+          "calculator": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "target": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "first_start": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": -9223372036854776000,
+            "maximum": 9223372036854776000
+          },
+          "window_ms": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 604800000
+          },
+          "lateness_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 604800000
+          },
+          "minimum_samples": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1024
+          }
+        },
+        "description": "Exact admitted release and compatible target. Signed Unix milliseconds; start + window + lateness must fit int64. Deliberate first_start controls historical catch-up. Revision creation is inactive and does not alter selected scheduling."
+      },
+      "CalculatorRevisionReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        }
+      },
+      "CalculatorConfigurationRevision": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision",
+          "parameters",
+          "actor_id",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/CalculatorParameters"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": -9223372036854776000,
+            "maximum": 9223372036854776000
+          }
+        },
+        "description": "Immutable exact revision and original attribution; actor_id is null only for imported trusted schedules."
+      },
+      "CalculatorActivationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_generation",
+          "revision"
+        ],
+        "properties": {
+          "expected_generation": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        },
+        "description": "Select a retained revision, or explicit null to deactivate. Omission is invalid. Same-author/content retry of generation expected+1 returns its original receipt without restoring old state."
+      },
+      "CalculatorActivationState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generation",
+          "revision",
+          "actor_id",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "generation": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recorded_at_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": -9223372036854776000,
+            "maximum": 9223372036854776000
+          }
+        },
+        "description": "Generation zero is inactive with null attribution/time; later generations retain original command evidence."
+      },
       "FleetLocationMapping": {
         "type": "object",
         "additionalProperties": false,
@@ -5820,6 +6222,7 @@
         "type": "string",
         "description": "An exact granted tenant action; no action implies another.",
         "enum": [
+          "analytics.manage",
           "access.manage",
           "metadata.manage",
           "metadata.read",
@@ -5843,7 +6246,7 @@
           "actions": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 5,
+            "maxItems": 6,
             "uniqueItems": true,
             "description": "Explicit current grants ordered by action name; never reusable authorization.",
             "items": {
@@ -6539,6 +6942,26 @@
       }
     },
     "parameters": {
+      "calculator-configuration-id": {
+        "name": "configuration_id",
+        "in": "path",
+        "required": true,
+        "description": "Tenant-owned opaque calculator configuration identity.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "calculator-configuration-revision": {
+        "name": "revision",
+        "in": "path",
+        "required": true,
+        "description": "Positive ASCII decimal revision fitting u32; leading zeroes are accepted. Creation requires the next revision, except exact same-author retries.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
       "fleet-latitude-property": {
         "name": "latitude_property",
         "in": "query",
@@ -7283,6 +7706,121 @@
       }
     },
     "responses": {
+      "CalculatorRevisionCreated": {
+        "description": "The next revision was committed, or exact same-author content was already present. No activation.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CalculatorRevisionReceipt"
+            },
+            "example": {
+              "revision": 1
+            }
+          }
+        }
+      },
+      "CalculatorRevisionSucceeded": {
+        "description": "Retained exact configuration revision and original receipt.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CalculatorConfigurationRevision"
+            },
+            "example": {
+              "revision": 1,
+              "parameters": {
+                "calculator": "mean",
+                "version": "1",
+                "scope": "asset-a",
+                "target": "result",
+                "first_start": 0,
+                "window_ms": 3000,
+                "lateness_ms": 0,
+                "minimum_samples": 1
+              },
+              "actor_id": "operator-a",
+              "recorded_at_ms": 1000
+            }
+          }
+        }
+      },
+      "CalculatorActivationSucceeded": {
+        "description": "Current selection or original same-author retry receipt. No-store.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CalculatorActivationState"
+            },
+            "example": {
+              "generation": 1,
+              "revision": 1,
+              "actor_id": "operator-a",
+              "recorded_at_ms": 1000
+            }
+          }
+        }
+      },
+      "CalculatorConfigurationConflict": {
+        "description": "Stale revision/generation, different retry author/content, or missing/incompatible release, target or selected revision.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:calculator-configuration",
+              "title": "Configuration revision, activation or prerequisites conflict",
+              "status": 409
+            }
+          }
+        }
+      },
+      "CalculatorConfigurationMethodNotAllowed": {
+        "description": "Method is unsupported for this resource.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "GET, HEAD and PUT are supported."
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
       "FleetSnapshotSucceeded": {
         "description": "Consistent bounded tenant inventory and conservative observed-location evidence. Counts cover the full tenant, not the page suffix. No connectivity/health inference.",
         "headers": {
