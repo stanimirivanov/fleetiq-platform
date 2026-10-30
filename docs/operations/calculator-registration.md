@@ -16,7 +16,7 @@ Set `DATABASE_URL` using the normal private environment mechanism and
 Both exact property definitions must already exist inside the selected tenant.
 Input must be integer or decimal; output decimal; canonical units must match.
 Unknown fields, implementation IDs, zero versions and invalid identifiers fail.
-The first-party ABI is a declaration contract only until the later runner slice.
+The first-party ABI runs through the trusted [one-shot command](calculator-once.md); registration alone does not execute it.
 It supports one input role and one mean output role; future configuration uses
 PR1 window/lateness bounds (seven days each), 1024 inputs maximum and a minimum
 sample count between 1 and 1024. No free-form expressions or uploaded code exist.

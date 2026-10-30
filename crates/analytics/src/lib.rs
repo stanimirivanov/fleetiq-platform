@@ -35,3 +35,9 @@ pub use evaluation_store::{
     CalculatorEvaluationRecord, CalculatorEvaluationStore, EvaluationAppendOutcome,
     InvalidCalculatorEvaluation, MAX_CALCULATOR_OUTPUTS,
 };
+
+mod runner;
+pub use runner::{
+    CalculatorPreparation, CalculatorRunError, CalculatorRunRequest, PreparedCalculatorEvaluation,
+    calculate_mean, run_calculator_once,
+};

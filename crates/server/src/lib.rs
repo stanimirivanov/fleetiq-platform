@@ -280,3 +280,6 @@ pub use semantic_worker::{SemanticWorkerRunError, run_semantic_worker};
 
 mod calculator_registration;
 pub use calculator_registration::register_calculator_definition;
+
+mod calculator_once;
+pub use calculator_once::calculate_once;

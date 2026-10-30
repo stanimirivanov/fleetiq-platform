@@ -67,6 +67,10 @@ async fn execute() -> Result<(), Box<dyn Error>> {
             fleetiq_server::register_calculator_definition().await?;
             println!("calculator declaration registered or already present");
         }
+        ProcessCommand::CalculateOnce => {
+            fleetiq_server::calculate_once().await?;
+            println!("calculator evaluation persisted");
+        }
         ProcessCommand::Help => println!("{}", ProcessCommand::usage()),
     }
     Ok(())

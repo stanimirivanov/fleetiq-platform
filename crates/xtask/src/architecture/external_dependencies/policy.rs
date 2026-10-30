@@ -54,7 +54,7 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     },
     ExternalPackagePolicy {
         name: "fleetiq-analytics",
-        normal: NONE,
+        normal: &["bigdecimal"],
         development: NONE,
         build: NONE,
     },

@@ -81,3 +81,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Observed fleet locations and coverage](fleet-location-snapshots.md): explicit mapping, coherent source evidence and bounded snapshot interpretation.
 
 - [Calculator registration](calculator-registration.md): trusted immutable first-party declarations, without activation.
+
+- [One-shot calculators](calculator-once.md): checked-schema execution with durable input pinning and retry.
