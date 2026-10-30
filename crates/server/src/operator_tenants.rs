@@ -75,6 +75,8 @@ const fn action_name(action: TenantAction) -> &'static str {
         TenantAction::ManageAccess => "access.manage",
         TenantAction::ManageProtocols => "protocol.manage",
         TenantAction::ManageAnalytics => "analytics.manage",
+        TenantAction::ReadAlerts => "alerts.read",
+        TenantAction::ManageAlerts => "alerts.manage",
     }
 }
 

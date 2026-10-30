@@ -19,6 +19,10 @@ the earlier three-action limit must regenerate before consuming such operators.
 Baseline.22 adds explicit calculator configuration revisions and activation with
 separate `analytics.manage`, expanding discovery to six exact actions without
 upgrading grants. Regenerate clients before delegating the new capability.
+Baseline.24 adds exact alert-rule head/revision reads and revision/activation
+commands with independent `alerts.read` and `alerts.manage`. Discovery now admits
+eight exact actions. Regenerate clients before delegation; existing grants are
+unchanged. See [alert rules](../../docs/operations/alert-rule-configuration.md).
 
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components

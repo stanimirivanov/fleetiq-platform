@@ -1,0 +1,18 @@
+type: object
+additionalProperties: false
+required:
+- expected_generation
+- revision
+properties:
+  expected_generation:
+    type: integer
+    minimum: 0
+    maximum: 4294967295
+  revision:
+    type:
+    - integer
+    - 'null'
+    minimum: 1
+    maximum: 4294967295
+description: Select a retained revision or explicit null to deactivate. Omission is invalid. Configuration
+  only; no alert lifecycle execution or delivery.

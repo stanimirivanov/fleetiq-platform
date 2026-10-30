@@ -1,0 +1,13 @@
+description: Changed retry, skipped revision, stale generation, missing selected revision or unsupported
+  release/output/property/target/unit.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:alert-rule
+      title: Alert rule revision, activation or prerequisites conflict
+      status: 409

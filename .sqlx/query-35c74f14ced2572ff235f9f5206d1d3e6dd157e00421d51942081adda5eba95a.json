@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT definition,actor_id,recorded_at_ms FROM analytics.alert_rule_revisions WHERE tenant_id=$1 AND rule_id=$2 AND revision=$3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "definition",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_revisions",
+            "name": "definition"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_revisions",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_revisions",
+            "name": "recorded_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "35c74f14ced2572ff235f9f5206d1d3e6dd157e00421d51942081adda5eba95a"
+}

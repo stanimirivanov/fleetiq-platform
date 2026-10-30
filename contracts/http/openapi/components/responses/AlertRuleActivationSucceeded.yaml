@@ -1,0 +1,13 @@
+description: Selection committed or original same-author generation receipt returned; no alert evaluation.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/AlertRuleActivationState.yaml
+    example:
+      generation: 1
+      revision: 1
+      actor_id: operator-a
+      recorded_at_ms: 1000

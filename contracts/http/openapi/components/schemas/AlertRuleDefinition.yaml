@@ -1,0 +1,74 @@
+type: object
+additionalProperties: false
+required:
+- kind
+- calculator
+- version
+- scope
+- target
+- output_property
+- output_version
+- output_index
+- comparison
+- threshold
+- threshold_unit
+- hold_ms
+- resolution
+- resolve_after_ms
+properties:
+  kind:
+    type: string
+    const: numeric-threshold-v1
+  calculator:
+    $ref: ./AdministrationIdentifier.yaml
+  version:
+    $ref: ./AdministrationIdentifier.yaml
+  scope:
+    $ref: ./AdministrationIdentifier.yaml
+  target:
+    $ref: ./AdministrationIdentifier.yaml
+  output_property:
+    $ref: ./AdministrationIdentifier.yaml
+  output_version:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  output_index:
+    type: integer
+    minimum: 0
+    maximum: 1023
+    description: Current admitted mean/MAD implementations support only zero. Unsupported slots conflict.
+  comparison:
+    type: string
+    enum:
+    - gt
+    - gte
+    - lt
+    - lte
+  threshold:
+    type: string
+    minLength: 1
+    maxLength: 256
+    pattern: ^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$
+    description: Finite exact decimal text, canonicalized on write. At most 128 integer and 64 fractional
+      digits; resource bounds are checked by the server. No float conversion.
+  threshold_unit:
+    anyOf:
+    - $ref: ./AdministrationIdentifier.yaml
+    - type: 'null'
+    description: Required explicit canonical unit, or null for dimensionless output; must equal the selected
+      property unit.
+  hold_ms:
+    type: integer
+    minimum: 0
+    maximum: 604800000
+  resolution:
+    type: string
+    const: resolve_on_false
+  resolve_after_ms:
+    type: integer
+    minimum: 0
+    maximum: 604800000
+description: Immutable threshold grammar over exact release/scope/target/property/ordinal across execution
+  configurations. Durations use event time. Missing/unusable evidence is unknown, never false and never
+  sufficient to resolve. This slice does not execute alerts.

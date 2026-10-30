@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT h.latest_revision,h.generation,a.revision,a.actor_id,a.recorded_at_ms FROM analytics.alert_rules h LEFT JOIN analytics.alert_rule_activation_changes a ON a.tenant_id=h.tenant_id AND a.rule_id=h.rule_id AND a.generation=h.generation WHERE h.tenant_id=$1 AND h.rule_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "latest_revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rules",
+            "name": "latest_revision"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rules",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_activation_changes",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_activation_changes",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_activation_changes",
+            "name": "recorded_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "e8e6bcb7c977ef5186646cd77e6ec477dfc41d7522db1dc9ae9a031157461895"
+}

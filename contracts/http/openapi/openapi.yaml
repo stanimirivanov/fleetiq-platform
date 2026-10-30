@@ -1,12 +1,18 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.23"
+  version: "1.0.0-baseline.24"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
 servers:
   - url: "/"
 security: []
 paths:
+  "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}":
+    $ref: ./paths/analytics/alert-rule.yaml
+  "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}/revisions/{revision}":
+    $ref: ./paths/analytics/alert-rule-revision.yaml
+  "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}/activation":
+    $ref: ./paths/analytics/alert-rule-activation.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/calculator-evaluations":
     $ref: ./paths/analytics/evaluations.yaml
   "/api/v1/tenants/{tenant_id}/assets/{asset_id}/calculator-evaluations/{evaluation_id}":
@@ -115,6 +121,18 @@ paths:
     $ref: "./paths/identity/logout.yaml"
 components:
   schemas:
+    AlertRuleDefinition:
+      $ref: ./components/schemas/AlertRuleDefinition.yaml
+    AlertRuleRevision:
+      $ref: ./components/schemas/AlertRuleRevision.yaml
+    AlertRuleRevisionReceipt:
+      $ref: ./components/schemas/AlertRuleRevisionReceipt.yaml
+    AlertRuleActivationState:
+      $ref: ./components/schemas/AlertRuleActivationState.yaml
+    AlertRuleHead:
+      $ref: ./components/schemas/AlertRuleHead.yaml
+    AlertRuleActivationRequest:
+      $ref: ./components/schemas/AlertRuleActivationRequest.yaml
     CalculatorEvidenceRelease:
       $ref: ./components/schemas/CalculatorEvidenceRelease.yaml
     CalculatorEvidenceProperty:
@@ -382,6 +400,10 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    alert-rule-id:
+      $ref: ./components/parameters/alert-rule-id.yaml
+    alert-rule-revision:
+      $ref: ./components/parameters/alert-rule-revision.yaml
     calculator-evaluation-id:
       $ref: ./components/parameters/calculator-evaluation-id.yaml
     calculator-evidence-asset-id:
@@ -537,6 +559,18 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    AlertRuleHeadSucceeded:
+      $ref: ./components/responses/AlertRuleHeadSucceeded.yaml
+    AlertRuleRevisionSucceeded:
+      $ref: ./components/responses/AlertRuleRevisionSucceeded.yaml
+    AlertRuleRevisionCreated:
+      $ref: ./components/responses/AlertRuleRevisionCreated.yaml
+    AlertRuleActivationSucceeded:
+      $ref: ./components/responses/AlertRuleActivationSucceeded.yaml
+    AlertRuleConflict:
+      $ref: ./components/responses/AlertRuleConflict.yaml
+    AlertRuleMethodNotAllowed:
+      $ref: ./components/responses/AlertRuleMethodNotAllowed.yaml
     CalculatorEvaluationPageSucceeded:
       $ref: ./components/responses/CalculatorEvaluationPageSucceeded.yaml
     CalculatorEvaluationEvidenceSucceeded:

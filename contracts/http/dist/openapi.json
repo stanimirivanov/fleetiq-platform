@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.23",
+    "version": "1.0.0-baseline.24",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,246 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}": {
+      "get": {
+        "operationId": "getAlertRuleHead",
+        "summary": "Read alert-rule authoring head and current selection",
+        "description": "Requires exact alerts.read before resource discovery; management, metadata or telemetry grants do not imply this read. Latest revision and activation are separate version counters. A newly created rule is inactive.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertRuleHeadSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/AlertRuleMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}/revisions/{revision}": {
+      "get": {
+        "operationId": "getAlertRuleRevision",
+        "summary": "Read one retained alert-rule revision",
+        "description": "Requires exact alerts.read before resource discovery; management, metadata or telemetry grants do not imply this read. Returns retained exact content and original authenticated actor/time.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-revision"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertRuleRevisionSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/AlertRuleMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "createAlertRuleRevision",
+        "summary": "Append one immutable alert-rule revision",
+        "description": "Requires exact alerts.manage, independently delegated; browser mutations require matching Origin and X-FleetIQ-CSRF. Current actor, tenant and grant are rechecked transactionally. Create only the next immutable revision; equivalent canonical numeric text and same author retry exactly. New revisions remain inactive while any prior selected revision remains selected.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-revision"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertRuleRevisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/AlertRuleMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/AlertRuleConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertRuleDefinition"
+              },
+              "example": {
+                "kind": "numeric-threshold-v1",
+                "calculator": "mean",
+                "version": "1",
+                "scope": "asset-a",
+                "target": "result",
+                "output_property": "mean.voltage",
+                "output_version": 1,
+                "output_index": 0,
+                "comparison": "gt",
+                "threshold": "50",
+                "threshold_unit": "volt",
+                "hold_ms": 1000,
+                "resolution": "resolve_on_false",
+                "resolve_after_ms": 2000
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}/activation": {
+      "put": {
+        "operationId": "changeAlertRuleActivation",
+        "summary": "Select or deactivate an alert-rule revision",
+        "description": "Requires exact alerts.manage, independently delegated; browser mutations require matching Origin and X-FleetIQ-CSRF. Current actor, tenant and grant are rechecked transactionally. Selection uses expected_generation; exact same-author retries return original receipt without restoring old state. This endpoint configures intent only; no alert worker or notification delivery is started.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-id"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-origin"
+          },
+          {
+            "$ref": "#/components/parameters/admin-mutation-csrf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertRuleActivationSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/AlertRuleMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/AlertRuleConflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertRuleActivationRequest"
+              },
+              "example": {
+                "expected_generation": 0,
+                "revision": 1
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/calculator-evaluations": {
       "get": {
         "operationId": "listCalculatorEvaluations",
@@ -3489,6 +3729,230 @@
   },
   "components": {
     "schemas": {
+      "AlertRuleDefinition": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "calculator",
+          "version",
+          "scope",
+          "target",
+          "output_property",
+          "output_version",
+          "output_index",
+          "comparison",
+          "threshold",
+          "threshold_unit",
+          "hold_ms",
+          "resolution",
+          "resolve_after_ms"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "numeric-threshold-v1"
+          },
+          "calculator": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "target": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "output_property": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "output_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "output_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1023,
+            "description": "Current admitted mean/MAD implementations support only zero. Unsupported slots conflict."
+          },
+          "comparison": {
+            "type": "string",
+            "enum": [
+              "gt",
+              "gte",
+              "lt",
+              "lte"
+            ]
+          },
+          "threshold": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?$",
+            "description": "Finite exact decimal text, canonicalized on write. At most 128 integer and 64 fractional digits; resource bounds are checked by the server. No float conversion."
+          },
+          "threshold_unit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required explicit canonical unit, or null for dimensionless output; must equal the selected property unit."
+          },
+          "hold_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 604800000
+          },
+          "resolution": {
+            "type": "string",
+            "const": "resolve_on_false"
+          },
+          "resolve_after_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 604800000
+          }
+        },
+        "description": "Immutable threshold grammar over exact release/scope/target/property/ordinal across execution configurations. Durations use event time. Missing/unusable evidence is unknown, never false and never sufficient to resolve. This slice does not execute alerts."
+      },
+      "AlertRuleRevision": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision",
+          "definition",
+          "actor_id",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "definition": {
+            "$ref": "#/components/schemas/AlertRuleDefinition"
+          },
+          "actor_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "recorded_at_ms": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": -9223372036854776000,
+            "maximum": 9223372036854776000
+          }
+        }
+      },
+      "AlertRuleRevisionReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "revision"
+        ],
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        }
+      },
+      "AlertRuleActivationState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generation",
+          "revision",
+          "actor_id",
+          "recorded_at_ms"
+        ],
+        "properties": {
+          "generation": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recorded_at_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": -9223372036854776000,
+            "maximum": 9223372036854776000
+          }
+        },
+        "description": "Generation zero is inactive with null attribution/time. A retry returns its original receipt without restoring old state."
+      },
+      "AlertRuleHead": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "latest_revision",
+          "activation"
+        ],
+        "properties": {
+          "latest_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "activation": {
+            "$ref": "#/components/schemas/AlertRuleActivationState"
+          }
+        }
+      },
+      "AlertRuleActivationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expected_generation",
+          "revision"
+        ],
+        "properties": {
+          "expected_generation": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          },
+          "revision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        },
+        "description": "Select a retained revision or explicit null to deactivate. Omission is invalid. Configuration only; no alert lifecycle execution or delivery."
+      },
       "CalculatorEvidenceRelease": {
         "type": "object",
         "additionalProperties": false,
@@ -6675,6 +7139,8 @@
         "type": "string",
         "description": "An exact granted tenant action; no action implies another.",
         "enum": [
+          "alerts.read",
+          "alerts.manage",
           "analytics.manage",
           "access.manage",
           "metadata.manage",
@@ -6699,7 +7165,7 @@
           "actions": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 6,
+            "maxItems": 8,
             "uniqueItems": true,
             "description": "Explicit current grants ordered by action name; never reusable authorization.",
             "items": {
@@ -7395,6 +7861,26 @@
       }
     },
     "parameters": {
+      "alert-rule-id": {
+        "name": "rule_id",
+        "in": "path",
+        "required": true,
+        "description": "Tenant-owned opaque alert-rule series identity.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "alert-rule-revision": {
+        "name": "revision",
+        "in": "path",
+        "required": true,
+        "description": "Positive ASCII decimal u32, leading zeros accepted; creation requires the exact successor unless retrying identical same-author content.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
       "calculator-evaluation-id": {
         "name": "evaluation_id",
         "in": "path",
@@ -8207,6 +8693,151 @@
       }
     },
     "responses": {
+      "AlertRuleHeadSucceeded": {
+        "description": "Current authoring head and selected revision; new revisions do not change activation.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertRuleHead"
+            },
+            "example": {
+              "latest_revision": 1,
+              "activation": {
+                "generation": 0,
+                "revision": null,
+                "actor_id": null,
+                "recorded_at_ms": null
+              }
+            }
+          }
+        }
+      },
+      "AlertRuleRevisionSucceeded": {
+        "description": "Exact immutable definition and original actor/time.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertRuleRevision"
+            },
+            "example": {
+              "revision": 1,
+              "definition": {
+                "kind": "numeric-threshold-v1",
+                "calculator": "mean",
+                "version": "1",
+                "scope": "asset-a",
+                "target": "result",
+                "output_property": "mean.voltage",
+                "output_version": 1,
+                "output_index": 0,
+                "comparison": "gt",
+                "threshold": "50",
+                "threshold_unit": "volt",
+                "hold_ms": 1000,
+                "resolution": "resolve_on_false",
+                "resolve_after_ms": 2000
+              },
+              "actor_id": "operator-a",
+              "recorded_at_ms": 1000
+            }
+          }
+        }
+      },
+      "AlertRuleRevisionCreated": {
+        "description": "Next revision committed or identical same-author content retained. Never implicitly activates.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertRuleRevisionReceipt"
+            },
+            "example": {
+              "revision": 1
+            }
+          }
+        }
+      },
+      "AlertRuleActivationSucceeded": {
+        "description": "Selection committed or original same-author generation receipt returned; no alert evaluation.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertRuleActivationState"
+            },
+            "example": {
+              "generation": 1,
+              "revision": 1,
+              "actor_id": "operator-a",
+              "recorded_at_ms": 1000
+            }
+          }
+        }
+      },
+      "AlertRuleConflict": {
+        "description": "Changed retry, skipped revision, stale generation, missing selected revision or unsupported release/output/property/target/unit.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:alert-rule",
+              "title": "Alert rule revision, activation or prerequisites conflict",
+              "status": 409
+            }
+          }
+        }
+      },
+      "AlertRuleMethodNotAllowed": {
+        "description": "Unsupported method; allowed methods depend on the rule resource.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "GET/HEAD for the head; GET/HEAD/PUT for revisions; PUT for activation."
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
       "CalculatorEvaluationPageSucceeded": {
         "description": "Bounded terminal summaries in ascending window-end/evaluation-ID C order. No snapshot guarantee.",
         "headers": {

@@ -1,0 +1,16 @@
+description: Unsupported method; allowed methods depend on the rule resource.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+  Allow:
+    schema:
+      type: string
+    description: GET/HEAD for the head; GET/HEAD/PUT for revisions; PUT for activation.
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:method-not-allowed
+      title: Method not allowed
+      status: 405

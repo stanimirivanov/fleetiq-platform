@@ -1,0 +1,10 @@
+description: Next revision committed or identical same-author content retained. Never implicitly activates.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/AlertRuleRevisionReceipt.yaml
+    example:
+      revision: 1

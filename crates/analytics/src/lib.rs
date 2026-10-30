@@ -16,7 +16,7 @@ mod output;
 
 pub use assembly::{CalculatorAssemblyError, assemble_output, assemble_outputs};
 pub use identifier::{
-    AnalyticsIdentifierError, CalculatorConfigurationId, CalculatorEvaluationId,
+    AlertRuleId, AnalyticsIdentifierError, CalculatorConfigurationId, CalculatorEvaluationId,
     CalculatorEvidenceId, CalculatorId, CalculatorVersion,
 };
 pub use output::{
@@ -47,3 +47,8 @@ pub use work::{CalculatorSchedule, CalculatorWorkLease};
 
 mod detectors;
 pub use detectors::{MadEvidence, detect_mad};
+
+mod alert_rules;
+pub use alert_rules::{
+    ALERT_RULE_GRAMMAR, AlertComparison, AlertCondition, AlertResolution, AlertRuleDefinition,
+};

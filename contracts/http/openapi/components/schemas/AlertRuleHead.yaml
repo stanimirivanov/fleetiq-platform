@@ -1,0 +1,12 @@
+type: object
+additionalProperties: false
+required:
+- latest_revision
+- activation
+properties:
+  latest_revision:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  activation:
+    $ref: ./AlertRuleActivationState.yaml

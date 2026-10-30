@@ -113,3 +113,8 @@ mod calculator_evidence;
 pub use calculator_evidence::{
     CalculatorEvidenceError, CalculatorEvidenceRow, CalculatorOutputRow, PostgresCalculatorEvidence,
 };
+
+mod alert_rules;
+pub use alert_rules::{
+    AlertRuleActivationRecord, AlertRuleError, AlertRuleHead, AlertRuleRevision, PostgresAlertRules,
+};

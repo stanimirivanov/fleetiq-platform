@@ -1,0 +1,15 @@
+description: Current authoring head and selected revision; new revisions do not change activation.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/AlertRuleHead.yaml
+    example:
+      latest_revision: 1
+      activation:
+        generation: 0
+        revision: null
+        actor_id: null
+        recorded_at_ms: null

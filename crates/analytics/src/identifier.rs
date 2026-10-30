@@ -2,6 +2,10 @@ use std::{error::Error, fmt, str::FromStr};
 
 const MAX_ANALYTICS_IDENTIFIER_LENGTH: usize = 128;
 
+/// Identifies an alert-rule series independently of its immutable revisions.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct AlertRuleId(String);
+
 /// Identifies a calculator independently of any implementation release.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct CalculatorId(String);
@@ -115,6 +119,7 @@ macro_rules! analytics_identifier {
     };
 }
 
+analytics_identifier!(AlertRuleId);
 analytics_identifier!(CalculatorConfigurationId);
 analytics_identifier!(CalculatorEvidenceId);
 analytics_identifier!(CalculatorId);
