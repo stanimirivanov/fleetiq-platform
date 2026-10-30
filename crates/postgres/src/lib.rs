@@ -108,3 +108,8 @@ pub use calculator_configuration::{
     CalculatorActivationRecord, CalculatorConfigurationError, CalculatorConfigurationRecord,
     PostgresCalculatorConfiguration,
 };
+
+mod calculator_evidence;
+pub use calculator_evidence::{
+    CalculatorEvidenceError, CalculatorEvidenceRow, CalculatorOutputRow, PostgresCalculatorEvidence,
+};

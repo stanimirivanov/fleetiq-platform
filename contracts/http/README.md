@@ -239,3 +239,8 @@ whole-tenant inventory/coverage totals and bounded C-ordered pages follow
 The [operations guide](../../docs/operations/fleet-location-snapshots.md) defines
 query context, quality/age, receipt-time exclusions and count semantics. No map,
 health or installation qualification follows from publishing this contract.
+
+Baseline.23 adds bounded calculator evaluation summaries, exact retained manifests
+and separate ordered output pages under existing `telemetry.read`; values/times
+remain exact strings and no new grants are implied. See
+[calculator evidence](../../docs/operations/calculator-evidence.md).

@@ -216,7 +216,10 @@ with exact explanation values, dimensionless 0/1 output and replayable input evi
 The explicit checked-schema [analytics worker](../operations/analytics-worker.md) now
 enumerates bounded fixed windows with durable cursors, database-clock claims,
 three-attempt fencing and atomic terminal completion. Protected configuration revisions and serialized explicit activation now use
-separate `analytics.manage` with metadata-read discovery. Operator recovery controls
+separate `analytics.manage` with metadata-read discovery. Protected
+[evaluation/output evidence](../operations/calculator-evidence.md) now provides
+bounded terminal summary pages, exact input manifests and separate output pages
+under `telemetry.read`, without raw preparation expansion. Operator recovery controls
 and installed dashboard qualification remain planned. Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data

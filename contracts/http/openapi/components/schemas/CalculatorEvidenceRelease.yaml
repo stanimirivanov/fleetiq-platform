@@ -1,0 +1,16 @@
+type: object
+additionalProperties: false
+required:
+- id
+- version
+- implementation
+properties:
+  id:
+    $ref: ./AdministrationIdentifier.yaml
+  version:
+    $ref: ./AdministrationIdentifier.yaml
+  implementation:
+    type: string
+    enum:
+    - window-mean-v1
+    - window-mad-v1

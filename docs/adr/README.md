@@ -168,3 +168,4 @@ introducing a new record.
 | [0126](0126-schedule-fenced-calculator-work.md) | Durable fixed-window scheduling and generation-fenced completion |
 | [0127](0127-explain-window-mad-anomalies.md) | Exact latest-point median/MAD anomalies with replayable evidence |
 | [0128](0128-activate-calculator-configurations.md) | Authorized immutable calculator revisions and serialized activation |
+| [0129](0129-read-bounded-calculator-evidence.md) | Bounded authorized evaluation manifests and ordered output pages |

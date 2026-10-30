@@ -1,0 +1,21 @@
+description: Bounded outputs in ascending deterministic zero-based position.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/CalculatorOutputPage.yaml
+    example:
+      outputs:
+      - evaluation_id: evaluation-a
+        calculator_id: mean
+        calculator_version: '1'
+        output_index: 0
+        asset_id: result
+        property_id: mean.voltage
+        property_version: 1
+        kind: decimal
+        value: '12345678901234567890.1234567890123456789'
+        unit: volt
+      next_after: null

@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.22",
+    "version": "1.0.0-baseline.23",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,165 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/calculator-evaluations": {
+      "get": {
+        "operationId": "listCalculatorEvaluations",
+        "summary": "listCalculatorEvaluations",
+        "description": "Requires fresh exact telemetry.read before discovery; metadata.read or analytics.manage does not imply access. Strict query fields, no-store, at most 1 MiB serialized response, no raw preparation/payload expansion. Half-open event-time range is [start_at_ms,end_at_ms), at most seven days; event time is window end. Cursors bind tenant/asset/range; new backdated appends are not a paging snapshot.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evidence-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/history-start-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/history-end-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evaluation-limit"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evidence-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CalculatorEvaluationPageSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/calculator-evaluations/{evaluation_id}": {
+      "get": {
+        "operationId": "getCalculatorEvaluationEvidence",
+        "summary": "getCalculatorEvaluationEvidence",
+        "description": "Requires fresh exact telemetry.read before discovery; metadata.read or analytics.manage does not imply access. Strict query fields, no-store, at most 1 MiB serialized response, no raw preparation/payload expansion. Returns retained exact calculator/configuration/input identity without re-evaluation. Outputs are paged separately.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evidence-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evaluation-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CalculatorEvaluationEvidenceSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/calculator-evaluations/{evaluation_id}/outputs": {
+      "get": {
+        "operationId": "listCalculatorEvaluationOutputs",
+        "summary": "listCalculatorEvaluationOutputs",
+        "description": "Requires fresh exact telemetry.read before discovery; metadata.read or analytics.manage does not imply access. Strict query fields, no-store, at most 1 MiB serialized response, no raw preparation/payload expansion. Exact evaluation must belong to the tenant and input scope. Cursor binds this evaluation and resource; it cannot be used on another output page.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evidence-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evaluation-id"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-output-limit"
+          },
+          {
+            "$ref": "#/components/parameters/calculator-evidence-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CalculatorOutputPageSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/calculator-configurations/{configuration_id}/revisions/{revision}": {
       "get": {
         "operationId": "getCalculatorConfigurationRevision",
@@ -3330,6 +3489,300 @@
   },
   "components": {
     "schemas": {
+      "CalculatorEvidenceRelease": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "implementation"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "implementation": {
+            "type": "string",
+            "enum": [
+              "window-mean-v1",
+              "window-mad-v1"
+            ]
+          }
+        }
+      },
+      "CalculatorEvidenceProperty": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          }
+        }
+      },
+      "CalculatorEvidenceWindow": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start_at_ms",
+          "end_at_ms",
+          "finalize_at_ms",
+          "known_at_ms"
+        ],
+        "properties": {
+          "start_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "end_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "finalize_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "known_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          }
+        }
+      },
+      "CalculatorEvaluationSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evaluation_id",
+          "scope_asset_id",
+          "calculator",
+          "configuration_id",
+          "input_property",
+          "window",
+          "evaluated_at_ms",
+          "outcome",
+          "minimum_samples",
+          "input_count",
+          "output_count"
+        ],
+        "properties": {
+          "evaluation_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "scope_asset_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "calculator": {
+            "$ref": "#/components/schemas/CalculatorEvidenceRelease"
+          },
+          "configuration_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "input_property": {
+            "$ref": "#/components/schemas/CalculatorEvidenceProperty"
+          },
+          "window": {
+            "$ref": "#/components/schemas/CalculatorEvidenceWindow"
+          },
+          "evaluated_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "insufficient",
+              "incompatible_input",
+              "invalid_output",
+              "resource_limit"
+            ]
+          },
+          "minimum_samples": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1024
+          },
+          "input_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1024
+          },
+          "output_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1024
+          }
+        },
+        "description": "Retained terminal evaluation; event time is window end. configuration_id is the immutable execution identity, not an unversioned configuration series. No input/output array expansion."
+      },
+      "CalculatorInputReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evidence_id",
+          "event_at_ms"
+        ],
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "event_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          }
+        },
+        "description": "Exact immutable semantic evidence identity and event time. Does not expand decoded payloads or prepared values; semantic history reads use the pinned scope/property/window."
+      },
+      "CalculatorEvaluationEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evaluation",
+          "inputs"
+        ],
+        "properties": {
+          "evaluation": {
+            "$ref": "#/components/schemas/CalculatorEvaluationSummary"
+          },
+          "inputs": {
+            "type": "array",
+            "maxItems": 1024,
+            "items": {
+              "$ref": "#/components/schemas/CalculatorInputReference"
+            }
+          }
+        }
+      },
+      "CalculatorOutputEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evaluation_id",
+          "calculator_id",
+          "calculator_version",
+          "output_index",
+          "asset_id",
+          "property_id",
+          "property_version",
+          "kind",
+          "value",
+          "unit"
+        ],
+        "properties": {
+          "evaluation_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "calculator_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "calculator_version": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "output_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1023
+          },
+          "asset_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "property_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "property_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "kind": {
+            "type": "string",
+            "const": "decimal"
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "description": "Exact finite decimal text, potentially exponent notation. Never convert through binary float."
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdministrationIdentifier"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Identity is tenant/evaluation/calculator release/output_index; target/property/unit and stored decimal text are retained."
+      },
+      "CalculatorEvidenceCursor": {
+        "type": "string",
+        "maxLength": 8192,
+        "pattern": "^v1\\.(?:[0-9a-f]{2})+$",
+        "description": "Opaque bounded public position, not a signature or authority. Bound to tenant, asset, resource, time range for lists and exact evaluation for outputs. Page size may change; pages are not snapshots."
+      },
+      "CalculatorEvaluationPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evaluations",
+          "next_after"
+        ],
+        "properties": {
+          "evaluations": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CalculatorEvaluationSummary"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalculatorEvidenceCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "CalculatorOutputPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "outputs",
+          "next_after"
+        ],
+        "properties": {
+          "outputs": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/CalculatorOutputEvidence"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CalculatorEvidenceCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "CalculatorParameters": {
         "type": "object",
         "additionalProperties": false,
@@ -6942,6 +7395,54 @@
       }
     },
     "parameters": {
+      "calculator-evaluation-id": {
+        "name": "evaluation_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact retained calculator evaluation identity.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "calculator-evidence-asset-id": {
+        "name": "asset_id",
+        "in": "path",
+        "required": true,
+        "description": "Semantic input scope asset. A scoped collection with no retained evaluations returns an empty page; exact absent records return 404.",
+        "schema": {
+          "$ref": "#/components/schemas/AdministrationIdentifier"
+        }
+      },
+      "calculator-evaluation-limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Maximum summaries returned.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "calculator-output-limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Maximum ordered outputs returned without whole-envelope expansion.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 20
+        }
+      },
+      "calculator-evidence-after": {
+        "name": "after",
+        "in": "query",
+        "description": "Versioned position bound to this exact read scope; malformed or foreign positions return 400.",
+        "schema": {
+          "$ref": "#/components/schemas/CalculatorEvidenceCursor"
+        }
+      },
       "calculator-configuration-id": {
         "name": "configuration_id",
         "in": "path",
@@ -7706,6 +8207,157 @@
       }
     },
     "responses": {
+      "CalculatorEvaluationPageSucceeded": {
+        "description": "Bounded terminal summaries in ascending window-end/evaluation-ID C order. No snapshot guarantee.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CalculatorEvaluationPage"
+            },
+            "example": {
+              "evaluations": [
+                {
+                  "evaluation_id": "evaluation-a",
+                  "scope_asset_id": "asset-a",
+                  "calculator": {
+                    "id": "mean",
+                    "version": "1",
+                    "implementation": "window-mean-v1"
+                  },
+                  "configuration_id": "execution-a",
+                  "input_property": {
+                    "id": "electrical.voltage",
+                    "version": 1
+                  },
+                  "window": {
+                    "start_at_ms": "0",
+                    "end_at_ms": "3000",
+                    "finalize_at_ms": "3000",
+                    "known_at_ms": "3000"
+                  },
+                  "evaluated_at_ms": "3500",
+                  "outcome": "complete",
+                  "minimum_samples": 1,
+                  "input_count": 1,
+                  "output_count": 1
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "CalculatorEvaluationEvidenceSucceeded": {
+        "description": "Exact terminal manifest, at most 1024 source identities; outputs are paged separately.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CalculatorEvaluationEvidence"
+            },
+            "example": {
+              "evaluation": {
+                "evaluation_id": "evaluation-a",
+                "scope_asset_id": "asset-a",
+                "calculator": {
+                  "id": "mean",
+                  "version": "1",
+                  "implementation": "window-mean-v1"
+                },
+                "configuration_id": "execution-a",
+                "input_property": {
+                  "id": "electrical.voltage",
+                  "version": 1
+                },
+                "window": {
+                  "start_at_ms": "0",
+                  "end_at_ms": "3000",
+                  "finalize_at_ms": "3000",
+                  "known_at_ms": "3000"
+                },
+                "evaluated_at_ms": "3500",
+                "outcome": "complete",
+                "minimum_samples": 1,
+                "input_count": 1,
+                "output_count": 1
+              },
+              "inputs": [
+                {
+                  "evidence_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "event_at_ms": "1000"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "CalculatorOutputPageSucceeded": {
+        "description": "Bounded outputs in ascending deterministic zero-based position.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CalculatorOutputPage"
+            },
+            "example": {
+              "outputs": [
+                {
+                  "evaluation_id": "evaluation-a",
+                  "calculator_id": "mean",
+                  "calculator_version": "1",
+                  "output_index": 0,
+                  "asset_id": "result",
+                  "property_id": "mean.voltage",
+                  "property_version": 1,
+                  "kind": "decimal",
+                  "value": "12345678901234567890.1234567890123456789",
+                  "unit": "volt"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "CalculatorEvidenceMethodNotAllowed": {
+        "description": "Only GET and HEAD are supported.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Allow": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "GET and HEAD."
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:method-not-allowed",
+              "title": "Method not allowed",
+              "status": 405
+            }
+          }
+        }
+      },
       "CalculatorRevisionCreated": {
         "description": "The next revision was committed, or exact same-author content was already present. No activation.",
         "headers": {

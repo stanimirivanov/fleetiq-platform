@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          SELECT e.evaluation_id AS id,e.evaluated_at_ms,e.outcome,e.minimum_samples,\n            CASE WHEN $4 THEN e.replay_key ELSE e.replay_key-'inputs' END AS \"replay!\",d.implementation,d.input_id AS input_property_id,d.input_version AS input_property_version,\n            jsonb_array_length(e.replay_key->'inputs') AS \"input_count!\",jsonb_array_length(e.outputs) AS \"output_count!\"\n          FROM analytics.evaluations e JOIN analytics.calculator_definitions d USING(tenant_id,calculator_id,calculator_version)\n          WHERE e.tenant_id=$1 AND e.scope_asset_id=$2 AND e.evaluation_id=$3\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.evaluations",
+            "name": "evaluation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "evaluated_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.evaluations",
+            "name": "evaluated_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "outcome",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.evaluations",
+            "name": "outcome"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "minimum_samples",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "analytics.evaluations",
+            "name": "minimum_samples"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "replay!",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "implementation",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_definitions",
+            "name": "implementation"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "input_property_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_definitions",
+            "name": "input_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "input_property_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_definitions",
+            "name": "input_version"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "input_count!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "output_count!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "3cb59f9e02e0eb28f3b04d943e2d026e8c86c20fe213b6cd2099203bee186ad2"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          SELECT (o.ordinality-1)::int AS \"index!\",o.value AS \"output!\"\n          FROM analytics.evaluations e CROSS JOIN LATERAL jsonb_array_elements(e.outputs) WITH ORDINALITY o\n          WHERE e.tenant_id=$1 AND e.scope_asset_id=$2 AND e.evaluation_id=$3 AND o.ordinality>$4::bigint+1\n          ORDER BY o.ordinality LIMIT $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "index!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "output!",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "3e8ffdea1b46f851b0057933b081d272c57c33c8e824986636c7a1c480d3ce78"
+}

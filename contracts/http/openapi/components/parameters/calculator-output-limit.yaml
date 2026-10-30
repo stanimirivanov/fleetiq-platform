@@ -1,0 +1,8 @@
+name: limit
+in: query
+description: Maximum ordered outputs returned without whole-envelope expansion.
+schema:
+  type: integer
+  minimum: 1
+  maximum: 20
+  default: 20

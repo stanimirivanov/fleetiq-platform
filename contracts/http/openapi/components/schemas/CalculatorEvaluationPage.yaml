@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required:
+- evaluations
+- next_after
+properties:
+  evaluations:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./CalculatorEvaluationSummary.yaml
+  next_after:
+    anyOf:
+    - $ref: ./CalculatorEvidenceCursor.yaml
+    - type: 'null'

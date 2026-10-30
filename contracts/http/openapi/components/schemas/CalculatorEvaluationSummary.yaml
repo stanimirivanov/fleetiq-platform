@@ -1,0 +1,51 @@
+type: object
+additionalProperties: false
+required:
+- evaluation_id
+- scope_asset_id
+- calculator
+- configuration_id
+- input_property
+- window
+- evaluated_at_ms
+- outcome
+- minimum_samples
+- input_count
+- output_count
+properties:
+  evaluation_id:
+    $ref: ./AdministrationIdentifier.yaml
+  scope_asset_id:
+    $ref: ./AdministrationIdentifier.yaml
+  calculator:
+    $ref: ./CalculatorEvidenceRelease.yaml
+  configuration_id:
+    $ref: ./AdministrationIdentifier.yaml
+  input_property:
+    $ref: ./CalculatorEvidenceProperty.yaml
+  window:
+    $ref: ./CalculatorEvidenceWindow.yaml
+  evaluated_at_ms:
+    $ref: ./HistoryMillis.yaml
+  outcome:
+    type: string
+    enum:
+    - complete
+    - insufficient
+    - incompatible_input
+    - invalid_output
+    - resource_limit
+  minimum_samples:
+    type: integer
+    minimum: 1
+    maximum: 1024
+  input_count:
+    type: integer
+    minimum: 0
+    maximum: 1024
+  output_count:
+    type: integer
+    minimum: 0
+    maximum: 1024
+description: Retained terminal evaluation; event time is window end. configuration_id is the immutable
+  execution identity, not an unversioned configuration series. No input/output array expansion.

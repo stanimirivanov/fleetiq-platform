@@ -1,0 +1,16 @@
+type: object
+additionalProperties: false
+required:
+- start_at_ms
+- end_at_ms
+- finalize_at_ms
+- known_at_ms
+properties:
+  start_at_ms:
+    $ref: ./HistoryMillis.yaml
+  end_at_ms:
+    $ref: ./HistoryMillis.yaml
+  finalize_at_ms:
+    $ref: ./HistoryMillis.yaml
+  known_at_ms:
+    $ref: ./HistoryMillis.yaml

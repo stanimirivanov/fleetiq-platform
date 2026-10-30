@@ -1,0 +1,29 @@
+get:
+  operationId: getCalculatorEvaluationEvidence
+  summary: getCalculatorEvaluationEvidence
+  description: Requires fresh exact telemetry.read before discovery; metadata.read or analytics.manage
+    does not imply access. Strict query fields, no-store, at most 1 MiB serialized response, no raw preparation/payload
+    expansion. Returns retained exact calculator/configuration/input identity without re-evaluation. Outputs
+    are paged separately.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/calculator-evidence-asset-id.yaml
+  - $ref: ../../components/parameters/calculator-evaluation-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/CalculatorEvaluationEvidenceSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml

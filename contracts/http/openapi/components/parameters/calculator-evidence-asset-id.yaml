@@ -1,0 +1,7 @@
+name: asset_id
+in: path
+required: true
+description: Semantic input scope asset. A scoped collection with no retained evaluations returns an empty
+  page; exact absent records return 404.
+schema:
+  $ref: ../schemas/AdministrationIdentifier.yaml
