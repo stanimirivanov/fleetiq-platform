@@ -30,7 +30,10 @@ impl PostgresProtocolPackageCatalog {
     /// `READ COMMITTED`, an insert can wait for another transaction while the
     /// original statement snapshot remains unable to see the committed winner.
     /// The fresh snapshot lets this adapter compare every immutable field rather
-    /// than mistaking a release-key conflict for idempotent success.
+    /// than mistaking a release-key conflict for idempotent success. Both the
+    /// primary key and content-reference unique key contain the same release
+    /// identity, so either conflict must enter that comparison (ADR 0045).
+    /// Future unique constraints must preserve this identity-resolution rule.
     async fn register_release(
         &self,
         release: &ProtocolPackageRelease,
@@ -43,9 +46,7 @@ impl PostgresProtocolPackageCatalog {
                 (tenant_id, protocol_package_id, protocol_package_version,
                  artifact_sha256, artifact_size_bytes)
             VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT
-                (tenant_id, protocol_package_id, protocol_package_version)
-            DO NOTHING
+            ON CONFLICT DO NOTHING
             RETURNING TRUE AS "inserted!"
             "#,
             release.tenant_id().as_str(),

@@ -66,27 +66,30 @@ async fn exact_retry_returns_already_present(pool: PgPool) -> Result<(), Box<dyn
 async fn concurrent_exact_registrations_have_one_winner(
     pool: PgPool,
 ) -> Result<(), Box<dyn Error>> {
-    seed_tenant(&pool, "tenant-a").await?;
-    let catalog = PostgresProtocolPackageCatalog::new(pool);
-    let release = release("tenant-a", [1; 32], 500);
+    let catalog = PostgresProtocolPackageCatalog::new(pool.clone());
+    for round in 0..16 {
+        let tenant = format!("tenant-race-{round}");
+        seed_tenant(&pool, &tenant).await?;
+        let release = release(&tenant, [1; 32], 500);
 
-    let (first, second) = tokio::join!(catalog.register(&release), catalog.register(&release));
-    let outcomes = [first?, second?];
+        let (first, second) = tokio::join!(catalog.register(&release), catalog.register(&release));
+        let outcomes = [first?, second?];
 
-    assert_eq!(
-        outcomes
-            .iter()
-            .filter(|outcome| **outcome == ProtocolPackageRegistrationOutcome::Registered)
-            .count(),
-        1
-    );
-    assert_eq!(
-        outcomes
-            .iter()
-            .filter(|outcome| **outcome == ProtocolPackageRegistrationOutcome::AlreadyPresent)
-            .count(),
-        1
-    );
+        assert_eq!(
+            outcomes
+                .iter()
+                .filter(|outcome| **outcome == ProtocolPackageRegistrationOutcome::Registered)
+                .count(),
+            1
+        );
+        assert_eq!(
+            outcomes
+                .iter()
+                .filter(|outcome| **outcome == ProtocolPackageRegistrationOutcome::AlreadyPresent)
+                .count(),
+            1
+        );
+    }
     Ok(())
 }
 

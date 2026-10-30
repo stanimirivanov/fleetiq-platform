@@ -20,6 +20,14 @@ pub struct CalculatorVersion(String);
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct CalculatorEvaluationId(String);
 
+/// Identifies one immutable configuration including input roles and parameters.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct CalculatorConfigurationId(String);
+
+/// Identifies one exact immutable semantic evidence record.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct CalculatorEvidenceId(String);
+
 /// Describes why an analytics identifier is invalid.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AnalyticsIdentifierError {
@@ -107,6 +115,8 @@ macro_rules! analytics_identifier {
     };
 }
 
+analytics_identifier!(CalculatorConfigurationId);
+analytics_identifier!(CalculatorEvidenceId);
 analytics_identifier!(CalculatorId);
 analytics_identifier!(CalculatorVersion);
 analytics_identifier!(CalculatorEvaluationId);
