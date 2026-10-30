@@ -173,3 +173,5 @@ introducing a new record.
 | [0130](0130-configure-versioned-alert-rules.md) | Closed numeric alert grammar, immutable revisions and explicit optimistic activation |
 
 | [0131](0131-evaluate-durable-alert-lifecycles.md) | Event-time lifecycle checkpoints, immutable evidence receipts and atomic notification intents |
+
+| [0132](0132-publish-bounded-alert-reads.md) | Authorized observed-alert queue, exact detail, bounded transition history and evidence references |

@@ -1,0 +1,6 @@
+type: string
+enum:
+- inactive
+- pending
+- firing
+- resolved

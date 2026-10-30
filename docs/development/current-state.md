@@ -226,8 +226,10 @@ closed numeric-threshold-v1 revisions with independent alerts.read/manage grants
 and optimistic selection, inactive by default. Missing evidence remains unknown;
 the explicit analytics worker now persists event-time alert lifecycle transitions,
 deduplicated evidence receipts and atomic notification intents. Historical/one-shot
-evidence cannot create live transitions. Alert reads, acknowledgement and network
-delivery remain planned; see [lifecycle operation](../operations/alert-lifecycle.md). Exact-property subscription transport now uses the authorized SSE boundary.
+evidence cannot create live transitions. Protected
+[alert reads](../operations/alert-reads.md) now expose the observed queue, exact
+pinned detail and bounded transition history with separate alerts.read authority.
+Acknowledgement and network delivery remain planned; see [lifecycle operation](../operations/alert-lifecycle.md). Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data
 

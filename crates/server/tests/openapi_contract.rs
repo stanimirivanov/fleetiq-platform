@@ -174,6 +174,18 @@ const OPERATIONS: &[PublishedOperation] = &[
 // or duplicate operation IDs from slipping past the global inventory guard.
 const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
     (
+        "/api/v1/tenants/{tenant_id}/alerts",
+        &[("get", "listAlerts")],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/alerts/{rule_id}/revisions/{revision}",
+        &[("get", "getAlert")],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/alerts/{rule_id}/revisions/{revision}/transitions",
+        &[("get", "listAlertTransitions")],
+    ),
+    (
         "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}",
         &[("get", "getAlertRuleHead")],
     ),

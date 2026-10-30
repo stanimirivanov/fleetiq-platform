@@ -87,3 +87,7 @@ For demand-driven current-property SSE, scoped resume and recovery, use the
 For selected numeric alert rules and durable evidence-driven lifecycle execution,
 use [alert lifecycle operation](operations/alert-lifecycle.md) and
 [ADR 0131](adr/0131-evaluate-durable-alert-lifecycles.md).
+
+For authorized observed-alert queue/detail and bounded transition history, use
+[tenant alert reads](operations/alert-reads.md) and
+[ADR 0132](adr/0132-publish-bounded-alert-reads.md).

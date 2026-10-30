@@ -1,0 +1,5 @@
+type: string
+maxLength: 8192
+pattern: ^v1\.(?:[0-9a-f]{2})+$
+description: Opaque bounded position, not a signature or authority. Bound to tenant/resource/filter and
+  exact rule revision for transitions. Page size may change; traversal is not a snapshot.

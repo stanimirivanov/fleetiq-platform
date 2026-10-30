@@ -1,0 +1,44 @@
+description: Retained exact alert, latest transition and pinned rule definition from one statement snapshot.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/AlertDetail.yaml
+    example:
+      alert:
+        rule_id: voltage-high
+        rule_revision: 1
+        scope_asset_id: asset-a
+        target_asset_id: result
+        version: '2'
+        phase: firing
+        selected: true
+        candidate_since_ms: null
+        last_event_at_ms: '2000'
+        latest_transition:
+          version: '2'
+          phase: firing
+          event_at_ms: '2000'
+          recorded_at_ms: '2010'
+          activation_generation: 1
+          evidence:
+            evaluation_id: evaluation-b
+            scope_asset_id: asset-a
+            output_index: 0
+      definition:
+        kind: numeric-threshold-v1
+        calculator: mean
+        version: '1'
+        scope: asset-a
+        target: result
+        output_property: mean.voltage
+        output_version: 1
+        output_index: 0
+        comparison: gt
+        threshold: '50'
+        threshold_unit: volt
+        hold_ms: 1000
+        resolution: resolve_on_false
+        resolve_after_ms: 1000

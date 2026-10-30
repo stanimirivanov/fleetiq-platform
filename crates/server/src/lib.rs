@@ -104,6 +104,7 @@ fn protected_application_router<A>(
 where
     A: protected_request::RequestAuthenticator + Clone + 'static,
 {
+    let alerts = alerts::router(pool.clone(), authentication.clone());
     let rules = alert_rules::router(pool.clone(), authentication.clone(), mutation.clone());
     let calculators =
         calculator_configuration::router(pool.clone(), authentication.clone(), mutation.clone());
@@ -112,6 +113,7 @@ where
         .merge(calculators)
         .merge(evidence)
         .merge(rules)
+        .merge(alerts)
 }
 
 fn protected_capability_routers<A>(
@@ -311,3 +313,5 @@ mod calculator_evidence;
 mod cursor_codec;
 
 mod alert_rules;
+
+mod alerts;

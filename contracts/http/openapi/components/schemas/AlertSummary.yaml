@@ -1,0 +1,41 @@
+type: object
+additionalProperties: false
+required:
+- rule_id
+- rule_revision
+- scope_asset_id
+- target_asset_id
+- version
+- phase
+- selected
+- candidate_since_ms
+- last_event_at_ms
+- latest_transition
+properties:
+  rule_id:
+    $ref: ./AdministrationIdentifier.yaml
+  rule_revision:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  scope_asset_id:
+    $ref: ./AdministrationIdentifier.yaml
+  target_asset_id:
+    $ref: ./AdministrationIdentifier.yaml
+  version:
+    $ref: ./AlertLifecycleVersion.yaml
+  phase:
+    $ref: ./AlertPhase.yaml
+  selected:
+    type: boolean
+  candidate_since_ms:
+    anyOf:
+    - $ref: ./HistoryMillis.yaml
+    - type: 'null'
+  last_event_at_ms:
+    $ref: ./HistoryMillis.yaml
+  latest_transition:
+    $ref: ./AlertTransition.yaml
+description: One observed lifecycle, identified by rule ID/revision and its pinned scope. Version-zero
+  configuration checkpoints are excluded. selected describes processing selection, not condition health.
+  Latest transition evidence can precede last_event_at_ms when later evidence did not change phase.

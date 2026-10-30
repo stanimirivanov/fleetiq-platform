@@ -1,0 +1,6 @@
+name: phase
+in: query
+description: Exact current phase filter. Omission selects pending and firing. Filtering can change during
+  traversal.
+schema:
+  $ref: ../schemas/AlertPhase.yaml

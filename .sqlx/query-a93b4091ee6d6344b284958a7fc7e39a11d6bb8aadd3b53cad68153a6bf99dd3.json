@@ -1,0 +1,178 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          SELECT a.rule_id,a.revision,a.phase,t.phase AS transition_phase,a.version,a.candidate_since_ms,a.last_event_at_ms,\n            COALESCE(h.active_revision=a.revision,false) AS \"selected!\",r.definition,\n            t.event_at_ms,(floor(extract(epoch FROM t.recorded_at)*1000)::bigint) AS \"recorded_at_ms!\",\n            p.activation_generation,t.evaluation_id,p.disposition\n          FROM analytics.alert_lifecycles a\n          JOIN analytics.alert_rules h USING(tenant_id,rule_id)\n          JOIN analytics.alert_rule_revisions r ON r.tenant_id=a.tenant_id AND r.rule_id=a.rule_id AND r.revision=a.revision\n          JOIN analytics.alert_transitions t ON t.tenant_id=a.tenant_id AND t.rule_id=a.rule_id AND t.revision=a.revision AND t.version=a.version\n          JOIN analytics.alert_evaluation_receipts p ON p.tenant_id=t.tenant_id AND p.rule_id=t.rule_id AND p.revision=t.revision AND p.evaluation_id=t.evaluation_id\n          WHERE a.tenant_id=$1 AND a.version>0\n            AND (($2::text IS NULL AND a.phase IN ('pending','firing')) OR a.phase=$2)\n            AND ($3::text IS NULL OR (a.rule_id COLLATE \"C\",a.revision)>($3 COLLATE \"C\",$4))\n          ORDER BY a.rule_id COLLATE \"C\",a.revision LIMIT $5\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rule_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "rule_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "phase",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "transition_phase",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "phase"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "candidate_since_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "candidate_since_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "last_event_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_lifecycles",
+            "name": "last_event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "selected!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 8,
+        "name": "definition",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_revisions",
+            "name": "definition"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "event_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "recorded_at_ms!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 11,
+        "name": "activation_generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_evaluation_receipts",
+            "name": "activation_generation"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "evaluation_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "evaluation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "disposition",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_evaluation_receipts",
+            "name": "disposition"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      null,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a93b4091ee6d6344b284958a7fc7e39a11d6bb8aadd3b53cad68153a6bf99dd3"
+}

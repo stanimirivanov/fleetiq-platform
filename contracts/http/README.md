@@ -23,6 +23,9 @@ Baseline.24 adds exact alert-rule head/revision reads and revision/activation
 commands with independent `alerts.read` and `alerts.manage`. Discovery now admits
 eight exact actions. Regenerate clients before delegation; existing grants are
 unchanged. See [alert rules](../../docs/operations/alert-rule-configuration.md).
+Baseline.25 adds the observed-alert queue, exact detail and bounded transition
+history under alerts.read, linking to exact calculator evidence without implying
+telemetry.read. See [alert reads](../../docs/operations/alert-reads.md).
 
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components

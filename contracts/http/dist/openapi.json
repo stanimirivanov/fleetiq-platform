@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.24",
+    "version": "1.0.0-baseline.25",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -3725,10 +3725,376 @@
           }
         }
       }
+    },
+    "/api/v1/tenants/{tenant_id}/alerts": {
+      "get": {
+        "operationId": "listAlerts",
+        "summary": "Read the tenant alert queue",
+        "description": "Requires exact current alerts.read before discovery. Metadata, telemetry, analytics and alerts.manage grants imply no access. Omission of phase selects pending/firing; exact filters include retained resolved/inactive history. Newly initialized version-zero checkpoints are not alerts. Queue order uses stable rule identity and revision, not mutable phase/time. Inserts before the cursor or changing filters can enter/leave traversal; this is not a live snapshot. All evidence references target existing calculator reads that retain separate telemetry.read authority; no raw output or input payload is expanded.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-phase"
+          },
+          {
+            "$ref": "#/components/parameters/alert-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/alert-read-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertPageSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/alerts/{rule_id}/revisions/{revision}": {
+      "get": {
+        "operationId": "getAlert",
+        "summary": "Read an exact pinned alert lifecycle",
+        "description": "Requires exact current alerts.read before discovery. Metadata, telemetry, analytics and alerts.manage grants imply no access. Returns the current checkpoint, latest phase-changing evaluation reference and exact pinned condition. Missing, foreign and never-transitioned revisions return 404. No acknowledgement or mutation is implied. All evidence references target existing calculator reads that retain separate telemetry.read authority; no raw output or input payload is expanded.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-identity-revision"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertDetailSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/alerts/{rule_id}/revisions/{revision}/transitions": {
+      "get": {
+        "operationId": "listAlertTransitions",
+        "summary": "Read bounded alert transition history",
+        "description": "Requires exact current alerts.read before discovery. Metadata, telemetry, analytics and alerts.manage grants imply no access. Transitions retain original event/receipt times, activation generation and exact evidence identity. Pages advance by positive lifecycle version. A missing/foreign/unobserved alert returns 404; an exhausted page is empty. Cursors from another resource or revision are invalid. All evidence references target existing calculator reads that retain separate telemetry.read authority; no raw output or input payload is expanded.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-rule-id"
+          },
+          {
+            "$ref": "#/components/parameters/alert-identity-revision"
+          },
+          {
+            "$ref": "#/components/parameters/alert-page-limit"
+          },
+          {
+            "$ref": "#/components/parameters/alert-read-after"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AlertTransitionPageSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AlertPhase": {
+        "type": "string",
+        "enum": [
+          "inactive",
+          "pending",
+          "firing",
+          "resolved"
+        ]
+      },
+      "AlertLifecycleVersion": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]*$",
+        "maxLength": 19,
+        "description": "Exact positive signed-64-bit lifecycle phase-transition version as decimal text. This is separate from the immutable rule revision."
+      },
+      "AlertReadCursor": {
+        "type": "string",
+        "maxLength": 8192,
+        "pattern": "^v1\\.(?:[0-9a-f]{2})+$",
+        "description": "Opaque bounded position, not a signature or authority. Bound to tenant/resource/filter and exact rule revision for transitions. Page size may change; traversal is not a snapshot."
+      },
+      "AlertEvaluationRef": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evaluation_id",
+          "scope_asset_id",
+          "output_index"
+        ],
+        "properties": {
+          "evaluation_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "scope_asset_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "output_index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1023
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Exact reference into the existing tenant/scope calculator evaluation and output reads. Those require separate telemetry.read. Null output_index means the transition consumed unknown evidence without a usable output slot; it does not mean the condition was false."
+      },
+      "AlertTransition": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "phase",
+          "event_at_ms",
+          "recorded_at_ms",
+          "activation_generation",
+          "evidence"
+        ],
+        "properties": {
+          "version": {
+            "$ref": "#/components/schemas/AlertLifecycleVersion"
+          },
+          "phase": {
+            "$ref": "#/components/schemas/AlertPhase"
+          },
+          "event_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "recorded_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "activation_generation": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/AlertEvaluationRef"
+          }
+        }
+      },
+      "AlertSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rule_id",
+          "rule_revision",
+          "scope_asset_id",
+          "target_asset_id",
+          "version",
+          "phase",
+          "selected",
+          "candidate_since_ms",
+          "last_event_at_ms",
+          "latest_transition"
+        ],
+        "properties": {
+          "rule_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "rule_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "scope_asset_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "target_asset_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "version": {
+            "$ref": "#/components/schemas/AlertLifecycleVersion"
+          },
+          "phase": {
+            "$ref": "#/components/schemas/AlertPhase"
+          },
+          "selected": {
+            "type": "boolean"
+          },
+          "candidate_since_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HistoryMillis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_event_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "latest_transition": {
+            "$ref": "#/components/schemas/AlertTransition"
+          }
+        },
+        "description": "One observed lifecycle, identified by rule ID/revision and its pinned scope. Version-zero configuration checkpoints are excluded. selected describes processing selection, not condition health. Latest transition evidence can precede last_event_at_ms when later evidence did not change phase."
+      },
+      "AlertDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alert",
+          "definition"
+        ],
+        "properties": {
+          "alert": {
+            "$ref": "#/components/schemas/AlertSummary"
+          },
+          "definition": {
+            "$ref": "#/components/schemas/AlertRuleDefinition"
+          }
+        }
+      },
+      "AlertPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alerts",
+          "next_after"
+        ],
+        "properties": {
+          "alerts": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AlertSummary"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlertReadCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "AlertTransitionPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "transitions",
+          "next_after"
+        ],
+        "properties": {
+          "transitions": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AlertTransition"
+            }
+          },
+          "next_after": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlertReadCursor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "AlertRuleDefinition": {
         "type": "object",
         "additionalProperties": false,
@@ -7861,6 +8227,44 @@
       }
     },
     "parameters": {
+      "alert-identity-revision": {
+        "name": "revision",
+        "in": "path",
+        "required": true,
+        "description": "Immutable rule revision forming the alert identity; canonical positive ASCII decimal u32, without leading zeros. This is separate from lifecycle version.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      },
+      "alert-phase": {
+        "name": "phase",
+        "in": "query",
+        "description": "Exact current phase filter. Omission selects pending and firing. Filtering can change during traversal.",
+        "schema": {
+          "$ref": "#/components/schemas/AlertPhase"
+        }
+      },
+      "alert-page-limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Maximum records returned; one extra record is fetched to determine continuation.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "alert-read-after": {
+        "name": "after",
+        "in": "query",
+        "description": "Resume strictly after the opaque tenant/resource/filter-bound position.",
+        "schema": {
+          "$ref": "#/components/schemas/AlertReadCursor"
+        }
+      },
       "alert-rule-id": {
         "name": "rule_id",
         "in": "path",
@@ -8693,6 +9097,137 @@
       }
     },
     "responses": {
+      "AlertPageSucceeded": {
+        "description": "Bounded observed alerts in C-collated rule/revision order; no snapshot guarantee.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertPage"
+            },
+            "example": {
+              "alerts": [
+                {
+                  "rule_id": "voltage-high",
+                  "rule_revision": 1,
+                  "scope_asset_id": "asset-a",
+                  "target_asset_id": "result",
+                  "version": "2",
+                  "phase": "firing",
+                  "selected": true,
+                  "candidate_since_ms": null,
+                  "last_event_at_ms": "2000",
+                  "latest_transition": {
+                    "version": "2",
+                    "phase": "firing",
+                    "event_at_ms": "2000",
+                    "recorded_at_ms": "2010",
+                    "activation_generation": 1,
+                    "evidence": {
+                      "evaluation_id": "evaluation-b",
+                      "scope_asset_id": "asset-a",
+                      "output_index": 0
+                    }
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
+      "AlertDetailSucceeded": {
+        "description": "Retained exact alert, latest transition and pinned rule definition from one statement snapshot.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertDetail"
+            },
+            "example": {
+              "alert": {
+                "rule_id": "voltage-high",
+                "rule_revision": 1,
+                "scope_asset_id": "asset-a",
+                "target_asset_id": "result",
+                "version": "2",
+                "phase": "firing",
+                "selected": true,
+                "candidate_since_ms": null,
+                "last_event_at_ms": "2000",
+                "latest_transition": {
+                  "version": "2",
+                  "phase": "firing",
+                  "event_at_ms": "2000",
+                  "recorded_at_ms": "2010",
+                  "activation_generation": 1,
+                  "evidence": {
+                    "evaluation_id": "evaluation-b",
+                    "scope_asset_id": "asset-a",
+                    "output_index": 0
+                  }
+                }
+              },
+              "definition": {
+                "kind": "numeric-threshold-v1",
+                "calculator": "mean",
+                "version": "1",
+                "scope": "asset-a",
+                "target": "result",
+                "output_property": "mean.voltage",
+                "output_version": 1,
+                "output_index": 0,
+                "comparison": "gt",
+                "threshold": "50",
+                "threshold_unit": "volt",
+                "hold_ms": 1000,
+                "resolution": "resolve_on_false",
+                "resolve_after_ms": 1000
+              }
+            }
+          }
+        }
+      },
+      "AlertTransitionPageSucceeded": {
+        "description": "Bounded immutable transitions in ascending lifecycle version order; later appends can enter a subsequent page.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AlertTransitionPage"
+            },
+            "example": {
+              "transitions": [
+                {
+                  "version": "2",
+                  "phase": "firing",
+                  "event_at_ms": "2000",
+                  "recorded_at_ms": "2010",
+                  "activation_generation": 1,
+                  "evidence": {
+                    "evaluation_id": "evaluation-b",
+                    "scope_asset_id": "asset-a",
+                    "output_index": 0
+                  }
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
       "AlertRuleHeadSucceeded": {
         "description": "Current authoring head and selected revision; new revisions do not change activation.",
         "headers": {

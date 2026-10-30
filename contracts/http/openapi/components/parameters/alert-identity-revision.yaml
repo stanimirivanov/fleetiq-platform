@@ -1,0 +1,8 @@
+name: revision
+in: path
+required: true
+description: Immutable rule revision forming the alert identity; canonical positive ASCII decimal u32, without leading zeros. This is separate from lifecycle version.
+schema:
+  type: integer
+  minimum: 1
+  maximum: 4294967295

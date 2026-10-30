@@ -1,0 +1,5 @@
+type: string
+pattern: ^[1-9][0-9]*$
+maxLength: 19
+description: Exact positive signed-64-bit lifecycle phase-transition version as decimal text. This is
+  separate from the immutable rule revision.

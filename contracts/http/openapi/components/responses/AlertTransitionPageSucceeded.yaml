@@ -1,0 +1,21 @@
+description: Bounded immutable transitions in ascending lifecycle version order; later appends can enter
+  a subsequent page.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/AlertTransitionPage.yaml
+    example:
+      transitions:
+      - version: '2'
+        phase: firing
+        event_at_ms: '2000'
+        recorded_at_ms: '2010'
+        activation_generation: 1
+        evidence:
+          evaluation_id: evaluation-b
+          scope_asset_id: asset-a
+          output_index: 0
+      next_after: null

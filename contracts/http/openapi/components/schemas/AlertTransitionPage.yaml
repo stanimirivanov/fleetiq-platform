@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required:
+- transitions
+- next_after
+properties:
+  transitions:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./AlertTransition.yaml
+  next_after:
+    anyOf:
+    - $ref: ./AlertReadCursor.yaml
+    - type: 'null'
