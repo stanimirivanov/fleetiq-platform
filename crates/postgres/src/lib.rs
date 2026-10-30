@@ -93,3 +93,6 @@ pub use history::{PostgresSemanticWorkError, PostgresSemanticWorkRepository};
 
 mod analytics;
 pub use analytics::{CalculatorRegistryError, PostgresCalculatorRegistry};
+
+mod calculator_evaluations;
+pub use calculator_evaluations::{EvaluationStoreError, PostgresCalculatorEvaluationStore};

@@ -1143,6 +1143,7 @@ dependencies = [
  "fleetiq-protocol-sdk",
  "fleetiq-semantics",
  "fleetiq-telemetry",
+ "serde_json",
  "sqlx",
  "tokio",
 ]

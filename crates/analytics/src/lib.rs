@@ -29,3 +29,9 @@ pub use definitions::{
     CalculatorDefinition, CalculatorDefinitionRegistry, CalculatorImplementation,
     CalculatorRegistrationOutcome, UnknownCalculatorImplementation,
 };
+
+mod evaluation_store;
+pub use evaluation_store::{
+    CalculatorEvaluationRecord, CalculatorEvaluationStore, EvaluationAppendOutcome,
+    InvalidCalculatorEvaluation, MAX_CALCULATOR_OUTPUTS,
+};

@@ -102,7 +102,7 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     },
     ExternalPackagePolicy {
         name: "fleetiq-postgres",
-        normal: &["bigdecimal", "sqlx"],
+        normal: &["serde_json", "bigdecimal", "sqlx"],
         development: &["tokio"],
         build: NONE,
     },

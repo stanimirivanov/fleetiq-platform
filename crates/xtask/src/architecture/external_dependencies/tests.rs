@@ -5,7 +5,7 @@ use cargo_metadata::{Dependency, DependencyKind, Package};
 use super::*;
 
 // An explicit reviewed baseline, independent of the metadata being mutated.
-const REVIEWED_EXTERNAL_EDGES: usize = 46;
+const REVIEWED_EXTERNAL_EDGES: usize = 47;
 
 #[test]
 fn current_workspace_matches_exact_external_ownership() {
