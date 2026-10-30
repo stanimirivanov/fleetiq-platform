@@ -118,3 +118,6 @@ mod alert_rules;
 pub use alert_rules::{
     AlertRuleActivationRecord, AlertRuleError, AlertRuleHead, AlertRuleRevision, PostgresAlertRules,
 };
+
+mod alerts;
+pub use alerts::{AlertProcessingError, PostgresAlertLifecycle};

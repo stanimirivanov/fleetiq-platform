@@ -1,6 +1,8 @@
-//! Explicit trusted fixed-window scheduling; no HTTP activation or automatic DDL.
+//! Explicit calculator scheduling and alert lifecycle consumption; no automatic DDL or delivery.
 use fleetiq_analytics::{CalculatorPreparation, calculate_prepared};
-use fleetiq_postgres::{PostgresCalculatorPreparation, PostgresCalculatorWork};
+use fleetiq_postgres::{
+    PostgresAlertLifecycle, PostgresCalculatorPreparation, PostgresCalculatorWork,
+};
 use std::{error::Error, time::Duration};
 
 /// Runs bounded durable work against a checked schema until process shutdown.
@@ -31,10 +33,11 @@ pub async fn run_analytics_worker() -> Result<(), Box<dyn Error>> {
         crate::SchemaMode::Check.prepare(&pool).await.map_err(|_| "calculator schema incompatible")?;
         let work = PostgresCalculatorWork::new(pool.clone());
         let preparation = PostgresCalculatorPreparation::new(pool.clone());
+        let alerts = PostgresAlertLifecycle::new(pool.clone());
         let shutdown = crate::runtime::shutdown_signal();
         tokio::pin!(shutdown);
         loop {
-            let turn = async {
+            let calculator_turn = async {
                 work.seed().await?;
                 if let Some(lease) = work.claim().await? {
                     let prepared = preparation.prepare(&lease.request).await.map_err(|_| "calculator preparation failed")?;
@@ -43,10 +46,19 @@ pub async fn run_analytics_worker() -> Result<(), Box<dyn Error>> {
                 }
                 Ok::<(), Box<dyn Error>>(())
             };
+            // Independent bounded turns: a failed calculator must not starve
+            // already retained alert evidence; shutdown cancels both transactions.
+            let turn = async {
+                tokio::join!(
+                    tokio::time::timeout(Duration::from_secs(15), calculator_turn),
+                    tokio::time::timeout(Duration::from_secs(15), alerts.advance_one()),
+                )
+            };
             tokio::select! {
                 () = &mut shutdown => break,
-                result = tokio::time::timeout(Duration::from_secs(15), turn) => {
-                    if !matches!(result, Ok(Ok(()))) { eprintln!("calculator turn failed; durable retry retained"); }
+                (calculator, alert) = turn => {
+                    if !matches!(calculator, Ok(Ok(()))) { eprintln!("calculator turn failed; durable retry retained"); }
+                    if !matches!(alert, Ok(Ok(_))) { eprintln!("alert lifecycle turn failed; durable retry retained"); }
                 }
             }
             tokio::select! {

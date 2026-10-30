@@ -63,3 +63,7 @@ that explanation; this slice adds no separate explanation endpoint. Thresholds
 are fixed by ABI, not learned. Upgrade all checked-schema workers before installing
 detector releases; stop workers for rollback and retain schema and evidence. See
 [ADR 0127](../adr/0127-explain-window-mad-anomalies.md) for precision and edge cases.
+
+One-shot evidence remains historical for alert lifecycle consumption, even with a
+recent event timestamp. It cannot silently create live transitions or notification
+intents; see [alert lifecycle operation](alert-lifecycle.md).

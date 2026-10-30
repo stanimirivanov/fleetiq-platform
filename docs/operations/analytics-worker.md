@@ -44,10 +44,22 @@ time and preparation are retained. Statements have five-second deadlines, turns
 fifteen seconds and pauses 250 ms. Database-clock leases last 30 seconds with at
 most three generations; exhaustion is retained without an operator reset API.
 
-Activation shares the configuration lock with enumeration/claims. Deactivation
+Activation shares the configuration lock with enumeration/claims. Concurrent
+claims skip busy configuration heads and may return idle while windows remain;
+the next worker turn retries after contention. Deactivation
 pauses unclaimed work; issued claims may complete atomically with their original
 evidence. Switching revisions retains old pending work without running it. Selecting
 the old revision again resumes its original cursor and saved requests.
+
+## Alert lifecycle
+
+Each turn also independently consumes one selected alert-rule evidence item.
+Checkpoint, evidence receipt, optional transition and notification intent commit
+atomically; failure in calculator execution does not block this consumer. Only
+completed scheduled work at/after the rule's activation boundary can affect live
+state; one-shot/historical evidence cannot silently notify. No network delivery
+runs. See [alert lifecycle operation](alert-lifecycle.md) for timing, missing-data,
+replay, deactivation and migration rules.
 
 ## Rollout and rollback
 

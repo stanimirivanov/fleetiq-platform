@@ -68,10 +68,26 @@ async fn registration_and_concurrent_catchup_are_bounded_and_immutable(
             .await
             .is_err()
     );
+    // Activation shares this head lock. SKIP LOCKED may report idle even
+    // with pending windows; it must leave them claimable after contention.
+    let mut activation = pool.begin().await?;
+    sqlx::query("SELECT configuration_id FROM analytics.calculator_configurations FOR UPDATE")
+        .execute(&mut *activation)
+        .await?;
+    assert!(work.claim().await?.is_none());
+    activation.commit().await?;
     let (a, b) = tokio::join!(work.claim(), work.claim());
+    let first = match a? {
+        Some(lease) => lease,
+        None => work.claim().await?.expect("work remains after contention"),
+    };
+    let second = match b? {
+        Some(lease) => lease,
+        None => work.claim().await?.expect("work remains after contention"),
+    };
     assert_ne!(
-        a?.unwrap().request.evaluation.id(),
-        b?.unwrap().request.evaluation.id()
+        first.request.evaluation.id(),
+        second.request.evaluation.id()
     );
     Ok(())
 }

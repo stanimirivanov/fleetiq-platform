@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                WITH transition AS (\n                  INSERT INTO analytics.alert_transitions(tenant_id,rule_id,revision,version,evaluation_id,phase,event_at_ms)\n                  VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING tenant_id,rule_id,revision,version,phase\n                ) INSERT INTO analytics.alert_notification_intents(tenant_id,rule_id,revision,transition_version)\n                  SELECT tenant_id,rule_id,revision,version FROM transition WHERE phase IN ('firing','resolved')\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "58e644d22b782499bab49462b5ca0755ebbfd4f4ca402e0dd12f9c6395734b32"
+}

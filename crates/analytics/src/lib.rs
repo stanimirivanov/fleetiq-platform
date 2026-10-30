@@ -52,3 +52,6 @@ mod alert_rules;
 pub use alert_rules::{
     ALERT_RULE_GRAMMAR, AlertComparison, AlertCondition, AlertResolution, AlertRuleDefinition,
 };
+
+mod alerts;
+pub use alerts::{AlertLifecycle, AlertPhase};

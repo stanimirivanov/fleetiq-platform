@@ -171,3 +171,5 @@ introducing a new record.
 | [0129](0129-read-bounded-calculator-evidence.md) | Bounded authorized evaluation manifests and ordered output pages |
 
 | [0130](0130-configure-versioned-alert-rules.md) | Closed numeric alert grammar, immutable revisions and explicit optimistic activation |
+
+| [0131](0131-evaluate-durable-alert-lifecycles.md) | Event-time lifecycle checkpoints, immutable evidence receipts and atomic notification intents |

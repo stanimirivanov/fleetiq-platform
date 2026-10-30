@@ -82,6 +82,8 @@ impl PostgresCalculatorWork {
         "#).fetch_one(&self.0).await.map_err(|_|CalculatorWorkError)
     }
     /// Claims one eligible window; expired third attempts become retained exhaustion.
+    /// Returns none when eligible configuration heads are locked as well as when
+    /// no window is due. Callers retry on a later turn without assuming an empty queue.
     /// # Errors
     /// Returns bounded storage errors; original request is never replaced.
     pub async fn claim(&self) -> Result<Option<CalculatorWorkLease>, CalculatorWorkError> {

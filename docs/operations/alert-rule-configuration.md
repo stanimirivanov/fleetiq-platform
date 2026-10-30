@@ -3,8 +3,9 @@
 ## TL;DR
 
 M05 persists protected versioned numeric rules, inactive by default. This slice
-configures rules only: there is no alert evaluation worker, transition history,
-notification delivery or authoring UI. See [ADR 0130](../adr/0130-configure-versioned-alert-rules.md).
+configures rules; the explicit analytics worker now consumes scheduled evidence
+and retains lifecycle transitions plus notification intents. Network delivery and
+authoring UI remain planned. See [ADR 0130](../adr/0130-configure-versioned-alert-rules.md).
 
 ## Authority and commands
 
@@ -48,9 +49,8 @@ for a dimensionless output. Units are not converted.
 `hold_ms` specifies matched event-time duration before firing. `resolution` is
 `resolve_on_false`; `resolve_after_ms` specifies explicit false event-time duration
 before resolution. Both durations range from zero through 604800000. Missing,
-failed and unusable evidence is unknown rather than false. The configuration
-slice does not advance timers or states; later lifecycle execution must preserve
-these semantics. No arbitrary expressions are accepted.
+failed and unusable evidence is unknown rather than false. The explicit worker advances these timers only from increasing event-time
+evidence; see [alert lifecycle operation](alert-lifecycle.md). No arbitrary expressions are accepted.
 
 ## Migration and rollback
 

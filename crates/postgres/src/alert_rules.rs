@@ -214,7 +214,7 @@ fn definition_json(d: &AlertRuleDefinition) -> Value {
         "resolve_after_ms": d.resolve_after_ms,
     })
 }
-fn decode(p: &Value) -> Result<AlertRuleDefinition, AlertRuleError> {
+pub(crate) fn decode(p: &Value) -> Result<AlertRuleDefinition, AlertRuleError> {
     let parse = || -> Result<AlertRuleDefinition, Box<dyn std::error::Error>> {
         let text = |k| p[k].as_str().ok_or(AlertRuleError::Database);
         let number = |k| p[k].as_u64().ok_or(AlertRuleError::Database);
