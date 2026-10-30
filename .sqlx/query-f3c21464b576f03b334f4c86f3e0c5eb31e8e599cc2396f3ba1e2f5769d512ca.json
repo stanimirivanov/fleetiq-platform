@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT (implementation = $4 AND input_id = $5 AND input_version = $6\n              AND output_id = $7 AND output_version = $8) AS \"matches!\"\n            FROM analytics.calculator_definitions\n            WHERE tenant_id = $1 AND calculator_id = $2 AND calculator_version = $3\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f3c21464b576f03b334f4c86f3e0c5eb31e8e599cc2396f3ba1e2f5769d512ca"
+}

@@ -1132,6 +1132,7 @@ version = "0.1.0"
 dependencies = [
  "bigdecimal",
  "fleetiq-access",
+ "fleetiq-analytics",
  "fleetiq-domain",
  "fleetiq-history",
  "fleetiq-identity",
@@ -1210,6 +1211,7 @@ dependencies = [
  "axum",
  "cookie",
  "fleetiq-access",
+ "fleetiq-analytics",
  "fleetiq-domain",
  "fleetiq-history",
  "fleetiq-identity",
