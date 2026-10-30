@@ -209,8 +209,9 @@ deltas, cursor continuity, and resnapshot reasons. A tenant-owned immutable firs
 Atomic terminal evaluation envelopes now persist pinned input references and
 ordered calculated outputs with provenance checks and exact retry comparison; see
 [calculator evaluation storage](calculator-evaluation-storage.md).
-Calculator runtime and installed operator dashboard qualification remain
-planned. Exact-property subscription transport now uses the authorized SSE boundary.
+The checked-schema `calculate-once` command now runs the first-party window mean
+with immutable preparation, explicit decimal truncation and atomic terminal append.
+Background scheduling and installed operator dashboard qualification remain planned. Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data
 

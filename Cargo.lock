@@ -1062,6 +1062,7 @@ dependencies = [
 name = "fleetiq-analytics"
 version = "0.1.0"
 dependencies = [
+ "bigdecimal",
  "fleetiq-domain",
 ]
 

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH candidate AS (\n              SELECT jsonb_build_object('output',jsonb_build_object('id',p.property_id,'version',p.version,'name',p.display_name,'unit',p.canonical_unit),\n                'samples', COALESCE((\n                  SELECT jsonb_agg(jsonb_build_array(s.evidence,s.event_at_ms,s.value) ORDER BY s.event_at_ms,s.evidence COLLATE \"C\") FROM (\n                    SELECT analytics.semantic_evidence_id(h.tenant_id,h.message_id,h.protocol_package_id,h.protocol_package_version,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis) AS evidence,\n                      h.event_at_ms, CASE WHEN o.quality='good' AND o.value_kind IN ('integer','decimal')\n                        AND length(COALESCE(o.value_integer::text,o.value_decimal::text))<=4096\n                        THEN jsonb_build_array(o.value_kind,COALESCE(o.value_integer::text,o.value_decimal::text)) ELSE NULL END AS value\n                    FROM history.asset_property_changes h\n                    JOIN metadata.signal_binding_revisions b ON b.tenant_id=h.tenant_id AND b.binding_id=h.binding_id AND b.revision=h.binding_revision\n                    JOIN ingestion.decoded_observations o ON o.tenant_id=h.tenant_id AND o.message_id=h.message_id AND o.protocol_package_id=h.protocol_package_id AND o.protocol_package_version=h.protocol_package_version AND o.output_index=h.output_index\n                    WHERE h.tenant_id=$1 AND b.target_asset_id=($3::jsonb)->>'scope' AND b.target_property_id=d.input_id AND b.target_property_version=d.input_version\n                      AND h.event_at_ms>=(($3::jsonb)->>'start')::bigint AND h.event_at_ms<(($3::jsonb)->>'end')::bigint AND h.resolution_known_at_ms<=(($3::jsonb)->>'known')::bigint\n                    ORDER BY h.event_at_ms,h.message_id,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis LIMIT 1025\n                  ) s\n                ),'[]'::jsonb)) AS selection\n              FROM analytics.calculator_definitions d\n              JOIN metadata.property_definitions p ON p.tenant_id=d.tenant_id AND p.property_id=d.output_id AND p.version=d.output_version\n              JOIN metadata.assets a ON a.tenant_id=d.tenant_id AND a.asset_id=($3::jsonb)->>'target'\n              JOIN metadata.asset_type_properties ap ON ap.tenant_id=a.tenant_id AND ap.type_id=a.type_id AND ap.type_version=a.type_version AND ap.property_id=p.property_id AND ap.property_version=p.version\n              WHERE d.tenant_id=$1 AND d.calculator_id=($3::jsonb)->>'calculator' AND d.calculator_version=($3::jsonb)->>'version' AND d.implementation='window-mean-v1'\n                AND EXISTS(SELECT 1 FROM metadata.assets scope WHERE scope.tenant_id=$1 AND scope.asset_id=($3::jsonb)->>'scope')\n            )\n            INSERT INTO analytics.prepared_evaluations(tenant_id,evaluation_id,request,selection)\n            SELECT $1,$2,$3,selection FROM candidate WHERE jsonb_array_length(selection->'samples')<=1024\n            ON CONFLICT DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d10d362426e5ed2c6ac53a733b47813f59acb030c9bdec638ea5ed84b8a7adbc"
+}

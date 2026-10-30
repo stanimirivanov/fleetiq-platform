@@ -29,6 +29,8 @@ pub enum ProcessCommand {
     IngestTcp,
     /// Register one immutable first-party calculator declaration, then exit.
     RegisterCalculator,
+    /// Execute one bounded first-party evaluation, then exit.
+    CalculateOnce,
     /// Print command usage without reading runtime configuration.
     Help,
 }
@@ -58,6 +60,7 @@ impl ProcessCommand {
         let mut parsed = match command.as_str() {
             "serve" => Self::Serve,
             "migrate" => Self::Migrate,
+            "calculate-once" => Self::CalculateOnce,
             "register-calculator" => Self::RegisterCalculator,
             "replay-worker" => Self::ReplayWorker,
             "semantic-worker" => Self::SemanticWorker,
@@ -88,7 +91,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
+        "Usage: fleetiq-server [calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -167,6 +170,7 @@ mod tests {
                 vec!["register-calculator"],
                 ProcessCommand::RegisterCalculator,
             ),
+            (vec!["calculate-once"], ProcessCommand::CalculateOnce),
             (vec!["migrate"], ProcessCommand::Migrate),
             (vec!["healthcheck"], ProcessCommand::Healthcheck),
             (vec!["replay-worker"], ProcessCommand::ReplayWorker),
@@ -187,6 +191,8 @@ mod tests {
         for args in [
             vec!["register-calculator", "--check-schema"],
             vec!["register-calculator", "inline-json"],
+            vec!["calculate-once", "inline-json"],
+            vec!["calculate-once", "--check-schema"],
             vec!["migrate", "--check-schema"],
             vec!["healthcheck", "--check-schema"],
             vec!["replay-worker", "--check-schema"],
