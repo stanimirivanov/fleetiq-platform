@@ -1,0 +1,78 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.parameters,r.actor_id,r.recorded_at_ms,s.schedule_id,s.configuration_id AS execution_id FROM analytics.calculator_configuration_revisions r JOIN analytics.calculator_schedules s ON s.tenant_id=r.tenant_id AND s.schedule_id=r.schedule_id WHERE r.tenant_id=$1 AND r.configuration_id=$2 AND r.revision=$3",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "parameters",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_configuration_revisions",
+            "name": "parameters"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_configuration_revisions",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_configuration_revisions",
+            "name": "recorded_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "schedule_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_schedules",
+            "name": "schedule_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "execution_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_schedules",
+            "name": "configuration_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "61047f948d0d61f07475779da3bf457de6c0bfb3d7d8c322b57c870995164786"
+}

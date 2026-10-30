@@ -1,0 +1,37 @@
+type: object
+additionalProperties: false
+required:
+- calculator
+- version
+- scope
+- target
+- first_start
+- window_ms
+- lateness_ms
+- minimum_samples
+properties:
+  calculator: &id001
+    $ref: ./AdministrationIdentifier.yaml
+  version: *id001
+  scope: *id001
+  target: *id001
+  first_start:
+    type: integer
+    format: int64
+    minimum: -9223372036854775808
+    maximum: 9223372036854775807
+  window_ms:
+    type: integer
+    minimum: 1
+    maximum: 604800000
+  lateness_ms:
+    type: integer
+    minimum: 0
+    maximum: 604800000
+  minimum_samples:
+    type: integer
+    minimum: 1
+    maximum: 1024
+description: Exact admitted release and compatible target. Signed Unix milliseconds; start + window +
+  lateness must fit int64. Deliberate first_start controls historical catch-up. Revision creation is inactive
+  and does not alter selected scheduling.

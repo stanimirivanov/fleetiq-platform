@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH clock AS MATERIALIZED (SELECT floor(extract(epoch FROM clock_timestamp())*1000)::bigint AS now),\n            candidate AS MATERIALIZED (\n              SELECT s.*,clock.now,LEAST(32::numeric,floor((clock.now::numeric-s.next_start_ms-s.window_ms-s.lateness_ms)/s.window_ms)+1)::int AS n\n              FROM analytics.calculator_schedules s JOIN metadata.tenants t USING(tenant_id)\n              JOIN analytics.calculator_configuration_revisions r ON r.tenant_id=s.tenant_id AND r.schedule_id=s.schedule_id\n              JOIN analytics.calculator_configurations c ON c.tenant_id=r.tenant_id AND c.configuration_id=r.configuration_id AND c.active_revision=r.revision CROSS JOIN clock\n              WHERE t.is_active AND s.next_start_ms::numeric+s.window_ms+s.lateness_ms<=clock.now\n              ORDER BY s.next_start_ms,s.tenant_id,s.schedule_id FOR UPDATE OF s,c SKIP LOCKED LIMIT 1\n            ), saved AS (\n              INSERT INTO analytics.calculator_work(tenant_id,evaluation_id,schedule_id,start_ms,request)\n              SELECT tenant_id,'scheduled:'||encode(sha256(convert_to(jsonb_build_array(tenant_id,schedule_id,next_start_ms+nth*window_ms)::text,'UTF8')),'hex'),schedule_id,next_start_ms+nth*window_ms,\n                jsonb_build_object('scope',scope_asset_id,'calculator',calculator_id,'version',calculator_version,'configuration',configuration_id,\n                  'start',next_start_ms+nth*window_ms,'end',next_start_ms+(nth+1)*window_ms,'finalize',next_start_ms+(nth+1)*window_ms+lateness_ms,\n                  'known',next_start_ms+(nth+1)*window_ms+lateness_ms,'evaluated',now,'minimum',minimum_samples,'target',target_asset_id)\n              FROM candidate CROSS JOIN LATERAL generate_series(0,n-1) nth RETURNING 1\n            ), advanced AS (\n              UPDATE analytics.calculator_schedules s SET next_start_ms=c.next_start_ms+c.n*c.window_ms FROM candidate c\n              WHERE s.tenant_id=c.tenant_id AND s.schedule_id=c.schedule_id AND (SELECT count(*) FROM saved)=c.n RETURNING 1\n            ) SELECT count(*) AS \"count!\" FROM saved\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "01097780e0b7f1cd7f3876528f06b248f1788525004475e67f8f80faed0df3c0"
+}

@@ -239,7 +239,7 @@ async fn mad_registration_execution_and_scheduled_replay_preserve_evidence(
         minimum_samples: 1,
     })
     .await?;
-    work.seed().await?;
+    fixture_seed(&pool, &work).await?;
     let lease = work.claim().await?.unwrap();
     let record = calculate_prepared(preparation.prepare(&lease.request).await?)?;
     work.complete(&lease, &record).await?;
@@ -276,4 +276,14 @@ async fn legacy_mean_preparation_without_abi_remains_replayable(
         calculate_mean(expected)?.outputs()[0].property().value()
     );
     Ok(())
+}
+
+async fn fixture_seed(
+    pool: &PgPool,
+    work: &fleetiq_postgres::PostgresCalculatorWork,
+) -> Result<i64, Box<dyn Error>> {
+    sqlx::raw_sql(include_str!("calculator_configuration/activate.sql"))
+        .execute(pool)
+        .await?;
+    Ok(work.seed().await?)
 }

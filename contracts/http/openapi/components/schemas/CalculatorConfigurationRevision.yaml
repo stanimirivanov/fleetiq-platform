@@ -1,0 +1,25 @@
+type: object
+additionalProperties: false
+required:
+- revision
+- parameters
+- actor_id
+- recorded_at_ms
+properties:
+  revision:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  parameters:
+    $ref: ./CalculatorParameters.yaml
+  actor_id:
+    anyOf:
+    - $ref: ./AdministrationIdentifier.yaml
+    - type: 'null'
+  recorded_at_ms:
+    type: integer
+    format: int64
+    minimum: -9223372036854775808
+    maximum: 9223372036854775807
+description: Immutable exact revision and original attribution; actor_id is null only for imported trusted
+  schedules.

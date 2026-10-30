@@ -63,9 +63,11 @@ impl PostgresCalculatorWork {
             WITH clock AS MATERIALIZED (SELECT floor(extract(epoch FROM clock_timestamp())*1000)::bigint AS now),
             candidate AS MATERIALIZED (
               SELECT s.*,clock.now,LEAST(32::numeric,floor((clock.now::numeric-s.next_start_ms-s.window_ms-s.lateness_ms)/s.window_ms)+1)::int AS n
-              FROM analytics.calculator_schedules s JOIN metadata.tenants t USING(tenant_id) CROSS JOIN clock
+              FROM analytics.calculator_schedules s JOIN metadata.tenants t USING(tenant_id)
+              JOIN analytics.calculator_configuration_revisions r ON r.tenant_id=s.tenant_id AND r.schedule_id=s.schedule_id
+              JOIN analytics.calculator_configurations c ON c.tenant_id=r.tenant_id AND c.configuration_id=r.configuration_id AND c.active_revision=r.revision CROSS JOIN clock
               WHERE t.is_active AND s.next_start_ms::numeric+s.window_ms+s.lateness_ms<=clock.now
-              ORDER BY s.next_start_ms,s.tenant_id,s.schedule_id FOR UPDATE OF s SKIP LOCKED LIMIT 1
+              ORDER BY s.next_start_ms,s.tenant_id,s.schedule_id FOR UPDATE OF s,c SKIP LOCKED LIMIT 1
             ), saved AS (
               INSERT INTO analytics.calculator_work(tenant_id,evaluation_id,schedule_id,start_ms,request)
               SELECT tenant_id,'scheduled:'||encode(sha256(convert_to(jsonb_build_array(tenant_id,schedule_id,next_start_ms+nth*window_ms)::text,'UTF8')),'hex'),schedule_id,next_start_ms+nth*window_ms,
@@ -93,8 +95,10 @@ impl PostgresCalculatorWork {
         let row=sqlx::query!(r#"
             WITH candidate AS (
               SELECT w.tenant_id,w.evaluation_id FROM analytics.calculator_work w JOIN metadata.tenants t USING(tenant_id)
+              JOIN analytics.calculator_configuration_revisions r ON r.tenant_id=w.tenant_id AND r.schedule_id=w.schedule_id
+              JOIN analytics.calculator_configurations config ON config.tenant_id=r.tenant_id AND config.configuration_id=r.configuration_id AND config.active_revision=r.revision
               WHERE t.is_active AND w.status='pending' AND w.generation<3 AND (w.lease_until_ms IS NULL OR w.lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint)
-              ORDER BY w.start_ms,w.tenant_id,w.evaluation_id FOR UPDATE OF w SKIP LOCKED LIMIT 1
+              ORDER BY w.start_ms,w.tenant_id,w.evaluation_id FOR UPDATE OF w,config SKIP LOCKED LIMIT 1
             ) UPDATE analytics.calculator_work w SET generation=generation+1,lease_until_ms=floor(extract(epoch FROM clock_timestamp())*1000)::bigint+30000
             FROM candidate c WHERE w.tenant_id=c.tenant_id AND w.evaluation_id=c.evaluation_id
             RETURNING w.tenant_id,w.evaluation_id,w.request,w.generation

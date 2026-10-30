@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE($3,c.generation) AS generation,r.revision,r.actor_id,r.recorded_at_ms FROM analytics.calculator_configurations c LEFT JOIN analytics.calculator_activation_changes r ON r.tenant_id=c.tenant_id AND r.configuration_id=c.configuration_id AND r.generation=COALESCE($3,c.generation) WHERE c.tenant_id=$1 AND c.configuration_id=$2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_activation_changes",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "actor_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_activation_changes",
+            "name": "actor_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "recorded_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_activation_changes",
+            "name": "recorded_at_ms"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "c867976ac33061c07f2cac2f6f071f5b0d2c159e0dc114681503a2d6e03ddf02"
+}

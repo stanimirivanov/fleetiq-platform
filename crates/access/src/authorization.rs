@@ -23,6 +23,8 @@ pub enum TenantAction {
     ManageAccess,
     /// Register and admit tenant-owned executable protocol packages.
     ManageProtocols,
+    /// Create calculator configuration revisions and control their scheduling.
+    ManageAnalytics,
 }
 
 mod sealed {
@@ -87,6 +89,14 @@ pub struct ManageProtocols;
 impl sealed::Sealed for ManageProtocols {}
 impl TenantActionMarker for ManageProtocols {
     const ACTION: TenantAction = TenantAction::ManageProtocols;
+}
+
+/// Permission to configure analytics, independent of metadata/protocol writes.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageAnalytics;
+impl sealed::Sealed for ManageAnalytics {}
+impl TenantActionMarker for ManageAnalytics {
+    const ACTION: TenantAction = TenantAction::ManageAnalytics;
 }
 
 /// Describes one actor's attempt to perform an action in a selected tenant.

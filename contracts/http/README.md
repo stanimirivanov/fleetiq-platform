@@ -16,6 +16,9 @@ authentication boundary and returns only the caller's current active tenant
 grants, without requiring a tenant to be selected first. Baseline.21 corrects
 the discovery action-array bound to all five supported grants; clients pinned to
 the earlier three-action limit must regenerate before consuming such operators.
+Baseline.22 adds explicit calculator configuration revisions and activation with
+separate `analytics.manage`, expanding discovery to six exact actions without
+upgrading grants. Regenerate clients before delegating the new capability.
 
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
