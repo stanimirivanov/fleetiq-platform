@@ -165,3 +165,4 @@ introducing a new record.
 | [0124](0124-pin-calculator-execution-evidence.md) | Bounded canonical input evidence, finalized windows and immutable calculator replay keys |
 
 | [0125](0125-execute-pinned-window-means.md) | Durable one-shot input preparation and explicit bounded mean arithmetic |
+| [0126](0126-schedule-fenced-calculator-work.md) | Durable fixed-window scheduling and generation-fenced completion |

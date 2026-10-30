@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE analytics.calculator_work SET status='done' WHERE tenant_id=$1 AND evaluation_id=$2 AND generation=$3 AND status='pending' AND lease_until_ms>floor(extract(epoch FROM clock_timestamp())*1000)::bigint",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "682313383273219e105c615e7e285edc1710656dda93dcf3a7ef197384f99684"
+}

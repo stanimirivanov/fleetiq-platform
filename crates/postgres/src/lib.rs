@@ -99,3 +99,6 @@ pub use calculator_evaluations::{EvaluationStoreError, PostgresCalculatorEvaluat
 
 mod calculator_inputs;
 pub use calculator_inputs::{PostgresCalculatorPreparation, PreparationError};
+
+mod calculator_work;
+pub use calculator_work::{CalculatorWorkError, PostgresCalculatorWork};

@@ -41,3 +41,6 @@ pub use runner::{
     CalculatorPreparation, CalculatorRunError, CalculatorRunRequest, PreparedCalculatorEvaluation,
     calculate_mean, run_calculator_once,
 };
+
+mod work;
+pub use work::{CalculatorSchedule, CalculatorWorkLease};

@@ -283,3 +283,6 @@ pub use calculator_registration::register_calculator_definition;
 
 mod calculator_once;
 pub use calculator_once::calculate_once;
+
+mod analytics_worker;
+pub use analytics_worker::run_analytics_worker;

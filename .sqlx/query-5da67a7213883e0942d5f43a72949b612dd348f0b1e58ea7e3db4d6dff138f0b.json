@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT w.request FROM analytics.calculator_work w JOIN metadata.tenants t USING(tenant_id)\n            WHERE w.tenant_id=$1 AND w.evaluation_id=$2 AND w.generation=$3 AND w.status='pending' AND t.is_active\n              AND w.lease_until_ms>floor(extract(epoch FROM clock_timestamp())*1000)::bigint FOR UPDATE OF w,t\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "request",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analytics.calculator_work",
+            "name": "request"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5da67a7213883e0942d5f43a72949b612dd348f0b1e58ea7e3db4d6dff138f0b"
+}
