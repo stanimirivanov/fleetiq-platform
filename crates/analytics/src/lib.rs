@@ -58,3 +58,5 @@ pub use alerts::{AlertLifecycle, AlertPhase};
 
 mod notifications;
 pub use notifications::{AlertDeliveryFailure, AlertNotificationLease};
+mod work_diagnostics;
+pub use work_diagnostics::{WorkDiagnostics, WorkQueueEvidence};

@@ -255,3 +255,7 @@ Baseline.23 adds bounded calculator evaluation summaries, exact retained manifes
 and separate ordered output pages under existing `telemetry.read`; values/times
 remain exact strings and no new grants are implied. See
 [calculator evidence](../../docs/operations/calculator-evidence.md).
+
+Baseline.27 adds independent operations.read and bounded work-diagnostics reads.
+Discovery admits ten exact actions; regenerate strict clients before delegation.
+No prior grant implies this capability. See [operational diagnostics](../../docs/operations/work-diagnostics.md).

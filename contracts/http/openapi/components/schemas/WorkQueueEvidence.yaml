@@ -1,0 +1,46 @@
+type: object
+additionalProperties: false
+required: [kind, sampled, eligible, leased, failed, blocked, deferred, max_attempts, oldest_sampled_eligible_at_ms, failure_categories, truncated]
+properties:
+  kind:
+    enum: [replay, calculator, alert_evaluation, notification]
+  sampled:
+    type: integer
+    minimum: 0
+    maximum: 64
+  eligible:
+    type: integer
+    minimum: 0
+    maximum: 64
+  leased:
+    type: integer
+    minimum: 0
+    maximum: 64
+  failed:
+    type: integer
+    minimum: 0
+    maximum: 64
+  blocked:
+    type: integer
+    minimum: 0
+    maximum: 64
+  deferred:
+    type: integer
+    minimum: 0
+    maximum: 64
+  max_attempts:
+    type: integer
+    minimum: 0
+    maximum: 5
+  oldest_sampled_eligible_at_ms:
+    anyOf:
+    - $ref: ./HistoryMillis.yaml
+    - type: 'null'
+  failure_categories:
+    type: array
+    maxItems: 5
+    uniqueItems: true
+    items:
+      enum: [attempts_exhausted, transport, rejected, response_limit, invalid_payload]
+  truncated:
+    type: boolean

@@ -44,6 +44,7 @@ mod revision_commands;
 mod semantic_graph;
 mod tenant_access_administration;
 mod tenant_administration;
+mod work_diagnostics;
 
 use axum::Router;
 pub use bootstrap::{
@@ -111,12 +112,14 @@ where
     let calculators =
         calculator_configuration::router(pool.clone(), authentication.clone(), mutation.clone());
     let evidence = calculator_evidence::router(pool.clone(), authentication.clone());
+    let diagnostics = work_diagnostics::router(pool.clone(), authentication.clone());
     protected_capability_routers(pool, authentication, mutation)
         .merge(calculators)
         .merge(evidence)
         .merge(rules)
         .merge(alerts)
         .merge(acknowledgement)
+        .merge(diagnostics)
 }
 
 fn protected_capability_routers<A>(

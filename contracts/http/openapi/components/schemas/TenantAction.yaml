@@ -10,3 +10,4 @@ enum:
   - "protocol.manage"
   - "telemetry.read"
   - "alerts.acknowledge"
+  - "operations.read"
