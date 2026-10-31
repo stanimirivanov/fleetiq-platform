@@ -1,0 +1,26 @@
+get:
+  operationId: getWorkDiagnostics
+  summary: Read bounded tenant work evidence
+  description: Requires independent current operations.read before discovery. Existing metadata,
+    protocol, analytics and alerts grants imply no access. Returns at most 64 identity-prefix
+    observations per work family, with a sentinel for truncation; counts and oldest eligible time
+    concern only that sample. Alert evaluation samples selected rules and their next matching
+    evidence. Leases are database evidence, never worker health. Empty results do not prove
+    notification seeding, absence of backlog or receiver delivery. No mutation or raw payload,
+    request, endpoint or exception text is returned.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/WorkDiagnosticsSucceeded.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

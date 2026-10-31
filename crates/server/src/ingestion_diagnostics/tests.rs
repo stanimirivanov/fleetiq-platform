@@ -59,7 +59,11 @@ async fn setup(pool: &PgPool) -> Router {
         ),
         fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
     );
-    router(pool.clone(), auth)
+    crate::protected_application_router(
+        pool.clone(),
+        auth,
+        crate::mutation_guard::MutationGuard::Workload,
+    )
 }
 
 fn request(path: &str, token: bool) -> Request<Body> {
@@ -155,4 +159,75 @@ async fn populated_diagnostics_conform_and_exclude_private_wire_and_values(pool:
             .unwrap()
             .contains("decoded_observations")
     );
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn operational_replay_sample_distinguishes_lease_expiry_and_poison(pool: PgPool) {
+    use fleetiq_ingestion::{ReplayRepository, ReplayWork};
+    use fleetiq_telemetry::{AcceptedMessage, AcceptedMessageId, AcceptedPayload};
+    let app = setup(&pool).await;
+    sqlx::query("INSERT INTO identity.tenant_action_grants VALUES('tenant-a','operator-a','operations.read')").execute(&pool).await.unwrap();
+    let artifact = ProtocolArtifact::new(b"fixture".to_vec()).unwrap();
+    let work = ReplayWork {
+        message: AcceptedMessage::new(
+            AcceptedMessageId::new("m").unwrap(),
+            TenantId::new("tenant-a").unwrap(),
+            fleetiq_domain::AssetId::new("device-a").unwrap(),
+            ProtocolPackageRef::new(
+                ProtocolPackageId::new("custom.binary").unwrap(),
+                ProtocolPackageVersion::new("1").unwrap(),
+            ),
+            UnixTimeMillis::new(100),
+            AcceptedPayload::new(b"private-fixture-payload".as_slice()),
+        ),
+        session: "s".into(),
+        sequence: 1,
+        digest: artifact.digest(),
+        world: ProtocolAdmissionWorld::Identity,
+        execution: fleetiq_protocol_sdk::replay_wire::replay_fingerprint(),
+        pre_state: vec![],
+    };
+    let repo = fleetiq_postgres::PostgresReplayRepository::new(pool.clone());
+    repo.enqueue(&work).await.unwrap();
+    for (state, sql) in [
+        ("eligible", None),
+        (
+            "leased",
+            Some(
+                "UPDATE ingestion.replay_work SET generation=1,lease_until_ms=9223372036854775807",
+            ),
+        ),
+        (
+            "failed",
+            Some(
+                "UPDATE ingestion.replay_work SET generation=1,lease_until_ms=0,status='poisoned'",
+            ),
+        ),
+    ] {
+        if let Some(sql) = sql {
+            sqlx::query(sql).execute(&pool).await.unwrap();
+        }
+        let response = app
+            .clone()
+            .oneshot(request("/api/v1/tenants/tenant-a/work-diagnostics", true))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let bytes = to_bytes(response.into_body(), 4096).await.unwrap();
+        let value: Value = serde_json::from_slice(&bytes).unwrap();
+        let replay = value["queues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|q| q["kind"] == "replay")
+            .unwrap();
+        assert_eq!(replay[state], 1);
+        if state == "failed" {
+            assert_eq!(replay["failure_categories"], json!([]));
+        }
+        if state == "eligible" {
+            assert_eq!(replay["oldest_sampled_eligible_at_ms"], "100");
+        }
+        assert!(!String::from_utf8_lossy(&bytes).contains("private-fixture-payload"));
+    }
 }

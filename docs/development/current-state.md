@@ -582,3 +582,5 @@ in a bounded repeatable view without new schema or a fleet worker. See the
 [fleet snapshot guide](../operations/fleet-location-snapshots.md). Geodetic map
 and overview consumers are PRs 29–30. D06 and full-profile qualification remain
 deferred; no device-health or connectivity inference is provided.
+
+- Independent operations.read publishes bounded tenant work diagnostics; see [coverage and limits](../operations/work-diagnostics.md).

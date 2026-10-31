@@ -179,3 +179,4 @@ introducing a new record.
 | [0133](0133-acknowledge-exact-alert-versions.md) | Independent acknowledgement authority, immutable exact-version receipts and annotated reads |
 
 | [0134](0134-deliver-durable-alert-notifications.md) | Destination-scoped durable Alertmanager delivery with bounded refresh and reconciliation |
+| [0135](0135-read-bounded-operational-work-evidence.md) | Independent operational-read authority and bounded work evidence without health inference |

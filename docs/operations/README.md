@@ -91,3 +91,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Alert acknowledgement](alert-acknowledgement.md): exact-version operator intent, independent authority, original receipts and resolve races.
 
 - [Alert notification delivery](alert-notifications.md): opt-in fenced outbox delivery, refresh, reconciliation and exhaustion.
+
+- [Operational work diagnostics](work-diagnostics.md): bounded failure/lag evidence without health inference.

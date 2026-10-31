@@ -132,3 +132,5 @@ pub use alert_acknowledgement::{
 
 mod alert_delivery;
 pub use alert_delivery::{AlertDeliveryError, PostgresAlertDelivery};
+mod work_diagnostics;
+pub use work_diagnostics::PostgresWorkDiagnostics;

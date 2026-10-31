@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.26",
+    "version": "1.0.0-baseline.27",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,43 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/work-diagnostics": {
+      "get": {
+        "operationId": "getWorkDiagnostics",
+        "summary": "Read bounded tenant work evidence",
+        "description": "Requires independent current operations.read before discovery. Existing metadata, protocol, analytics and alerts grants imply no access. Returns at most 64 identity-prefix observations per work family, with a sentinel for truncation; counts and oldest eligible time concern only that sample. Alert evaluation samples selected rules and their next matching evidence. Leases are database evidence, never worker health. Empty results do not prove notification seeding, absence of backlog or receiver delivery. No mutation or raw payload, request, endpoint or exception text is returned.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WorkDiagnosticsSucceeded"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}": {
       "get": {
         "operationId": "getAlertRuleHead",
@@ -3950,6 +3987,128 @@
   },
   "components": {
     "schemas": {
+      "WorkDiagnostics": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observed_at_ms",
+          "worker_liveness",
+          "notification_seeding",
+          "sample_limit",
+          "queues"
+        ],
+        "properties": {
+          "observed_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "worker_liveness": {
+            "const": "not_observed"
+          },
+          "notification_seeding": {
+            "const": "not_observed"
+          },
+          "sample_limit": {
+            "const": 64
+          },
+          "queues": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "$ref": "#/components/schemas/WorkQueueEvidence"
+            }
+          }
+        }
+      },
+      "WorkQueueEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "sampled",
+          "eligible",
+          "leased",
+          "failed",
+          "blocked",
+          "deferred",
+          "max_attempts",
+          "oldest_sampled_eligible_at_ms",
+          "failure_categories",
+          "truncated"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "replay",
+              "calculator",
+              "alert_evaluation",
+              "notification"
+            ]
+          },
+          "sampled": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "eligible": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "leased": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "failed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "blocked": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "deferred": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 64
+          },
+          "max_attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5
+          },
+          "oldest_sampled_eligible_at_ms": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HistoryMillis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failure_categories": {
+            "type": "array",
+            "maxItems": 5,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "attempts_exhausted",
+                "transport",
+                "rejected",
+                "response_limit",
+                "invalid_payload"
+              ]
+            }
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        }
+      },
       "AlertAcknowledgementRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -7625,7 +7784,8 @@
           "metadata.read",
           "protocol.manage",
           "telemetry.read",
-          "alerts.acknowledge"
+          "alerts.acknowledge",
+          "operations.read"
         ]
       },
       "OperatorTenant": {
@@ -7644,7 +7804,7 @@
           "actions": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 9,
+            "maxItems": 10,
             "uniqueItems": true,
             "description": "Explicit current grants ordered by action name; never reusable authorization.",
             "items": {
@@ -9210,6 +9370,81 @@
       }
     },
     "responses": {
+      "WorkDiagnosticsSucceeded": {
+        "description": "Bounded sample evidence only; no health or full-backlog inference.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WorkDiagnostics"
+            },
+            "example": {
+              "observed_at_ms": "1000",
+              "worker_liveness": "not_observed",
+              "notification_seeding": "not_observed",
+              "sample_limit": 64,
+              "queues": [
+                {
+                  "kind": "replay",
+                  "sampled": 0,
+                  "eligible": 0,
+                  "leased": 0,
+                  "failed": 0,
+                  "blocked": 0,
+                  "deferred": 0,
+                  "max_attempts": 0,
+                  "oldest_sampled_eligible_at_ms": null,
+                  "failure_categories": [],
+                  "truncated": false
+                },
+                {
+                  "kind": "calculator",
+                  "sampled": 0,
+                  "eligible": 0,
+                  "leased": 0,
+                  "failed": 0,
+                  "blocked": 0,
+                  "deferred": 0,
+                  "max_attempts": 0,
+                  "oldest_sampled_eligible_at_ms": null,
+                  "failure_categories": [],
+                  "truncated": false
+                },
+                {
+                  "kind": "alert_evaluation",
+                  "sampled": 0,
+                  "eligible": 0,
+                  "leased": 0,
+                  "failed": 0,
+                  "blocked": 0,
+                  "deferred": 0,
+                  "max_attempts": 0,
+                  "oldest_sampled_eligible_at_ms": null,
+                  "failure_categories": [],
+                  "truncated": false
+                },
+                {
+                  "kind": "notification",
+                  "sampled": 0,
+                  "eligible": 0,
+                  "leased": 0,
+                  "failed": 0,
+                  "blocked": 0,
+                  "deferred": 0,
+                  "max_attempts": 0,
+                  "oldest_sampled_eligible_at_ms": null,
+                  "failure_categories": [],
+                  "truncated": false
+                }
+              ]
+            }
+          }
+        }
+      },
       "AlertAcknowledgementSucceeded": {
         "description": "Open version acknowledged, or original same-author receipt returned without reapplying or changing health.",
         "headers": {

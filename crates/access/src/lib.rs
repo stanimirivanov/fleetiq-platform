@@ -19,8 +19,8 @@ pub use tenant_discovery::{
 pub use actor_identity_resolver::ActorIdentityResolver;
 pub use authorization::{
     AccessDecision, AcknowledgeAlerts, AuthorizedTenant, ManageAccess, ManageAlerts,
-    ManageAnalytics, ManageMetadata, ManageProtocols, ReadAlerts, ReadMetadata, ReadTelemetry,
-    TenantAccessPolicy, TenantAccessRequest, TenantAction, TenantActionMarker,
+    ManageAnalytics, ManageMetadata, ManageProtocols, ReadAlerts, ReadMetadata, ReadOperations,
+    ReadTelemetry, TenantAccessPolicy, TenantAccessRequest, TenantAction, TenantActionMarker,
     TenantAuthorizationError, TenantAuthorizationService,
 };
 pub use caller_authentication::{
