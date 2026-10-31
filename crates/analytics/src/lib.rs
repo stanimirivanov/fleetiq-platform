@@ -17,7 +17,7 @@ mod output;
 pub use assembly::{CalculatorAssemblyError, assemble_output, assemble_outputs};
 pub use identifier::{
     AlertRuleId, AnalyticsIdentifierError, CalculatorConfigurationId, CalculatorEvaluationId,
-    CalculatorEvidenceId, CalculatorId, CalculatorVersion,
+    CalculatorEvidenceId, CalculatorId, CalculatorVersion, WorkRecoveryId,
 };
 pub use output::{
     CalculatedProperty, CalculatedPropertyError, CalculatorEvaluation, CalculatorOutput,
@@ -55,3 +55,8 @@ pub use alert_rules::{
 
 mod alerts;
 pub use alerts::{AlertLifecycle, AlertPhase};
+
+mod notifications;
+pub use notifications::{AlertDeliveryFailure, AlertNotificationLease};
+mod work_diagnostics;
+pub use work_diagnostics::{WorkDiagnostics, WorkQueueEvidence};

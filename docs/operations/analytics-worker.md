@@ -69,3 +69,7 @@ author means unknown trusted installation attribution. Explicitly grant and acti
 SIGINT/SIGTERM cancels a turn; its lease recovers after expiry. Stop the worker to
 roll back execution, retaining schema, revisions, preparations and output evidence.
 No production service or editor UI is packaged here. See [ADR 0128](../adr/0128-activate-calculator-configurations.md).
+
+Use [audited recovery](work-recovery.md) for failed work or tenant queue controls.
+After 0051, attempts are per cycle and generations are monotonic across recovery;
+old binaries must not run. Pause is not a drain or an input reinterpretation.

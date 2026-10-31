@@ -1,0 +1,8 @@
+description: Stale/ineligible work or a request identity collision. No effect was newly applied.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml

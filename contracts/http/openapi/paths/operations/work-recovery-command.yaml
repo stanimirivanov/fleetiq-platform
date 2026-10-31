@@ -1,0 +1,41 @@
+put:
+  operationId: applyWorkRecovery
+  summary: Retry one failed position or pause/resume a tenant work family
+  description: 'Requires independent current operations.manage and the listener-selected mutation guard
+    before command validation. Browser commands require same-origin and CSRF marker. Retry supports replay/calculator
+    id targets or an exact notification incident; alert_evaluation retry is invalid. Pause/resume require
+    an empty target and expected control generation. Pause gates new observed scheduling/claims, not in-flight
+    completion, ingress retention or drain. It does not resolve/silence alerts. Retry preserves original
+    frozen inputs and identity while advancing the fence; active/completed/ineligible work and stale generations
+    conflict. Reuse the same request_id and exact actor/body after an ambiguous response: original receipts
+    never reapply effects even after later state changes. Changed author/body conflicts. Authority is
+    rechecked even for repeat receipts. Generation capacity and unavailable configuration/execution policy
+    can reject recovery. No unknown query parameters.'
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/work-kind.yaml
+  - $ref: ../../components/parameters/work-recovery-request-id.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/WorkRecoveryCommand.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/WorkRecoverySucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/WorkRecoveryMethodNotAllowed.yaml
+    '409':
+      $ref: ../../components/responses/WorkRecoveryConflict.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

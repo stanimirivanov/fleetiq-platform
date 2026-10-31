@@ -1,0 +1,12 @@
+description: Recovery commands support only PUT.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+  Allow:
+    schema:
+      type: string
+      const: PUT
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml

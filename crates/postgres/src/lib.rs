@@ -129,3 +129,12 @@ mod alert_acknowledgement;
 pub use alert_acknowledgement::{
     AlertAcknowledgement, AlertAcknowledgementError, PostgresAlertAcknowledgement,
 };
+
+mod alert_delivery;
+pub use alert_delivery::{AlertDeliveryError, PostgresAlertDelivery};
+mod work_diagnostics;
+pub use work_diagnostics::PostgresWorkDiagnostics;
+mod work_recovery;
+pub use work_recovery::{
+    PostgresWorkRecovery, WorkRecoveryCandidates, WorkRecoveryError, WorkRecoveryReceipt,
+};

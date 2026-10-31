@@ -3,8 +3,8 @@
 ## TL;DR
 
 The explicit `analytics-worker` now advances selected alert-rule revisions and
-retains notification intents in the same transaction. Delivery is disabled: no
-worker sends these intents anywhere. PR15 owns delivery/retry/reconciliation;
+retains notification intents in the same transaction. An opt-in [notification worker](alert-notifications.md) now consumes retained
+incidents with bounded retry/refresh/reconciliation; analytics-worker itself never sends them.
 Protected [alert reads](alert-reads.md) now expose observed state and bounded history. See [ADR 0131](../adr/0131-evaluate-durable-alert-lifecycles.md).
 
 ## Start and stop

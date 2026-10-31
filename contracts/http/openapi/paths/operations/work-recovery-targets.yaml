@@ -1,0 +1,27 @@
+get:
+  operationId: getWorkRecoveryTargets
+  summary: Prepare bounded work recovery commands
+  description: Requires both operations.read and operations.manage under the same current actor/tenant
+    before discovery. Returns at most 32 eligible failed targets and current control state, with explicit
+    truncation. Keys contain only work identity and opaque destination digest, never payloads or endpoints.
+    Alert evaluation has controls only, with no durable failed lease to retry. Absence of candidates is
+    not health or drain. No unknown query parameters.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/work-kind.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/WorkRecoveryTargetsSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

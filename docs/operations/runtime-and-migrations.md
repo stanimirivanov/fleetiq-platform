@@ -12,6 +12,7 @@ not provide a release orchestrator, online upgrades or automatic rollback.
 
 | Command | Database behavior | Other configuration |
 |:--|:--|:--|
+| `fleetiq-server notification-worker` | Validate ledger without DDL, then deliver retained notification incidents | DATABASE_URL and operator-only FLEETIQ_ALERTMANAGER_URL; no HTTP listener |
 | `fleetiq-server migrate` | Apply and verify embedded migrations, close connections, exit | DATABASE_URL only; never opens HTTP |
 | `fleetiq-server migration-inventory` | None | None; deterministic public JSON |
 | `fleetiq-server serve --check-schema` | Validate ledger without DDL before listening | Existing bind and optional HTTP identity configuration |
