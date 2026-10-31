@@ -174,6 +174,14 @@ const OPERATIONS: &[PublishedOperation] = &[
 // or duplicate operation IDs from slipping past the global inventory guard.
 const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
     (
+        "/api/v1/tenants/{tenant_id}/work-recovery/{kind}",
+        &[("get", "getWorkRecoveryTargets")],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/work-recovery/{kind}/commands/{request_id}",
+        &[("put", "applyWorkRecovery")],
+    ),
+    (
         "/api/v1/tenants/{tenant_id}/work-diagnostics",
         &[("get", "getWorkDiagnostics")],
     ),
@@ -866,7 +874,7 @@ fn tenant_discovery_accepts_complete_grants_and_rejects_invalid_arrays()
     let actions = contract["components"]["schemas"]["TenantAction"]["enum"]
         .as_array()
         .expect("closed tenant action vocabulary");
-    assert_eq!(actions.len(), 10, "review changes to the action vocabulary");
+    assert_eq!(actions.len(), 11, "review changes to the action vocabulary");
     assert_eq!(
         contract["components"]["schemas"]["OperatorTenant"]["properties"]["actions"]["maxItems"],
         json!(actions.len()),

@@ -66,7 +66,7 @@ impl PostgresCalculatorWork {
               FROM analytics.calculator_schedules s JOIN metadata.tenants t USING(tenant_id)
               JOIN analytics.calculator_configuration_revisions r ON r.tenant_id=s.tenant_id AND r.schedule_id=s.schedule_id
               JOIN analytics.calculator_configurations c ON c.tenant_id=r.tenant_id AND c.configuration_id=r.configuration_id AND c.active_revision=r.revision CROSS JOIN clock
-              WHERE t.is_active AND s.next_start_ms::numeric+s.window_ms+s.lateness_ms<=clock.now
+              WHERE t.is_active AND NOT EXISTS(SELECT 1 FROM analytics.work_controls control WHERE control.tenant_id=s.tenant_id AND control.kind='calculator' AND control.paused) AND s.next_start_ms::numeric+s.window_ms+s.lateness_ms<=clock.now
               ORDER BY s.next_start_ms,s.tenant_id,s.schedule_id FOR UPDATE OF s,c SKIP LOCKED LIMIT 1
             ), saved AS (
               INSERT INTO analytics.calculator_work(tenant_id,evaluation_id,schedule_id,start_ms,request)
@@ -89,7 +89,7 @@ impl PostgresCalculatorWork {
     pub async fn claim(&self) -> Result<Option<CalculatorWorkLease>, CalculatorWorkError> {
         sqlx::query!(r#"
             UPDATE analytics.calculator_work w SET status='exhausted'
-            FROM (SELECT tenant_id,evaluation_id FROM analytics.calculator_work WHERE status='pending' AND generation=3
+            FROM (SELECT tenant_id,evaluation_id FROM analytics.calculator_work WHERE status='pending' AND attempts=3
               AND lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint
               ORDER BY tenant_id,evaluation_id FOR UPDATE SKIP LOCKED LIMIT 32) expired
             WHERE w.tenant_id=expired.tenant_id AND w.evaluation_id=expired.evaluation_id
@@ -99,9 +99,9 @@ impl PostgresCalculatorWork {
               SELECT w.tenant_id,w.evaluation_id FROM analytics.calculator_work w JOIN metadata.tenants t USING(tenant_id)
               JOIN analytics.calculator_configuration_revisions r ON r.tenant_id=w.tenant_id AND r.schedule_id=w.schedule_id
               JOIN analytics.calculator_configurations config ON config.tenant_id=r.tenant_id AND config.configuration_id=r.configuration_id AND config.active_revision=r.revision
-              WHERE t.is_active AND w.status='pending' AND w.generation<3 AND (w.lease_until_ms IS NULL OR w.lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint)
+              WHERE t.is_active AND NOT EXISTS(SELECT 1 FROM analytics.work_controls control WHERE control.tenant_id=w.tenant_id AND control.kind='calculator' AND control.paused) AND w.status='pending' AND w.attempts<3 AND w.generation<2147483647 AND (w.lease_until_ms IS NULL OR w.lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint)
               ORDER BY w.start_ms,w.tenant_id,w.evaluation_id FOR UPDATE OF w,config SKIP LOCKED LIMIT 1
-            ) UPDATE analytics.calculator_work w SET generation=generation+1,lease_until_ms=floor(extract(epoch FROM clock_timestamp())*1000)::bigint+30000
+            ) UPDATE analytics.calculator_work w SET generation=generation+1,attempts=attempts+1,lease_until_ms=floor(extract(epoch FROM clock_timestamp())*1000)::bigint+30000
             FROM candidate c WHERE w.tenant_id=c.tenant_id AND w.evaluation_id=c.evaluation_id
             RETURNING w.tenant_id,w.evaluation_id,w.request,w.generation
         "#).fetch_optional(&self.0).await.map_err(|_|CalculatorWorkError)?;
@@ -141,7 +141,7 @@ impl PostgresCalculatorWork {
         let saved=sqlx::query_scalar!(r#"
             SELECT w.request FROM analytics.calculator_work w JOIN metadata.tenants t USING(tenant_id)
             WHERE w.tenant_id=$1 AND w.evaluation_id=$2 AND w.generation=$3 AND w.status='pending' AND t.is_active
-              AND w.lease_until_ms>floor(extract(epoch FROM clock_timestamp())*1000)::bigint FOR UPDATE OF w,t
+              AND w.lease_until_ms>floor(extract(epoch FROM clock_timestamp())*1000)::bigint FOR UPDATE OF w FOR SHARE OF t
         "#,tenant,id,generation).fetch_optional(&mut *tx).await.map_err(|_|CalculatorWorkError)?;
         if saved != Some(request_json(request)) {
             return Err(CalculatorWorkError);

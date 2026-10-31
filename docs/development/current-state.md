@@ -584,3 +584,5 @@ and overview consumers are PRs 29–30. D06 and full-profile qualification remai
 deferred; no device-health or connectivity inference is provided.
 
 - Independent operations.read publishes bounded tenant work diagnostics; see [coverage and limits](../operations/work-diagnostics.md).
+
+- Independent operations.manage enables audited exact-work retry and tenant queue controls; [rollout and limits](../operations/work-recovery.md) require compatible post-0051 workers.

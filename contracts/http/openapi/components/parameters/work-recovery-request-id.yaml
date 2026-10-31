@@ -1,0 +1,6 @@
+name: request_id
+in: path
+required: true
+description: Exact tenant-scoped idempotent recovery request identity; retain on ambiguous response
+schema:
+  $ref: ../schemas/AdministrationIdentifier.yaml

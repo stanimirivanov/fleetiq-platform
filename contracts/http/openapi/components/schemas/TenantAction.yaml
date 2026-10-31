@@ -11,3 +11,4 @@ enum:
   - "telemetry.read"
   - "alerts.acknowledge"
   - "operations.read"
+  - "operations.manage"

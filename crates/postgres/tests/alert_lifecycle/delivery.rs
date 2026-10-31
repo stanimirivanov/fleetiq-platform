@@ -158,12 +158,21 @@ async fn populated_48_to_49_upgrade_retains_intents_and_requires_explicit_seed(
     for migration in fleetiq_postgres::MIGRATOR.iter().filter(|m| m.version < 49) {
         sqlx::raw_sql(migration.sql.clone()).execute(&pool).await?;
     }
+    // The current evaluator checks pause controls. Supply an empty compatibility
+    // fixture only while creating the historical intents, then remove it before
+    // testing either migration; it does not change the historical business rows.
+    sqlx::raw_sql("CREATE TABLE analytics.work_controls(tenant_id TEXT,kind TEXT,paused BOOLEAN)")
+        .execute(&pool)
+        .await?;
     let base = fire(&pool).await?;
     append(&pool, "resolve", base + 1000, Some("49")).await?;
     PostgresAlertLifecycle::new(pool.clone())
         .advance_one()
         .await?;
     let before = counts(&pool).await;
+    sqlx::raw_sql("DROP TABLE analytics.work_controls")
+        .execute(&pool)
+        .await?;
     sqlx::raw_sql(include_str!(
         "../../../../migrations/0049_alert_notification_delivery.sql"
     ))
@@ -175,6 +184,11 @@ async fn populated_48_to_49_upgrade_retains_intents_and_requires_explicit_seed(
             .fetch_one(&pool)
             .await?;
     assert_eq!(queued, 0);
+    // The 0049 assertions above are historical. Current adapters require the
+    // complete current schema before exercising explicit worker seeding.
+    for migration in fleetiq_postgres::MIGRATOR.iter().filter(|m| m.version > 49) {
+        sqlx::raw_sql(migration.sql.clone()).execute(&pool).await?;
+    }
     let work = PostgresAlertDelivery::new(pool);
     work.seed(&DEST).await?;
     let lease = work

@@ -122,7 +122,7 @@ async fn lifecycle_and_delivery_samples_preserve_source_truth_and_closed_failure
     assert_eq!(queue(&sample, "calculator")["sampled"], 64);
     assert_eq!(queue(&sample, "calculator")["truncated"], true);
     assert_eq!(queue(&sample, "calculator")["blocked"], 64); // completed work is excluded
-    sqlx::query("UPDATE analytics.calculator_work SET generation=3,lease_until_ms=0 WHERE evaluation_id='pending-1'").execute(&pool).await.unwrap();
+    sqlx::query("UPDATE analytics.calculator_work SET generation=3,attempts=3,lease_until_ms=0 WHERE evaluation_id='pending-1'").execute(&pool).await.unwrap();
     let (_, expired) = read(&app, ROOT, true).await;
     assert_eq!(queue(&expired, "calculator")["failed"], 1);
     let serialized = expired.to_string();

@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT r.generation AS \"generation!\",r.actor_id AS \"actor!\",floor(extract(epoch FROM r.recorded_at)*1000)::bigint AS \"recorded!\"\n            FROM analytics.recover_work($1,$2,$3,$4,$5,$6,$7,$8) r",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "actor!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "recorded!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "c2fcc00b5f7f8229792f6b3b285a972ee72dfbf1b1c8db325cf24c75f24f7f74"
+}

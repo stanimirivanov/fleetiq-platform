@@ -1,0 +1,13 @@
+description: Safe operational original receipt; not a current-state or completion assertion.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/WorkRecoveryReceipt.yaml
+    example:
+      request_id: recovery-a
+      generation: '4'
+      actor_id: operator-a
+      recorded_at_ms: '1000'
