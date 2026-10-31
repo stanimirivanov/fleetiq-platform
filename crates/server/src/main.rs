@@ -67,6 +67,7 @@ async fn execute() -> Result<(), Box<dyn Error>> {
             fleetiq_server::register_calculator_definition().await?;
             println!("calculator declaration registered or already present");
         }
+        ProcessCommand::NotificationWorker => fleetiq_server::run_notification_worker().await?,
         ProcessCommand::AnalyticsWorker => fleetiq_server::run_analytics_worker().await?,
         ProcessCommand::CalculateOnce => {
             fleetiq_server::calculate_once().await?;

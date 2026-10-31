@@ -95,3 +95,5 @@ For authorized observed-alert queue/detail and bounded transition history, use
 For audited alert operator intent and exact-version command retry semantics, use
 [alert acknowledgement](operations/alert-acknowledgement.md) and
 [ADR 0133](adr/0133-acknowledge-exact-alert-versions.md).
+
+- [Alert notifications](operations/alert-notifications.md): explicit trusted delivery worker and bounded incident convergence.

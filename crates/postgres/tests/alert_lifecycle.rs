@@ -508,3 +508,6 @@ async fn checkpoint_creation_boundary_suppresses_a_predeployment_active_rule_bac
     );
     Ok(())
 }
+
+#[path = "alert_lifecycle/delivery.rs"]
+mod delivery;

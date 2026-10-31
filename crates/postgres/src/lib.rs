@@ -129,3 +129,6 @@ mod alert_acknowledgement;
 pub use alert_acknowledgement::{
     AlertAcknowledgement, AlertAcknowledgementError, PostgresAlertAcknowledgement,
 };
+
+mod alert_delivery;
+pub use alert_delivery::{AlertDeliveryError, PostgresAlertDelivery};

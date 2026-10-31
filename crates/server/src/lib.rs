@@ -320,3 +320,6 @@ mod alert_rules;
 mod alerts;
 
 mod alert_acknowledgement;
+
+mod alert_delivery;
+pub use alert_delivery::{AlertmanagerConfig, AlertmanagerConfigError, run_notification_worker};

@@ -1,0 +1,138 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          WITH candidate AS (\n            SELECT d.tenant_id,d.rule_id,d.revision,d.firing_version,\n              COALESCE(n.version,f.version) AS version,COALESCE(n.phase,f.phase) AS phase,\n              f.event_at_ms AS starts_ms,n.event_at_ms AS resolved_ms,r.definition\n            FROM analytics.alert_notification_delivery d\n            JOIN metadata.tenants tenant USING(tenant_id)\n            JOIN analytics.alert_rule_revisions r ON (r.tenant_id,r.rule_id,r.revision)=(d.tenant_id,d.rule_id,d.revision)\n            JOIN analytics.alert_transitions f ON (f.tenant_id,f.rule_id,f.revision,f.version)=(d.tenant_id,d.rule_id,d.revision,d.firing_version)\n            LEFT JOIN LATERAL (\n              SELECT t.version,t.phase,t.event_at_ms FROM analytics.alert_notification_intents i\n              JOIN analytics.alert_transitions t ON (t.tenant_id,t.rule_id,t.revision,t.version)=(i.tenant_id,i.rule_id,i.revision,i.transition_version)\n              WHERE (i.tenant_id,i.rule_id,i.revision)=(d.tenant_id,d.rule_id,d.revision) AND i.transition_version>d.firing_version\n              ORDER BY i.transition_version LIMIT 1\n            ) n ON true\n            WHERE d.destination=$1 AND tenant.is_active AND f.phase='firing' AND (n.phase IS NULL OR n.phase='resolved')\n              AND d.generation<9223372036854775807 AND (d.lease_until IS NULL OR d.lease_until<=clock_timestamp())\n              AND (COALESCE(n.version,f.version)>d.target_version OR (d.attempts<5 AND d.next_attempt_at<=clock_timestamp()\n                AND (d.accepted_version<d.target_version OR n.phase IS NULL OR d.resolved_until>clock_timestamp())))\n            ORDER BY d.next_attempt_at,d.tenant_id,d.rule_id,d.revision,d.firing_version\n            FOR SHARE OF tenant SKIP LOCKED FOR UPDATE OF d SKIP LOCKED LIMIT 1\n          ) UPDATE analytics.alert_notification_delivery d SET target_version=c.version,generation=d.generation+1,\n            attempts=CASE WHEN c.version>d.target_version THEN 1 ELSE d.attempts+1 END,\n            lease_until=clock_timestamp()+interval '30 seconds'\n          FROM candidate c WHERE d.destination=$1 AND (d.tenant_id,d.rule_id,d.revision,d.firing_version)=(c.tenant_id,c.rule_id,c.revision,c.firing_version)\n          RETURNING d.tenant_id,d.rule_id,d.revision,d.firing_version,d.target_version,d.generation,\n            c.phase AS \"phase!\",c.starts_ms AS \"starts_ms!\",c.resolved_ms AS \"resolved_ms?\",c.definition AS \"definition!\",\n            (floor(extract(epoch FROM clock_timestamp())*1000)::bigint+120000) AS \"active_until!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "tenant_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_notification_delivery",
+            "name": "tenant_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "rule_id",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_notification_delivery",
+            "name": "rule_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_notification_delivery",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "firing_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_notification_delivery",
+            "name": "firing_version"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "target_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_notification_delivery",
+            "name": "target_version"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_notification_delivery",
+            "name": "generation"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "phase!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 7,
+        "name": "starts_ms!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "resolved_ms?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_transitions",
+            "name": "event_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "definition!",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_rule_revisions",
+            "name": "definition"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "active_until!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "0699370e50f8b9d14d0311b6d3df98ae06036e6926c9721b5e44dc53cc64dff8"
+}

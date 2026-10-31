@@ -55,3 +55,6 @@ pub use alert_rules::{
 
 mod alerts;
 pub use alerts::{AlertLifecycle, AlertPhase};
+
+mod notifications;
+pub use notifications::{AlertDeliveryFailure, AlertNotificationLease};

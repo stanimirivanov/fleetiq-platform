@@ -33,6 +33,8 @@ pub enum ProcessCommand {
     CalculateOnce,
     /// Run explicit durable fixed-window calculator work without HTTP or DDL.
     AnalyticsWorker,
+    /// Deliver retained alerts to the configured trusted notification router.
+    NotificationWorker,
     /// Print command usage without reading runtime configuration.
     Help,
 }
@@ -63,6 +65,7 @@ impl ProcessCommand {
             "serve" => Self::Serve,
             "migrate" => Self::Migrate,
             "calculate-once" => Self::CalculateOnce,
+            "notification-worker" => Self::NotificationWorker,
             "analytics-worker" => Self::AnalyticsWorker,
             "register-calculator" => Self::RegisterCalculator,
             "replay-worker" => Self::ReplayWorker,
@@ -94,7 +97,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [analytics-worker|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
+        "Usage: fleetiq-server [notification-worker|analytics-worker|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -175,6 +178,10 @@ mod tests {
             ),
             (vec!["calculate-once"], ProcessCommand::CalculateOnce),
             (vec!["analytics-worker"], ProcessCommand::AnalyticsWorker),
+            (
+                vec!["notification-worker"],
+                ProcessCommand::NotificationWorker,
+            ),
             (vec!["migrate"], ProcessCommand::Migrate),
             (vec!["healthcheck"], ProcessCommand::Healthcheck),
             (vec!["replay-worker"], ProcessCommand::ReplayWorker),
@@ -198,6 +205,8 @@ mod tests {
             vec!["calculate-once", "inline-json"],
             vec!["analytics-worker", "--check-schema"],
             vec!["analytics-worker", "inline-json"],
+            vec!["notification-worker", "--check-schema"],
+            vec!["notification-worker", "inline-url"],
             vec!["calculate-once", "--check-schema"],
             vec!["migrate", "--check-schema"],
             vec!["healthcheck", "--check-schema"],

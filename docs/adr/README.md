@@ -177,3 +177,5 @@ introducing a new record.
 | [0132](0132-publish-bounded-alert-reads.md) | Authorized observed-alert queue, exact detail, bounded transition history and evidence references |
 
 | [0133](0133-acknowledge-exact-alert-versions.md) | Independent acknowledgement authority, immutable exact-version receipts and annotated reads |
+
+| [0134](0134-deliver-durable-alert-notifications.md) | Destination-scoped durable Alertmanager delivery with bounded refresh and reconciliation |

@@ -2,6 +2,8 @@
 
 ## TL;DR
 
+- M05-PR15 adds [explicit durable notification delivery](../operations/alert-notifications.md) to a configured Alertmanager endpoint, with generation fencing, bounded retries, restart refresh and resolved reconciliation. HTTP acceptance does not prove downstream receiver delivery; packaging and installed qualification remain later slices.
+
 - The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history, durable current-property snapshots and authorized exact-property SSE now exist.
 
 - [Bounded TCP ingestion](../operations/tcp-ingestion.md) now accepts explicitly
