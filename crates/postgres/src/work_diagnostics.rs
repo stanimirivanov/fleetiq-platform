@@ -37,32 +37,32 @@ calculator AS MATERIALIZED (SELECT * FROM analytics.calculator_work WHERE tenant
 rules AS MATERIALIZED (SELECT * FROM analytics.alert_rules WHERE tenant_id=$1 AND active_revision IS NOT NULL ORDER BY rule_id LIMIT 65),
 notification AS MATERIALIZED (SELECT * FROM analytics.alert_notification_delivery WHERE tenant_id=$1 ORDER BY destination,rule_id,revision,firing_version LIMIT 65),
 positions AS (
- SELECT 'replay' AS kind,w.message_id AS id,w.generation AS attempts,
+ SELECT 'replay' AS kind,w.message_id AS id,w.attempts::bigint AS attempts,
  CASE WHEN w.status='completed' THEN 'idle' WHEN w.status='poisoned' THEN 'failed'
- WHEN w.lease_until_ms>clock.now THEN 'leased' WHEN w.generation>=3 THEN 'failed'
- WHEN w.sequence<>s.current_sequence+1 OR s.execution_sha256<>$2 OR s.execution_policy<>1 OR s.admission_policy<>1 THEN 'blocked' ELSE 'eligible' END AS state,
+ WHEN w.lease_until_ms>clock.now THEN 'leased' WHEN w.attempts>=3 THEN 'failed'
+ WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=w.tenant_id AND c.kind='replay' AND c.paused) OR w.sequence<>s.current_sequence+1 OR s.execution_sha256<>$2 OR s.execution_policy<>1 OR s.admission_policy<>1 THEN 'blocked' ELSE 'eligible' END AS state,
  m.received_at_ms AS since,NULL::text AS failure
  FROM replay w JOIN ingestion.replay_sessions s USING(tenant_id,session_id)
  JOIN ingestion.accepted_messages m USING(tenant_id,message_id) CROSS JOIN clock
  UNION ALL
- SELECT 'calculator',w.evaluation_id,w.generation::bigint,
+ SELECT 'calculator',w.evaluation_id,w.attempts::bigint,
  CASE WHEN w.status='done' THEN 'idle' WHEN w.status='exhausted' THEN 'failed'
- WHEN w.lease_until_ms>clock.now THEN 'leased' WHEN w.generation>=3 THEN 'failed'
- WHEN NOT EXISTS(SELECT 1 FROM analytics.calculator_configuration_revisions r JOIN analytics.calculator_configurations c
+ WHEN w.lease_until_ms>clock.now THEN 'leased' WHEN w.attempts>=3 THEN 'failed'
+ WHEN EXISTS(SELECT 1 FROM analytics.work_controls control WHERE control.tenant_id=w.tenant_id AND control.kind='calculator' AND control.paused) OR NOT EXISTS(SELECT 1 FROM analytics.calculator_configuration_revisions r JOIN analytics.calculator_configurations c
  ON (c.tenant_id,c.configuration_id,c.active_revision)=(r.tenant_id,r.configuration_id,r.revision)
  WHERE r.tenant_id=w.tenant_id AND r.schedule_id=w.schedule_id) THEN 'blocked' ELSE 'eligible' END,
  (w.start_ms::numeric+s.window_ms+s.lateness_ms)::bigint,NULL::text
  FROM calculator w JOIN analytics.calculator_schedules s USING(tenant_id,schedule_id) CROSS JOIN clock
  UNION ALL
- SELECT 'alert_evaluation',h.rule_id,0::bigint,CASE WHEN e.evaluation_id IS NULL THEN 'idle' ELSE 'eligible' END,e.evaluated_ms,NULL::text
+ SELECT 'alert_evaluation',h.rule_id,0::bigint,CASE WHEN e.evaluation_id IS NULL THEN 'idle' WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=h.tenant_id AND c.kind='alert_evaluation' AND c.paused) THEN 'blocked' ELSE 'eligible' END,e.evaluated_ms,NULL::text
  FROM rules h LEFT JOIN LATERAL analytics.next_alert_evidence(h.tenant_id,h.rule_id,h.active_revision) e ON true
  UNION ALL
  SELECT 'notification',encode(d.destination,'hex')||':'||d.rule_id||':'||d.revision||':'||d.firing_version,d.attempts::bigint,
  CASE WHEN d.lease_until>transaction_timestamp() THEN 'leased'
- WHEN n.transition_version>d.target_version THEN 'eligible'
+ WHEN n.transition_version>d.target_version THEN CASE WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=d.tenant_id AND c.kind='notification' AND c.paused) THEN 'blocked' ELSE 'eligible' END
  WHEN d.attempts>=5 THEN 'failed'
  WHEN d.accepted_version=d.target_version AND d.resolved_until<=transaction_timestamp() THEN 'idle'
- WHEN d.next_attempt_at>transaction_timestamp() THEN 'deferred' ELSE 'eligible' END,
+ WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=d.tenant_id AND c.kind='notification' AND c.paused) THEN 'blocked' WHEN d.next_attempt_at>transaction_timestamp() THEN 'deferred' ELSE 'eligible' END,
  floor(extract(epoch FROM CASE WHEN n.transition_version>d.target_version THEN n.recorded_at ELSE d.next_attempt_at END)*1000)::bigint,
  CASE d.last_failure WHEN 'transport' THEN 'transport' WHEN 'rejected' THEN 'rejected'
  WHEN 'response_limit' THEN 'response_limit' WHEN 'invalid_payload' THEN 'invalid_payload' END

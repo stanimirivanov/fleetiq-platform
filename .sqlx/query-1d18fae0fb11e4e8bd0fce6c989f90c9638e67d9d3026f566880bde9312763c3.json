@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          INSERT INTO analytics.alert_notification_delivery(destination,tenant_id,rule_id,revision,firing_version,target_version)\n          SELECT $1,i.tenant_id,i.rule_id,i.revision,i.transition_version,i.transition_version\n          FROM analytics.alert_notification_intents i JOIN analytics.alert_transitions t\n            ON (t.tenant_id,t.rule_id,t.revision,t.version)=(i.tenant_id,i.rule_id,i.revision,i.transition_version)\n          JOIN metadata.tenants tenant ON tenant.tenant_id=i.tenant_id\n          WHERE tenant.is_active AND NOT EXISTS(SELECT 1 FROM analytics.work_controls control WHERE control.tenant_id=i.tenant_id AND control.kind='notification' AND control.paused) AND t.phase='firing' AND NOT EXISTS(\n            SELECT 1 FROM analytics.alert_notification_delivery d WHERE d.destination=$1\n            AND (d.tenant_id,d.rule_id,d.revision,d.firing_version)=(i.tenant_id,i.rule_id,i.revision,i.transition_version))\n          ORDER BY i.recorded_at,i.tenant_id,i.rule_id,i.revision,i.transition_version LIMIT 32 ON CONFLICT DO NOTHING\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1d18fae0fb11e4e8bd0fce6c989f90c9638e67d9d3026f566880bde9312763c3"
+}

@@ -1,0 +1,10 @@
+type: object
+additionalProperties: false
+required:
+- generation
+- paused
+properties:
+  generation:
+    $ref: ./WorkGeneration.yaml
+  paused:
+    type: boolean

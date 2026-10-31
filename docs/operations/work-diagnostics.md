@@ -60,5 +60,7 @@ new capability to roll back reads while retaining source state. A compatible
 forward binary is required for the new ledger/action vocabulary. See
 [ADR 0135](../adr/0135-read-bounded-operational-work-evidence.md).
 
-PR18 owns audited recovery; PR19 owns the operational UI. These samples do not
+Use [audited recovery](work-recovery.md) for independent operations.manage commands.
+Paused eligible positions are blocked; max_attempts is per cycle, not the fence.
+PR19 owns the operational UI. These samples do not
 replace installed worker/router qualification or production monitoring.

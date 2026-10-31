@@ -1,0 +1,6 @@
+type: string
+enum:
+- replay
+- calculator
+- alert_evaluation
+- notification

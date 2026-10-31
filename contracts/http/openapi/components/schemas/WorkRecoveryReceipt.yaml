@@ -1,0 +1,15 @@
+type: object
+additionalProperties: false
+required:
+- request_id
+- generation
+- actor_id
+- recorded_at_ms
+properties:
+  request_id: &id001
+    $ref: ./AdministrationIdentifier.yaml
+  generation:
+    $ref: ./WorkGeneration.yaml
+  actor_id: *id001
+  recorded_at_ms:
+    $ref: ./HistoryMillis.yaml

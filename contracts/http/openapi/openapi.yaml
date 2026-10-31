@@ -1,12 +1,16 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.27"
+  version: "1.0.0-baseline.28"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
 servers:
   - url: "/"
 security: []
 paths:
+  /api/v1/tenants/{tenant_id}/work-recovery/{kind}:
+    $ref: ./paths/operations/work-recovery-targets.yaml
+  /api/v1/tenants/{tenant_id}/work-recovery/{kind}/commands/{request_id}:
+    $ref: ./paths/operations/work-recovery-command.yaml
   /api/v1/tenants/{tenant_id}/work-diagnostics:
     $ref: ./paths/operations/work-diagnostics.yaml
   "/api/v1/tenants/{tenant_id}/alert-rules/{rule_id}":
@@ -131,6 +135,22 @@ paths:
     $ref: ./paths/analytics/alert-acknowledgement.yaml
 components:
   schemas:
+    WorkKind:
+      $ref: ./components/schemas/WorkKind.yaml
+    WorkGeneration:
+      $ref: ./components/schemas/WorkGeneration.yaml
+    WorkRetryTarget:
+      $ref: ./components/schemas/WorkRetryTarget.yaml
+    WorkRecoveryCommand:
+      $ref: ./components/schemas/WorkRecoveryCommand.yaml
+    WorkRecoveryReceipt:
+      $ref: ./components/schemas/WorkRecoveryReceipt.yaml
+    WorkRecoveryCandidate:
+      $ref: ./components/schemas/WorkRecoveryCandidate.yaml
+    WorkControl:
+      $ref: ./components/schemas/WorkControl.yaml
+    WorkRecoveryTargets:
+      $ref: ./components/schemas/WorkRecoveryTargets.yaml
     WorkDiagnostics:
       $ref: ./components/schemas/WorkDiagnostics.yaml
     WorkQueueEvidence:
@@ -436,6 +456,10 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    work-kind:
+      $ref: ./components/parameters/work-kind.yaml
+    work-recovery-request-id:
+      $ref: ./components/parameters/work-recovery-request-id.yaml
     alert-identity-revision:
       $ref: ./components/parameters/alert-identity-revision.yaml
     alert-phase:
@@ -603,6 +627,14 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    WorkRecoverySucceeded:
+      $ref: ./components/responses/WorkRecoverySucceeded.yaml
+    WorkRecoveryTargetsSucceeded:
+      $ref: ./components/responses/WorkRecoveryTargetsSucceeded.yaml
+    WorkRecoveryMethodNotAllowed:
+      $ref: ./components/responses/WorkRecoveryMethodNotAllowed.yaml
+    WorkRecoveryConflict:
+      $ref: ./components/responses/WorkRecoveryConflict.yaml
     WorkDiagnosticsSucceeded:
       $ref: ./components/responses/WorkDiagnosticsSucceeded.yaml
     AlertAcknowledgementSucceeded:

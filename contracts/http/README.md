@@ -259,3 +259,7 @@ remain exact strings and no new grants are implied. See
 Baseline.27 adds independent operations.read and bounded work-diagnostics reads.
 Discovery admits ten exact actions; regenerate strict clients before delegation.
 No prior grant implies this capability. See [operational diagnostics](../../docs/operations/work-diagnostics.md).
+
+Baseline.28 adds operations.manage, bounded dual-authorized recovery preparation and
+request-ID commands for failed work and queue pause/resume. Discovery admits eleven
+actions; regenerate clients before delegation. See [work recovery](../../docs/operations/work-recovery.md).

@@ -50,7 +50,7 @@ unexpired generation/target and active tenant; late responses cannot confirm a
 replacement claim. Each cycle allows five attempts, including crashes with expired
 leases, with 2/4/8/16/30-second failure backoff. Exhaustion remains retained; there is
 no unaudited reset/replay command. A newer resolution rearms an exhausted firing
-cycle. Later PRs add operational diagnostics and audited recovery.
+cycle. See [diagnostics](work-diagnostics.md) and [audited recovery](work-recovery.md).
 
 Firing snapshots use a two-minute endsAt and refresh every thirty seconds after
 success. Resolved snapshots reconcile for three minutes after their first accepted

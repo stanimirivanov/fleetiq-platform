@@ -93,3 +93,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Alert notification delivery](alert-notifications.md): opt-in fenced outbox delivery, refresh, reconciliation and exhaustion.
 
 - [Operational work diagnostics](work-diagnostics.md): bounded failure/lag evidence without health inference.
+
+- [Audited work recovery](work-recovery.md): independent authority, immutable receipts and worker pause/resume.

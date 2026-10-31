@@ -69,7 +69,8 @@ Rejected component output or framing poisons the work without advancing state.
 Transient executor failures leave a pending lease; after the third expired attempt,
 compatible workers quarantine it as poisoned. The session cannot skip a poisoned
 turn. Do not edit rows, drop guards, reset generations or delete evidence to retry.
-A separately reviewed recovery operation is required.
+Use [audited recovery](work-recovery.md); it preserves pre-state and advances
+the fence while rearming the separate three-attempt cycle.
 
 Inspection should use bounded queries selecting identifiers, sequence, generation,
 status and lease times. Do not routinely select payload, pre_state, state or

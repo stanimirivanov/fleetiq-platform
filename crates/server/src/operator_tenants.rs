@@ -79,6 +79,7 @@ const fn action_name(action: TenantAction) -> &'static str {
         TenantAction::ManageAlerts => "alerts.manage",
         TenantAction::AcknowledgeAlerts => "alerts.acknowledge",
         TenantAction::ReadOperations => "operations.read",
+        TenantAction::ManageOperations => "operations.manage",
     }
 }
 

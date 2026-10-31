@@ -180,3 +180,5 @@ introducing a new record.
 
 | [0134](0134-deliver-durable-alert-notifications.md) | Destination-scoped durable Alertmanager delivery with bounded refresh and reconciliation |
 | [0135](0135-read-bounded-operational-work-evidence.md) | Independent operational-read authority and bounded work evidence without health inference |
+
+| [0136](0136-recover-work-with-monotonic-fences.md) | Audited operational retry and pause/resume with monotonic fencing and retained inputs |

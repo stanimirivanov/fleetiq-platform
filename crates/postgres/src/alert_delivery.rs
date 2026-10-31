@@ -20,7 +20,7 @@ impl PostgresAlertDelivery {
           FROM analytics.alert_notification_intents i JOIN analytics.alert_transitions t
             ON (t.tenant_id,t.rule_id,t.revision,t.version)=(i.tenant_id,i.rule_id,i.revision,i.transition_version)
           JOIN metadata.tenants tenant ON tenant.tenant_id=i.tenant_id
-          WHERE tenant.is_active AND t.phase='firing' AND NOT EXISTS(
+          WHERE tenant.is_active AND NOT EXISTS(SELECT 1 FROM analytics.work_controls control WHERE control.tenant_id=i.tenant_id AND control.kind='notification' AND control.paused) AND t.phase='firing' AND NOT EXISTS(
             SELECT 1 FROM analytics.alert_notification_delivery d WHERE d.destination=$1
             AND (d.tenant_id,d.rule_id,d.revision,d.firing_version)=(i.tenant_id,i.rule_id,i.revision,i.transition_version))
           ORDER BY i.recorded_at,i.tenant_id,i.rule_id,i.revision,i.transition_version LIMIT 32 ON CONFLICT DO NOTHING
@@ -51,7 +51,7 @@ impl PostgresAlertDelivery {
               WHERE (i.tenant_id,i.rule_id,i.revision)=(d.tenant_id,d.rule_id,d.revision) AND i.transition_version>d.firing_version
               ORDER BY i.transition_version LIMIT 1
             ) n ON true
-            WHERE d.destination=$1 AND tenant.is_active AND f.phase='firing' AND (n.phase IS NULL OR n.phase='resolved')
+            WHERE d.destination=$1 AND NOT EXISTS(SELECT 1 FROM analytics.work_controls control WHERE control.tenant_id=d.tenant_id AND control.kind='notification' AND control.paused) AND tenant.is_active AND f.phase='firing' AND (n.phase IS NULL OR n.phase='resolved')
               AND d.generation<9223372036854775807 AND (d.lease_until IS NULL OR d.lease_until<=clock_timestamp())
               AND (COALESCE(n.version,f.version)>d.target_version OR (d.attempts<5 AND d.next_attempt_at<=clock_timestamp()
                 AND (d.accepted_version<d.target_version OR n.phase IS NULL OR d.resolved_until>clock_timestamp())))

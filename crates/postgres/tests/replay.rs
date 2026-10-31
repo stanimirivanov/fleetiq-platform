@@ -266,7 +266,7 @@ async fn incompatible_execution_is_neither_claimed_nor_quarantined(pool: PgPool)
     sqlx::query("INSERT INTO ingestion.replay_work(tenant_id,message_id,session_id,sequence,pre_state) VALUES('tenant-a','message-1','session-1',1,''::bytea)")
         .execute(&pool).await.unwrap();
     assert!(repo.claim().await.unwrap().is_none());
-    sqlx::query("UPDATE ingestion.replay_work SET generation=3,lease_until_ms=0")
+    sqlx::query("UPDATE ingestion.replay_work SET generation=3,attempts=3,lease_until_ms=0")
         .execute(&pool)
         .await
         .unwrap();
