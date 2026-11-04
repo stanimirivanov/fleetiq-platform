@@ -1,7 +1,9 @@
 //! Process resources and cancellation, separate from HTTP route composition.
-use crate::{SchemaPreparationError, ServerConfig, application_router, protected_request};
+use crate::{
+    SchemaMode, SchemaPreparationError, ServerConfig, application_router, protected_request,
+};
 use sqlx::postgres::PgPoolOptions;
-use std::{error::Error, fmt, future::Future, io};
+use std::{error::Error, fmt, future::Future, io, time::Duration};
 use tokio::net::TcpListener;
 
 /// Starts the configured backend and serves requests until shutdown.
@@ -33,13 +35,34 @@ pub(crate) async fn run_until(
     config: ServerConfig,
     shutdown: impl Future<Output = ()> + Send + 'static,
 ) -> Result<(), ServerError> {
+    if config.schema_mode() == SchemaMode::Migrate {
+        // Migration locks and DDL have their own lifecycle. Never run them on
+        // serving connections or carry migration session settings into HTTP.
+        let migration_pool = PgPoolOptions::new()
+            .max_connections(1)
+            .connect(config.database_url())
+            .await
+            .map_err(ServerError::DatabaseConnection)?;
+        let prepared = SchemaMode::Migrate.prepare(&migration_pool).await;
+        migration_pool.close().await;
+        prepared.map_err(ServerError::Schema)?;
+    }
+
     let pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_secs(3))
+        .after_connect(|connection, _| {
+            Box::pin(async move {
+                sqlx::query("SET statement_timeout = '5s'")
+                    .execute(connection)
+                    .await?;
+                Ok(())
+            })
+        })
         .connect(config.database_url())
         .await
         .map_err(ServerError::DatabaseConnection)?;
     let result = async {
-        config
-            .schema_mode()
+        SchemaMode::Check
             .prepare(&pool)
             .await
             .map_err(ServerError::Schema)?;

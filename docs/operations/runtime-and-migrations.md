@@ -71,8 +71,13 @@ causes remain available internally and must not be recursively dumped into logs.
 Migration sessions explicitly select the public search path so role-specific
 schemas cannot redirect migration ledger lookup. Their connection
 is closed instead of returning its settings/locks to runtime traffic. Check mode
-changes no session settings and executes no DDL. Checksum projections read at
-most 49 bytes, distinguishing oversized values from valid 48-byte SHA-384 digests.
+executes no DDL. HTTP serving uses a separate pool with a three-second
+connection acquisition deadline and a five-second PostgreSQL statement
+deadline. Existing transaction-local limits still apply. The statement limit
+applies to each statement, not the full HTTP request. A timeout does not
+establish whether a write committed before its response was lost. Checksum
+projections read at most 49 bytes, distinguishing oversized values from valid
+48-byte SHA-384 digests.
 
 SQLx holds its database advisory lock during migration. Two migration commands
 serialize; repeated success is idempotent. Failed transactions are not recorded
