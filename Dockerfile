@@ -28,7 +28,7 @@ RUN --mount=type=cache,id=fleetiq-cargo-registry,target=/usr/local/cargo/registr
 RUN /tmp/fleetiq-server migration-inventory > /tmp/migrations.json
 
 # The Rust executable needs glibc and libgcc, not a package manager, shell or curl.
-FROM gcr.io/distroless/cc-debian13:nonroot@sha256:3ee00291cf386ec52a552e6a858d555debd74776eb4bfa53fa3df2cd6677515e AS runtime
+FROM gcr.io/distroless/cc-debian13:nonroot@sha256:08476c244888bfb425bae1ae4dd7c17f093e972aab8426883d97f3c6f280f7c1 AS runtime
 
 COPY --from=builder /tmp/fleetiq-server /usr/local/bin/fleetiq-server
 COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission
