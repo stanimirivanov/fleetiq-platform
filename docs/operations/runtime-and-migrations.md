@@ -120,10 +120,12 @@ qualification. See [browser identity](browser-identity.md).
 
 ## Shutdown and recovery
 
-Ctrl+C and Unix SIGTERM initiate graceful stop: stop accepting HTTP, drain
-accepted requests, cancel/join expired browser-record cleanup, close connections.
-The supervisor owns its termination grace deadline; forced kill or host loss
-requires release/database recovery. Do not infer that a Pod deletion proves all
+Ctrl+C and Unix SIGTERM stop HTTP admission and start a shared seven-second
+budget for draining accepted requests, joining browser-record cleanup and closing
+the PostgreSQL pool. If the budget expires, the server logs a bounded error and
+exits with status 1, interrupting any remaining requests or streams. Configure the
+supervisor with a longer grace period. An interrupted response can leave the
+result of a write unknown, so inspect durable state before retrying. Do not infer that a Pod deletion proves all
 writers stopped: observe actual processes, requests and database sessions.
 Current writers include HTTP metadata/identity commands, login/logout/session
 writes and browser-record cleanup. Future ingestion/processing/replay workers
