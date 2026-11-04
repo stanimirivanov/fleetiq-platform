@@ -132,7 +132,16 @@ add placeholder abstractions, empty modules, or speculative dependencies.
 6. Review the complete diff for secrets, generated churn, accidental contract
    changes, assumptions, and unrelated edits.
 7. Update documentation, ADRs, migrations, and operational guidance.
-8. Open a linked pull request when authorized.
+8. Before opening a linked pull request, run the supply-chain gate on the final
+   commit. A failed check or missing prerequisite blocks PR creation. With
+   GitHub CLI, make the gate a condition of the create command:
+
+   ```bash
+   cargo xtask verify --group supply-chain && gh pr create
+   ```
+
+   Also run this focused gate before database-backed validation for fast
+   feedback. Repeat it before creating the PR if the candidate has changed.
 
 Commit subjects should be imperative and describe the resulting behavior.
 Generated output is committed only when consumers require it and regeneration
