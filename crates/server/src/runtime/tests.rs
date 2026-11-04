@@ -237,3 +237,20 @@ async fn assert_readiness_deadline(
     server_result?;
     probe_result
 }
+
+#[sqlx::test(migrations = false)]
+async fn a_checked_out_connection_cannot_extend_the_shutdown_budget(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    let held = pool.acquire().await?;
+    let listener = TcpListener::bind("127.0.0.1:0").await?;
+    let result = tokio::time::timeout(
+        Duration::from_secs(9),
+        serve_listener(listener, Router::new(), pool.clone(), false, async {}),
+    )
+    .await?;
+    assert!(matches!(result, Err(ServerError::ShutdownDeadline)));
+    assert!(pool.is_closed(), "graceful pool closure must have started");
+    drop(held);
+    Ok(())
+}

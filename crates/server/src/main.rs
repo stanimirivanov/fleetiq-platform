@@ -7,7 +7,7 @@ use std::{env, error::Error, process::ExitCode};
 use fleetiq_identity::PlatformBootstrapOutcome;
 use fleetiq_server::{
     MigrationConfig, PlatformBootstrapConfig, ProcessCommand, SchemaMode, ServerConfig,
-    bootstrap_platform_operator, migrate_database, migration_inventory,
+    ServerError, bootstrap_platform_operator, migrate_database, migration_inventory,
 };
 
 #[tokio::main]
@@ -17,6 +17,14 @@ async fn main() -> ExitCode {
         Err(error) => {
             // Render the bounded boundary message, never an error/source tree.
             eprintln!("{error}");
+            // A Tokio runtime drop can wait for outstanding blocking work.
+            // The deadline is a process boundary, including runtime teardown.
+            if matches!(
+                error.downcast_ref::<ServerError>(),
+                Some(ServerError::ShutdownDeadline)
+            ) {
+                std::process::exit(1);
+            }
             ExitCode::FAILURE
         }
     }

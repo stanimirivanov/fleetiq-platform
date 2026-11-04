@@ -4,20 +4,22 @@ use crate::{
 };
 use sqlx::postgres::PgPoolOptions;
 use std::{error::Error, fmt, future::Future, io, time::Duration};
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, sync::oneshot, time::Instant};
+
+// Leave time for process teardown before the local supervisor's 10s grace.
+const HTTP_SHUTDOWN_GRACE: Duration = Duration::from_secs(7);
 
 /// Starts the configured backend and serves requests until shutdown.
 ///
 /// Startup establishes the PostgreSQL pool and prepares the schema according
 /// to the explicit mode before binding the listener. The server therefore never
 /// advertises readiness against an older schema. Receiving `Ctrl+C`, or
-/// `SIGTERM` on Unix, initiates Axum's graceful shutdown and then closes the
-/// connection pool.
+/// `SIGTERM` on Unix, initiates a bounded graceful drain and connection pool shutdown.
 ///
 /// # Errors
 ///
 /// Returns [`ServerError`] when PostgreSQL connection or migration, listener
-/// binding, trusted OIDC discovery, or HTTP serving fails.
+/// binding, trusted OIDC discovery, or HTTP serving fails, or the drain expires.
 pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
     run_until(config, shutdown_signal()).await
 }
@@ -25,9 +27,8 @@ pub async fn run(config: ServerConfig) -> Result<(), ServerError> {
 /// Runs with an owner-provided shutdown future for deterministic lifecycle verification.
 ///
 /// Schema/identity validation still precede listening. Once shutdown resolves,
-/// in-flight HTTP requests drain, the browser cleanup worker is joined, and the
-/// pool is closed. A supervisor must enforce its external termination deadline;
-/// this function does not forcibly roll back or abandon an in-flight command.
+/// the drain, browser cleanup and pool close share one deadline. The executable
+/// terminates the process if that deadline expires.
 ///
 /// # Errors
 /// Returns the same redacted startup/serving errors as [`run`].
@@ -61,7 +62,7 @@ pub(crate) async fn run_until(
         .connect(config.database_url())
         .await
         .map_err(ServerError::DatabaseConnection)?;
-    let result = async {
+    let startup = async {
         SchemaMode::Check
             .prepare(&pool)
             .await
@@ -70,18 +71,26 @@ pub(crate) async fn run_until(
         let listener = TcpListener::bind(config.bind_address())
             .await
             .map_err(ServerError::Listener)?;
-        serve_listener(
-            listener,
-            application,
-            pool.clone(),
-            config.browser_identity().is_some(),
-            shutdown,
-        )
-        .await
+        Ok((listener, application))
     }
     .await;
-    pool.close().await;
-    result
+
+    match startup {
+        Ok((listener, application)) => {
+            serve_listener(
+                listener,
+                application,
+                pool,
+                config.browser_identity().is_some(),
+                shutdown,
+            )
+            .await
+        }
+        Err(error) => {
+            pool.close().await;
+            Err(error)
+        }
+    }
 }
 
 async fn serve_listener(
@@ -110,11 +119,29 @@ async fn serve_listener(
             }
         });
     }
-    let serving = axum::serve(listener, application).with_graceful_shutdown(shutdown);
-    let result = serving.await.map_err(ServerError::Serving);
-    cleanup.shutdown().await;
-    pool.close().await;
-    result
+    let (deadline_sender, deadline_receiver) = oneshot::channel();
+    let serving = axum::serve(listener, application).with_graceful_shutdown(async move {
+        shutdown.await;
+        let _ = deadline_sender.send(Instant::now() + HTTP_SHUTDOWN_GRACE);
+    });
+    let graceful = async {
+        let result = serving.await.map_err(ServerError::Serving);
+        cleanup.shutdown().await;
+        pool.close().await;
+        result
+    };
+    let deadline = async {
+        match deadline_receiver.await {
+            Ok(deadline) => tokio::time::sleep_until(deadline).await,
+            // No shutdown signal was observed. Let the serving result win.
+            Err(_) => std::future::pending::<()>().await,
+        }
+    };
+    tokio::select! {
+        biased;
+        () = deadline => Err(ServerError::ShutdownDeadline),
+        result = graceful => result,
+    }
 }
 
 pub(crate) async fn shutdown_signal() {
@@ -163,6 +190,8 @@ pub enum ServerError {
     Listener(io::Error),
     /// The HTTP server terminated with an I/O failure.
     Serving(io::Error),
+    /// The HTTP drain and cleanup exceeded their shared grace period.
+    ShutdownDeadline,
 }
 
 impl fmt::Display for ServerError {
@@ -177,6 +206,7 @@ impl fmt::Display for ServerError {
             }
             Self::Listener(error) => write!(formatter, "failed to bind HTTP listener: {error}"),
             Self::Serving(error) => write!(formatter, "HTTP server failed: {error}"),
+            Self::ShutdownDeadline => formatter.write_str("HTTP shutdown deadline exceeded"),
         }
     }
 }
@@ -191,7 +221,7 @@ impl Error for ServerError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::DatabaseConnection(error) => Some(error),
-            Self::BrowserIdentityStartup => None,
+            Self::BrowserIdentityStartup | Self::ShutdownDeadline => None,
             Self::Schema(error) => Some(error),
             Self::Listener(error) | Self::Serving(error) => Some(error),
         }
