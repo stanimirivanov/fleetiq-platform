@@ -1,0 +1,5 @@
+type: string
+pattern: ^(0|[1-9][0-9]*)$
+maxLength: 19
+description: Exact nonnegative signed-64-bit fence as decimal text. Compare only within the same tenant,
+  work identity or queue control; never reset it. Runtime range/capacity checks can reject a command.

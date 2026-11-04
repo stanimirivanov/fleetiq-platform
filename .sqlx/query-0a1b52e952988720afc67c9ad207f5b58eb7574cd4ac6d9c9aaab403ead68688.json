@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE analytics.calculator_work w SET status='exhausted'\n            FROM (SELECT tenant_id,evaluation_id FROM analytics.calculator_work WHERE status='pending' AND attempts=3\n              AND lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint\n              ORDER BY tenant_id,evaluation_id FOR UPDATE SKIP LOCKED LIMIT 32) expired\n            WHERE w.tenant_id=expired.tenant_id AND w.evaluation_id=expired.evaluation_id\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "0a1b52e952988720afc67c9ad207f5b58eb7574cd4ac6d9c9aaab403ead68688"
+}

@@ -1,0 +1,10 @@
+type: object
+additionalProperties: false
+required:
+- target
+- expected_generation
+properties:
+  target:
+    $ref: ./WorkRetryTarget.yaml
+  expected_generation:
+    $ref: ./WorkGeneration.yaml

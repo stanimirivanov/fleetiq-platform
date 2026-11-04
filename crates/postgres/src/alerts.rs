@@ -118,7 +118,7 @@ async fn lock_candidate(
             JOIN metadata.tenants t USING(tenant_id)
             JOIN analytics.alert_lifecycles a ON a.tenant_id=h.tenant_id
               AND a.rule_id=h.rule_id AND a.revision=h.active_revision
-            WHERE t.is_active AND EXISTS(SELECT 1 FROM analytics.next_alert_evidence(h.tenant_id,h.rule_id,h.active_revision))
+            WHERE t.is_active AND NOT EXISTS(SELECT 1 FROM analytics.work_controls control WHERE control.tenant_id=h.tenant_id AND control.kind='alert_evaluation' AND control.paused) AND EXISTS(SELECT 1 FROM analytics.next_alert_evidence(h.tenant_id,h.rule_id,h.active_revision))
             ORDER BY a.last_turn_at,h.tenant_id,h.rule_id
             FOR SHARE OF t SKIP LOCKED FOR UPDATE OF h SKIP LOCKED LIMIT 1
         "#).fetch_optional(&mut **tx).await?;

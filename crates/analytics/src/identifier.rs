@@ -2,6 +2,10 @@ use std::{error::Error, fmt, str::FromStr};
 
 const MAX_ANALYTICS_IDENTIFIER_LENGTH: usize = 128;
 
+/// Identifies an immutable tenant-scoped operational recovery request.
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct WorkRecoveryId(String);
+
 /// Identifies an alert-rule series independently of its immutable revisions.
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct AlertRuleId(String);
@@ -119,6 +123,7 @@ macro_rules! analytics_identifier {
     };
 }
 
+analytics_identifier!(WorkRecoveryId);
 analytics_identifier!(AlertRuleId);
 analytics_identifier!(CalculatorConfigurationId);
 analytics_identifier!(CalculatorEvidenceId);

@@ -1,0 +1,19 @@
+type: object
+additionalProperties: false
+required:
+- kind
+- control
+- targets
+- truncated
+properties:
+  kind:
+    $ref: ./WorkKind.yaml
+  control:
+    $ref: ./WorkControl.yaml
+  targets:
+    type: array
+    maxItems: 32
+    items:
+      $ref: ./WorkRecoveryCandidate.yaml
+  truncated:
+    type: boolean

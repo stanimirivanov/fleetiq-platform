@@ -1,0 +1,18 @@
+type: object
+additionalProperties: false
+required: [observed_at_ms, worker_liveness, notification_seeding, sample_limit, queues]
+properties:
+  observed_at_ms:
+    $ref: ./HistoryMillis.yaml
+  worker_liveness:
+    const: not_observed
+  notification_seeding:
+    const: not_observed
+  sample_limit:
+    const: 64
+  queues:
+    type: array
+    minItems: 4
+    maxItems: 4
+    items:
+      $ref: ./WorkQueueEvidence.yaml

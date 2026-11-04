@@ -1,0 +1,15 @@
+description: Safe operational command preparation; snapshot candidates can become stale.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/WorkRecoveryTargets.yaml
+    example:
+      kind: replay
+      control:
+        generation: '0'
+        paused: false
+      targets: []
+      truncated: false

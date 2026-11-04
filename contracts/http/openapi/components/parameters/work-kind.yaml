@@ -1,0 +1,6 @@
+name: kind
+in: path
+required: true
+description: Exact tenant-scoped work family
+schema:
+  $ref: ../schemas/WorkKind.yaml

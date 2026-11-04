@@ -2,6 +2,8 @@
 
 ## TL;DR
 
+- M05-PR15 adds [explicit durable notification delivery](../operations/alert-notifications.md) to a configured Alertmanager endpoint, with generation fencing, bounded retries, restart refresh and resolved reconciliation. HTTP acceptance does not prove downstream receiver delivery; packaging and installed qualification remain later slices.
+
 - The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history, durable current-property snapshots and authorized exact-property SSE now exist.
 
 - [Bounded TCP ingestion](../operations/tcp-ingestion.md) now accepts explicitly
@@ -580,3 +582,7 @@ in a bounded repeatable view without new schema or a fleet worker. See the
 [fleet snapshot guide](../operations/fleet-location-snapshots.md). Geodetic map
 and overview consumers are PRs 29–30. D06 and full-profile qualification remain
 deferred; no device-health or connectivity inference is provided.
+
+- Independent operations.read publishes bounded tenant work diagnostics; see [coverage and limits](../operations/work-diagnostics.md).
+
+- Independent operations.manage enables audited exact-work retry and tenant queue controls; [rollout and limits](../operations/work-recovery.md) require compatible post-0051 workers.

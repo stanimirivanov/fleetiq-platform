@@ -59,7 +59,11 @@ async fn setup(pool: &PgPool) -> Router {
         ),
         fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
     );
-    router(pool.clone(), auth)
+    crate::protected_application_router(
+        pool.clone(),
+        auth,
+        crate::mutation_guard::MutationGuard::Workload,
+    )
 }
 
 fn request(path: &str, token: bool) -> Request<Body> {
@@ -155,4 +159,198 @@ async fn populated_diagnostics_conform_and_exclude_private_wire_and_values(pool:
             .unwrap()
             .contains("decoded_observations")
     );
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn operational_replay_sample_distinguishes_lease_expiry_and_poison(pool: PgPool) {
+    use fleetiq_ingestion::ReplayRepository;
+    let app = setup(&pool).await;
+    sqlx::query("INSERT INTO identity.tenant_action_grants VALUES('tenant-a','operator-a','operations.read')").execute(&pool).await.unwrap();
+    let work = replay_work();
+    let repo = fleetiq_postgres::PostgresReplayRepository::new(pool.clone());
+    repo.enqueue(&work).await.unwrap();
+    for (state, sql) in [
+        ("eligible", None),
+        (
+            "leased",
+            Some(
+                "UPDATE ingestion.replay_work SET generation=1,attempts=1,lease_until_ms=9223372036854775807",
+            ),
+        ),
+        (
+            "failed",
+            Some(
+                "UPDATE ingestion.replay_work SET generation=1,attempts=1,lease_until_ms=0,status='poisoned'",
+            ),
+        ),
+    ] {
+        if let Some(sql) = sql {
+            sqlx::query(sql).execute(&pool).await.unwrap();
+        }
+        let response = app
+            .clone()
+            .oneshot(request("/api/v1/tenants/tenant-a/work-diagnostics", true))
+            .await
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let bytes = to_bytes(response.into_body(), 4096).await.unwrap();
+        let value: Value = serde_json::from_slice(&bytes).unwrap();
+        let replay = value["queues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|q| q["kind"] == "replay")
+            .unwrap();
+        assert_eq!(replay[state], 1);
+        if state == "failed" {
+            assert_eq!(replay["failure_categories"], json!([]));
+        }
+        if state == "eligible" {
+            assert_eq!(replay["oldest_sampled_eligible_at_ms"], "100");
+        }
+        assert!(!String::from_utf8_lossy(&bytes).contains("private-fixture-payload"));
+    }
+}
+
+fn replay_work() -> fleetiq_ingestion::ReplayWork {
+    use fleetiq_ingestion::ReplayWork;
+    use fleetiq_telemetry::{AcceptedMessage, AcceptedMessageId, AcceptedPayload};
+    let artifact = ProtocolArtifact::new(b"fixture".to_vec()).unwrap();
+    ReplayWork {
+        message: AcceptedMessage::new(
+            AcceptedMessageId::new("m").unwrap(),
+            TenantId::new("tenant-a").unwrap(),
+            fleetiq_domain::AssetId::new("device-a").unwrap(),
+            ProtocolPackageRef::new(
+                ProtocolPackageId::new("custom.binary").unwrap(),
+                ProtocolPackageVersion::new("1").unwrap(),
+            ),
+            UnixTimeMillis::new(100),
+            AcceptedPayload::new(b"private-fixture-payload".as_slice()),
+        ),
+        session: "s".into(),
+        sequence: 1,
+        digest: artifact.digest(),
+        world: ProtocolAdmissionWorld::Identity,
+        execution: fleetiq_protocol_sdk::replay_wire::replay_fingerprint(),
+        pre_state: vec![],
+    }
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn audited_replay_recovery_preserves_pre_state_and_fences_old_effects(pool: PgPool) {
+    use crate::work_recovery::tests::{command, grant, send, view};
+    use fleetiq_ingestion::{ReplayEffects, ReplayRepository};
+    let app = setup(&pool).await;
+    grant(&pool).await;
+    let work = replay_work();
+    let repo = fleetiq_postgres::PostgresReplayRepository::new(pool.clone());
+    repo.enqueue(&work).await.unwrap();
+    let old = repo.claim().await.unwrap().unwrap();
+    assert_eq!(
+        send(
+            &app,
+            "replay",
+            "active",
+            command("retry", old.generation, json!({"id":"m"}))
+        )
+        .await
+        .0,
+        StatusCode::CONFLICT
+    );
+    // Controlled crash/expiry fixture: terminal work keeps its recorded lease.
+    sqlx::query("UPDATE ingestion.replay_work SET generation=3,attempts=3,status='poisoned',lease_until_ms=0")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let unsupported=sqlx::query("SELECT analytics.recover_work('tenant-a','operator-a','unsupported','replay','retry','{\"id\":\"m\"}',3,NULL)").execute(&pool).await.unwrap_err();
+    assert_eq!(
+        unsupported.as_database_error().unwrap().code().as_deref(),
+        Some("23505")
+    );
+    let (_, candidates) = view(&app, "replay").await;
+    assert_eq!(candidates["targets"][0]["expected_generation"], "3");
+    let retry = command("retry", 3, json!({"id":"m"}));
+    let receipt = send(&app, "replay", "retry-a", retry.clone()).await;
+    assert_eq!(receipt.0, StatusCode::OK);
+    assert_eq!(
+        send(&app, "replay", "pause-a", command("pause", 0, json!({})))
+            .await
+            .0,
+        StatusCode::OK
+    );
+    assert!(repo.claim().await.unwrap().is_none());
+    assert_eq!(
+        send(&app, "replay", "resume-a", command("resume", 1, json!({})))
+            .await
+            .0,
+        StatusCode::OK
+    );
+    let current = repo.claim().await.unwrap().unwrap();
+    assert_eq!(current.generation, 5);
+    assert_eq!(current.work, old.work);
+    let (batch, state) = ReplayEffects {
+        outputs: vec![],
+        state: vec![1],
+    }
+    .batch(&work)
+    .unwrap();
+    assert!(!repo.complete(&old, &batch, &state).await.unwrap());
+    assert!(!repo.poison(&old).await.unwrap());
+    assert!(repo.complete(&current, &batch, &state).await.unwrap());
+    assert_eq!(send(&app, "replay", "retry-a", retry).await, receipt);
+    assert_eq!(
+        send(
+            &app,
+            "replay",
+            "completed",
+            command("retry", 5, json!({"id":"m"}))
+        )
+        .await
+        .0,
+        StatusCode::CONFLICT
+    );
+}
+#[sqlx::test(migrations = false)]
+async fn recovery_upgrade_retains_old_terminal_work_and_attempt_budget(pool: PgPool) {
+    use fleetiq_ingestion::ReplayRepository;
+    for migration in fleetiq_postgres::MIGRATOR.iter().filter(|m| m.version < 51) {
+        sqlx::raw_sql(migration.sql.clone())
+            .execute(&pool)
+            .await
+            .unwrap();
+    }
+    let _app = setup(&pool).await;
+    let work = replay_work();
+    let repo = fleetiq_postgres::PostgresReplayRepository::new(pool.clone());
+    repo.enqueue(&work).await.unwrap();
+    sqlx::query("UPDATE ingestion.replay_work SET generation=2,lease_until_ms=0,status='poisoned'")
+        .execute(&pool)
+        .await
+        .unwrap();
+    let before: Value = sqlx::query_scalar("SELECT to_jsonb(w) FROM ingestion.replay_work w")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    sqlx::raw_sql(include_str!(
+        "../../../../migrations/0051_audited_work_recovery.sql"
+    ))
+    .execute(&pool)
+    .await
+    .unwrap();
+    let (after, attempts): (Value, i32) =
+        sqlx::query_as("SELECT to_jsonb(w)-'attempts',attempts FROM ingestion.replay_work w")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(before, after);
+    assert_eq!(attempts, 2);
+    assert!(sqlx::query("UPDATE ingestion.replay_work SET generation=3,attempts=0,lease_until_ms=NULL,status='pending'").execute(&pool).await.is_err());
+    let count: i64 = sqlx::query_scalar(
+        "SELECT count(*) FROM identity.tenant_action_grants WHERE action='operations.manage'",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(count, 0);
 }

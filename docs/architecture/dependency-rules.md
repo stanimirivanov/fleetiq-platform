@@ -320,3 +320,14 @@ vocabulary while validating coordinate grouping and precision. This adds one
 explicit inward `fleetiq-projection -> fleetiq-telemetry` edge, with no external
 library or transport dependency. Metadata/history reconstruction and set-based
 query ownership remain in PostgreSQL; see [ADR 0123](../adr/0123-expose-observed-fleet-locations-and-coverage.md).
+
+## Alert notification transport
+
+The server directly owns reqwest 0.12.28 (Rustls TLS only) and time 0.3.55 (std and
+formatting only) for the fixed outbound Alertmanager adapter and UTC RFC3339
+conversion. Both were already locked/transitively present; no resolver versions
+or new packages are added. Licenses are MIT OR Apache-2.0; their declared MSRVs
+1.64 and 1.88 fit the pinned 1.99.1 compiler. Native delivery snapshots stay in
+analytics and fencing stays in PostgreSQL; neither depends on HTTP or the router.
+See [ADR 0134](../adr/0134-deliver-durable-alert-notifications.md). New direct
+ownership does not waive current advisory or license verification.

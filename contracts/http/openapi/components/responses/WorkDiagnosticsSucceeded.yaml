@@ -1,0 +1,58 @@
+description: Bounded sample evidence only; no health or full-backlog inference.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/WorkDiagnostics.yaml
+    example:
+      observed_at_ms: '1000'
+      worker_liveness: not_observed
+      notification_seeding: not_observed
+      sample_limit: 64
+      queues:
+      - kind: replay
+        sampled: 0
+        eligible: 0
+        leased: 0
+        failed: 0
+        blocked: 0
+        deferred: 0
+        max_attempts: 0
+        oldest_sampled_eligible_at_ms: null
+        failure_categories: []
+        truncated: false
+      - kind: calculator
+        sampled: 0
+        eligible: 0
+        leased: 0
+        failed: 0
+        blocked: 0
+        deferred: 0
+        max_attempts: 0
+        oldest_sampled_eligible_at_ms: null
+        failure_categories: []
+        truncated: false
+      - kind: alert_evaluation
+        sampled: 0
+        eligible: 0
+        leased: 0
+        failed: 0
+        blocked: 0
+        deferred: 0
+        max_attempts: 0
+        oldest_sampled_eligible_at_ms: null
+        failure_categories: []
+        truncated: false
+      - kind: notification
+        sampled: 0
+        eligible: 0
+        leased: 0
+        failed: 0
+        blocked: 0
+        deferred: 0
+        max_attempts: 0
+        oldest_sampled_eligible_at_ms: null
+        failure_categories: []
+        truncated: false

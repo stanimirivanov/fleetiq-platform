@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          WITH tenant AS (\n            SELECT tenant_id FROM metadata.tenants WHERE tenant_id=$2 AND is_active FOR SHARE\n          ) UPDATE analytics.alert_notification_delivery d SET\n            accepted_version=CASE WHEN $8 THEN d.target_version ELSE d.accepted_version END,\n            attempts=CASE WHEN $8 THEN 0 ELSE d.attempts END,lease_until=NULL,last_failure=$9,\n            next_attempt_at=clock_timestamp()+CASE WHEN $8 THEN interval '30 seconds' ELSE make_interval(secs=>LEAST(30,power(2,d.attempts)::int)) END,\n            resolved_until=CASE WHEN $8 AND $10 THEN COALESCE(d.resolved_until,clock_timestamp()+interval '3 minutes') ELSE d.resolved_until END\n          FROM tenant WHERE d.destination=$1 AND d.tenant_id=$2 AND d.rule_id=$3 AND d.revision=$4\n            AND d.firing_version=$5 AND d.target_version=$6 AND d.generation=$7 AND d.lease_until>clock_timestamp()\n            AND tenant.tenant_id=d.tenant_id\n          RETURNING d.generation\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "analytics.alert_notification_delivery",
+            "name": "generation"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Bool",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ecc38563ac09d0531a285eb02fddb82c22c25b489eb8810d1f16964678cc9794"
+}

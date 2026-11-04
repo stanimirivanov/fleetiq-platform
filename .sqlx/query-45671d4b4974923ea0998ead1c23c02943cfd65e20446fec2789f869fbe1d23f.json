@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COALESCE((SELECT generation FROM analytics.work_controls WHERE tenant_id=$1 AND kind=$2),0) AS \"generation!\",\n          COALESCE((SELECT paused FROM analytics.work_controls WHERE tenant_id=$1 AND kind=$2),false) AS \"paused!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "generation!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "paused!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "45671d4b4974923ea0998ead1c23c02943cfd65e20446fec2789f869fbe1d23f"
+}

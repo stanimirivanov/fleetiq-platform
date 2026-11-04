@@ -1,4 +1,5 @@
-//! Authorized safe operational evidence; no payload inspection or inferred liveness.
+//! Device evidence under protocol management; broader operational samples live
+//! in `work_diagnostics` under independent operations.read authority.
 mod dto;
 #[cfg(test)]
 mod tests;

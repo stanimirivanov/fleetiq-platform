@@ -31,6 +31,10 @@ pub enum TenantAction {
     ManageAlerts,
     /// Record operator acknowledgement independently of rule management.
     AcknowledgeAlerts,
+    /// Read bounded operational work evidence, independent of business reads.
+    ReadOperations,
+    /// Retry failed work and pause/resume tenant scheduling, independently of reads.
+    ManageOperations,
 }
 
 mod sealed {
@@ -126,6 +130,22 @@ pub struct AcknowledgeAlerts;
 impl sealed::Sealed for AcknowledgeAlerts {}
 impl TenantActionMarker for AcknowledgeAlerts {
     const ACTION: TenantAction = TenantAction::AcknowledgeAlerts;
+}
+
+/// Independent authority to inspect bounded tenant work evidence; implies no recovery.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ReadOperations;
+impl sealed::Sealed for ReadOperations {}
+impl TenantActionMarker for ReadOperations {
+    const ACTION: TenantAction = TenantAction::ReadOperations;
+}
+
+/// Independent operational recovery authority; does not grant diagnostic reads.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ManageOperations;
+impl sealed::Sealed for ManageOperations {}
+impl TenantActionMarker for ManageOperations {
+    const ACTION: TenantAction = TenantAction::ManageOperations;
 }
 
 /// Describes one actor's attempt to perform an action in a selected tenant.

@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nWITH replay AS MATERIALIZED (\n SELECT jsonb_build_object('id',w.message_id) AS target,w.generation FROM ingestion.replay_work w JOIN ingestion.replay_sessions s USING(tenant_id,session_id)\n WHERE $2='replay' AND w.tenant_id=$1 AND (w.status='poisoned' OR (w.status='pending' AND w.attempts=3))\n AND (w.lease_until_ms IS NULL OR w.lease_until_ms<=floor(extract(epoch FROM transaction_timestamp())*1000)::bigint)\n AND w.generation<=9223372036854775807-4 AND s.current_sequence+1=w.sequence AND s.execution_sha256=$3 AND s.execution_policy=1 AND s.admission_policy=1\n ORDER BY w.message_id LIMIT 33),\ncalculator AS MATERIALIZED (\n SELECT jsonb_build_object('id',w.evaluation_id) AS target,w.generation::bigint FROM analytics.calculator_work w\n WHERE $2='calculator' AND w.tenant_id=$1 AND (w.status='exhausted' OR (w.status='pending' AND w.attempts=3))\n AND (w.lease_until_ms IS NULL OR w.lease_until_ms<=floor(extract(epoch FROM transaction_timestamp())*1000)::bigint)\n AND w.generation<=2147483647-4 AND EXISTS(SELECT 1 FROM analytics.calculator_configuration_revisions r JOIN analytics.calculator_configurations c\n ON (c.tenant_id,c.configuration_id,c.active_revision)=(r.tenant_id,r.configuration_id,r.revision) WHERE r.tenant_id=w.tenant_id AND r.schedule_id=w.schedule_id)\n ORDER BY w.evaluation_id LIMIT 33),\nnotification AS MATERIALIZED (\n SELECT jsonb_build_object('destination',encode(d.destination,'hex'),'rule_id',d.rule_id,'revision',d.revision::text,'firing_version',d.firing_version::text) AS target,d.generation\n FROM analytics.alert_notification_delivery d WHERE $2='notification' AND d.tenant_id=$1 AND d.attempts=5 AND d.generation<=9223372036854775807-6\n AND (d.lease_until IS NULL OR d.lease_until<=transaction_timestamp())\n AND (d.accepted_version<d.target_version OR d.resolved_until IS NULL OR d.resolved_until>transaction_timestamp())\n AND NOT COALESCE((SELECT min(i.transition_version)>d.target_version FROM analytics.alert_notification_intents i\n WHERE (i.tenant_id,i.rule_id,i.revision)=(d.tenant_id,d.rule_id,d.revision) AND i.transition_version>d.firing_version),false)\n ORDER BY d.destination,d.rule_id,d.revision,d.firing_version LIMIT 33)\nSELECT target AS \"target!\",generation AS \"generation!\" FROM replay UNION ALL SELECT * FROM calculator UNION ALL SELECT * FROM notification\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "target!",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "generation!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "938f839c0200eb6bee8908c18872d0301e28c97d82a2d74f6ebee16cfac43e50"
+}

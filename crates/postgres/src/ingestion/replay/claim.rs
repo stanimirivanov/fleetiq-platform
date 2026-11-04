@@ -23,7 +23,7 @@ impl PostgresReplayRepository {
             AND w.status='pending'
             AND ($2::text IS NULL OR w.tenant_id=$2)
             AND ($3::text IS NULL OR w.message_id=$3)
-            AND w.generation=3
+            AND w.attempts=3
             AND lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint
             ORDER BY lease_until_ms
             FOR UPDATE OF w SKIP LOCKED
@@ -47,8 +47,9 @@ impl PostgresReplayRepository {
             AND s.execution_policy=1
             AND s.admission_policy=1
             AND w.status='pending'
-            AND w.generation<3
+            AND w.attempts<3 AND w.generation<9223372036854775807
             AND (w.lease_until_ms IS NULL OR w.lease_until_ms<=floor(extract(epoch FROM clock_timestamp())*1000)::bigint)
+            AND NOT EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=w.tenant_id AND c.kind='replay' AND c.paused)
             AND w.sequence=s.current_sequence+1
             AND ($2::text IS NULL OR w.tenant_id=$2)
             AND ($3::text IS NULL OR w.message_id=$3)
@@ -68,7 +69,7 @@ impl PostgresReplayRepository {
         sqlx::query!(
             r#"
             UPDATE ingestion.replay_work
-            SET generation=generation+1,lease_until_ms=floor(extract(epoch FROM clock_timestamp())*1000)::bigint+30000
+            SET generation=generation+1,attempts=attempts+1,lease_until_ms=floor(extract(epoch FROM clock_timestamp())*1000)::bigint+30000
             WHERE tenant_id=$1
             AND message_id=$2
             "#,

@@ -62,6 +62,6 @@ fn acknowledgement_contract_preserves_independent_authority_and_exact_versions()
     );
     assert_eq!(
         spec["components"]["schemas"]["OperatorTenant"]["properties"]["actions"]["maxItems"],
-        9
+        11
     );
 }

@@ -1,0 +1,29 @@
+oneOf:
+- type: object
+  additionalProperties: false
+  required:
+  - id
+  properties:
+    id: &id001
+      $ref: ./AdministrationIdentifier.yaml
+- type: object
+  additionalProperties: false
+  required:
+  - destination
+  - rule_id
+  - revision
+  - firing_version
+  properties:
+    destination:
+      type: string
+      pattern: ^[a-f0-9]{64}$
+      description: Opaque destination digest returned by authorized command preparation, never a URL.
+    rule_id: *id001
+    revision:
+      type: string
+      pattern: ^[1-9][0-9]{0,9}$
+      description: Exact positive u32 revision as decimal text; maximum 4294967295.
+    firing_version:
+      type: string
+      pattern: ^[1-9][0-9]{0,18}$
+      description: Positive signed-64-bit firing episode version as decimal text.
