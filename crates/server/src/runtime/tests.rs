@@ -164,3 +164,76 @@ async fn authenticated_runtime_reads_work_under_a_non_ddl_role(
     restricted.close().await;
     Ok(())
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn http_readiness_times_out_under_database_lock_and_recovers(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    assert_readiness_deadline(pool, SchemaMode::Check).await
+}
+
+#[sqlx::test(migrations = false)]
+async fn migrate_on_start_preserves_readiness_and_serving_deadline(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    assert_readiness_deadline(pool, SchemaMode::Migrate).await
+}
+
+async fn assert_readiness_deadline(
+    pool: PgPool,
+    schema_mode: SchemaMode,
+) -> Result<(), Box<dyn Error>> {
+    let reservation = TcpListener::bind("127.0.0.1:0").await?;
+    let address = reservation.local_addr()?;
+    let config = ServerConfig::from_values(
+        pool.connect_options().to_url_lossy().to_string(),
+        address.to_string(),
+    )?
+    .with_schema_mode(schema_mode);
+    let (stop, stopped) = oneshot::channel();
+    drop(reservation);
+    let server = run_until(config, async move {
+        let _ = stopped.await;
+    });
+    let probe = async move {
+        let client = reqwest::Client::new();
+        let url = format!("http://{address}/health/ready");
+        tokio::time::timeout(Duration::from_secs(10), async {
+            loop {
+                if let Ok(response) = client.get(&url).send().await {
+                    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+                    break;
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        })
+        .await?;
+
+        let mut lock = pool.begin().await?;
+        sqlx::query("LOCK TABLE public._sqlx_migrations IN ACCESS EXCLUSIVE MODE")
+            .execute(&mut *lock)
+            .await?;
+        let response = client
+            .get(&url)
+            .timeout(Duration::from_secs(10))
+            .send()
+            .await
+            .expect("the database statement must time out before the HTTP client");
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        assert!(response.bytes().await?.is_empty());
+
+        lock.rollback().await?;
+        assert_eq!(
+            client.get(&url).send().await?.status(),
+            StatusCode::NO_CONTENT
+        );
+        stop.send(()).expect("server owns shutdown receiver");
+        Ok::<(), Box<dyn Error>>(())
+    };
+    let (server_result, probe_result) = tokio::time::timeout(Duration::from_secs(35), async {
+        tokio::join!(server, probe)
+    })
+    .await?;
+    server_result?;
+    probe_result
+}
