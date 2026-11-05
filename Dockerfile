@@ -28,7 +28,19 @@ RUN --mount=type=cache,id=fleetiq-cargo-registry,target=/usr/local/cargo/registr
 RUN /tmp/fleetiq-server migration-inventory > /tmp/migrations.json
 
 # The Rust executable needs glibc and libgcc, not a package manager, shell or curl.
-FROM gcr.io/distroless/cc-debian13:nonroot@sha256:3ee00291cf386ec52a552e6a858d555debd74776eb4bfa53fa3df2cd6677515e AS runtime
+FROM gcr.io/distroless/cc-debian13:nonroot@sha256:08476c244888bfb425bae1ae4dd7c17f093e972aab8426883d97f3c6f280f7c1 AS runtime-libraries
+FROM gcr.io/distroless/base-nossl-debian13:nonroot@sha256:e6b0f82595aa1edde72c8054de7a9dca30f0f8f54820c37a167c0ddfc21c5c67 AS runtime
+
+# Rust uses rustls and needs glibc/libgcc, so keep unused OpenSSL/compression out.
+# Carry the complete libgcc package evidence and license alongside its library.
+COPY --from=runtime-libraries /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+COPY --from=runtime-libraries /var/lib/dpkg/status.d/libgcc-s1 /var/lib/dpkg/status.d/libgcc-s1
+COPY --from=runtime-libraries /var/lib/dpkg/status.d/libgcc-s1.md5sums /var/lib/dpkg/status.d/libgcc-s1.md5sums
+COPY --from=runtime-libraries /var/lib/dpkg/status.d/gcc-14-base /var/lib/dpkg/status.d/gcc-14-base
+COPY --from=runtime-libraries /var/lib/dpkg/status.d/gcc-14-base.md5sums /var/lib/dpkg/status.d/gcc-14-base.md5sums
+COPY --from=runtime-libraries /usr/share/doc/gcc-14-base/ /usr/share/doc/gcc-14-base/
+COPY --from=runtime-libraries /usr/share/doc/libgcc-s1/ /usr/share/doc/libgcc-s1/
+COPY --from=runtime-libraries /usr/share/lintian/overrides/libgcc-s1 /usr/share/lintian/overrides/libgcc-s1
 
 COPY --from=builder /tmp/fleetiq-server /usr/local/bin/fleetiq-server
 COPY --from=builder /tmp/fleetiq-protocol-admission /usr/local/bin/fleetiq-protocol-admission

@@ -188,3 +188,15 @@ test("transport requires upstream immutable namespace, version and digest", () =
     "quay.io/containers/skopeo:v1.22.3-immutable",
   ]) assert.throws(() => validateTools({ ...tools, transport }), /immutable/);
 });
+
+test("minimal runtime retains only the reviewed GCC library and package evidence", () => {
+  const candidate = read("Dockerfile");
+  assert.doesNotThrow(() => validateDockerfile(candidate, rust));
+  for (const changed of [
+    candidate.replace(" AS runtime-libraries", " AS unexpected-donor"),
+    candidate.replace("COPY --from=runtime-libraries /var/lib/dpkg/status.d/libgcc-s1 /var/lib/dpkg/status.d/libgcc-s1", ""),
+    candidate + "\nCOPY --from=runtime-libraries /usr/lib/ /usr/lib/\n",
+    candidate + "\nCOPY --from=1 /usr/lib/ /usr/lib/\n",
+    candidate.replace("base-nossl-debian13:nonroot", "base-debian13:nonroot"),
+  ]) assert.throws(() => validateDockerfile(changed, rust));
+});

@@ -65,18 +65,38 @@ export function validateTools(tools) {
   }
 }
 export function validateDockerfile(text, rust) {
-  const from = [...text.matchAll(/^FROM ([^ ]+) AS (builder|runtime)$/gm)];
+  const from = [...text.matchAll(/^FROM ([^ ]+) AS ([^ \r\n]+)$/gm)];
   ensure(
-    from.length === 2 && from.every((x) => /@sha256:[a-f0-9]{64}$/.test(x[1])),
-    "Both base images require immutable digests.",
+    from.length === 3 &&
+      from.map((x) => x[2]).join(",") === "builder,runtime-libraries,runtime" &&
+      from.every((x) => /@sha256:[a-f0-9]{64}$/.test(x[1])),
+    "Builder, library donor and runtime require named stages and immutable digests.",
   );
   ensure(
     from[0][1].startsWith("rust:" + rust + "-slim-"),
     "Container Rust must match rust-toolchain.toml.",
   );
   ensure(
-    from[1][1].startsWith("gcr.io/distroless/cc-debian13:nonroot@"),
-    "Runtime must use the reviewed shell-free Debian family.",
+    from[1][1].startsWith("gcr.io/distroless/cc-debian13:nonroot@") &&
+      from[2][1].startsWith("gcr.io/distroless/base-nossl-debian13:nonroot@"),
+    "Library donor and minimal runtime must use the reviewed shell-free Debian family.",
+  );
+  const libraryCopies = [
+    "usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+    "var/lib/dpkg/status.d/libgcc-s1",
+    "var/lib/dpkg/status.d/libgcc-s1.md5sums",
+    "var/lib/dpkg/status.d/gcc-14-base",
+    "var/lib/dpkg/status.d/gcc-14-base.md5sums",
+    "usr/share/doc/gcc-14-base/",
+    "usr/share/doc/libgcc-s1/",
+    "usr/share/lintian/overrides/libgcc-s1",
+  ].map((path) => `COPY --from=runtime-libraries /${path} /${path}`);
+  const copies = [
+    ...text.matchAll(/^\s*COPY[^\n]*--from=(?:runtime-libraries|1)\b[^\n]*/gmi),
+  ].map((match) => match[0].trim());
+  ensure(
+    JSON.stringify(copies.sort()) === JSON.stringify(libraryCopies.sort()),
+    "Only the complete libgcc runtime package, metadata and license may be copied from the donor.",
   );
   ensure(
     text.includes('CMD ["/usr/local/bin/fleetiq-server", "healthcheck"]'),

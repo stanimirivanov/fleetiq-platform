@@ -106,11 +106,16 @@ does not replace Rust/PostgreSQL or cargo-deny checks.
 
 ## Minimal runtime and readiness
 
-The digest-pinned Distroless cc-debian13 runtime supplies glibc, libgcc and
-certificate data without a shell, package manager or curl. A general Debian
-runtime failed the fresh scan on high-severity packages that the backend does
-not need; removing those packages preserves the same vulnerability policy.
-The source and builder remain separate from the runtime.
+The digest-pinned Distroless base-nossl-debian13 runtime supplies glibc and
+certificate data. A separately pinned cc-debian13 donor supplies only libgcc and
+its complete package records, checksums and license/docs. The closed COPY list
+keeps unused OpenSSL, zlib, zstd, C++ and OpenMP runtime libraries out of the final
+image. The Rust server and all three executors use glibc/libgcc and rustls TLS.
+See [ADR 0138](../adr/0138-minimize-native-runtime-libraries.md).
+
+Fresh scans reject HIGH/CRITICAL findings, including unfixed vulnerabilities.
+Both donor/runtime updates require the complete platform and image gates.
+The compiler, native-library donor and final runtime remain separate stages.
 
 `fleetiq-server healthcheck` probes only `http://127.0.0.1:8080/health/ready`.
 It requires exactly HTTP 204, refuses redirects and proxy configuration, and
