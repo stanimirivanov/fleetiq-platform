@@ -182,3 +182,5 @@ introducing a new record.
 | [0135](0135-read-bounded-operational-work-evidence.md) | Independent operational-read authority and bounded work evidence without health inference |
 
 | [0136](0136-recover-work-with-monotonic-fences.md) | Audited operational retry and pause/resume with monotonic fencing and retained inputs |
+
+| [0137](0137-prioritize-actionable-notification-diagnostics.md) | Notification diagnostics exclude completed reconciliation and prioritize failures and due work |

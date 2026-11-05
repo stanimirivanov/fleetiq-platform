@@ -26,7 +26,11 @@ threshold. Milliseconds are exact decimal strings, including nullable oldest tim
 - Notification samples retained destination/incident positions; reports leases,
   deferred refresh/backoff, exhaustion and eligibility. A newer terminal successor
   rearms an exhausted target just as in the worker. Completed reconciliation
-  positions may occupy the prefix. Endpoint digests and configuration are omitted.
+  positions are excluded before the 64-position sample and truncation sentinel.
+  Failures come first, followed by eligible work, then leased, blocked and deferred
+  positions together. Identity order breaks ties within each priority. Thus retained
+  completion history and backoff cannot hide failures or due work. Endpoint digests
+  and configuration are omitted.
 
 max_attempts is the highest attempt count in the sample, not a sum. Failure
 categories are closed: attempts_exhausted, transport, rejected, response_limit and
@@ -37,8 +41,10 @@ not_observed: absence of seeded positions cannot prove no notification demand.
 Truncation concerns positions/rules, not all future evidence behind a selected rule.
 
 The statement deadline is two seconds and the HTTP storage turn is five seconds.
-Tenant-first prefix indexes bound sample discovery; the existing alert selector
-still depends on retained history and can time out. Timeouts produce a redacted
+Tenant-first prefix indexes bound replay, calculator and rule sample discovery.
+Notification classification and priority selection examine tenant-local retained
+positions before limiting output. Their cost grows with retained history, as does
+the existing alert selector. Both can hit the statement deadline. Timeouts produce a redacted
 500 problem, not a partial success. Qualify installed volume/skew before rollout.
 No query parameter, raw payload, telemetry value, URL, key or log expansion is
 provided. Reads never claim, retry, release, acknowledge or modify work.
@@ -58,7 +64,8 @@ indexes and extends action checks. Index builds scan retained tables and may blo
 writes; review maintenance timing against installed data. Stop using/revoke the
 new capability to roll back reads while retaining source state. A compatible
 forward binary is required for the new ledger/action vocabulary. See
-[ADR 0135](../adr/0135-read-bounded-operational-work-evidence.md).
+[ADR 0135](../adr/0135-read-bounded-operational-work-evidence.md) and the
+[notification sampling amendment](../adr/0137-prioritize-actionable-notification-diagnostics.md).
 
 Use [audited recovery](work-recovery.md) for independent operations.manage commands.
 Paused eligible positions are blocked; max_attempts is per cycle, not the fence.

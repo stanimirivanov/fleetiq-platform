@@ -183,3 +183,132 @@ async fn blocked_storage_times_out_redacted_and_returns_pool_to_service(pool: Pg
     lock.rollback().await.unwrap();
     assert_eq!(read(&app, ROOT, true).await.0, StatusCode::OK);
 }
+
+async fn resolved_notification_history(pool: &PgPool) -> Router {
+    let app = setup(pool).await;
+    grant(pool).await;
+    rule(pool, "high", "50", 0).await;
+    let base = boundary(pool).await;
+    let lifecycle = fleetiq_postgres::PostgresAlertLifecycle::new(pool.clone());
+    append_evidence(pool, "firing", base, Some("51")).await;
+    assert!(lifecycle.advance_one().await.unwrap());
+    append_evidence(pool, "resolved", base + 1000, Some("0")).await;
+    assert!(lifecycle.advance_one().await.unwrap());
+    // Completed reconciliation histories sort before the live positions below.
+    sqlx::query(
+        "INSERT INTO analytics.alert_notification_delivery
+         (destination,tenant_id,rule_id,revision,firing_version,target_version,accepted_version,resolved_until)
+         SELECT decode(lpad(to_hex(g),64,'0'),'hex'),'tenant-a','high',1,1,2,2,
+         transaction_timestamp()-interval '1 day' FROM generate_series(1,70) g",
+    )
+    .execute(pool)
+    .await
+    .unwrap();
+    app
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn completed_history_does_not_hide_actionable_notification_states(pool: PgPool) {
+    let app = resolved_notification_history(&pool).await;
+    let (_, completed) = read(&app, ROOT, true).await;
+    assert_eq!(queue(&completed, "notification")["sampled"], 0);
+    assert_eq!(queue(&completed, "notification")["truncated"], false);
+
+    sqlx::query(
+        "INSERT INTO analytics.alert_notification_delivery
+         (destination,tenant_id,rule_id,revision,firing_version,target_version,attempts,lease_until,next_attempt_at,last_failure)
+         SELECT decode(repeat('ff',31)||lpad(to_hex(g),2,'0'),'hex'),'tenant-a','high',1,1,
+         CASE WHEN g=5 THEN 1 ELSE 2 END,
+         CASE WHEN g IN (1,5) THEN 5 ELSE 1 END,
+         CASE WHEN g=3 THEN transaction_timestamp()+interval '1 day' ELSE NULL END,
+         CASE WHEN g=4 THEN transaction_timestamp()+interval '1 day' ELSE transaction_timestamp()-interval '1 day' END,
+         CASE WHEN g=1 THEN 'transport' ELSE NULL END
+         FROM generate_series(1,5) g",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    let before: Value = sqlx::query_scalar(
+        "SELECT jsonb_agg(to_jsonb(d) ORDER BY destination) FROM analytics.alert_notification_delivery d",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    let (status, body) = read(&app, ROOT, true).await;
+    assert_eq!(status, StatusCode::OK);
+    let notification = queue(&body, "notification");
+    assert_eq!(notification["sampled"], 5);
+    assert_eq!(notification["failed"], 1);
+    assert_eq!(notification["eligible"], 2); // Includes the newer terminal successor.
+    assert_eq!(notification["leased"], 1);
+    assert_eq!(notification["deferred"], 1);
+    assert_eq!(notification["truncated"], false);
+    assert_eq!(notification["failure_categories"], json!(["transport"]));
+    assert!(notification["oldest_sampled_eligible_at_ms"].is_string());
+    let (_, repeated) = read(&app, ROOT, true).await;
+    assert_eq!(queue(&repeated, "notification"), notification);
+
+    sqlx::query("INSERT INTO identity.tenant_action_grants VALUES('tenant-a','operator-a','operations.manage')")
+        .execute(&pool).await.unwrap();
+    let paused = crate::work_recovery::tests::send(
+        &app,
+        "notification",
+        "pause-diagnostics",
+        json!({"operation":"pause","expected_generation":"0","target":{}}),
+    )
+    .await;
+    assert_eq!(paused.0, StatusCode::OK);
+    let (_, paused) = read(&app, ROOT, true).await;
+    assert_eq!(queue(&paused, "notification")["blocked"], 3);
+    assert_eq!(queue(&paused, "notification")["failed"], 1);
+    assert_eq!(queue(&paused, "notification")["leased"], 1);
+    let after: Value = sqlx::query_scalar(
+        "SELECT jsonb_agg(to_jsonb(d) ORDER BY destination) FROM analytics.alert_notification_delivery d",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(before, after);
+}
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn notification_sample_prioritizes_failures_and_due_work_before_backoff(pool: PgPool) {
+    let app = resolved_notification_history(&pool).await;
+    sqlx::query(
+        "INSERT INTO analytics.alert_notification_delivery
+         (destination,tenant_id,rule_id,revision,firing_version,target_version,attempts,next_attempt_at,last_failure)
+         SELECT decode(lpad(to_hex(g),64,'f'),'hex'),'tenant-a','high',1,1,2,
+         CASE WHEN g=72 THEN 5 ELSE 1 END,
+         CASE WHEN g<=70 THEN transaction_timestamp()+interval '1 day' ELSE transaction_timestamp()-interval '1 day' END,
+         CASE WHEN g=72 THEN 'rejected' ELSE NULL END
+         FROM generate_series(1,72) g",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    let (status, body) = read(&app, ROOT, true).await;
+    assert_eq!(status, StatusCode::OK);
+    let notification = queue(&body, "notification");
+    assert_eq!(notification["sampled"], 64);
+    assert_eq!(notification["truncated"], true);
+    assert_eq!(notification["failed"], 1);
+    assert_eq!(notification["eligible"], 1);
+    assert_eq!(notification["deferred"], 62);
+    assert_eq!(notification["failure_categories"], json!(["rejected"]));
+    // Exactly 64 remaining candidates must not mistake completed history for a sentinel.
+    sqlx::query(
+        "UPDATE analytics.alert_notification_delivery SET accepted_version=2,
+         resolved_until=transaction_timestamp()-interval '1 day'
+         WHERE destination IN (
+           SELECT decode(lpad(to_hex(g),64,'f'),'hex') FROM generate_series(1,8) g)",
+    )
+    .execute(&pool)
+    .await
+    .unwrap();
+    let (_, exact) = read(&app, ROOT, true).await;
+    let notification = queue(&exact, "notification");
+    assert_eq!(notification["sampled"], 64);
+    assert_eq!(notification["truncated"], false);
+    assert_eq!(notification["failed"], 1);
+    assert_eq!(notification["eligible"], 1);
+}

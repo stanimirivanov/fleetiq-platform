@@ -22,7 +22,7 @@ pub struct WorkQueueEvidence {
     pub oldest_sampled_eligible_at_ms: Option<i64>,
     /// Closed failure categories observed in the sample; no upstream exception text.
     pub failure_categories: Vec<&'static str>,
-    /// More positions/rules exist outside the deterministic identity prefix.
+    /// More candidate positions/rules exist outside the deterministic sample.
     pub truncated: bool,
 }
 impl WorkQueueEvidence {
