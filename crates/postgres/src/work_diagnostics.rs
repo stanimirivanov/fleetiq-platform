@@ -12,8 +12,9 @@ impl PostgresWorkDiagnostics {
         Self(pool)
     }
     /// Samples at most 64 identities per family, using a 65th only for coverage.
-    /// Alert candidates reuse the worker's exact selector; the database deadline
-    /// bounds work inside that selector as well as the fixed number of calls.
+    /// Notification states are classified before sampling, with failures and due
+    /// work first. The statement deadline bounds tenant-local classification and
+    /// the alert worker's exact selector, which is called for at most 65 rules.
     /// # Errors
     /// Fails closed on timeout, storage failure or corrupt closed vocabulary.
     pub async fn snapshot(
@@ -35,7 +36,24 @@ WITH clock AS MATERIALIZED (SELECT floor(extract(epoch FROM transaction_timestam
 replay AS MATERIALIZED (SELECT * FROM ingestion.replay_work WHERE tenant_id=$1 AND status<>'completed' ORDER BY message_id LIMIT 65),
 calculator AS MATERIALIZED (SELECT * FROM analytics.calculator_work WHERE tenant_id=$1 AND status<>'done' ORDER BY evaluation_id LIMIT 65),
 rules AS MATERIALIZED (SELECT * FROM analytics.alert_rules WHERE tenant_id=$1 AND active_revision IS NOT NULL ORDER BY rule_id LIMIT 65),
-notification AS MATERIALIZED (SELECT * FROM analytics.alert_notification_delivery WHERE tenant_id=$1 ORDER BY destination,rule_id,revision,firing_version LIMIT 65),
+notification_positions AS (
+ SELECT encode(d.destination,'hex')||':'||d.rule_id||':'||d.revision||':'||d.firing_version AS id,d.attempts::bigint AS attempts,
+ CASE WHEN d.lease_until>transaction_timestamp() THEN 'leased'
+ WHEN n.transition_version>d.target_version THEN CASE WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=d.tenant_id AND c.kind='notification' AND c.paused) THEN 'blocked' ELSE 'eligible' END
+ WHEN d.attempts>=5 THEN 'failed'
+ WHEN d.accepted_version=d.target_version AND d.resolved_until<=transaction_timestamp() THEN 'idle'
+ WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=d.tenant_id AND c.kind='notification' AND c.paused) THEN 'blocked' WHEN d.next_attempt_at>transaction_timestamp() THEN 'deferred' ELSE 'eligible' END AS state,
+ floor(extract(epoch FROM CASE WHEN n.transition_version>d.target_version THEN n.recorded_at ELSE d.next_attempt_at END)*1000)::bigint AS since,
+ CASE d.last_failure WHEN 'transport' THEN 'transport' WHEN 'rejected' THEN 'rejected'
+ WHEN 'response_limit' THEN 'response_limit' WHEN 'invalid_payload' THEN 'invalid_payload' END AS failure
+ FROM analytics.alert_notification_delivery d LEFT JOIN LATERAL (SELECT transition_version,recorded_at FROM analytics.alert_notification_intents i
+ WHERE (i.tenant_id,i.rule_id,i.revision)=(d.tenant_id,d.rule_id,d.revision) AND i.transition_version>d.firing_version ORDER BY transition_version LIMIT 1) n ON true
+ WHERE d.tenant_id=$1
+),
+notification AS MATERIALIZED (
+ SELECT * FROM notification_positions WHERE state<>'idle'
+ ORDER BY CASE state WHEN 'failed' THEN 0 WHEN 'eligible' THEN 1 ELSE 2 END,id LIMIT 65
+),
 positions AS (
  SELECT 'replay' AS kind,w.message_id AS id,w.attempts::bigint AS attempts,
  CASE WHEN w.status='completed' THEN 'idle' WHEN w.status='poisoned' THEN 'failed'
@@ -57,20 +75,11 @@ positions AS (
  SELECT 'alert_evaluation',h.rule_id,0::bigint,CASE WHEN e.evaluation_id IS NULL THEN 'idle' WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=h.tenant_id AND c.kind='alert_evaluation' AND c.paused) THEN 'blocked' ELSE 'eligible' END,e.evaluated_ms,NULL::text
  FROM rules h LEFT JOIN LATERAL analytics.next_alert_evidence(h.tenant_id,h.rule_id,h.active_revision) e ON true
  UNION ALL
- SELECT 'notification',encode(d.destination,'hex')||':'||d.rule_id||':'||d.revision||':'||d.firing_version,d.attempts::bigint,
- CASE WHEN d.lease_until>transaction_timestamp() THEN 'leased'
- WHEN n.transition_version>d.target_version THEN CASE WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=d.tenant_id AND c.kind='notification' AND c.paused) THEN 'blocked' ELSE 'eligible' END
- WHEN d.attempts>=5 THEN 'failed'
- WHEN d.accepted_version=d.target_version AND d.resolved_until<=transaction_timestamp() THEN 'idle'
- WHEN EXISTS(SELECT 1 FROM analytics.work_controls c WHERE c.tenant_id=d.tenant_id AND c.kind='notification' AND c.paused) THEN 'blocked' WHEN d.next_attempt_at>transaction_timestamp() THEN 'deferred' ELSE 'eligible' END,
- floor(extract(epoch FROM CASE WHEN n.transition_version>d.target_version THEN n.recorded_at ELSE d.next_attempt_at END)*1000)::bigint,
- CASE d.last_failure WHEN 'transport' THEN 'transport' WHEN 'rejected' THEN 'rejected'
- WHEN 'response_limit' THEN 'response_limit' WHEN 'invalid_payload' THEN 'invalid_payload' END
- FROM notification d LEFT JOIN LATERAL (SELECT transition_version,recorded_at FROM analytics.alert_notification_intents i
- WHERE (i.tenant_id,i.rule_id,i.revision)=(d.tenant_id,d.rule_id,d.revision) AND i.transition_version>d.firing_version ORDER BY transition_version LIMIT 1) n ON true
+ SELECT 'notification',id,attempts,state,since,failure FROM notification
 )
 SELECT clock.now AS "now!",COALESCE(p.kind,'') AS "kind!",COALESCE(p.attempts,0) AS "attempts!",COALESCE(p.state,'') AS "state!",p.since,p.failure
-FROM clock LEFT JOIN positions p ON true ORDER BY p.kind,p.id
+FROM clock LEFT JOIN positions p ON true ORDER BY p.kind,
+ CASE WHEN p.kind='notification' THEN CASE p.state WHEN 'failed' THEN 0 WHEN 'eligible' THEN 1 ELSE 2 END ELSE 0 END,p.id
         "#, auth.tenant_id().as_str(), execution.as_slice()).fetch_all(&mut *tx).await.map_err(classify_database_error)?;
         let now = rows.first().map_or(0, |r| r.now);
         let mut queues: Vec<_> = ["replay", "calculator", "alert_evaluation", "notification"]
