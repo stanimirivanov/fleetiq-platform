@@ -351,3 +351,18 @@ Wasmtime slots, with zero retries and no filtering. This is resource scheduling,
 not excluded coverage. The configuration sensor rejects changing/removing this
 exact reservation. Nextest applies `threads-required` to both global and group
 limits; see [the upstream scheduling documentation](https://www.nexte.st/docs/configuration/test-groups/).
+
+## Alert selection measurement artifacts
+
+The ordinary PostgreSQL lifecycle suite runs
+`measured::measured_retained_history_selection`. The fixture reserves all eight
+Nextest slots and its PostgreSQL group, matching the TCP measurement reservation.
+The exact reservation is part of the reviewed complete-suite policy.
+
+The Rust evidence artifact retains
+`target/alert-selection-measurements/*.json` for 14 days. Reports contain
+synthetic workload counts, selector/worker latency observations and an allowlisted
+projection of analyzed PostgreSQL plan nodes and buffer totals. They omit SQL
+text, predicates and connection configuration. Missing or failed measurement
+execution cannot produce a passing test. See the
+[procedure and baseline](../operations/alert-selection-measurements.md).

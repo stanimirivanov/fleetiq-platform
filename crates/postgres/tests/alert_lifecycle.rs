@@ -511,3 +511,6 @@ async fn checkpoint_creation_boundary_suppresses_a_predeployment_active_rule_bac
 
 #[path = "alert_lifecycle/delivery.rs"]
 mod delivery;
+
+#[path = "alert_lifecycle/measured.rs"]
+mod measured;

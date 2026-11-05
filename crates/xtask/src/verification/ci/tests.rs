@@ -607,3 +607,20 @@ fn rust_evidence_retains_measured_ingestion_reports() {
         );
     }
 }
+
+#[test]
+fn rust_evidence_retains_alert_selection_measurements() {
+    let fixture = Fixture::new();
+    let original = generated();
+    let artifact = "            target/alert-selection-measurements/*.json\n";
+    assert!(
+        original.contains(artifact),
+        "Retain alert selection measurements"
+    );
+    fs::write(
+        fixture.0.join(super::WORKFLOW),
+        original.replace(artifact, ""),
+    )
+    .unwrap();
+    assert!(check(&fixture.0).is_err());
+}
