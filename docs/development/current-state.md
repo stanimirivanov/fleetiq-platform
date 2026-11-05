@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- M05-PR15 adds [explicit durable notification delivery](../operations/alert-notifications.md) to a configured Alertmanager endpoint, with generation fencing, bounded retries, restart refresh and resolved reconciliation. HTTP acceptance does not prove downstream receiver delivery; packaging and installed qualification remain later slices.
+- M05-PR15 adds [explicit durable notification delivery](../operations/alert-notifications.md) to a configured Alertmanager endpoint, with generation fencing, bounded retries, restart refresh and resolved reconciliation. Remote HTTP acceptance and downstream receiver delivery have separate evidence. Installation packaging and product qualification are tracked in fleetiq-deploy.
 
 - The [durable semantic worker](../operations/semantic-worker.md) now queues committed decoded outputs, pins binding selection and atomically appends history with fenced progress. Unresolved/exhausted outcomes remain retained; public history, durable current-property snapshots and authorized exact-property SSE now exist.
 
@@ -17,7 +17,7 @@
 
 - Kubernetes plan D02 adds source-owned immutable backend image qualification and explicit maintainer publication; no environment deployment is performed. See [image production](../operations/image-publication.md).
 
-- Kubernetes plan D01 adds [explicit migration and checked runtime commands](../operations/runtime-and-migrations.md), deterministic embedded migration inventory and bounded mounted OIDC CA trust. Image publication, Kubernetes packaging, release/recovery orchestration and real deployed browser qualification remain later slices.
+- Kubernetes plan D01 adds [explicit migration and checked runtime commands](../operations/runtime-and-migrations.md), deterministic embedded migration inventory and bounded mounted OIDC CA trust. Backend image production and explicit maintainer publication are implemented through D02. Environment packaging, activation and installed product qualification are owned by fleetiq-deploy.
 
 - [Relationship and signal-binding commands](../operations/metadata-revisions.md)
   now expose attributed immutable appends and explicit corrections; their existing
@@ -55,10 +55,8 @@
 - Protocol framing and processing are bounded and a versioned WIT component
   boundary is admitted and invoked through Wasmtime.
 - Semantic resolution, calculator output, and `fleetiq-live` projection
-  contracts exist; property-change append and exact reads are durable, while production
-  calculator stores remain planned; current-property materialization and authorized SSE are durable-state consumers.
-- The complete development stack runs through Compose on isolated loopback
-  ports; production deployment remains a later milestone.
+  contracts exist; property-change append and exact reads are durable, and PostgreSQL calculator stores, checked runners and fenced scheduled work are implemented. Current-property materialization and authorized SSE consume durable state.
+- Platform development Compose supports isolated loopback database/API and opt-in TCP processes. Normal installation topology and product qualification are tracked in fleetiq-deploy.
 - The HTTP surface exposes version discovery and bounded problem details under
   `/api/v1`, plus optional authenticated and authorized exact asset, bounded
   asset catalogue, device, asset-type-definition, property-definition,
@@ -89,8 +87,35 @@
   collection/version catalogues; exact metadata.manage and metadata.read remain
   separate. See [commissioning](../operations/semantic-definitions.md).
 - Asset and communication-device registration now expose create-only HTTP commands with exact metadata.manage, atomic immutable actor/time evidence and content-checked retries; see [registration](../operations/metadata-registration.md).
-- Further business APIs, identity-provider qualification, device transport listeners, operator UI, archival storage, and
-  observability remain future milestones.
+- Calculator, alert and operational APIs are implemented as described below. Customer-provider and field-device qualification, archival completeness and production observability require target-specific evidence. Operator UI implementation and browser qualification are tracked in fleetiq-ui.
+
+## Capability and verification boundaries
+
+Implemented capabilities below describe merged platform source and its runbooks.
+Verification identifies the exercised boundary. Production qualification requires
+evidence for the selected provider, hardware, retained volume and deployment.
+
+| Capability | Implemented boundary | Verification evidence | Remaining qualification |
+|:--|:--|:--|:--|
+| HTTP runtime | Checked serving, pool limits and bounded shutdown | [Database-lock/pool tests](../../crates/server/src/runtime/tests.rs) and [open-SSE SIGTERM test](../../crates/server/tests/http_shutdown.rs) | Target roles, provider trust and supervisor budgets |
+| Ingestion | Commissioned TCP, fenced replay and durable semantic/current-state workers | [Measured TCP/storage fixture](../operations/ingestion-diagnostics.md) and [replay integration tests](../../crates/postgres/tests/replay.rs) | Device interoperability, channel security and installed load |
+| Calculator storage | Immutable terminal envelopes and fenced scheduled completion | [Storage tests](../../crates/postgres/tests/calculator_evaluations.rs) and [work tests](../../crates/postgres/tests/calculator_work.rs) | Retention volume and installed worker capacity |
+| Alerts and operations | Lifecycle, notification delivery, sampled diagnostics and audited recovery | [Lifecycle tests](../../crates/postgres/tests/alert_lifecycle.rs), [notification process test](../../crates/server/tests/notification_worker.rs) and operational runbooks | Installed routing/receiver behavior and recovery procedures |
+
+The recorded [F-PR8 acceptance run](https://github.com/stanimirivanov/fleetiq-platform/pull/395)
+passed all canonical checks, including 1,212 workspace tests with one existing
+skipped test. It includes the F-PR2 shutdown and F-PR7 diagnostic changes.
+Reproduce platform checks with the [verification guide](verification.md).
+
+[Retained-history alert measurements](../operations/alert-selection-measurements.md)
+record selector plans/buffers, latency and full worker turns, including late and
+equal-end correctness. F6's measurement deliverable is complete. Choosing a
+production history budget or a selector optimization requires target evidence.
+
+Normal installation and product qualification are owned by
+[fleetiq-deploy](https://github.com/stanimirivanov/fleetiq-deploy).
+Operator UI and browser qualification are owned by
+[fleetiq-ui](https://github.com/stanimirivanov/fleetiq-ui).
 
 ## Browser operator authentication
 
@@ -101,8 +126,9 @@ rechecks current actor mapping and tenant grants for every metadata read.
 Cookie, expiry, callback replay, origin/CSRF, trust-domain reconfiguration, and
 rollback policies are in the
 [browser identity procedure](../operations/browser-identity.md).
-The UX connection remains the next slice; this backend boundary does not
-qualify a customer provider or a public production deployment.
+The browser-safe contract supports connected UI consumers in fleetiq-ui. Customer
+provider onboarding, public ingress and production deployment qualification remain
+installation-specific responsibilities.
 
 ## Semantic metadata foundation
 
@@ -134,11 +160,14 @@ The protocol SDK and trusted host implement:
 - ownership-preserving failure values for retry; and
 - a bounded session turn that extracts and processes at most one frame.
 
-The host has no production network listener or device-session registry yet.
-The source-built [Teltonika package](../../packages/teltonika/README.md) supports
-a bounded IMEI handshake and TCP Codec 8/8 Extended subset, retaining source
-timestamps and raw unknown IO. Actual component conformance covers host ACK gates;
-hardware compatibility and durable worker/listener qualification remain pending.
+The explicit Linux [TCP ingestion process](../operations/tcp-ingestion.md)
+resolves configured identity-v1 handshakes through commissioned device/channel
+routes and runs bounded durable sessions through fixed sibling executors. The
+source-built [Teltonika package](../../packages/teltonika/README.md) supports an
+IMEI handshake and TCP Codec 8/8 Extended subset, retaining source timestamps and
+raw unknown IO. Component and real TCP/PostgreSQL fixtures cover ACK and durability
+boundaries. Field-device interoperability and channel security need deployment
+qualification.
 
 ## WebAssembly protocol components
 
@@ -158,7 +187,7 @@ Admitted components retain their immutable package release and host-computed
 SHA-256 artifact digest. PostgreSQL catalogue registration is implemented
 separately from admission, including exact retry, immutable-content collision,
 tenant-scoped lookup, and the complete unsigned artifact-size range. Device/channel activation and internal scoped routing are implemented;
-transport listeners and package distribution remain planned. Source-built Rust guest authoring and conformance are implemented in the
+the opt-in TCP listener consumes those routes. Artifact admission, commissioning and distribution require explicit operator selection. Source-built Rust guest authoring and conformance are implemented in the
 [custom protocol example](../../examples/custom-protocol/README.md). An opt-in
 identity world returns bounded, redacted external identity proposals; resolving
 and authorizing those claims remains a separate host routing responsibility.
@@ -204,8 +233,9 @@ atomic history completion; protected property-window reads remain separate.
 Analytics contracts represent versioned calculator evaluations and typed
 semantic outputs, plus bounded canonical input manifests, finalized event-time
 windows, immutable configuration identities and logical replay keys. Terminal
-classifications distinguish completion, insufficient evidence and bounded failure;
-persistence and runners must enforce their cross-record invariants. The `fleetiq-live` crate owns full snapshots, forward-only
+classifications distinguish completion, insufficient evidence and bounded failure.
+PostgreSQL stores and checked runners enforce immutable envelope, provenance and
+atomic-completion invariants. The `fleetiq-live` crate owns full snapshots, forward-only
 deltas, cursor continuity, and resnapshot reasons. A tenant-owned immutable first-party calculator registry and checked-schema
 `register-calculator` command now persist exact input/output declarations.
 Atomic terminal evaluation envelopes now persist pinned input references and
@@ -221,8 +251,9 @@ three-attempt fencing and atomic terminal completion. Protected configuration re
 separate `analytics.manage` with metadata-read discovery. Protected
 [evaluation/output evidence](../operations/calculator-evidence.md) now provides
 bounded terminal summary pages, exact input manifests and separate output pages
-under `telemetry.read`, without raw preparation expansion. Operator recovery controls
-and installed dashboard qualification remain planned. Protected
+under `telemetry.read`, without raw preparation expansion. Independent operations.read diagnostics and operations.manage recovery controls
+are implemented. Installed UI qualification is tracked with the installation and
+UI repositories. Protected
 [alert-rule configuration](../operations/alert-rule-configuration.md) now retains
 closed numeric-threshold-v1 revisions with independent alerts.read/manage grants
 and optimistic selection, inactive by default. Missing evidence remains unknown;
@@ -233,7 +264,7 @@ evidence cannot create live transitions. Protected
 pinned detail and bounded transition history with separate alerts.read authority.
 Independent alerts.acknowledge now records immutable exact-version operator intent
 with current-authority fencing and annotations on existing reads; it does not resolve
-or suppress a condition. Network delivery remains planned; see [lifecycle operation](../operations/alert-lifecycle.md). Exact-property subscription transport now uses the authorized SSE boundary.
+or suppress a condition. The opt-in [notification worker](../operations/alert-notifications.md) now delivers firing/resolved snapshots to an operator-configured Alertmanager endpoint with fenced leases, bounded retry and restart-safe reconciliation. Exact-property subscription transport now uses the authorized SSE boundary.
 
 ## Runtime and data
 
@@ -245,19 +276,19 @@ stores metadata and ingestion facts under checked SQL migrations. SQLx macros va
 against a migrated database. Committed offline query descriptions permit
 database-independent image builds while online checks remain authoritative.
 
-The `fleetiq-server` binary validates environment configuration, applies the
-embedded migration chain, exposes liveness and PostgreSQL-backed readiness
-probes, identifies the version 1 HTTP contract, returns bounded problem details
-for unknown API resources and unsupported methods, and shuts down gracefully
-after `Ctrl+C`. A configured bearer identity enables protected exact asset,
-bounded asset catalogue, communication-device, asset-type, property-definition,
-relationship-type,
-exact relationship-revision, exact signal-binding-revision, bounded
-asset-relationship snapshot, bounded source-binding snapshot, and bounded
-target-asset binding snapshot queries;
-without complete credential configuration those routes are absent. It is an
-operable development composition root, not a production deployment. Unix deployments
-also handle `SIGTERM`, which is the normal container stop signal.
+The `fleetiq-server` process separates explicit migration, checked serving,
+bootstrap and worker commands. `serve --check-schema` validates the complete
+embedded migration inventory without DDL, exposes liveness and database-backed
+readiness, and serves the protected versioned HTTP contract. Browser OIDC sessions
+and configured workload bearer authentication are separate listener modes. See
+[runtime and migrations](../operations/runtime-and-migrations.md).
+
+The serving pool has a three-second acquisition limit and a five-second
+PostgreSQL statement limit, with narrower transaction-local limits preserved.
+SIGINT/SIGTERM starts one seven-second budget for HTTP drain, browser cleanup and
+pool closure. Deadline expiry exits with status 1. Real database-lock, held-pool
+and open-SSE subprocess tests cover these bounds. Interrupted writes can have an
+uncertain outcome, so recovery inspects durable state before retrying.
 
 The local Compose deployment builds that binary in a multi-stage image, waits
 for PostgreSQL readiness, publishes both services only on loopback, and runs the
@@ -377,7 +408,9 @@ keyset cursors use recorded time and the platform-scoped lifecycle change
 identity. It also protects a bounded platform-wide tenant catalogue ordered by
 stable tenant identity, with explicit active or suspended current state.
 Internal protocol handoff eligibility honors current tenant suspension.
-Production transport cancellation remains planned.
+The TCP process rechecks current tenant/route eligibility around bounded turns;
+its [runtime procedure](../operations/tcp-ingestion.md) defines session limits and
+shutdown behavior.
 
 External identities use an exact trusted-authority and opaque-subject key that
 resolves to one stable internal actor. Subjects remain case-sensitive and are
@@ -463,24 +496,23 @@ Platform and tenant administration now have protected HTTP adapters. See the
 [signal-binding snapshot procedure](../operations/signal-binding-snapshot.md),
 and [asset-binding snapshot procedure](../operations/asset-binding-snapshot.md).
 
-There is no broader business resource API, production authentication provider,
-message broker, object archive, cache,
-production deployment manifest, or service-level objective. Do not describe
-the version-discovery resource, library contracts, or local database defaults
-as production product behavior.
+The protected surface also includes calculator configuration/evidence, alert
+configuration/lifecycle reads, acknowledgements and operational diagnostics/recovery.
+The linked runbooks describe their distinct grants and bounds. Provider onboarding,
+production infrastructure and service-level objectives require installation evidence.
 
 ## Deliberate limitations
 
-- No Teltonika or other real device package is distributed.
-- No package activation, connection routing, network transport, or command path.
-- No archival semantic history query or installed end-to-end qualification; exact
-  observation processing, source-scoped keyset pages, and append-only
-  persistence exist.
-- No tenant/user administration, authentication, authorization, or audit UI.
-- No live map, graph editor, dashboard, alert delivery, or broad graph query API.
-- No archive, retention enforcement, backup/restore, or cost controls.
-- No hardware qualification fixtures or field-device interoperability suite.
-- No production observability, scaling, rollout, or recovery automation.
+- Field-device interoperability, authenticated/encrypted device channels and
+  remote device commands need separately scoped delivery and qualification.
+- Bounded history and graph APIs exist. Archival completeness, retention
+  enforcement and production backup/restore/cost policy need installation evidence.
+- Customer identity-provider onboarding, production SLOs, capacity, network policy
+  and disaster recovery require target-specific qualification.
+- The retained-history alert selector has a measured warm synthetic baseline.
+  Production volume/budget qualification and any selector optimization remain open.
+- Operator UI and normal installation status are maintained in fleetiq-ui and
+  fleetiq-deploy, including their browser and installed product evidence.
 
 The intended sequence is maintained in
 [implementation milestones](../roadmap/milestones.md). Update this document when
@@ -512,7 +544,7 @@ and the [execution plan](plans/semantic-definition-publication.md).
 Issue #317 adds tenant-scoped bounded PostgreSQL artifacts and explicit protected
 registration/read/admission routes. Admission uses a supervised Linux worker and
 retains exact release/world/policy evidence; ordinary metadata authority does not
-permit it. Revisioned device/channel activation and scoped identity handoffs are implemented; listeners remain planned. See the
+permit it. Revisioned device/channel activation and scoped identity handoffs and the opt-in TCP listener are implemented. See the
 [admission procedure](../operations/protocol-package-admission.md).
 
 ## Protocol device routing
@@ -520,7 +552,7 @@ permit it. Revisioned device/channel activation and scoped identity handoffs are
 Issue #319 adds exact admitted package/world selection per registered device and
 host channel, immutable generations, historical retry receipts and explicit
 retirement. Internal lookup constrains tenant/issuer/channel/decoder and revalidates
-current eligibility before future bounded turns. Routing does not authenticate
+current eligibility before each bounded turn. Routing does not authenticate
 peers or activate network listeners. See the [commissioning guide](../operations/protocol-route-commissioning.md).
 
 ## Bounded ingestion diagnostics
@@ -535,8 +567,8 @@ statement timeout, and protected HTTP history/provenance routes. Page sizes are
 1–100 and mandatory half-open event windows span at most seven days. Cursors
 bind exact target and window; pages preserve late-data limitations, all original
 interpretations and precise string-encoded numeric values. See the
-[property history guide](../operations/property-history.md). Live delivery,
-archive completeness, D06 and full-profile qualification remain deferred.
+[property history guide](../operations/property-history.md). Authorized exact-property SSE is implemented as described below. Archive
+completeness and target-specific D06/full-profile qualification remain separate.
 
 ## Bounded semantic graph exploration
 
@@ -568,8 +600,8 @@ scope-bound generation/revision ids, complete coalesced replacements, explicit
 resnapshot/terminal controls and fresh authority around reads. The stream is
 pull-driven, with bounded connection/payload/time budgets and no new SQL state
 or background producer queue. See the [live operations guide](../operations/property-live-updates.md).
-Heavy PostgreSQL/transport/Rust execution remains on CI; D06 and full-profile
-qualification remain deferred. Inspector activation is implemented in fleetiq-ui PR #89. This is latest-state
+PostgreSQL, transport and Rust acceptance evidence is recorded per verified
+revision; target-specific D06/full-profile qualification remains separate. Inspector activation is implemented in fleetiq-ui PR #89. This is latest-state
 synchronization, not lossless history replay or a capacity/deployment qualification.
 
 ## Observed fleet locations and coverage
@@ -583,6 +615,16 @@ in a bounded repeatable view without new schema or a fleet worker. See the
 and overview consumers are PRs 29–30. D06 and full-profile qualification remain
 deferred; no device-health or connectivity inference is provided.
 
-- Independent operations.read publishes bounded tenant work diagnostics; see [coverage and limits](../operations/work-diagnostics.md).
+## Operational diagnostics and recovery
 
-- Independent operations.manage enables audited exact-work retry and tenant queue controls; [rollout and limits](../operations/work-recovery.md) require compatible post-0051 workers.
+Independent operations.read publishes bounded tenant work diagnostics. Notification
+samples exclude completed reconciliation history and prioritize failed, then
+eligible work before other unfinished positions. Counts and oldest eligible time
+describe the sample. Worker liveness and notification seeding remain unobserved.
+See [coverage, ordering and statement limits](../operations/work-diagnostics.md).
+
+Independent operations.manage enables audited exact-work retry and tenant queue
+pause/resume controls, with stable request receipts and monotonic fences.
+[Rollout and recovery limits](../operations/work-recovery.md) require compatible
+post-0051 workers and explicit grants. Pausing controls new claims/scheduling
+while in-flight work retains its existing semantics.
