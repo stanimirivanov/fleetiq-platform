@@ -184,3 +184,5 @@ introducing a new record.
 | [0136](0136-recover-work-with-monotonic-fences.md) | Audited operational retry and pause/resume with monotonic fencing and retained inputs |
 
 | [0137](0137-prioritize-actionable-notification-diagnostics.md) | Notification diagnostics exclude completed reconciliation and prioritize failures and due work |
+
+| [0138](0138-minimize-native-runtime-libraries.md) | Minimal Distroless runtime with explicit libgcc package evidence and unchanged vulnerability policy |
