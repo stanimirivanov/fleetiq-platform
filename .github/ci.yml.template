@@ -212,6 +212,7 @@ jobs:
           path: |
             target/verification/*.json
             target/ingestion-measurements/*.json
+            target/alert-selection-measurements/*.json
           if-no-files-found: error
           retention-days: 14
 

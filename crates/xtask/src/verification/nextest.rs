@@ -39,6 +39,11 @@ filter = 'package(fleetiq-server) & test(/^tcp_ingestion::tests::measured::measu
 test-group = "postgres"
 threads-required = 8
 [[profile.default.overrides]]
+filter = 'package(fleetiq-postgres) & binary(alert_lifecycle) & test(/^measured::measured_retained_history_selection$/)'
+test-group = "postgres"
+threads-required = 8
+
+[[profile.default.overrides]]
 filter = 'package(fleetiq-postgres) | package(fleetiq-server)'
 test-group = "postgres"
 [[profile.default.overrides]]
@@ -91,6 +96,10 @@ mod tests {
             original.replace(
                 "test(/^tcp_ingestion::tests::measured::measured_bounded_tcp_envelope$/)",
                 "test(/^different_measurement$/)",
+            ),
+            original.replace(
+                "test(/^measured::measured_retained_history_selection$/)",
+                "test(/^different_alert_measurement$/)",
             ),
             original.replace("fail-fast = false", "fail-fast = true"),
             original.replace("package(fleetiq-server)", "package(no-server-tests)"),

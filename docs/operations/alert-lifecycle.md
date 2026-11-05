@@ -66,3 +66,11 @@ ship a compatible correction rather than deleting history or downgrading the led
 The consumer may scan a long receipted prefix; monitor turn failures/timeouts and
 measure large-history behavior before increasing throughput. There is no receipt
 reset, historical replay notification override or delivery command in this slice.
+
+## Retained-history measurement
+
+Use the [repeatable selector fixture](alert-selection-measurements.md) to measure
+receipt-prefix cost, exhausted scans and complete worker turns. It records the
+production selector's analyzed plan and buffers alongside correctness checks for
+late and equal-end evidence. Repeat on the target hardware and retained volumes
+before changing throughput or choosing a selector optimization.
