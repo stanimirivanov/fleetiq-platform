@@ -4,6 +4,7 @@ mod cursor;
 pub(crate) mod dto;
 mod handlers;
 mod restored;
+mod summaries;
 #[cfg(test)]
 mod tests;
 use crate::protected_request::{RequestAuthenticator, protected_method_not_allowed};
@@ -14,6 +15,9 @@ use fleetiq_postgres::{PostgresAssetPropertyChangeView, PostgresTenantAccessPoli
 use sqlx::PgPool;
 use std::sync::Arc;
 struct Context<A> {
+    summaries: fleetiq_history::summary_read::NumericSummaryService<
+        fleetiq_postgres::PostgresNumericSummaries,
+    >,
     authentication: A,
     authorization: TenantAuthorizationService<PostgresTenantAccessPolicy>,
     budgets: fleetiq_postgres::PostgresHistoryBudgets,
@@ -23,11 +27,13 @@ struct Context<A> {
 }
 pub(crate) fn router<A: RequestAuthenticator + 'static>(pool: PgPool, authentication: A) -> Router {
     Router::new()
+        .route("/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/summaries", get(summaries::list::<A>).fallback(protected_method_not_allowed))
         .route("/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/history",
             get(handlers::list::<A>).fallback(protected_method_not_allowed))
         .route("/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/interpretations/{interpretation}",
             get(handlers::find::<A>).fallback(protected_method_not_allowed))
         .with_state(Arc::new(Context {
+            summaries: fleetiq_history::summary_read::NumericSummaryService::new(fleetiq_postgres::PostgresNumericSummaries::new(pool.clone())),
             authentication, authorization: TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone())),
             budgets: fleetiq_postgres::PostgresHistoryBudgets::new(pool.clone()),
             restores: fleetiq_postgres::PostgresRestore::new(pool.clone()),

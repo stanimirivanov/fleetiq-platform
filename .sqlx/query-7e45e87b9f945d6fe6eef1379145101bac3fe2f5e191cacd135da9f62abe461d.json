@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT d.series_id,d.revision,d.observed_at_ms,d.body-'inputs' AS \"body!\" FROM history.numeric_summary_series s JOIN history.numeric_summaries d USING(tenant_id,series_id) WHERE s.tenant_id=$1 AND s.asset_id=$2 AND s.property_id=$3 AND s.property_version=$4 AND s.start_ms=$5 AND s.end_ms=$6 AND s.width_ms=$7 AND s.algorithm=1 AND s.manifest_id IS NOT DISTINCT FROM $8 AND s.restore_generation IS NOT DISTINCT FROM $9 AND d.revision=COALESCE($11::bigint,s.revision) AND ($10::bigint IS NULL OR s.series_id=$10)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "series_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.numeric_summaries",
+            "name": "series_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.numeric_summaries",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "observed_at_ms",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.numeric_summaries",
+            "name": "observed_at_ms"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "body!",
+        "type_info": "Jsonb",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "7e45e87b9f945d6fe6eef1379145101bac3fe2f5e191cacd135da9f62abe461d"
+}

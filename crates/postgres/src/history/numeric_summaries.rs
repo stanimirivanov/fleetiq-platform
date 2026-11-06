@@ -307,3 +307,5 @@ fn summary_body<D: SummaryArchiveDecoder>(
     }
     Ok(body)
 }
+
+mod read;

@@ -7,7 +7,7 @@ use fleetiq_history::{
 };
 use fleetiq_postgres::{PostgresArchiveWork, PostgresRestore};
 use sha2::{Digest, Sha256};
-async fn publish(pool: &PgPool) -> (i64, RestoredSegment) {
+pub(super) async fn publish(pool: &PgPool) -> (i64, RestoredSegment) {
     sqlx::query("INSERT INTO history.lifecycle_policies (tenant_id,revision,actor_id,hot_days,archive_days,max_jobs,max_bytes) VALUES ('tenant-a',1,'operator-a',7,30,2,8388608)").execute(pool).await.unwrap();
     let tenant = TenantId::new("tenant-a").unwrap();
     let archive = PostgresArchiveWork::new(pool.clone());

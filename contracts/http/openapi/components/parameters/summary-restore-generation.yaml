@@ -1,0 +1,6 @@
+name: restore_generation
+in: query
+required: false
+description: Exact generation used during publication; supply together with manifest_id.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml

@@ -705,7 +705,11 @@ One repeatable-read capture combines hot evidence and an optional explicit ready
 restore. Unavailable coverage fails rather than becoming empty output. Immutable
 series/revisions preserve original input lineage; unchanged content reuses its
 receipt and late evidence adds a revision without regressing a newer input set.
-Existing budget/current-policy fences apply. No startup worker or public summary
-API is added. See [the operations guide](../operations/numeric-downsampling.md)
-and [ADR 0149](../adr/0149-produce-versioned-numeric-downsampling.md). Read API,
-UI and installed/volume qualification remain later slices.
+Existing budget/current-policy fences apply. No startup worker is added. See [the operations guide](../operations/numeric-downsampling.md)
+and [ADR 0149](../adr/0149-produce-versioned-numeric-downsampling.md).
+M06-PR12 exposes telemetry.read-protected bounded summary pages under HTTP baseline.34.
+Range/resolution and selected manifest/generation are explicit; continuation pins
+immutable revision and rechecks current grants. Exact strings and numeric_summary
+representation distinguish derived buckets from raw history. Missing publications
+return 404; malformed/cross-scope cursors return 400. No production or raw fallback
+occurs. UI and installed/volume qualification remain later slices.

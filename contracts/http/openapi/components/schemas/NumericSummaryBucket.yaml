@@ -1,0 +1,40 @@
+type: object
+additionalProperties: false
+required:
+- start_ms
+- end_ms
+- total
+- count
+- excluded
+- min
+- max
+- sum
+properties:
+  start_ms:
+    $ref: ./HistoryMillis.yaml
+  end_ms:
+    $ref: ./HistoryMillis.yaml
+  total:
+    type: integer
+    minimum: 0
+    maximum: 100
+  count:
+    type: integer
+    minimum: 0
+    maximum: 100
+  excluded:
+    type: integer
+    minimum: 0
+    maximum: 100
+  min:
+    type: [string, 'null']
+    maxLength: 2048
+    pattern: '^-?(0|[1-9][0-9]*)([.][0-9]*[1-9])?$'
+  max:
+    type: [string, 'null']
+    maxLength: 2048
+    pattern: '^-?(0|[1-9][0-9]*)([.][0-9]*[1-9])?$'
+  sum:
+    type: string
+    maxLength: 2048
+    pattern: '^-?(0|[1-9][0-9]*)([.][0-9]*[1-9])?$'

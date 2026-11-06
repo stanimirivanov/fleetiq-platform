@@ -337,3 +337,5 @@ async fn configured_history_budgets_reject_explicitly_and_release(pool: PgPool) 
 mod restored;
 
 mod retention;
+
+mod summaries;
