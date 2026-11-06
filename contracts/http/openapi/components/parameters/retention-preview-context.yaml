@@ -1,0 +1,6 @@
+name: preview
+in: query
+required: false
+description: Optional prior context to recheck. A fresh consistent snapshot is always computed; expiry or changed policy/sample/protection returns 409. Context never authorizes deletion.
+schema:
+  $ref: ../schemas/RetentionPreviewToken.yaml

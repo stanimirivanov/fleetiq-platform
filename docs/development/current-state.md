@@ -663,3 +663,15 @@ scope includes restore generation and state, and unavailable selections cannot
 continue. Legacy hot reads and exact provenance lookup retain their behavior.
 See [the history guide](../operations/property-history.md) and
 [ADR 0146](../adr/0146-query-restored-history-with-explicit-coverage.md).
+
+
+## Read-only retention preview
+
+Independent operations.read now publishes a bounded interpretation sample with
+policy, verified-receipt age and conservative tenant-wide consumer protections.
+Estimates cover potential logical projection fields only; lineage/idempotency
+anchors remain retained and no reclamation is supported. Public sixty-second
+context is rechecked against fresh state, never accepted as deletion authority.
+See [the retention guide](../operations/retention-preview.md) and
+[ADR 0147](../adr/0147-preview-retention-eligibility.md). Execution, precise
+reachability and retained-volume/installed qualification remain later work.

@@ -68,6 +68,10 @@ pub enum LifecycleSettings {
 /// Reasons a future retention selector must distinguish, not deletion authority.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum EvidenceProtection {
+    /// No configured retention policy authorizes even candidate selection.
+    PolicyDisabled,
+    /// Conservative hot-age floor has not elapsed.
+    WithinHotRetention,
     /// Original attribution and provenance anchors remain retained.
     Lineage,
     /// Durable retry/duplicate identities remain retained.
@@ -96,3 +100,9 @@ pub enum BudgetAdmission {
     /// Durable reservation identity, scoped to its tenant; not an authorization token.
     Reserved(i64),
 }
+
+/// Conservative read-only retention assessment models.
+pub mod retention;
+#[cfg(test)]
+#[path = "lifecycle/retention_tests.rs"]
+mod retention_tests;

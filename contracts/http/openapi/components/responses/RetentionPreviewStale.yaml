@@ -1,0 +1,12 @@
+description: Preview expired or its policy/sample/protection changed. Fetch a new preview; no action was authorized or performed.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:stale-retention-preview
+      title: Retention preview changed or expired
+      status: 409

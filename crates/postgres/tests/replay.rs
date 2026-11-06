@@ -313,3 +313,47 @@ async fn live_claim_is_message_scoped_and_competes_with_global_recovery(pool: Pg
 
 #[path = "replay/diagnostics.rs"]
 mod diagnostics;
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn replay_work_is_visible_to_retention_protection(pool: PgPool) {
+    let work = seed(&pool).await;
+    let before = sqlx::query_file!("src/history/retention/context.sql", "tenant-a")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(!before.replay);
+    assert!(
+        before.semantic,
+        "unfinished global discovery is protected even before queueing"
+    );
+    let semantics = fleetiq_postgres::PostgresSemanticWorkRepository::new(pool.clone());
+    fleetiq_history::SemanticWorkRepository::seed(&semantics)
+        .await
+        .unwrap();
+    let discovered = sqlx::query_file!("src/history/retention/context.sql", "tenant-a")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(!discovered.semantic);
+
+    let repo = PostgresReplayRepository::new(pool.clone());
+    assert!(repo.enqueue(&work).await.unwrap());
+    let pending = sqlx::query_file!("src/history/retention/context.sql", "tenant-a")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(pending.replay);
+    let lease = repo.claim().await.unwrap().unwrap();
+    let (batch, state) = ReplayEffects {
+        outputs: vec![],
+        state: vec![1],
+    }
+    .batch(&work)
+    .unwrap();
+    assert!(repo.complete(&lease, &batch, &state).await.unwrap());
+    let terminal = sqlx::query_file!("src/history/retention/context.sql", "tenant-a")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(!terminal.replay);
+}

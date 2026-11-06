@@ -1,0 +1,4 @@
+type: string
+pattern: '^v1\.[0-9a-f]+$'
+maxLength: 8192
+description: Public opaque 60-second preview context bound to tenant, policy and sampled assessment. Not a credential, signature or deletion permit; rechecking always recomputes current state.
