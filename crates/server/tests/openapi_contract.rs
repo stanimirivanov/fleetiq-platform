@@ -174,6 +174,10 @@ const OPERATIONS: &[PublishedOperation] = &[
 // or duplicate operation IDs from slipping past the global inventory guard.
 const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
     (
+        "/api/v1/tenants/{tenant_id}/storage-usage",
+        &[("get", "getStorageUsage")],
+    ),
+    (
         "/api/v1/tenants/{tenant_id}/work-recovery/{kind}",
         &[("get", "getWorkRecoveryTargets")],
     ),

@@ -1,0 +1,33 @@
+get:
+  operationId: getStorageUsage
+  summary: Read tenant logical storage usage
+  description: Requires independent current operations.read. Reconciles authoritative tenant
+    rows in one repeatable-read database snapshot with a two-second statement deadline.
+    Counts and bytes are exact decimal strings. Accepted bytes measure wire payloads only;
+    decoded and interpretation bytes measure UTF-8 PostgreSQL row JSON serialization.
+    These are distinct logical methods, not physical allocation, total tenant cost or billing.
+    Archive, export and shared physical usage are not measured. A scan failure or timeout
+    returns an error, never a successful empty report. No payload or row content is returned.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  responses:
+    '200':
+      description: Live snapshot of supported classes only; other storage is unmeasured.
+      headers:
+        Cache-Control:
+          $ref: ../../components/headers/cache-control.yaml
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/StorageUsage.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

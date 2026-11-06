@@ -188,3 +188,5 @@ introducing a new record.
 | [0138](0138-minimize-native-runtime-libraries.md) | Minimal Distroless runtime with explicit libgcc package evidence and unchanged vulnerability policy |
 
 | [0139](0139-define-tenant-lifecycle-policies.md) | Explicit disabled-by-default tenant lifecycle policies and retained evidence protection contracts |
+
+| [0140](0140-report-tenant-logical-storage-usage.md) | Tenant-scoped logical storage reconciliation with explicit methods and unmeasured classes |

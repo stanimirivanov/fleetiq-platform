@@ -31,6 +31,10 @@ optional transition acknowledgement annotations. Discovery now admits nine actio
 regenerate strict clients before rollout/delegation. See
 [acknowledgement](../../docs/operations/alert-acknowledgement.md).
 
+Baseline.29 adds operations.read-protected logical storage usage for accepted payloads,
+decoded rows and semantic interpretation rows. Methods and unmeasured archive/export/physical
+classes are explicit; totals are exact strings, never disk usage or billing.
+
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
 live in adjacent domain and component files. The committed

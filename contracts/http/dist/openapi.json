@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.28",
+    "version": "1.0.0-baseline.29",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,55 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/storage-usage": {
+      "get": {
+        "operationId": "getStorageUsage",
+        "summary": "Read tenant logical storage usage",
+        "description": "Requires independent current operations.read. Reconciles authoritative tenant rows in one repeatable-read database snapshot with a two-second statement deadline. Counts and bytes are exact decimal strings. Accepted bytes measure wire payloads only; decoded and interpretation bytes measure UTF-8 PostgreSQL row JSON serialization. These are distinct logical methods, not physical allocation, total tenant cost or billing. Archive, export and shared physical usage are not measured. A scan failure or timeout returns an error, never a successful empty report. No payload or row content is returned.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live snapshot of supported classes only; other storage is unmeasured.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/cache-control"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageUsage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/work-recovery/{kind}": {
       "get": {
         "operationId": "getWorkRecoveryTargets",
@@ -4089,6 +4138,80 @@
   },
   "components": {
     "schemas": {
+      "StorageUsage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observed_at_ms",
+          "coverage",
+          "archive",
+          "exports",
+          "physical_allocation",
+          "classes"
+        ],
+        "properties": {
+          "observed_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "coverage": {
+            "const": "supported_classes_only"
+          },
+          "archive": {
+            "const": "not_measured"
+          },
+          "exports": {
+            "const": "not_measured"
+          },
+          "physical_allocation": {
+            "const": "not_measured"
+          },
+          "classes": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "$ref": "#/components/schemas/StorageUsageClass"
+            }
+          }
+        }
+      },
+      "StorageUsageClass": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "method",
+          "records",
+          "bytes"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "accepted_messages",
+              "decoded_observations",
+              "property_interpretations"
+            ]
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "wire_payload_octets",
+              "postgres_row_json_utf8_v1"
+            ]
+          },
+          "records": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "maxLength": 39
+          },
+          "bytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "maxLength": 39
+          }
+        }
+      },
       "WorkKind": {
         "type": "string",
         "enum": [

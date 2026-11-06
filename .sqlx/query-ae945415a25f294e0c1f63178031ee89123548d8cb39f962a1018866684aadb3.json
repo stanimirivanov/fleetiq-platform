@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\nSELECT floor(extract(epoch FROM transaction_timestamp())*1000)::bigint AS \"observed!\",\n (SELECT count(*)::text FROM ingestion.accepted_messages WHERE tenant_id=$1) AS \"accepted_records!\",\n (SELECT COALESCE(sum(octet_length(payload)::numeric),0)::text FROM ingestion.accepted_messages WHERE tenant_id=$1) AS \"accepted_bytes!\",\n (SELECT count(*)::text FROM ingestion.decoded_observations WHERE tenant_id=$1) AS \"decoded_records!\",\n (SELECT COALESCE(sum(octet_length(convert_to(row_to_json(d)::text,'UTF8'))::numeric),0)::text FROM ingestion.decoded_observations d WHERE tenant_id=$1) AS \"decoded_bytes!\",\n (SELECT count(*)::text FROM history.asset_property_changes WHERE tenant_id=$1) AS \"interpretation_records!\",\n (SELECT COALESCE(sum(octet_length(convert_to(row_to_json(h)::text,'UTF8'))::numeric),0)::text FROM history.asset_property_changes h WHERE tenant_id=$1) AS \"interpretation_bytes!\"\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "observed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "accepted_records!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "accepted_bytes!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "decoded_records!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "decoded_bytes!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "interpretation_records!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "interpretation_bytes!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ae945415a25f294e0c1f63178031ee89123548d8cb39f962a1018866684aadb3"
+}
