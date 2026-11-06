@@ -1,0 +1,66 @@
+get:
+  operationId: downloadHistoricalExport
+  summary: Download an authorized bounded export
+  description: Requires fresh telemetry.read on every request, including after revocation. Ready-only
+    exact attachment under the same origin; cancelled/expired return 410, pending returns 409. No unknown
+    query parameters. Reserves one additional shared tenant slot and 2 MiB; enabled policy required. Global
+    transfer limit eight. Five-second total preparation/body deadline, also limited by artifact expiry.
+    Full source buffers and global permits expire even if a body is never polled. Independent frames are
+    at most 64 KiB. Completed transfers release admission before the final frame; dropped/timed-out transfers
+    retain uncertain admission until durable thirty-second expiry. Authorization is per request; previously
+    delivered bytes cannot be recalled. Range requests return 416; no resume/public URLs/credentials.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/export-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/ExportDownloadSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '409':
+      $ref: ../../components/responses/ExportConflict.yaml
+    '410':
+      $ref: ../../components/responses/ExportUnavailable.yaml
+    '416':
+      $ref: ../../components/responses/ExportRangeUnsupported.yaml
+    '429':
+      $ref: ../../components/responses/ExportBudgetUnavailable.yaml
+head:
+  operationId: headHistoricalExportDownload
+  summary: Read authorized export attachment metadata
+  description: Same current telemetry.read and ready/expiry requirements as GET, with no evidence-file
+    read or transfer reservation. Range is ignored for this metadata-only request. No unknown query parameters.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/export-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/ExportHeadSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '409':
+      $ref: ../../components/responses/ExportConflict.yaml
+    '410':
+      $ref: ../../components/responses/ExportUnavailable.yaml

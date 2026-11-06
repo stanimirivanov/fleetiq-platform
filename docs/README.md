@@ -111,3 +111,5 @@ For conservative read-only lifecycle eligibility and protected anchors, use the
 - [Versioned numeric downsampling](operations/numeric-downsampling.md) and [ADR 0149](adr/0149-produce-versioned-numeric-downsampling.md) cover explicit summary production, exact arithmetic and immutable source coverage.
 
 - [Bounded historical exports](operations/historical-exports.md) and [ADR 0150](adr/0150-produce-bounded-historical-exports.md) cover frozen exact selections, shared admission and artifact expiry.
+
+- [ADR 0151](adr/0151-deliver-authorized-export-downloads.md) and the [export operations guide](operations/historical-exports.md) cover current authority and bounded same-origin attachments.

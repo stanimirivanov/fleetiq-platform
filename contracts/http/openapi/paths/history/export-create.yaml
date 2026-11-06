@@ -1,0 +1,49 @@
+put:
+  operationId: createHistoricalExport
+  summary: Create or retry one bounded historical export
+  description: 'Requires current telemetry.read and independent operations.manage for the same actor,
+    with the listener-selected mutation guard. Browser mutations require exact same-origin Origin and
+    X-FleetIQ-CSRF: 1. Closed JSON command, at most 4096 bytes; no unknown query parameters. Select exact
+    target/version, half-open window up to seven days and optional manifest/restore_generation together.
+    Up to 16 unique interpretations and a 2 MiB exact Parquet file; no truncation. Same request key preserves
+    original selection/lifetime and never reopens terminal work. Creation materializes bounded staging
+    and schedules one durable twenty-second attempt; global capture/worker capacity is eight. Pending
+    retry can resume work after interruption. No startup scheduler. Enabled lifecycle policy charges one
+    slot and 4 MiB for the live job. Capture coverage is explicit, not interval completeness.'
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/export-request-key.yaml
+  responses:
+    '202':
+      $ref: ../../components/responses/ExportAccepted.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '409':
+      $ref: ../../components/responses/ExportConflict.yaml
+    '413':
+      $ref: ../../components/responses/ExportPayloadTooLarge.yaml
+    '422':
+      $ref: ../../components/responses/ExportLimitExceeded.yaml
+    '429':
+      $ref: ../../components/responses/ExportBudgetUnavailable.yaml
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/ExportCreateRequest.yaml
+        example:
+          asset_id: asset-a
+          property_id: electrical.voltage
+          property_version: 1
+          start_at_ms: '0'
+          end_at_ms: '3000'

@@ -1,0 +1,16 @@
+description: Export byte ranges are unsupported
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+  Content-Range:
+    schema:
+      type: string
+      pattern: ^bytes [*]/[1-9][0-9]*$
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:historical-export
+      title: Export byte ranges are unsupported
+      status: 416

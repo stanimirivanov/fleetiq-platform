@@ -717,7 +717,7 @@ occurs. UI and installed/volume qualification remain later slices.
 ## Bounded historical exports
 
 M06-PR13 adds explicit trusted request_export/export_once compositions with no
-startup worker or public HTTP/download endpoint. A tenant-scoped idempotency key
+startup worker. A tenant-scoped idempotency key
 freezes one exact property-version/window/optional restored-generation selection.
 At most sixteen unique interpretations, seven days and one 2 MiB property-history-v1
 file are accepted, without truncation or raw-history replacement. Asynchronous
@@ -730,3 +730,13 @@ uncertain running work retains quota until acknowledgement or lease expiry.
 Exact retries preserve generation, membership and terminal state. See
 [the operations guide](../operations/historical-exports.md) and
 [ADR 0150](../adr/0150-produce-bounded-historical-exports.md).
+
+M06-PR14 publishes baseline.35 export creation/status/cancellation and same-origin
+GET/HEAD attachments. Every operation rechecks telemetry.read; mutations also consume
+operations.manage for the same actor and browser mutation protection. Pending creation
+starts a bounded one-turn worker. Downloads require separate tenant admission and
+one of eight global transfer slots, with five-second/expiry deadlines, 2 MiB files,
+64 KiB frames, fixed safe attachment headers and conservative partial-transfer cleanup.
+HEAD reads metadata only. No public object URL, credential, new action vocabulary,
+startup polling scheduler or UI is added. See
+[ADR 0151](../adr/0151-deliver-authorized-export-downloads.md).

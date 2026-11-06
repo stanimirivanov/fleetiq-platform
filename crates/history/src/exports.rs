@@ -144,6 +144,10 @@ impl ExportArtifact {
     pub fn bytes(&self) -> &[u8] {
         &self.bytes
     }
+    /// Transfers the bounded verified bytes to an owned delivery body without copying.
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.bytes
+    }
     /// Original signed Unix-millisecond expiry; retries never extend it.
     pub const fn expires_at_ms(&self) -> i64 {
         self.expires_at_ms
@@ -174,6 +178,21 @@ pub enum ExportStatus {
     Cancelled,
     /// Artifact unavailable even if physical cleanup is pending.
     Expired,
+}
+/// Bounded metadata for one tenant-owned job; no source file or raw payload is exposed.
+pub struct ExportInfo {
+    /// Stable tenant-scoped identity.
+    pub ticket: ExportTicket,
+    /// Current effective availability.
+    pub status: ExportStatus,
+    /// Original expiry, as signed Unix milliseconds.
+    pub expires_at_ms: i64,
+    /// Complete frozen interpretation count, at most sixteen.
+    pub rows: u8,
+    /// Complete file length, at most 2 MiB.
+    pub file_bytes: i64,
+    /// Explicit selected restored scope; absence means hot snapshot only.
+    pub restore: Option<RestoreTicket>,
 }
 /// Frozen bounded source and independently fenced worker ownership.
 pub struct ExportLease {

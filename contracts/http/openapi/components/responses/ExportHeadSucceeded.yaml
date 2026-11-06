@@ -1,0 +1,24 @@
+description: Authorized ready-only attachment metadata. Does not load the file, reserve tenant capacity
+  or start a transfer.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+  Content-Disposition:
+    description: Generated numeric identity only; no caller filename or path.
+    schema:
+      type: string
+      pattern: ^attachment; filename="fleetiq-export-[1-9][0-9]*[.]parquet"$
+  Content-Length:
+    description: Verified complete bytes, at most 2 MiB.
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 2097152
+  Accept-Ranges:
+    schema:
+      type: string
+      const: none
+  X-Content-Type-Options:
+    schema:
+      type: string
+      const: nosniff

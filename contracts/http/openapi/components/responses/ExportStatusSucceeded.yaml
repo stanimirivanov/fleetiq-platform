@@ -1,0 +1,22 @@
+description: Effective availability and original frozen selection metadata. Coverage never promises interval
+  completeness.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/ExportJob.yaml
+    example:
+      export_id: '1'
+      state: ready
+      selection_generation: '1'
+      format: property-history-v1
+      format_version: 1
+      expires_at_ms: '3600000'
+      row_count: 2
+      file_bytes: '10000'
+      coverage:
+        scope: hot_snapshot
+        manifest_id: null
+        restore_generation: null

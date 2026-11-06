@@ -5,7 +5,9 @@ use fleetiq_history::exports::{
     EXPORT_BYTES, ExportCodec, ExportFailure, ExportKey, ExportRequest, ExportStatus, ExportTicket,
 };
 use sqlx::{PgPool, Postgres, Row, Transaction};
+mod authorized;
 mod capture;
+mod describe;
 mod work;
 /// Trusted export adapter; callers establish tenant authority and bounded execution.
 pub struct PostgresExports(PgPool);

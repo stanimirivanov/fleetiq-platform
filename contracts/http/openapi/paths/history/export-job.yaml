@@ -1,0 +1,50 @@
+get:
+  operationId: getHistoricalExport
+  summary: Read export status
+  description: Requires fresh telemetry.read. Exact tenant-owned identity; missing or other-tenant jobs
+    return 404. Reports effective expiry even before physical cleanup. No unknown query parameters; five-second
+    preparation bound. No raw evidence or public object URL.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/export-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/ExportStatusSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+delete:
+  operationId: cancelHistoricalExport
+  summary: Cancel a temporary export
+  description: Requires fresh telemetry.read and independent operations.manage for the same actor plus
+    browser mutation protection. Never reopens a selection. Removes availability and staging bytes; a
+    running attempt keeps its quota until acknowledged stopped or expired. No unknown query parameters.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/export-id.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/ExportStatusSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
