@@ -4,6 +4,7 @@ get:
   description: Requires exact telemetry.read. Reads original source, binding revision, exact property
     version and first-append resolution cutoffs. Corrections do not rewrite this fact. Another tenant/target
     or absent interpretation yields no provenance; no fallback to current metadata.
+    Configured lifecycle budgets reserve one slot and 1048576 response bytes before lookup. Budget rejection is distinct from missing evidence. Disabled policies preserve prior behavior.
   security:
   - bearerAuth: []
   - cookieAuth: []
@@ -14,6 +15,8 @@ get:
   - $ref: ../../components/parameters/definition-version.yaml
   - $ref: ../../components/parameters/history-interpretation.yaml
   responses:
+    '429':
+      $ref: ../../components/responses/HistoryBudgetExceeded.yaml
     '200':
       $ref: ../../components/responses/PropertyProvenanceSucceeded.yaml
     '400':

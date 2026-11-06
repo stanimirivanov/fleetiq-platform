@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.29",
+    "version": "1.0.0-baseline.30",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -1061,7 +1061,7 @@
       "get": {
         "operationId": "listPropertyHistory",
         "summary": "List bounded property history",
-        "description": "Requires exact telemetry.read. Returns all interpretations for one pinned property in a half-open event-time window of at most seven days. Ascending event time then full interpretation key provides stable ties, not latest-state precedence. Pages are not a snapshot: restart the window to observe late appends behind the cursor. No raw payload, archival history, correction collapse or implicit unit conversion.",
+        "description": "Requires exact telemetry.read. Returns all interpretations for one pinned property in a half-open event-time window of at most seven days. Ascending event time then full interpretation key provides stable ties, not latest-state precedence. Pages are not a snapshot: restart the window to observe late appends behind the cursor. No raw payload, archival history, correction collapse or implicit unit conversion. Configured lifecycle budgets reserve one slot and 1048576 response bytes; denied admission or oversized output returns 429. Disabled policies preserve prior behavior.",
         "security": [
           {
             "bearerAuth": []
@@ -1109,6 +1109,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "429": {
+            "$ref": "#/components/responses/HistoryBudgetExceeded"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
@@ -1119,7 +1122,7 @@
       "get": {
         "operationId": "getPropertyInterpretation",
         "summary": "Read exact property interpretation provenance",
-        "description": "Requires exact telemetry.read. Reads original source, binding revision, exact property version and first-append resolution cutoffs. Corrections do not rewrite this fact. Another tenant/target or absent interpretation yields no provenance; no fallback to current metadata.",
+        "description": "Requires exact telemetry.read. Reads original source, binding revision, exact property version and first-append resolution cutoffs. Corrections do not rewrite this fact. Another tenant/target or absent interpretation yields no provenance; no fallback to current metadata. Configured lifecycle budgets reserve one slot and 1048576 response bytes before lookup. Budget rejection is distinct from missing evidence. Disabled policies preserve prior behavior.",
         "security": [
           {
             "bearerAuth": []
@@ -1160,6 +1163,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/HistoryBudgetExceeded"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -9818,6 +9824,26 @@
       }
     },
     "responses": {
+      "HistoryBudgetExceeded": {
+        "description": "Configured tenant history-work slots or reserved response bytes are exhausted, or output exceeded its reserved allowance. Retry after competing work completes or expires; the requested allowance may require policy review. No evidence or empty page is implied.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:history-budget-exceeded",
+              "title": "History work budget exceeded",
+              "status": 429
+            }
+          }
+        }
+      },
       "WorkRecoverySucceeded": {
         "description": "Safe operational original receipt; not a current-state or completion assertion.",
         "headers": {

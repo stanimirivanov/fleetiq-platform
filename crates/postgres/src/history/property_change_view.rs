@@ -2,6 +2,7 @@
 
 use std::future::Future;
 
+mod bounded_exact;
 mod observation_page;
 mod property_page;
 pub(crate) mod row;

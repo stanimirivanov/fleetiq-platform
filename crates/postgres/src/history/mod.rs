@@ -20,3 +20,6 @@ pub use lifecycle_policy::PostgresLifecyclePolicyRepository;
 
 mod storage_usage;
 pub use storage_usage::PostgresStorageUsage;
+
+mod budgets;
+pub use budgets::PostgresHistoryBudgets;
