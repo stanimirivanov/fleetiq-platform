@@ -72,3 +72,6 @@ pub use work::{
     SemanticLease, SemanticTick, SemanticUnresolved, SemanticWorkRepository, SemanticWorker,
     SemanticWorkerError,
 };
+
+/// Tenant lifecycle policy contracts.
+pub mod lifecycle;

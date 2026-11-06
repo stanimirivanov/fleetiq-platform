@@ -14,3 +14,6 @@ pub use property_change_log::{
 
 mod work;
 pub use work::{PostgresSemanticWorkError, PostgresSemanticWorkRepository};
+
+mod lifecycle_policy;
+pub use lifecycle_policy::PostgresLifecyclePolicyRepository;

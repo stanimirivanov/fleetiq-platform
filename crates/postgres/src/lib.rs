@@ -138,3 +138,5 @@ mod work_recovery;
 pub use work_recovery::{
     PostgresWorkRecovery, WorkRecoveryCandidates, WorkRecoveryError, WorkRecoveryReceipt,
 };
+
+pub use history::PostgresLifecyclePolicyRepository;
