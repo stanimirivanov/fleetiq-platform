@@ -10,8 +10,9 @@ impl PostgresHistoryBudgets {
         Self(pool)
     }
     /// Reserves one slot and positive response/work bytes for at most thirty seconds.
-    /// Work must stop within five seconds, with database statements bounded at five
-    /// seconds; cancellation must never detach work beyond the reservation lifetime.
+    /// HTTP work retains its five-second deadline; explicit archive/restore turns
+    /// stop within twenty seconds. Cancellation never detaches work beyond the
+    /// reservation lifetime. Live restore copies also consume the byte allowance.
     /// # Errors
     /// Rejects invalid byte amounts, unknown tenants and storage failures.
     pub async fn reserve(
@@ -35,7 +36,7 @@ impl PostgresHistoryBudgets {
         let outcome = if let Some(policy) = policy {
             if let Some(jobs) = policy.try_get::<Option<i32>, _>("max_jobs")? {
                 let max_bytes: i64 = policy.try_get("max_bytes")?;
-                let allowed:bool=sqlx::query_scalar("SELECT count(*) < $2::integer AND COALESCE(sum(reserved_bytes::numeric),0)+$3::numeric <= $4::bigint FROM history.work_reservations WHERE tenant_id=$1").bind(tenant.as_str()).bind(jobs).bind(bytes).bind(max_bytes).fetch_one(&mut *tx).await?;
+                let allowed:bool=sqlx::query_scalar("SELECT count(*) < $2::integer AND COALESCE(sum(reserved_bytes::numeric),0)+$3::numeric+(SELECT COALESCE(sum(octet_length(payload)::numeric),0) FROM history.restore_jobs WHERE tenant_id=$1 AND status='ready' AND expires_at>clock_timestamp()) <= $4::bigint FROM history.work_reservations WHERE tenant_id=$1").bind(tenant.as_str()).bind(jobs).bind(bytes).bind(max_bytes).fetch_one(&mut *tx).await?;
                 if allowed {
                     let revision: i64 = policy.try_get("revision")?;
                     let id=sqlx::query_scalar("INSERT INTO history.work_reservations (tenant_id,policy_revision,reserved_bytes) VALUES ($1,$2,$3) RETURNING reservation_id").bind(tenant.as_str()).bind(revision).bind(bytes).fetch_one(&mut *tx).await?;

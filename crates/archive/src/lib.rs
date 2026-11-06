@@ -240,3 +240,4 @@ pub fn decode(tenant: &TenantId, bytes: &[u8]) -> Result<Vec<StoredPropertyChang
 /// Immutable operator-configured archive object storage.
 pub mod objects;
 mod publication;
+mod restoration;

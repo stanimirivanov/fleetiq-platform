@@ -640,3 +640,15 @@ See [ADR 0144](../adr/0144-publish-verified-archive-manifests.md) for selection
 bounds, retry semantics, policy fencing and retained-volume limits. No polling
 worker starts automatically; hot evidence is retained. Restore, retention,
 aggregate archive accounting and installed-product qualification remain pending.
+
+
+## Bounded archived-evidence restore
+
+M06 restore now has explicit trusted request/one-turn composition and temporary
+tenant-owned staging of exact verified files. Request generations, attempt leases,
+manifest membership, whole-object checks and tenant budgets gate atomic availability.
+One-hour expiry/cancellation hide the copy; bounded cleanup preserves archive and
+hot evidence. Real PostgreSQL/S3 tests exercise corruption and interrupted retry.
+See [ADR 0145](../adr/0145-restore-archived-evidence-into-bounded-staging.md) for
+bounds, shared-admission effects and rollout. History HTTP/query integration is
+M06-PR8; automatic processing/cleanup and installed qualification remain pending.
