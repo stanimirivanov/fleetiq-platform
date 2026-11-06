@@ -1,0 +1,61 @@
+type: object
+additionalProperties: false
+required: [observed_at_ms, expires_at_ms, policy_revision, preview_token, sample_scope, has_more, consumer_scope, age_method, estimate_method, estimated_reclaimable_bytes, physical_reclaimable_bytes, retained_anchors, reclamation_supported, candidates]
+properties:
+  observed_at_ms:
+    $ref: ./HistoryMillis.yaml
+  expires_at_ms:
+    $ref: ./HistoryMillis.yaml
+  policy_revision:
+    type: string
+    pattern: '^(0|[1-9][0-9]*)$'
+    maxLength: 19
+  preview_token:
+    $ref: ./RetentionPreviewToken.yaml
+  sample_scope:
+    const: first_100_interpretations_by_identity
+  has_more:
+    type: boolean
+  consumer_scope:
+    const: tenant_wide_conservative
+  age_method:
+    const: verified_manifest_lease_end_v1
+  estimate_method:
+    const: three_bigint_projection_fields_v1
+  estimated_reclaimable_bytes:
+    type: string
+    pattern: '^(0|[1-9][0-9]*)$'
+    maxLength: 4
+    description: Sum only for the bounded sample; at most 2400 potential logical bytes, not whole-tenant or disk savings.
+  physical_reclaimable_bytes:
+    const: not_measured
+  retained_anchors:
+    type: array
+    minItems: 2
+    maxItems: 2
+    uniqueItems: true
+    items:
+      type: string
+      enum: [lineage, idempotency]
+  reclamation_supported:
+    const: false
+  candidates:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./RetentionCandidate.yaml
+example:
+  observed_at_ms: '100000'
+  expires_at_ms: '160000'
+  policy_revision: '0'
+  preview_token: v1.7b7d
+  sample_scope: first_100_interpretations_by_identity
+  has_more: false
+  consumer_scope: tenant_wide_conservative
+  age_method: verified_manifest_lease_end_v1
+  estimate_method: three_bigint_projection_fields_v1
+  estimated_reclaimable_bytes: '0'
+  physical_reclaimable_bytes: not_measured
+  retained_anchors: [lineage, idempotency]
+  reclamation_supported: false
+  candidates: []

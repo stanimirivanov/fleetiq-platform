@@ -29,3 +29,6 @@ pub use archive_work::PostgresArchiveWork;
 
 mod restore;
 pub use restore::PostgresRestore;
+
+mod retention;
+pub use retention::PostgresRetentionPreview;

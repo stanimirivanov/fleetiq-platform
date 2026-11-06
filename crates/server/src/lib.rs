@@ -114,6 +114,7 @@ where
         calculator_configuration::router(pool.clone(), authentication.clone(), mutation.clone());
     let evidence = calculator_evidence::router(pool.clone(), authentication.clone());
     let usage = storage_usage::router(pool.clone(), authentication.clone());
+    let retention = retention_preview::router(pool.clone(), authentication.clone());
     let diagnostics = work_diagnostics::router(pool.clone(), authentication.clone());
     let recovery = work_recovery::router(pool.clone(), authentication.clone(), mutation.clone());
     protected_capability_routers(pool, authentication, mutation)
@@ -124,6 +125,7 @@ where
         .merge(acknowledgement)
         .merge(diagnostics)
         .merge(usage)
+        .merge(retention)
         .merge(recovery)
 }
 
@@ -339,3 +341,5 @@ pub use archive_once::archive_once;
 
 mod restore_once;
 pub use restore_once::restore_once;
+
+mod retention_preview;

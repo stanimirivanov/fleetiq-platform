@@ -43,6 +43,9 @@ Baseline.31 adds opt-in hot_and_restored history with explicit selected-manifest
 and restore/state-bound continuation. Legacy hot-only responses remain unchanged.
 Regenerate clients before opting in; selected coverage is not interval completeness.
 
+Baseline.32 adds operations.read-protected read-only retention preview/recheck, with
+explicit bounded-sample protections and logical estimates. It grants no deletion authority.
+
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
 live in adjacent domain and component files. The committed

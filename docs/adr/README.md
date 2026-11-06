@@ -202,3 +202,5 @@ introducing a new record.
 | [0145](0145-restore-archived-evidence-into-bounded-staging.md) | Exact verified restore staging with request/attempt fences, expiry and shared tenant budgets |
 
 | [0146](0146-query-restored-history-with-explicit-coverage.md) | Opt-in bounded restored-history union with explicit selected-manifest coverage and scoped continuation |
+
+| [0147](0147-preview-retention-eligibility.md) | Bounded read-only retention assessment with conservative age/consumer protections and expiring context |

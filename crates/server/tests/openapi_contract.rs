@@ -24,6 +24,14 @@ struct PublishedOperation {
 
 const OPERATIONS: &[PublishedOperation] = &[
     PublishedOperation {
+        path: "/api/v1/tenants/{tenant_id}/retention-preview",
+        id: "getRetentionPreview",
+        post_id: None,
+        protected: true,
+        can_be_missing: false,
+        snapshot: false,
+    },
+    PublishedOperation {
         path: "/api/v1/tenants/{tenant_id}/fleet",
         id: "getFleetSnapshot",
         post_id: None,

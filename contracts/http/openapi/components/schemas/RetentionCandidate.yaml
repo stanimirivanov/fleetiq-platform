@@ -1,0 +1,38 @@
+type: object
+additionalProperties: false
+required: [candidate_id, age_floor_ms, archive_verified, active_consumers, payload_eligible, estimated_reclaimable_bytes, protections]
+properties:
+  candidate_id:
+    type: string
+    pattern: '^[0-9a-f]{64}$'
+    description: Opaque digest of the complete interpretation identity, not an access capability.
+  age_floor_ms:
+    oneOf:
+    - $ref: ./HistoryMillis.yaml
+    - type: 'null'
+    description: Conservative verified manifest lease end, not source/event time or a precise append timestamp.
+  archive_verified:
+    type: boolean
+    description: Valid committed publication receipt; provider availability/integrity must be freshly checked before any future reclamation.
+  active_consumers:
+    description: Conservative dependency holds, including unfinished discovery and recoverable work; not worker liveness.
+    type: array
+    maxItems: 4
+    uniqueItems: true
+    items:
+      type: string
+      enum: [replay, semantic, calculator, restore]
+  payload_eligible:
+    type: boolean
+    description: Future projection-payload candidate only; anchors and original immutable rows are not deletion targets.
+  estimated_reclaimable_bytes:
+    type: string
+    enum: ['0', '24']
+    description: Potential logical bytes of three BIGINT projection fields, excluding anchors and physical allocation.
+  protections:
+    type: array
+    maxItems: 4
+    uniqueItems: true
+    items:
+      type: string
+      enum: [policy_disabled, hot_retention, unverified_archive, active_consumer]

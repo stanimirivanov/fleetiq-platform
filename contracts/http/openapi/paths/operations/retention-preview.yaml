@@ -1,0 +1,25 @@
+get:
+  operationId: getRetentionPreview
+  summary: Preview tenant retention eligibility
+  description: Requires independent current operations.read. Returns at most 100 interpretations in stable complete-identity order with a look-ahead, not whole-tenant totals. Uses one repeatable-read database snapshot and two-second statements within a five-second operation. Verified manifest lease end supplies a conservative age floor; event/device time does not. Tenant-wide replay, semantic, calculator and restore holds protect payload candidates. Identity/lineage anchors remain retained. Estimated bytes cover only three BIGINT projection fields, not physical savings. No deletion executor or provider check is invoked. Optional public context is rechecked against current policy, sampled assessment and a 60-second lifetime; it is not an execution permit.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  - $ref: ../../components/parameters/retention-preview-context.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/RetentionPreviewSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '409':
+      $ref: ../../components/responses/RetentionPreviewStale.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

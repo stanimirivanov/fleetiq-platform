@@ -1,0 +1,23 @@
+description: Bounded read-only eligibility sample with conservative protections and logical estimates; no deletion authority.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/RetentionPreview.yaml
+    example:
+      observed_at_ms: '100000'
+      expires_at_ms: '160000'
+      policy_revision: '0'
+      preview_token: v1.7b7d
+      sample_scope: first_100_interpretations_by_identity
+      has_more: false
+      consumer_scope: tenant_wide_conservative
+      age_method: verified_manifest_lease_end_v1
+      estimate_method: three_bigint_projection_fields_v1
+      estimated_reclaimable_bytes: '0'
+      physical_reclaimable_bytes: not_measured
+      retained_anchors: [lineage, idempotency]
+      reclamation_supported: false
+      candidates: []

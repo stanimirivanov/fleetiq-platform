@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.31",
+    "version": "1.0.0-baseline.32",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,52 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/retention-preview": {
+      "get": {
+        "operationId": "getRetentionPreview",
+        "summary": "Preview tenant retention eligibility",
+        "description": "Requires independent current operations.read. Returns at most 100 interpretations in stable complete-identity order with a look-ahead, not whole-tenant totals. Uses one repeatable-read database snapshot and two-second statements within a five-second operation. Verified manifest lease end supplies a conservative age floor; event/device time does not. Tenant-wide replay, semantic, calculator and restore holds protect payload candidates. Identity/lineage anchors remain retained. Estimated bytes cover only three BIGINT projection fields, not physical savings. No deletion executor or provider check is invoked. Optional public context is rechecked against current policy, sampled assessment and a 60-second lifetime; it is not an execution permit.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/admin-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/retention-preview-context"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/RetentionPreviewSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "405": {
+            "$ref": "#/components/responses/CalculatorEvidenceMethodNotAllowed"
+          },
+          "409": {
+            "$ref": "#/components/responses/RetentionPreviewStale"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/storage-usage": {
       "get": {
         "operationId": "getStorageUsage",
@@ -4153,6 +4199,190 @@
   },
   "components": {
     "schemas": {
+      "RetentionPreview": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observed_at_ms",
+          "expires_at_ms",
+          "policy_revision",
+          "preview_token",
+          "sample_scope",
+          "has_more",
+          "consumer_scope",
+          "age_method",
+          "estimate_method",
+          "estimated_reclaimable_bytes",
+          "physical_reclaimable_bytes",
+          "retained_anchors",
+          "reclamation_supported",
+          "candidates"
+        ],
+        "properties": {
+          "observed_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "expires_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "policy_revision": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "maxLength": 19
+          },
+          "preview_token": {
+            "$ref": "#/components/schemas/RetentionPreviewToken"
+          },
+          "sample_scope": {
+            "const": "first_100_interpretations_by_identity"
+          },
+          "has_more": {
+            "type": "boolean"
+          },
+          "consumer_scope": {
+            "const": "tenant_wide_conservative"
+          },
+          "age_method": {
+            "const": "verified_manifest_lease_end_v1"
+          },
+          "estimate_method": {
+            "const": "three_bigint_projection_fields_v1"
+          },
+          "estimated_reclaimable_bytes": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "maxLength": 4,
+            "description": "Sum only for the bounded sample; at most 2400 potential logical bytes, not whole-tenant or disk savings."
+          },
+          "physical_reclaimable_bytes": {
+            "const": "not_measured"
+          },
+          "retained_anchors": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "lineage",
+                "idempotency"
+              ]
+            }
+          },
+          "reclamation_supported": {
+            "const": false
+          },
+          "candidates": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/RetentionCandidate"
+            }
+          }
+        },
+        "example": {
+          "observed_at_ms": "100000",
+          "expires_at_ms": "160000",
+          "policy_revision": "0",
+          "preview_token": "v1.7b7d",
+          "sample_scope": "first_100_interpretations_by_identity",
+          "has_more": false,
+          "consumer_scope": "tenant_wide_conservative",
+          "age_method": "verified_manifest_lease_end_v1",
+          "estimate_method": "three_bigint_projection_fields_v1",
+          "estimated_reclaimable_bytes": "0",
+          "physical_reclaimable_bytes": "not_measured",
+          "retained_anchors": [
+            "lineage",
+            "idempotency"
+          ],
+          "reclamation_supported": false,
+          "candidates": []
+        }
+      },
+      "RetentionCandidate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidate_id",
+          "age_floor_ms",
+          "archive_verified",
+          "active_consumers",
+          "payload_eligible",
+          "estimated_reclaimable_bytes",
+          "protections"
+        ],
+        "properties": {
+          "candidate_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Opaque digest of the complete interpretation identity, not an access capability."
+          },
+          "age_floor_ms": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HistoryMillis"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Conservative verified manifest lease end, not source/event time or a precise append timestamp."
+          },
+          "archive_verified": {
+            "type": "boolean",
+            "description": "Valid committed publication receipt; provider availability/integrity must be freshly checked before any future reclamation."
+          },
+          "active_consumers": {
+            "description": "Conservative dependency holds, including unfinished discovery and recoverable work; not worker liveness.",
+            "type": "array",
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "replay",
+                "semantic",
+                "calculator",
+                "restore"
+              ]
+            }
+          },
+          "payload_eligible": {
+            "type": "boolean",
+            "description": "Future projection-payload candidate only; anchors and original immutable rows are not deletion targets."
+          },
+          "estimated_reclaimable_bytes": {
+            "type": "string",
+            "enum": [
+              "0",
+              "24"
+            ],
+            "description": "Potential logical bytes of three BIGINT projection fields, excluding anchors and physical allocation."
+          },
+          "protections": {
+            "type": "array",
+            "maxItems": 4,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "policy_disabled",
+                "hot_retention",
+                "unverified_archive",
+                "active_consumer"
+              ]
+            }
+          }
+        }
+      },
+      "RetentionPreviewToken": {
+        "type": "string",
+        "pattern": "^v1\\.[0-9a-f]+$",
+        "maxLength": 8192,
+        "description": "Public opaque 60-second preview context bound to tenant, policy and sampled assessment. Not a credential, signature or deletion permit; rechecking always recomputes current state."
+      },
       "StorageUsage": {
         "type": "object",
         "additionalProperties": false,
@@ -9330,6 +9560,15 @@
           "default": 50
         }
       },
+      "retention-preview-context": {
+        "name": "preview",
+        "in": "query",
+        "required": false,
+        "description": "Optional prior context to recheck. A fresh consistent snapshot is always computed; expiry or changed policy/sample/protection returns 409. Context never authorizes deletion.",
+        "schema": {
+          "$ref": "#/components/schemas/RetentionPreviewToken"
+        }
+      },
       "history-mode": {
         "name": "mode",
         "in": "query",
@@ -9920,6 +10159,60 @@
       }
     },
     "responses": {
+      "RetentionPreviewSucceeded": {
+        "description": "Bounded read-only eligibility sample with conservative protections and logical estimates; no deletion authority.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RetentionPreview"
+            },
+            "example": {
+              "observed_at_ms": "100000",
+              "expires_at_ms": "160000",
+              "policy_revision": "0",
+              "preview_token": "v1.7b7d",
+              "sample_scope": "first_100_interpretations_by_identity",
+              "has_more": false,
+              "consumer_scope": "tenant_wide_conservative",
+              "age_method": "verified_manifest_lease_end_v1",
+              "estimate_method": "three_bigint_projection_fields_v1",
+              "estimated_reclaimable_bytes": "0",
+              "physical_reclaimable_bytes": "not_measured",
+              "retained_anchors": [
+                "lineage",
+                "idempotency"
+              ],
+              "reclamation_supported": false,
+              "candidates": []
+            }
+          }
+        }
+      },
+      "RetentionPreviewStale": {
+        "description": "Preview expired or its policy/sample/protection changed. Fetch a new preview; no action was authorized or performed.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:stale-retention-preview",
+              "title": "Retention preview changed or expired",
+              "status": 409
+            }
+          }
+        }
+      },
       "HistoryBudgetExceeded": {
         "description": "Configured tenant history-work slots or reserved response bytes are exhausted, output exceeded its reserved allowance, or opt-in restored-history output exceeded the unconditional 1 MiB cap. Retry after competing work completes or expires; the requested allowance may require policy review. No evidence or empty page is implied.",
         "headers": {

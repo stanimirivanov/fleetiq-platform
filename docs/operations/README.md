@@ -95,3 +95,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Operational work diagnostics](work-diagnostics.md): bounded failure/lag evidence without health inference.
 
 - [Audited work recovery](work-recovery.md): independent authority, immutable receipts and worker pause/resume.
+
+- [Retention eligibility preview](retention-preview.md): read-only bounded candidates, protections and context rechecks; no deletion authority.

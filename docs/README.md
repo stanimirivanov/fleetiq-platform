@@ -101,3 +101,7 @@ For audited alert operator intent and exact-version command retry semantics, use
 - [Operational work diagnostics](operations/work-diagnostics.md): independent operations.read, sampled work states and coverage limits.
 
 - [Audited work recovery](operations/work-recovery.md): exact-generation retries, queue controls and quiescent rollout.
+
+For conservative read-only lifecycle eligibility and protected anchors, use the
+[retention preview guide](operations/retention-preview.md) and
+[ADR 0147](adr/0147-preview-retention-eligibility.md).

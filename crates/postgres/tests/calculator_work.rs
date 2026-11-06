@@ -245,3 +245,31 @@ async fn fixture_seed(
         .await?;
     Ok(work.seed().await?)
 }
+
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn active_scheduling_is_visible_to_retention_protection(
+    pool: PgPool,
+) -> Result<(), Box<dyn Error>> {
+    seed(&pool).await?;
+    let before = sqlx::query_file!("src/history/retention/context.sql", "tenant-a")
+        .fetch_one(&pool)
+        .await?;
+    assert!(!before.calculator);
+    let work = PostgresCalculatorWork::new(pool.clone());
+    work.register(&schedule()).await?;
+    let registered = sqlx::query_file!("src/history/retention/context.sql", "tenant-a")
+        .fetch_one(&pool)
+        .await?;
+    assert!(
+        registered.calculator,
+        "legacy schedules without a head stay conservatively protected"
+    );
+    sqlx::raw_sql(include_str!("calculator_configuration/activate.sql"))
+        .execute(&pool)
+        .await?;
+    let active = sqlx::query_file!("src/history/retention/context.sql", "tenant-a")
+        .fetch_one(&pool)
+        .await?;
+    assert!(active.calculator);
+    Ok(())
+}
