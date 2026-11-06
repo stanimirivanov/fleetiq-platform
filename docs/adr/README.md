@@ -192,3 +192,5 @@ introducing a new record.
 | [0140](0140-report-tenant-logical-storage-usage.md) | Tenant-scoped logical storage reconciliation with explicit methods and unmeasured classes |
 
 | [0141](0141-enforce-tenant-history-work-budgets.md) | Transactional tenant history-work reservations, bounded HTTP execution and conservative expiry recovery |
+
+| [0142](0142-encode-exact-archive-segments.md) | Bounded exact Parquet archive segments with tenant isolation and validated provenance |

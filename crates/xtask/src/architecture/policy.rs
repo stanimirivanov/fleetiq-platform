@@ -4,6 +4,18 @@ const NONE: &[&str] = &[];
 
 pub(super) const PACKAGE_POLICIES: &[PackagePolicy] = &[
     PackagePolicy {
+        name: "fleetiq-archive",
+        role: CrateRole::Adapter,
+        normal: &[
+            "fleetiq-domain",
+            "fleetiq-history",
+            "fleetiq-semantics",
+            "fleetiq-telemetry",
+        ],
+        development: NONE,
+        build: NONE,
+    },
+    PackagePolicy {
         name: "fleetiq-teltonika",
         role: CrateRole::Adapter,
         normal: NONE,

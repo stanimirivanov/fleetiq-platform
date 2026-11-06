@@ -28,6 +28,7 @@
 | `fleetiq-ingestion` | Application | Durable ingestion orchestration and consumer-owned persistence ports |
 | `fleetiq-history` | Application | Durable semantic work, exact observation processing and semantic history append/read ports |
 | `fleetiq-projection` | Application | Current-property policy, typed snapshots and atomic maintenance/read ports |
+| `fleetiq-archive` | Adapter | Bounded exact property-history Parquet segments; no object I/O or retention authority |
 | `fleetiq-postgres` | Adapter | SQLx implementations of persistence and policy ports |
 | `fleetiq-protocol-wasm` | Adapter | Wasmtime component admission and invocation |
 | `fleetiq-server` | Composition root | Process configuration, inbound HTTP, and concrete wiring |
