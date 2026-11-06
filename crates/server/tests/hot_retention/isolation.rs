@@ -211,7 +211,7 @@ async fn concurrent_repeatable_read_admission_cannot_exceed_one_slot(
     // Observe both real database lock waits before releasing the first snapshot gate.
     let observed=tokio::time::timeout(std::time::Duration::from_secs(1),async {
         loop {
-            let waiting:i64=sqlx::query_scalar("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%SELECT tenant_id FROM metadata.tenants%'").fetch_one(&pool).await?;
+            let waiting:i64=sqlx::query_scalar("SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FROM metadata.tenants WHERE tenant_id=$1 FOR UPDATE%'").fetch_one(&pool).await?;
             if waiting==2 {return Ok::<(),sqlx::Error>(());}
             tokio::task::yield_now().await;
         }

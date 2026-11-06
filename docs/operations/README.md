@@ -99,3 +99,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Retention eligibility preview](retention-preview.md): read-only bounded candidates, protections and context rechecks; no deletion authority.
 
 - [Verified hot-payload reclamation](hot-retention.md)
+
+- [Versioned numeric downsampling](numeric-downsampling.md)

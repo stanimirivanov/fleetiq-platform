@@ -241,3 +241,6 @@ pub fn decode(tenant: &TenantId, bytes: &[u8]) -> Result<Vec<StoredPropertyChang
 pub mod objects;
 mod publication;
 mod restoration;
+
+mod numeric_summary;
+pub use numeric_summary::NumericArchiveDecoder;

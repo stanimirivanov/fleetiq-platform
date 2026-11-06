@@ -5,8 +5,8 @@ use cargo_metadata::{Dependency, DependencyKind, Package};
 use super::*;
 
 // An explicit reviewed baseline, independent of the metadata being mutated.
-// Archive adds bytes, parquet and SHA-256 under its adapter ownership.
-const REVIEWED_EXTERNAL_EDGES: usize = 60;
+// Archive owns bytes/parquet/SHA-256; history owns exact BigDecimal summaries.
+const REVIEWED_EXTERNAL_EDGES: usize = 61;
 
 #[test]
 fn current_workspace_matches_exact_external_ownership() {

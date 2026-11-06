@@ -1141,6 +1141,7 @@ dependencies = [
 name = "fleetiq-history"
 version = "0.1.0"
 dependencies = [
+ "bigdecimal",
  "fleetiq-access",
  "fleetiq-domain",
  "fleetiq-semantics",

@@ -88,3 +88,6 @@ pub mod restore;
 
 /// Explicit bounded verified hot-payload reclamation.
 pub mod retention_work;
+
+/// Exact versioned numeric downsampling over bounded captured evidence.
+pub mod downsampling;

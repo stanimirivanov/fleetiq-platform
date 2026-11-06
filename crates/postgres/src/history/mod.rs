@@ -35,3 +35,6 @@ pub use retention::PostgresRetentionPreview;
 
 mod hot_retention;
 pub use hot_retention::PostgresHotRetention;
+
+mod numeric_summaries;
+pub use numeric_summaries::{NumericSnapshot, PostgresNumericSummaries};
