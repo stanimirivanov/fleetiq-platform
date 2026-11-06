@@ -100,6 +100,43 @@ impl Executor for System<'_> {
         }
         for prerequisite in check.prerequisites {
             match prerequisite {
+                Prerequisite::ObjectStoreFixture => {
+                    let host = Command::new("timeout")
+                        .args([
+                            "--kill-after=2",
+                            "10",
+                            "docker",
+                            "context",
+                            "inspect",
+                            "--format",
+                            "{{.Endpoints.docker.Host}}",
+                        ])
+                        .output()
+                        .ok()
+                        .filter(|o| o.status.success())
+                        .and_then(|o| String::from_utf8(o.stdout).ok());
+                    let valid = host.as_ref().is_some_and(|h| {
+                        h.trim().starts_with("unix:///")
+                            && env::var("DOCKER_HOST").ok().is_none_or(|v| v == h.trim())
+                    });
+                    if !valid {
+                        return Err("archive qualification requires GNU timeout and the selected local Linux Docker engine".into());
+                    }
+                    let linux = Command::new("timeout")
+                        .args([
+                            "--kill-after=2",
+                            "10",
+                            "docker",
+                            "info",
+                            "--format",
+                            "{{.OSType}}",
+                        ])
+                        .output()
+                        .is_ok_and(|o| o.status.success() && o.stdout == b"linux\n");
+                    if !linux {
+                        return Err("archive qualification requires GNU timeout and the selected local Linux Docker engine".into());
+                    }
+                }
                 Prerequisite::TrustedBase => {
                     if self.base.as_ref().map_err(Clone::clone)?.is_none() {
                         return Err("explicit trusted base required; use --base with the current published/event base".into());

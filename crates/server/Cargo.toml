@@ -8,6 +8,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
+fleetiq-archive = { path = "../archive" }
 reqwest.workspace = true
 time.workspace = true
 fleetiq-analytics = { path = "../analytics" }

@@ -17,7 +17,7 @@ fn validate(document: &str) -> Result<(), String> {
     if actual.as_ref().is_ok_and(|value| *value == expected) {
         Ok(())
     } else {
-        Err(".config/nextest.toml differs from the reviewed complete-suite policy; retain eight global slots, four PostgreSQL slots, two Wasmtime slots, zero retries and no selection overrides; policy: docs/development/verification.md".into())
+        Err(".config/nextest.toml differs from the reviewed complete-suite policy; retain eight global slots, four PostgreSQL slots, two Wasmtime slots, one archive slot, zero retries and no selection overrides; policy: docs/development/verification.md".into())
     }
 }
 fn expected() -> String {
@@ -34,6 +34,7 @@ retries = 0
 [test-groups]
 postgres = {{ max-threads = 4 }}
 wasmtime = {{ max-threads = 2 }}
+archive = {{ max-threads = 1 }}
 [[profile.default.overrides]]
 filter = 'package(fleetiq-server) & test(/^tcp_ingestion::tests::measured::measured_bounded_tcp_envelope$/)'
 test-group = "postgres"
@@ -49,6 +50,9 @@ test-group = "postgres"
 [[profile.default.overrides]]
 filter = 'package(fleetiq-protocol-wasm)'
 test-group = "wasmtime"
+[[profile.default.overrides]]
+filter = 'package(fleetiq-archive)'
+test-group = "archive"
 "#,
         Tool::Nextest.expected()
     )
@@ -91,6 +95,7 @@ mod tests {
             original.replace("test-threads = 8", "test-threads = 32"),
             original.replace("max-threads = 4", "max-threads = 20"),
             original.replace("max-threads = 2", "max-threads = 8"),
+            original.replace("max-threads = 1", "max-threads = 8"),
             original.replace("retries = 0", "retries = 1"),
             original.replace("threads-required = 8", "threads-required = 1"),
             original.replace(

@@ -55,11 +55,13 @@ pub(crate) enum Prerequisite {
     Database,
     OpenapiDependencies,
     NextestConfiguration,
+    ObjectStoreFixture,
 }
 
 impl Prerequisite {
     pub(crate) const fn name(self) -> &'static str {
         match self {
+            Self::ObjectStoreFixture => "object-store-fixture",
             Self::TrustedBase => "trusted-base",
             Self::Database => "database",
             Self::OpenapiDependencies => "openapi-dependencies",
@@ -69,6 +71,9 @@ impl Prerequisite {
 
     pub(crate) const fn description(self) -> &'static str {
         match self {
+            Self::ObjectStoreFixture => {
+                "Local Linux Docker, GNU timeout and the pinned RustFS archive fixture; tests enforce ownership and cleanup"
+            }
             Self::TrustedBase => "An explicit trusted base resolving to an ancestor commit",
             Self::Database => {
                 "DATABASE_URL for fully migrated PostgreSQL 18.6; the real gates prove schema compatibility"
@@ -288,8 +293,12 @@ pub(crate) static CHECKS: &[Check] = &[
             "ci",
         ],
         command: "cargo nextest run --workspace --all-features --locked --profile ci",
-        outcome: "Complete locked workspace behavior with bounded PostgreSQL concurrency",
-        prerequisites: &[Prerequisite::Database, Prerequisite::NextestConfiguration],
+        outcome: "Complete workspace behavior, bounded PostgreSQL concurrency and real immutable S3 qualification",
+        prerequisites: &[
+            Prerequisite::Database,
+            Prerequisite::NextestConfiguration,
+            Prerequisite::ObjectStoreFixture,
+        ],
         tools: &[Tool::Rust, Tool::Nextest],
         acceptance: true,
     },

@@ -50,6 +50,25 @@ review, while required independent approval and required status checks depend
 on externally configured GitHub protections. Those settings remain unverified;
 see [harness protection](harness-protection.md#ownership-merge-controls-and-maintenance).
 
+## Archive provider prerequisite
+
+One archive resource slot serializes fixture tests without changing the existing
+PostgreSQL/Wasmtime limits or the global measurement reservations.
+The canonical workspace test command includes the unconditionally executed archive
+object fixture in crates/archive/tests/objects.rs. It requires GNU timeout and a
+local Linux Docker engine; remote contexts are rejected. The reviewed RustFS 1.0.4
+Linux AMD64 image is digest-pinned in crates/archive/tests/fixtures/s3-image.txt.
+The test acquires it if absent, creates one labelled bridge/container and an
+ephemeral IPv4-loopback S3 listener, and provisions only synthetic credentials/data.
+This bridge is not an egress firewall. Console ports are not published.
+
+Readiness uses an actual signed bucket operation. Tests exercise conditional
+create, read-back verification, absence/corruption, interruption/retry and owned
+cleanup. Positive labelled resource inventories must be empty after cleanup;
+missing Docker, readiness failures or cleanup errors fail the suite. The verifier
+records this as the object-store-fixture prerequisite; no skip or in-memory fallback
+can qualify the provider. Fixture logs and credentials are not evidence artifacts.
+
 ## Select an explicit group
 
 List all check metadata with `cargo xtask verify --list`. The output is JSON for

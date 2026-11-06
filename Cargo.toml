@@ -29,6 +29,9 @@ repository = "https://github.com/stanimirivanov/fleetiq-platform"
 rust-version = "1.99.1"
 
 [workspace.dependencies]
+async-trait = { version = "=0.1.92", default-features = false }
+http-body-util = { version = "=0.1.5", default-features = false }
+object_store = { version = "=0.14.2", default-features = false, features = ["aws-base", "ring"] }
 bytes = { version = "=1.12.1", default-features = false, features = ["std"] }
 parquet = { version = "=60.1.0", default-features = false }
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls"] }
