@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/archive",
     "crates/access",
     "crates/analytics",
     "crates/domain",
@@ -28,6 +29,8 @@ repository = "https://github.com/stanimirivanov/fleetiq-platform"
 rust-version = "1.99.1"
 
 [workspace.dependencies]
+bytes = { version = "=1.12.1", default-features = false, features = ["std"] }
+parquet = { version = "=60.1.0", default-features = false }
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls"] }
 time = { version = "=0.3.55", default-features = false, features = ["std", "formatting"] }
 wit-bindgen = { version = "=0.63.0", default-features = false, features = ["macros", "realloc"] }

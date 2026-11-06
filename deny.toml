@@ -34,6 +34,7 @@ allow-wildcard-paths = true
 # package sources and duplicate records. Keep these rules with the advisory
 # exception and remove them together after a reviewed replacement or fix.
 deny = [
+    { crate = "tiny-keccak", wrappers = ["const-random-macro"], reason = "Only Parquet target-specific compile-time hashing; see archive review in dependency-management.md" },
     { crate = "crypto-bigint", wrappers = ["elliptic-curve"], reason = "Only the reviewed OIDC EC verifier graph may reach crypto-bigint; see oidc-crypto-bigint-advisory-review.md" },
     { crate = "rsa", wrappers = ["openidconnect"], reason = "Only the reviewed OIDC verifier may depend on RSA; see browser-identity-dependency-review.md" },
     { crate = "openidconnect:<4.0.1", reason = "OIDC versions outside 4.0.1 need a new RSA exposure review" },
@@ -67,6 +68,10 @@ allow = [
 # Owner: HTTP contract maintainers. Remove when the validator no longer needs
 # this crate or a suitable schema validator avoids it.
 exceptions = [
+    # Owner: archive adapter maintainers. Parquet 60.1 WASM ahash compile-time RNG
+    # requires this CC0 waiver/fallback implementation; no archive digest usage.
+    # Remove when that upstream target path disappears; re-review on version changes.
+    { crate = "tiny-keccak@2.0.2", allow = ["CC0-1.0"] },
     { crate = "borrow-or-share@0.2.4", allow = ["MIT-0"] },
     # Provider HTTPS verification uses rustls/ring. These exact ISC-licensed
     # implementations are permissive dependencies, not a global license change.

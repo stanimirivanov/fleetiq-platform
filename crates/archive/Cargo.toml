@@ -1,0 +1,20 @@
+[package]
+name = "fleetiq-archive"
+version = "0.1.0"
+description = "Bounded exact property-history archive codec"
+edition.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fleetiq-domain = { path = "../domain" }
+fleetiq-history = { path = "../history" }
+fleetiq-semantics = { path = "../semantics" }
+fleetiq-telemetry = { path = "../telemetry" }
+bytes.workspace = true
+parquet.workspace = true
+sha2.workspace = true
+
+[lints]
+workspace = true

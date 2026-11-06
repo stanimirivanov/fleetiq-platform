@@ -204,3 +204,28 @@ The old selectors are removed; the global license allowlist and every advisory
 exception remain unchanged. Requalify the actual dependency graph with
 cargo-deny and the full Rust/PostgreSQL gate; do not roll back to a vulnerable
 trust store to work around provider certificate problems.
+
+## M06 archive dependency review
+
+Archive maintainers own exact parquet 60.1.0 (Apache-2.0, MSRV 1.88), with default
+features disabled. It supplies interoperable bounded segment writing and metadata
+reading; no Arrow engine, cloud transport or compression backend is enabled.
+Bytes 1.12.1 and the existing SHA-256 primitive retain their existing license choices.
+The adapter has no reverse dependency into domain/history.
+
+The complete all-target graph adds tiny-keccak 2.0.2 via Parquet's WASM-specific
+ahash compile-time-rng -> const-random -> const-random-macro path. Native Linux
+uses ahash runtime-rng instead. The CC0-1.0 license is a public-domain waiver with
+a fallback license; it grants no patent/trademark rights. Reviewed sources are
+[upstream license](https://github.com/debris/tiny-keccak/blob/master/LICENSE),
+[CC0 legal code](https://creativecommons.org/publicdomain/zero/1.0/legalcode.en),
+and the pinned registry manifests.
+
+Use one exact-version license entry, with a parent-wrapper ban limiting the path
+to const-random-macro. Do not add CC0 to the global license list. This is not an
+advisory waiver or permission to use this implementation for archive integrity;
+archive logical digests use the already-reviewed SHA-256 implementation.
+Re-review Parquet/const-random/tiny-keccak upgrades and remove the entry when the
+upstream target path disappears or the archive adapter is replaced. Downgrading
+the parser or patching/vendoring upstream merely to change this license path was
+rejected. Full advisory/source/license and architecture checks remain enforced.
