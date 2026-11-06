@@ -75,3 +75,6 @@ pub use work::{
 
 /// Tenant lifecycle policy contracts.
 pub mod lifecycle;
+
+/// Logical tenant storage accounting contracts.
+pub mod storage_usage;

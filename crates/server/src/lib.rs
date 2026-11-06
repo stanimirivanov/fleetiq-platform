@@ -113,6 +113,7 @@ where
     let calculators =
         calculator_configuration::router(pool.clone(), authentication.clone(), mutation.clone());
     let evidence = calculator_evidence::router(pool.clone(), authentication.clone());
+    let usage = storage_usage::router(pool.clone(), authentication.clone());
     let diagnostics = work_diagnostics::router(pool.clone(), authentication.clone());
     let recovery = work_recovery::router(pool.clone(), authentication.clone(), mutation.clone());
     protected_capability_routers(pool, authentication, mutation)
@@ -122,6 +123,7 @@ where
         .merge(alerts)
         .merge(acknowledgement)
         .merge(diagnostics)
+        .merge(usage)
         .merge(recovery)
 }
 
@@ -329,3 +331,5 @@ mod alert_acknowledgement;
 
 mod alert_delivery;
 pub use alert_delivery::{AlertmanagerConfig, AlertmanagerConfigError, run_notification_worker};
+
+mod storage_usage;

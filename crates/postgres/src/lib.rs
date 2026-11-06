@@ -140,3 +140,5 @@ pub use work_recovery::{
 };
 
 pub use history::PostgresLifecyclePolicyRepository;
+
+pub use history::PostgresStorageUsage;

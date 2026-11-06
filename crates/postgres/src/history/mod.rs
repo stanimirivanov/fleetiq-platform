@@ -17,3 +17,6 @@ pub use work::{PostgresSemanticWorkError, PostgresSemanticWorkRepository};
 
 mod lifecycle_policy;
 pub use lifecycle_policy::PostgresLifecyclePolicyRepository;
+
+mod storage_usage;
+pub use storage_usage::PostgresStorageUsage;

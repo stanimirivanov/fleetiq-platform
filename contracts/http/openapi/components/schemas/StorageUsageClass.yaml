@@ -1,0 +1,18 @@
+type: object
+additionalProperties: false
+required: [kind, method, records, bytes]
+properties:
+  kind:
+    type: string
+    enum: [accepted_messages, decoded_observations, property_interpretations]
+  method:
+    type: string
+    enum: [wire_payload_octets, postgres_row_json_utf8_v1]
+  records:
+    type: string
+    pattern: '^(0|[1-9][0-9]*)$'
+    maxLength: 39
+  bytes:
+    type: string
+    pattern: '^(0|[1-9][0-9]*)$'
+    maxLength: 39

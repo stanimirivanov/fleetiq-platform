@@ -1,0 +1,20 @@
+type: object
+additionalProperties: false
+required: [observed_at_ms, coverage, archive, exports, physical_allocation, classes]
+properties:
+  observed_at_ms:
+    $ref: ./HistoryMillis.yaml
+  coverage:
+    const: supported_classes_only
+  archive:
+    const: not_measured
+  exports:
+    const: not_measured
+  physical_allocation:
+    const: not_measured
+  classes:
+    type: array
+    minItems: 3
+    maxItems: 3
+    items:
+      $ref: ./StorageUsageClass.yaml
