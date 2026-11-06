@@ -36,7 +36,17 @@ const NONE: &[&str] = &[];
 pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     ExternalPackagePolicy {
         name: "fleetiq-archive",
-        normal: &["bytes", "parquet", "sha2"],
+        normal: &[
+            "bytes",
+            "parquet",
+            "sha2",
+            "object_store",
+            "reqwest",
+            "async-trait",
+            "http-body-util",
+            "url",
+            "tokio",
+        ],
         development: NONE,
         build: NONE,
     },

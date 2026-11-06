@@ -194,3 +194,5 @@ introducing a new record.
 | [0141](0141-enforce-tenant-history-work-budgets.md) | Transactional tenant history-work reservations, bounded HTTP execution and conservative expiry recovery |
 
 | [0142](0142-encode-exact-archive-segments.md) | Bounded exact Parquet archive segments with tenant isolation and validated provenance |
+
+| [0143](0143-store-immutable-archive-objects.md) | Create-only verified archive objects with bounded S3 transport and real provider qualification |

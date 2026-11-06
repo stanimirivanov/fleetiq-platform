@@ -229,3 +229,15 @@ Re-review Parquet/const-random/tiny-keccak upgrades and remove the entry when th
 upstream target path disappears or the archive adapter is replaced. Downgrading
 the parser or patching/vendoring upstream merely to change this license path was
 rejected. Full advisory/source/license and architecture checks remain enforced.
+
+Immutable-object storage adds object_store 0.14.2 (MIT/Apache-2.0, MSRV 1.85),
+with only aws-base/ring enabled. Archive maintainers own its S3 boundary and a
+bounded HttpConnector using existing reqwest 0.12.28/Rustls/ring. This avoids a
+second reqwest major version and an additional crypto engine. The connector
+uses async-trait 0.1.92 (MIT/Apache-2.0) and http-body-util 0.1.5 (MIT), already
+present transitively. No license or advisory exception is added.
+
+The real-provider fixture pins Apache-2.0 RustFS 1.0.4 by immutable image digest;
+it is test infrastructure, not a production provider recommendation or image
+security certification. See [ADR 0143](../adr/0143-store-immutable-archive-objects.md)
+for alternatives, transport bounds, provider qualification and trust boundaries.

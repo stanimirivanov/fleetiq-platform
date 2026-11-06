@@ -6,7 +6,7 @@ use super::*;
 
 // An explicit reviewed baseline, independent of the metadata being mutated.
 // Archive adds bytes, parquet and SHA-256 under its adapter ownership.
-const REVIEWED_EXTERNAL_EDGES: usize = 53;
+const REVIEWED_EXTERNAL_EDGES: usize = 59;
 
 #[test]
 fn current_workspace_matches_exact_external_ownership() {

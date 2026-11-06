@@ -3,6 +3,7 @@ use std::{env, error::Error, fmt, net::SocketAddr};
 use fleetiq_domain::{ExternalIdentity, ExternalIdentitySubject, IdentityAuthorityId};
 
 use crate::SchemaMode;
+mod archive;
 use crate::browser_identity::{BrowserIdentityConfig, BrowserIdentityConfigError};
 
 const DEFAULT_BIND_ADDRESS: &str = "127.0.0.1:8080";
@@ -52,9 +53,15 @@ pub struct ServerConfig {
     bind_address: SocketAddr,
     bearer_identity: Option<BearerIdentityConfig>,
     browser_identity: Option<BrowserIdentityConfig>,
+    archive: Option<fleetiq_archive::objects::S3ArchiveConfig>,
 }
 
 impl ServerConfig {
+    /// Validated optional archive inputs; configuring them starts no worker or network call.
+    pub const fn archive(&self) -> Option<&fleetiq_archive::objects::S3ArchiveConfig> {
+        self.archive.as_ref()
+    }
+
     /// Reads and validates backend configuration from the process environment.
     ///
     /// `DATABASE_URL` is required. `FLEETIQ_BIND_ADDRESS` defaults to
@@ -125,6 +132,13 @@ impl ServerConfig {
                     .map_err(ServerConfigError::BrowserIdentity)?,
             );
         }
+        config.archive = archive::read([
+            optional_environment("FLEETIQ_ARCHIVE_ENDPOINT")?,
+            optional_environment("FLEETIQ_ARCHIVE_BUCKET")?,
+            optional_environment("FLEETIQ_ARCHIVE_REGION")?,
+            optional_environment("FLEETIQ_ARCHIVE_ACCESS_KEY")?,
+            optional_environment("FLEETIQ_ARCHIVE_SECRET_KEY")?,
+        ])?;
         Ok(config)
     }
 
@@ -160,6 +174,7 @@ impl ServerConfig {
             bind_address,
             bearer_identity: None,
             browser_identity: None,
+            archive: None,
         })
     }
 
@@ -257,6 +272,7 @@ impl fmt::Debug for ServerConfig {
             .field("bind_address", &self.bind_address)
             .field("bearer_identity", &self.bearer_identity)
             .field("browser_identity", &self.browser_identity)
+            .field("archive", &self.archive)
             .finish()
     }
 }
@@ -264,6 +280,8 @@ impl fmt::Debug for ServerConfig {
 /// Invalid or unavailable backend process configuration.
 #[derive(Debug)]
 pub enum ServerConfigError {
+    /// Archive settings are incomplete or invalid; no values are echoed.
+    InvalidArchive,
     /// A required environment variable is absent.
     MissingEnvironment {
         /// Required variable name.
@@ -300,6 +318,7 @@ pub enum ServerConfigError {
 impl fmt::Display for ServerConfigError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::InvalidArchive=>formatter.write_str("archive configuration is incomplete or invalid"),
             Self::MissingEnvironment { name } => {
                 write!(formatter, "required environment variable {name} is missing")
             }
@@ -332,7 +351,8 @@ impl Error for ServerConfigError {
         match self {
             Self::InvalidBindAddress { source, .. } => Some(source),
             Self::BrowserIdentity(source) => Some(source),
-            Self::MissingEnvironment { .. }
+            Self::InvalidArchive
+            | Self::MissingEnvironment { .. }
             | Self::NonUnicodeEnvironment { .. }
             | Self::EmptyDatabaseUrl
             | Self::IncompleteBearerIdentity

@@ -15,6 +15,7 @@ retries = 0
 [test-groups]
 postgres = { max-threads = 4 }
 wasmtime = { max-threads = 2 }
+archive = { max-threads = 1 }
 
 # Measurements reserve all global slots: no competing suite load distorts them.
 [[profile.default.overrides]]
@@ -35,3 +36,8 @@ test-group = "postgres"
 [[profile.default.overrides]]
 filter = 'package(fleetiq-protocol-wasm)'
 test-group = "wasmtime"
+
+# Real S3 fixtures retain one owned provider at a time.
+[[profile.default.overrides]]
+filter = 'package(fleetiq-archive)'
+test-group = "archive"

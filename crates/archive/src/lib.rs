@@ -1,4 +1,4 @@
-//! Exact tenant-owned property-history segments; no storage or retention authority.
+//! Exact tenant-owned segments and immutable object I/O; no retention authority.
 mod profile;
 mod wire;
 use bytes::Bytes;
@@ -236,3 +236,6 @@ pub fn decode(tenant: &TenantId, bytes: &[u8]) -> Result<Vec<StoredPropertyChang
     }
     Ok(result)
 }
+
+/// Immutable operator-configured archive object storage.
+pub mod objects;
