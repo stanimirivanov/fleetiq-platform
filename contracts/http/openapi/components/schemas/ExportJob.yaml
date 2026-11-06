@@ -1,0 +1,43 @@
+type: object
+additionalProperties: false
+required:
+- export_id
+- state
+- selection_generation
+- format
+- format_version
+- expires_at_ms
+- row_count
+- file_bytes
+- coverage
+properties:
+  export_id:
+    $ref: ./ExportId.yaml
+  state:
+    type: string
+    enum:
+    - pending
+    - ready
+    - cancelled
+    - expired
+  selection_generation:
+    type: string
+    const: '1'
+  format:
+    type: string
+    const: property-history-v1
+  format_version:
+    type: integer
+    const: 1
+  expires_at_ms:
+    $ref: ./HistoryMillis.yaml
+  row_count:
+    type: integer
+    minimum: 1
+    maximum: 16
+  file_bytes:
+    type: string
+    pattern: ^[1-9][0-9]*$
+    maxLength: 7
+  coverage:
+    $ref: ./ExportCoverage.yaml

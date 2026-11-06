@@ -1,0 +1,25 @@
+type: object
+additionalProperties: false
+required:
+- asset_id
+- property_id
+- property_version
+- start_at_ms
+- end_at_ms
+properties:
+  asset_id:
+    $ref: ./AdministrationIdentifier.yaml
+  property_id:
+    $ref: ./AdministrationIdentifier.yaml
+  property_version:
+    type: integer
+    minimum: 1
+    maximum: 4294967295
+  start_at_ms:
+    $ref: ./HistoryMillis.yaml
+  end_at_ms:
+    $ref: ./HistoryMillis.yaml
+  manifest_id:
+    $ref: ./HistoryRestoreId.yaml
+  restore_generation:
+    $ref: ./HistoryRestoreId.yaml

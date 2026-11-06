@@ -1,0 +1,12 @@
+description: Export expired or cancelled
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:historical-export
+      title: Export expired or cancelled
+      status: 410

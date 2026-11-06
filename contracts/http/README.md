@@ -51,6 +51,12 @@ explicit resolution/coverage and immutable revision-bound continuation. Raw hist
 is unchanged; reads select existing publications and never trigger production.
 See [numeric downsampling](../../docs/operations/numeric-downsampling.md).
 
+Baseline.35 adds authorized export creation/status/cancellation and same-origin
+bounded attachments. All operations require current telemetry.read; creation and
+cancellation additionally require existing operations.manage for the same actor and
+browser mutation protection. No new grant vocabulary or public storage URL is added.
+See [historical exports](../../docs/operations/historical-exports.md).
+
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
 live in adjacent domain and component files. The committed

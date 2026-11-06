@@ -1,0 +1,6 @@
+name: export_id
+in: path
+required: true
+description: Exact export identity owned by the authorized tenant.
+schema:
+  $ref: ../schemas/ExportId.yaml

@@ -1,12 +1,18 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.34"
+  version: "1.0.0-baseline.35"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
 servers:
   - url: "/"
 security: []
 paths:
+  /api/v1/tenants/{tenant_id}/exports/requests/{request_key}:
+    $ref: ./paths/history/export-create.yaml
+  /api/v1/tenants/{tenant_id}/exports/jobs/{export_id}:
+    $ref: ./paths/history/export-job.yaml
+  /api/v1/tenants/{tenant_id}/exports/jobs/{export_id}/download:
+    $ref: ./paths/history/export-download.yaml
   /api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/summaries:
     $ref: ./paths/history/numeric-summaries.yaml
   /api/v1/tenants/{tenant_id}/retention-preview:
@@ -141,6 +147,14 @@ paths:
     $ref: ./paths/analytics/alert-acknowledgement.yaml
 components:
   schemas:
+    ExportId:
+      $ref: ./components/schemas/ExportId.yaml
+    ExportCreateRequest:
+      $ref: ./components/schemas/ExportCreateRequest.yaml
+    ExportCoverage:
+      $ref: ./components/schemas/ExportCoverage.yaml
+    ExportJob:
+      $ref: ./components/schemas/ExportJob.yaml
     NumericSummaryPage:
       $ref: ./components/schemas/NumericSummaryPage.yaml
     NumericSummaryBucket:
@@ -482,6 +496,10 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    export-id:
+      $ref: ./components/parameters/export-id.yaml
+    export-request-key:
+      $ref: ./components/parameters/export-request-key.yaml
     summary-after:
       $ref: ./components/parameters/summary-after.yaml
     summary-resolution-ms:
@@ -671,6 +689,26 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    ExportAccepted:
+      $ref: ./components/responses/ExportAccepted.yaml
+    ExportStatusSucceeded:
+      $ref: ./components/responses/ExportStatusSucceeded.yaml
+    ExportDownloadSucceeded:
+      $ref: ./components/responses/ExportDownloadSucceeded.yaml
+    ExportHeadSucceeded:
+      $ref: ./components/responses/ExportHeadSucceeded.yaml
+    ExportConflict:
+      $ref: ./components/responses/ExportConflict.yaml
+    ExportUnavailable:
+      $ref: ./components/responses/ExportUnavailable.yaml
+    ExportBudgetUnavailable:
+      $ref: ./components/responses/ExportBudgetUnavailable.yaml
+    ExportLimitExceeded:
+      $ref: ./components/responses/ExportLimitExceeded.yaml
+    ExportPayloadTooLarge:
+      $ref: ./components/responses/ExportPayloadTooLarge.yaml
+    ExportRangeUnsupported:
+      $ref: ./components/responses/ExportRangeUnsupported.yaml
     NumericSummarySucceeded:
       $ref: ./components/responses/NumericSummarySucceeded.yaml
     ArchivedHistory:

@@ -1,0 +1,79 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT CASE WHEN expires_at<=clock_timestamp() THEN 'expired' ELSE status END AS \"state!\",floor(extract(epoch FROM expires_at)*1000)::bigint AS \"expires!\",row_count,file_bytes,manifest_id,restore_generation FROM history.export_jobs j JOIN metadata.tenants t USING(tenant_id) WHERE j.tenant_id=$1 AND job_id=$2 AND t.is_active",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "state!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "expires!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "row_count",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "history.export_jobs",
+            "name": "row_count"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "file_bytes",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.export_jobs",
+            "name": "file_bytes"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "manifest_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.export_jobs",
+            "name": "manifest_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "restore_generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.export_jobs",
+            "name": "restore_generation"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "c0391ab7bd5ff67372907aeaaa8fbc3ca3a35d3a6955b9c5a969cb6d6a0864c5"
+}

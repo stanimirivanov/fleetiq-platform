@@ -1,0 +1,12 @@
+description: Export identity conflicts, coverage is unavailable, or artifact is not ready
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:historical-export
+      title: Export identity conflicts, coverage is unavailable, or artifact is not ready
+      status: 409

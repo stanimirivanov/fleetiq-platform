@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.34",
+    "version": "1.0.0-baseline.35",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,261 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/exports/requests/{request_key}": {
+      "put": {
+        "operationId": "createHistoricalExport",
+        "summary": "Create or retry one bounded historical export",
+        "description": "Requires current telemetry.read and independent operations.manage for the same actor, with the listener-selected mutation guard. Browser mutations require exact same-origin Origin and X-FleetIQ-CSRF: 1. Closed JSON command, at most 4096 bytes; no unknown query parameters. Select exact target/version, half-open window up to seven days and optional manifest/restore_generation together. Up to 16 unique interpretations and a 2 MiB exact Parquet file; no truncation. Same request key preserves original selection/lifetime and never reopens terminal work. Creation materializes bounded staging and schedules one durable twenty-second attempt; global capture/worker capacity is eight. Pending retry can resume work after interruption. No startup scheduler. Enabled lifecycle policy charges one slot and 4 MiB for the live job. Capture coverage is explicit, not interval completeness.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/export-request-key"
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/ExportAccepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/ExportConflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/ExportPayloadTooLarge"
+          },
+          "422": {
+            "$ref": "#/components/responses/ExportLimitExceeded"
+          },
+          "429": {
+            "$ref": "#/components/responses/ExportBudgetUnavailable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportCreateRequest"
+              },
+              "example": {
+                "asset_id": "asset-a",
+                "property_id": "electrical.voltage",
+                "property_version": 1,
+                "start_at_ms": "0",
+                "end_at_ms": "3000"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/exports/jobs/{export_id}": {
+      "get": {
+        "operationId": "getHistoricalExport",
+        "summary": "Read export status",
+        "description": "Requires fresh telemetry.read. Exact tenant-owned identity; missing or other-tenant jobs return 404. Reports effective expiry even before physical cleanup. No unknown query parameters; five-second preparation bound. No raw evidence or public object URL.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/export-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ExportStatusSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "cancelHistoricalExport",
+        "summary": "Cancel a temporary export",
+        "description": "Requires fresh telemetry.read and independent operations.manage for the same actor plus browser mutation protection. Never reopens a selection. Removes availability and staging bytes; a running attempt keeps its quota until acknowledged stopped or expired. No unknown query parameters.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/export-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ExportStatusSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/exports/jobs/{export_id}/download": {
+      "get": {
+        "operationId": "downloadHistoricalExport",
+        "summary": "Download an authorized bounded export",
+        "description": "Requires fresh telemetry.read on every request, including after revocation. Ready-only exact attachment under the same origin; cancelled/expired return 410, pending returns 409. No unknown query parameters. Reserves one additional shared tenant slot and 2 MiB; enabled policy required. Global transfer limit eight. Five-second total preparation/body deadline, also limited by artifact expiry. Full source buffers and global permits expire even if a body is never polled. Independent frames are at most 64 KiB. Completed transfers release admission before the final frame; dropped/timed-out transfers retain uncertain admission until durable thirty-second expiry. Authorization is per request; previously delivered bytes cannot be recalled. Range requests return 416; no resume/public URLs/credentials.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/export-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ExportDownloadSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/ExportConflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/ExportUnavailable"
+          },
+          "416": {
+            "$ref": "#/components/responses/ExportRangeUnsupported"
+          },
+          "429": {
+            "$ref": "#/components/responses/ExportBudgetUnavailable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "head": {
+        "operationId": "headHistoricalExportDownload",
+        "summary": "Read authorized export attachment metadata",
+        "description": "Same current telemetry.read and ready/expiry requirements as GET, with no evidence-file read or transfer reservation. Range is ignored for this metadata-only request. No unknown query parameters.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/export-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ExportHeadSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/ExportConflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/ExportUnavailable"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/summaries": {
       "get": {
         "operationId": "listNumericSummaries",
@@ -4278,6 +4533,139 @@
   },
   "components": {
     "schemas": {
+      "ExportId": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]*$",
+        "maxLength": 19,
+        "description": "Exact positive signed-64-bit tenant-owned export identity."
+      },
+      "ExportCreateRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "asset_id",
+          "property_id",
+          "property_version",
+          "start_at_ms",
+          "end_at_ms"
+        ],
+        "properties": {
+          "asset_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "property_id": {
+            "$ref": "#/components/schemas/AdministrationIdentifier"
+          },
+          "property_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4294967295
+          },
+          "start_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "end_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "manifest_id": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          },
+          "restore_generation": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          }
+        }
+      },
+      "ExportCoverage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "manifest_id",
+          "restore_generation"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "hot_snapshot",
+              "hot_and_selected_manifest_snapshot"
+            ]
+          },
+          "manifest_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 19
+          },
+          "restore_generation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 19
+          }
+        }
+      },
+      "ExportJob": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "export_id",
+          "state",
+          "selection_generation",
+          "format",
+          "format_version",
+          "expires_at_ms",
+          "row_count",
+          "file_bytes",
+          "coverage"
+        ],
+        "properties": {
+          "export_id": {
+            "$ref": "#/components/schemas/ExportId"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ready",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "selection_generation": {
+            "type": "string",
+            "const": "1"
+          },
+          "format": {
+            "type": "string",
+            "const": "property-history-v1"
+          },
+          "format_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "expires_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "row_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "file_bytes": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 7
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/ExportCoverage"
+          }
+        }
+      },
       "NumericSummaryPage": {
         "type": "object",
         "additionalProperties": false,
@@ -9489,6 +9877,27 @@
       }
     },
     "parameters": {
+      "export-id": {
+        "name": "export_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact export identity owned by the authorized tenant.",
+        "schema": {
+          "$ref": "#/components/schemas/ExportId"
+        }
+      },
+      "export-request-key": {
+        "name": "request_key",
+        "in": "path",
+        "required": true,
+        "description": "Explicit idempotency key. Same key preserves original scope, selected generation and expiry; another scope conflicts.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
       "summary-after": {
         "name": "after",
         "in": "query",
@@ -10468,6 +10877,271 @@
       }
     },
     "responses": {
+      "ExportAccepted": {
+        "description": "Durable explicit selection accepted. Pending requests schedule at most one bounded production attempt when this call owns worker capacity. Retry the same key to resume pending work; no startup polling loop.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExportJob"
+            },
+            "example": {
+              "export_id": "1",
+              "state": "pending",
+              "selection_generation": "1",
+              "format": "property-history-v1",
+              "format_version": 1,
+              "expires_at_ms": "3600000",
+              "row_count": 2,
+              "file_bytes": "10000",
+              "coverage": {
+                "scope": "hot_snapshot",
+                "manifest_id": null,
+                "restore_generation": null
+              }
+            }
+          }
+        }
+      },
+      "ExportStatusSucceeded": {
+        "description": "Effective availability and original frozen selection metadata. Coverage never promises interval completeness.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExportJob"
+            },
+            "example": {
+              "export_id": "1",
+              "state": "ready",
+              "selection_generation": "1",
+              "format": "property-history-v1",
+              "format_version": 1,
+              "expires_at_ms": "3600000",
+              "row_count": 2,
+              "file_bytes": "10000",
+              "coverage": {
+                "scope": "hot_snapshot",
+                "manifest_id": null,
+                "restore_generation": null
+              }
+            }
+          }
+        }
+      },
+      "ExportDownloadSucceeded": {
+        "description": "Verified complete property-history-v1 Parquet attachment. No public URL, redirects or storage credentials. Bounded delivery may terminate on expiry/deadline; a partial transfer is never a complete artifact.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Content-Disposition": {
+            "description": "Generated numeric identity only; no caller filename or path.",
+            "schema": {
+              "type": "string",
+              "pattern": "^attachment; filename=\"fleetiq-export-[1-9][0-9]*[.]parquet\"$"
+            }
+          },
+          "Content-Length": {
+            "description": "Verified complete bytes, at most 2 MiB.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            }
+          },
+          "Accept-Ranges": {
+            "schema": {
+              "type": "string",
+              "const": "none"
+            }
+          },
+          "X-Content-Type-Options": {
+            "schema": {
+              "type": "string",
+              "const": "nosniff"
+            }
+          }
+        },
+        "content": {
+          "application/vnd.apache.parquet": {
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "maxLength": 2097152
+            }
+          }
+        }
+      },
+      "ExportHeadSucceeded": {
+        "description": "Authorized ready-only attachment metadata. Does not load the file, reserve tenant capacity or start a transfer.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Content-Disposition": {
+            "description": "Generated numeric identity only; no caller filename or path.",
+            "schema": {
+              "type": "string",
+              "pattern": "^attachment; filename=\"fleetiq-export-[1-9][0-9]*[.]parquet\"$"
+            }
+          },
+          "Content-Length": {
+            "description": "Verified complete bytes, at most 2 MiB.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2097152
+            }
+          },
+          "Accept-Ranges": {
+            "schema": {
+              "type": "string",
+              "const": "none"
+            }
+          },
+          "X-Content-Type-Options": {
+            "schema": {
+              "type": "string",
+              "const": "nosniff"
+            }
+          }
+        }
+      },
+      "ExportConflict": {
+        "description": "Export identity conflicts, coverage is unavailable, or artifact is not ready",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:historical-export",
+              "title": "Export identity conflicts, coverage is unavailable, or artifact is not ready",
+              "status": 409
+            }
+          }
+        }
+      },
+      "ExportUnavailable": {
+        "description": "Export expired or cancelled",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:historical-export",
+              "title": "Export expired or cancelled",
+              "status": 410
+            }
+          }
+        }
+      },
+      "ExportBudgetUnavailable": {
+        "description": "Export policy, shared tenant allowance or global capacity unavailable",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:historical-export",
+              "title": "Export policy, shared tenant allowance or global capacity unavailable",
+              "status": 429
+            }
+          }
+        }
+      },
+      "ExportLimitExceeded": {
+        "description": "Export selection exceeds supported limits",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:historical-export",
+              "title": "Export selection exceeds supported limits",
+              "status": 422
+            }
+          }
+        }
+      },
+      "ExportPayloadTooLarge": {
+        "description": "Export command exceeds 4096 bytes",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:historical-export",
+              "title": "Export command exceeds 4096 bytes",
+              "status": 413
+            }
+          }
+        }
+      },
+      "ExportRangeUnsupported": {
+        "description": "Export byte ranges are unsupported",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          },
+          "Content-Range": {
+            "schema": {
+              "type": "string",
+              "pattern": "^bytes [*]/[1-9][0-9]*$"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:historical-export",
+              "title": "Export byte ranges are unsupported",
+              "status": 416
+            }
+          }
+        }
+      },
       "NumericSummarySucceeded": {
         "description": "Published numeric summary page. Snapshot coverage is not interval completeness; sum/count is the exact mean, undefined when count is zero.",
         "headers": {

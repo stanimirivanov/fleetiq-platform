@@ -11,8 +11,8 @@
 ## Request and format
 
 The trusted server composition request_export accepts ExportKey and ExportRequest.
-The caller establishes tenant authority; this slice publishes no HTTP or download
-endpoint. Keys are 1–128 ASCII lowercase letters/digits/dot/underscore/hyphen and
+The caller establishes tenant authority; the protected HTTP routes below consume
+current telemetry and independent operational grants. Keys are 1–128 ASCII lowercase letters/digits/dot/underscore/hyphen and
 start with a letter or digit. They are request identities, never filesystem paths.
 An existing key cannot change scope, refresh expiry or reopen a terminal request.
 Concurrent requests recheck committed winners after admission/capture failure. A
@@ -80,6 +80,48 @@ code while exports are still charged would stop accounting for them. Retain the
 schema/identity receipts; do not rewrite published migrations or raw evidence.
 
 Private database writers must keep deferred completion constraints through commit.
-The private database role and exact codec host remain trusted. Public request,
-status/download/UI flows and installed/volume qualification are outside this slice.
+The private database role and exact codec host remain trusted. Public UI integration and installed/volume qualification remain later work.
 See [ADR 0150](../adr/0150-produce-bounded-historical-exports.md).
+
+## Authorized HTTP operations
+
+HTTP baseline.35 exposes these same-origin routes under /api/v1/tenants/{tenant_id}:
+
+- PUT /exports/requests/{request_key}: closed 4096-byte JSON command with asset_id,
+  property_id, property_version, exact start_at_ms/end_at_ms strings and optional
+  manifest_id/restore_generation together. Returns 202 with original job metadata.
+- GET /exports/jobs/{export_id}: current effective status, original expiry, format,
+  selected generation, row/file counts and explicit captured coverage.
+- DELETE /exports/jobs/{export_id}: cancel without reopening or changing selection.
+- GET /exports/jobs/{export_id}/download: ready-only exact Parquet attachment.
+- HEAD /exports/jobs/{export_id}/download: ready-only metadata without file reads,
+  reservations or transfer slots.
+
+Every request requires current telemetry.read. Creation/cancellation additionally
+require operations.manage for the same actor and tenant. Browser mutations require
+exact configured Origin and X-FleetIQ-CSRF: 1. No grant is upgraded automatically.
+Workload credentials stay server-side. Unknown queries, malformed IDs and forged
+context fail; current authority is checked before feature validation.
+
+An accepted pending creation starts one bounded attempt under eight shared worker/
+capture slots. Retrying the same key resumes eligible pending work after interruption.
+There is no automatic startup/polling worker. Current-policy and original-selection
+rules from the trusted compositions still apply.
+
+Downloads need another shared tenant slot and 2 MiB, in addition to the job's 4 MiB
+charge; configure at least two slots and 6 MiB plus live restore/other work. Eight
+global transfers bound full-file buffers. A five-second total prepare/body deadline
+is also clipped to artifact expiry. Even a body never polled releases its full
+buffer/global slot at its deadline. Independent frames are at most 64 KiB. Completed
+transfers acknowledge admission before the final frame; dropped/timed-out transfers
+retain uncertain reservations until their original thirty-second expiry.
+
+Attachments use generated fleetiq-export-{numeric-id}.parquet filenames, exact byte
+length, application/vnd.apache.parquet, no-store and nosniff. No public URL, redirect
+or storage credential is returned. GET ranges return 416; partial output must be
+discarded and a new authorized complete download requested. A new request after grant
+revocation fails. Already delivered/in-flight authorized bytes cannot be recalled.
+Pending downloads return 409; expired/cancelled return 410, scoped missing jobs 404,
+and disabled/denied work/global capacity 429. Metadata-only HEAD creates no transfer
+reservation. Regenerate clients for baseline.35; see
+[ADR 0151](../adr/0151-deliver-authorized-export-downloads.md).

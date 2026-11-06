@@ -210,3 +210,5 @@ introducing a new record.
 | [0149](0149-produce-versioned-numeric-downsampling.md) | Exact bounded numeric snapshots with immutable revisions, quality/coverage lineage and atomic admission |
 
 | [0150](0150-produce-bounded-historical-exports.md) | Produce bounded historical exports | Proposed |
+
+| [0151](0151-deliver-authorized-export-downloads.md) | Deliver authorized export downloads | Proposed |

@@ -116,6 +116,7 @@ where
     let usage = storage_usage::router(pool.clone(), authentication.clone());
     let retention = retention_preview::router(pool.clone(), authentication.clone());
     let diagnostics = work_diagnostics::router(pool.clone(), authentication.clone());
+    let exports = export_routes::router(pool.clone(), authentication.clone(), mutation.clone());
     let recovery = work_recovery::router(pool.clone(), authentication.clone(), mutation.clone());
     protected_capability_routers(pool, authentication, mutation)
         .merge(calculators)
@@ -127,6 +128,7 @@ where
         .merge(usage)
         .merge(retention)
         .merge(recovery)
+        .merge(exports)
 }
 
 fn protected_capability_routers<A>(
@@ -352,3 +354,5 @@ pub use numeric_summary_once::produce_numeric_summary_once;
 
 mod export_once;
 pub use export_once::{export_once, request_export};
+
+mod export_routes;

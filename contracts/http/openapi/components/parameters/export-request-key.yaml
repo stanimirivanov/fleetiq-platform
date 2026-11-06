@@ -1,0 +1,10 @@
+name: request_key
+in: path
+required: true
+description: Explicit idempotency key. Same key preserves original scope, selected generation and expiry;
+  another scope conflicts.
+schema:
+  type: string
+  pattern: ^[a-z0-9][a-z0-9._-]{0,127}$
+  minLength: 1
+  maxLength: 128
