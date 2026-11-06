@@ -198,3 +198,5 @@ introducing a new record.
 | [0143](0143-store-immutable-archive-objects.md) | Create-only verified archive objects with bounded S3 transport and real provider qualification |
 
 | [0144](0144-publish-verified-archive-manifests.md) | Frozen archive membership, durable fenced jobs and verified manifest publication |
+
+| [0145](0145-restore-archived-evidence-into-bounded-staging.md) | Exact verified restore staging with request/attempt fences, expiry and shared tenant budgets |

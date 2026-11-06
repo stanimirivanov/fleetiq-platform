@@ -336,3 +336,6 @@ mod storage_usage;
 
 mod archive_once;
 pub use archive_once::archive_once;
+
+mod restore_once;
+pub use restore_once::restore_once;

@@ -26,3 +26,6 @@ pub use budgets::PostgresHistoryBudgets;
 
 mod archive_work;
 pub use archive_work::PostgresArchiveWork;
+
+mod restore;
+pub use restore::PostgresRestore;

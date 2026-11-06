@@ -81,3 +81,6 @@ pub mod storage_usage;
 
 /// Durable verified archive publication contracts.
 pub mod archive_work;
+
+/// Explicit bounded staging of verified archived evidence.
+pub mod restore;
