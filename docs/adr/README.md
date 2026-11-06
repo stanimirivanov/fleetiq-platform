@@ -186,3 +186,5 @@ introducing a new record.
 | [0137](0137-prioritize-actionable-notification-diagnostics.md) | Notification diagnostics exclude completed reconciliation and prioritize failures and due work |
 
 | [0138](0138-minimize-native-runtime-libraries.md) | Minimal Distroless runtime with explicit libgcc package evidence and unchanged vulnerability policy |
+
+| [0139](0139-define-tenant-lifecycle-policies.md) | Explicit disabled-by-default tenant lifecycle policies and retained evidence protection contracts |
