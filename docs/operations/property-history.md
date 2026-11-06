@@ -103,3 +103,26 @@ commands and account for immutable audit rows carrying the new vocabulary;
 a compatible forward binary is the supported recovery path. Keep migrations,
 indexes and original history. D06, full-profile qualification, live state,
 archival coverage and hardware qualification remain separate.
+
+
+## Selected restored-history coverage
+
+Use `mode=hot_and_restored&manifest_id=1&restore_generation=1` on the existing
+history list, with the usual exact property version, seven-day window and page
+limit. The manifest and request generation are explicit; reads create no restore
+and perform no object-store scan. The response adds `coverage` with `hot=queried`,
+archive state (`archived`, `restoring`, `restored`, or `unavailable`), requested
+identities and `scope=selected_manifest_only`. Other manifests and the entire
+interval are not certified complete. Empty results must retain those qualifications.
+
+Continuations bind restore generation and coverage state as well as normal scope.
+Expiry, cancellation or state changes require restarting (400 for an old cursor).
+Unavailable selections issue no cursor; choose a valid restore or use hot mode to
+page hot-only results. Original row identity/provenance and exact values remain.
+No opt-in means the legacy response/token shape remains unchanged.
+
+Opt-in reads enforce five seconds and 1 MiB even with disabled lifecycle policy.
+Configured budgets need headroom for live staging bytes plus the existing 1 MiB
+query allowance; 429 is explicit admission/output rejection. See
+[ADR 0146](../adr/0146-query-restored-history-with-explicit-coverage.md) for merge
+ordering, limits and compatibility.

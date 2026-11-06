@@ -1,5 +1,4 @@
-description: Bounded hot-history interpretations. Empty is no matching durable interpretation, not proof
-  of a known asset/property or healthy ingestion.
+description: Bounded history interpretations. Legacy hot-only responses retain their shape. Opt-in hot_and_restored responses include selected-manifest coverage; empty or unavailable coverage never certifies a complete interval or healthy ingestion.
 headers:
   Cache-Control:
     $ref: ../headers/cache-control.yaml

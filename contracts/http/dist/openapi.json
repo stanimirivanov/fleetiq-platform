@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.30",
+    "version": "1.0.0-baseline.31",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -1061,7 +1061,7 @@
       "get": {
         "operationId": "listPropertyHistory",
         "summary": "List bounded property history",
-        "description": "Requires exact telemetry.read. Returns all interpretations for one pinned property in a half-open event-time window of at most seven days. Ascending event time then full interpretation key provides stable ties, not latest-state precedence. Pages are not a snapshot: restart the window to observe late appends behind the cursor. No raw payload, archival history, correction collapse or implicit unit conversion. Configured lifecycle budgets reserve one slot and 1048576 response bytes; denied admission or oversized output returns 429. Disabled policies preserve prior behavior.",
+        "description": "Requires exact telemetry.read. Returns all interpretations for one pinned property in a half-open event-time window of at most seven days. Ascending event time then full interpretation key provides stable ties, not latest-state precedence. Pages are not a snapshot: restart the window to observe late appends behind the cursor. No raw payload, transparent object-store scan, correction collapse or implicit unit conversion. Configured lifecycle budgets reserve one slot and 1048576 response bytes; denied admission or oversized output returns 429. Disabled policies preserve prior hot-only behavior. The opt-in hot_and_restored mode always has a five-second/1 MiB bound and merges one selected restore generation, deduplicated by immutable identity. Its coverage is selected_manifest_only, never interval completeness. Cursors additionally bind mode, manifest, restore generation and coverage state; expiry or state changes require restarting and return 400 for old cursors. Unavailable selections issue no continuation; select a valid restore generation or use hot mode to continue hot-only paging.",
         "security": [
           {
             "bearerAuth": []
@@ -1094,6 +1094,15 @@
           },
           {
             "$ref": "#/components/parameters/history-after"
+          },
+          {
+            "$ref": "#/components/parameters/history-mode"
+          },
+          {
+            "$ref": "#/components/parameters/history-manifest-id"
+          },
+          {
+            "$ref": "#/components/parameters/history-restore-generation"
           }
         ],
         "responses": {
@@ -6280,6 +6289,58 @@
           }
         }
       },
+      "PropertyHistoryCoverage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hot",
+          "archive",
+          "scope",
+          "manifest_id",
+          "restore_generation"
+        ],
+        "properties": {
+          "hot": {
+            "type": "string",
+            "const": "queried",
+            "description": "The bounded hot-history query ran; this is not an interval completeness assertion."
+          },
+          "archive": {
+            "type": "string",
+            "enum": [
+              "archived",
+              "restoring",
+              "restored",
+              "unavailable"
+            ],
+            "description": "State of only the selected manifest/request. Unavailable includes missing, replaced, cancelled, expired or invalid staging."
+          },
+          "scope": {
+            "type": "string",
+            "const": "selected_manifest_only",
+            "description": "Other manifests, unarchived evidence and later arrivals are not certified complete."
+          },
+          "manifest_id": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          },
+          "restore_generation": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          }
+        },
+        "example": {
+          "hot": "queried",
+          "archive": "restored",
+          "scope": "selected_manifest_only",
+          "manifest_id": "1",
+          "restore_generation": "1"
+        }
+      },
+      "HistoryRestoreId": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]{0,18}$",
+        "maxLength": 19,
+        "description": "Canonical positive signed-64-bit manifest or restore request generation (at most 9223372036854775807), serialized exactly."
+      },
       "PropertyHistoryPage": {
         "type": "object",
         "additionalProperties": false,
@@ -6304,6 +6365,9 @@
                 "type": "null"
               }
             ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/PropertyHistoryCoverage"
           }
         }
       },
@@ -9266,11 +9330,43 @@
           "default": 50
         }
       },
+      "history-mode": {
+        "name": "mode",
+        "in": "query",
+        "required": false,
+        "description": "Hot is the unchanged default. hot_and_restored requires manifest_id and restore_generation and reports selected-manifest coverage; it never scans object storage. Restore parameters are invalid in hot mode.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "hot",
+            "hot_and_restored"
+          ],
+          "default": "hot"
+        }
+      },
+      "history-manifest-id": {
+        "name": "manifest_id",
+        "in": "query",
+        "required": false,
+        "description": "Exact tenant-owned manifest selected in hot_and_restored mode; required only in that mode. Unknown selections report unavailable coverage.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryRestoreId"
+        }
+      },
+      "history-restore-generation": {
+        "name": "restore_generation",
+        "in": "query",
+        "required": false,
+        "description": "Explicit restore request generation selected with manifest_id in hot_and_restored mode. No restore is created by a read.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryRestoreId"
+        }
+      },
       "history-after": {
         "name": "after",
         "in": "query",
         "required": false,
-        "description": "Exclusive cursor bound to tenant, asset, exact property version and window. Restart to see late appends behind it.",
+        "description": "Exclusive cursor bound to tenant, asset, exact property version and window. Restart to see late appends behind it. In hot_and_restored mode it also binds manifest, request generation and coverage state; a changed/expired selection invalidates it.",
         "schema": {
           "$ref": "#/components/schemas/HistoryToken"
         }
@@ -9825,7 +9921,7 @@
     },
     "responses": {
       "HistoryBudgetExceeded": {
-        "description": "Configured tenant history-work slots or reserved response bytes are exhausted, or output exceeded its reserved allowance. Retry after competing work completes or expires; the requested allowance may require policy review. No evidence or empty page is implied.",
+        "description": "Configured tenant history-work slots or reserved response bytes are exhausted, output exceeded its reserved allowance, or opt-in restored-history output exceeded the unconditional 1 MiB cap. Retry after competing work completes or expires; the requested allowance may require policy review. No evidence or empty page is implied.",
         "headers": {
           "Cache-Control": {
             "$ref": "#/components/headers/cache-control"
@@ -10930,7 +11026,7 @@
         }
       },
       "PropertyHistorySucceeded": {
-        "description": "Bounded hot-history interpretations. Empty is no matching durable interpretation, not proof of a known asset/property or healthy ingestion.",
+        "description": "Bounded history interpretations. Legacy hot-only responses retain their shape. Opt-in hot_and_restored responses include selected-manifest coverage; empty or unavailable coverage never certifies a complete interval or healthy ingestion.",
         "headers": {
           "Cache-Control": {
             "$ref": "#/components/headers/cache-control"

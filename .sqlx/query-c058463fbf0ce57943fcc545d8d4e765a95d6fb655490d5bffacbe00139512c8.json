@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Atomic coverage/file observation; never read object storage or current hot payloads.\nWITH snapshot AS (\n SELECT CASE WHEN r.manifest_id IS NULL THEN 'archived'\n WHEN r.request_generation<>$3 OR r.expires_at<=clock_timestamp() OR r.status IN ('cancelled','expired') THEN 'unavailable'\n WHEN r.status='pending' THEN 'restoring'\n WHEN r.status='ready' AND octet_length(r.payload)=a.object_bytes AND sha256(r.payload)=a.object_sha256 THEN 'restored'\n ELSE 'unavailable' END AS state,r.payload\n FROM history.archive_jobs a JOIN metadata.tenants t USING (tenant_id)\n LEFT JOIN history.restore_jobs r ON r.tenant_id=a.tenant_id AND r.manifest_id=a.job_id\n WHERE a.tenant_id=$1 AND a.job_id=$2 AND a.object_sha256 IS NOT NULL AND t.is_active\n)\nSELECT state AS \"state!\",CASE WHEN state='restored' THEN payload ELSE NULL END AS payload FROM snapshot\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "state!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "payload",
+        "type_info": "Bytea",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c058463fbf0ce57943fcc545d8d4e765a95d6fb655490d5bffacbe00139512c8"
+}

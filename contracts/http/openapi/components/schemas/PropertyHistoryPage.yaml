@@ -13,3 +13,5 @@ properties:
     oneOf:
     - $ref: ./HistoryToken.yaml
     - type: 'null'
+  coverage:
+    $ref: ./PropertyHistoryCoverage.yaml

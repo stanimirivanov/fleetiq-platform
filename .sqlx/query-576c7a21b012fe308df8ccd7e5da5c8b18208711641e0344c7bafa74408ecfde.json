@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Use the same database text collation, numeric revision and basis ordering as hot history.\nWITH entries AS (\n SELECT * FROM jsonb_to_recordset($1::jsonb) AS x(event BIGINT,message TEXT,package TEXT,version TEXT,\n output BIGINT,binding TEXT,revision NUMERIC,basis TEXT,index BIGINT)\n), position AS (\n SELECT * FROM jsonb_to_record($2::jsonb) AS x(event BIGINT,message TEXT,package TEXT,version TEXT,\n output BIGINT,binding TEXT,revision NUMERIC,basis TEXT,index BIGINT)\n)\nSELECT e.index AS \"index!\" FROM entries e CROSS JOIN position p\nWHERE p.event IS NULL OR (e.event,e.message,e.package,e.version,e.output,e.binding,e.revision,e.basis)\n > (p.event,p.message,p.package,p.version,p.output,p.binding,p.revision,p.basis)\nORDER BY e.event,e.message,e.package,e.version,e.output,e.binding,e.revision,e.basis\nLIMIT 116\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "index!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "576c7a21b012fe308df8ccd7e5da5c8b18208711641e0344c7bafa74408ecfde"
+}

@@ -1,4 +1,4 @@
-description: Configured tenant history-work slots or reserved response bytes are exhausted, or output exceeded its reserved allowance. Retry after competing work completes or expires; the requested allowance may require policy review. No evidence or empty page is implied.
+description: Configured tenant history-work slots or reserved response bytes are exhausted, output exceeded its reserved allowance, or opt-in restored-history output exceeded the unconditional 1 MiB cap. Retry after competing work completes or expires; the requested allowance may require policy review. No evidence or empty page is implied.
 headers:
   Cache-Control:
     $ref: ../headers/cache-control.yaml

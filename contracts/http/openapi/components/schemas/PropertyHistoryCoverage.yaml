@@ -1,0 +1,31 @@
+type: object
+additionalProperties: false
+required:
+- hot
+- archive
+- scope
+- manifest_id
+- restore_generation
+properties:
+  hot:
+    type: string
+    const: queried
+    description: The bounded hot-history query ran; this is not an interval completeness assertion.
+  archive:
+    type: string
+    enum: [archived, restoring, restored, unavailable]
+    description: State of only the selected manifest/request. Unavailable includes missing, replaced, cancelled, expired or invalid staging.
+  scope:
+    type: string
+    const: selected_manifest_only
+    description: Other manifests, unarchived evidence and later arrivals are not certified complete.
+  manifest_id:
+    $ref: ./HistoryRestoreId.yaml
+  restore_generation:
+    $ref: ./HistoryRestoreId.yaml
+example:
+  hot: queried
+  archive: restored
+  scope: selected_manifest_only
+  manifest_id: '1'
+  restore_generation: '1'

@@ -39,6 +39,10 @@ Baseline.30 adds explicit 429 history-work budget rejection for configured tenan
 on property history and exact provenance reads. Existing telemetry authority and
 page/window bounds remain unchanged; disabled policies preserve unmetered reads.
 
+Baseline.31 adds opt-in hot_and_restored history with explicit selected-manifest coverage
+and restore/state-bound continuation. Legacy hot-only responses remain unchanged.
+Regenerate clients before opting in; selected coverage is not interval completeness.
+
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
 live in adjacent domain and component files. The committed

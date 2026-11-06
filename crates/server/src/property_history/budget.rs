@@ -9,8 +9,8 @@ use fleetiq_domain::TenantId;
 use fleetiq_history::lifecycle::BudgetAdmission;
 use fleetiq_postgres::PostgresHistoryBudgets;
 use std::{future::Future, time::Duration};
-const RESPONSE_BYTES: usize = 1_048_576;
-fn denied() -> Response {
+pub(super) const RESPONSE_BYTES: usize = 1_048_576;
+pub(super) fn denied() -> Response {
     protected_request::problem(
         StatusCode::TOO_MANY_REQUESTS,
         "urn:fleetiq:problem:history-budget-exceeded",

@@ -23,7 +23,7 @@ pub trait PropertyHistoryView: AssetPropertyChangeView {
 }
 /// Protected history use cases; metadata authority cannot be substituted.
 pub struct PropertyHistoryService<V> {
-    view: V,
+    pub(super) view: V,
 }
 impl<V> PropertyHistoryService<V> {
     /// Composes the consumer-owned read adapter.

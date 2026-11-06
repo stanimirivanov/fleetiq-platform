@@ -200,3 +200,5 @@ introducing a new record.
 | [0144](0144-publish-verified-archive-manifests.md) | Frozen archive membership, durable fenced jobs and verified manifest publication |
 
 | [0145](0145-restore-archived-evidence-into-bounded-staging.md) | Exact verified restore staging with request/attempt fences, expiry and shared tenant budgets |
+
+| [0146](0146-query-restored-history-with-explicit-coverage.md) | Opt-in bounded restored-history union with explicit selected-manifest coverage and scoped continuation |

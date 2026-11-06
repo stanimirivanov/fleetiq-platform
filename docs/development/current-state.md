@@ -652,3 +652,14 @@ hot evidence. Real PostgreSQL/S3 tests exercise corruption and interrupted retry
 See [ADR 0145](../adr/0145-restore-archived-evidence-into-bounded-staging.md) for
 bounds, shared-admission effects and rollout. History HTTP/query integration is
 M06-PR8; automatic processing/cleanup and installed qualification remain pending.
+
+
+## Explicit restored-history coverage
+
+Property-history lists now opt in to a selected restore generation through
+`hot_and_restored` mode. Verified staging and hot rows merge without duplicate
+identities; coverage stays explicitly limited to the selected manifest. Cursor
+scope includes restore generation and state, and unavailable selections cannot
+continue. Legacy hot reads and exact provenance lookup retain their behavior.
+See [the history guide](../operations/property-history.md) and
+[ADR 0146](../adr/0146-query-restored-history-with-explicit-coverage.md).

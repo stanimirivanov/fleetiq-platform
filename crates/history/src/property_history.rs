@@ -1,6 +1,8 @@
 //! Bounded hot-history queries; ordering never implies latest-state precedence.
 
+mod restored;
 mod service;
+pub use restored::{RestoredHistorySnapshot, RestoredPropertyHistoryView};
 #[cfg(test)]
 mod tests;
 pub use service::{PropertyHistoryService, PropertyHistoryView};

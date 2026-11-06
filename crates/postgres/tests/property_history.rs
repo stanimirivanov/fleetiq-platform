@@ -194,3 +194,6 @@ async fn decimal_history_preserves_arbitrary_precision_without_float_conversion(
     );
     Ok(())
 }
+
+#[path = "property_history/restored.rs"]
+mod restored;

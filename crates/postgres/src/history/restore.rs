@@ -2,6 +2,7 @@
 use fleetiq_domain::TenantId;
 use fleetiq_history::restore::{RestoreFailure, RestoreStatus, RestoreTicket};
 use sqlx::{PgPool, Postgres, Transaction};
+mod history_snapshot;
 mod work;
 /// Trusted restore request/staging adapter; construction starts no work.
 pub struct PostgresRestore(pub(super) PgPool);
