@@ -32,3 +32,6 @@ pub use restore::PostgresRestore;
 
 mod retention;
 pub use retention::PostgresRetentionPreview;
+
+mod hot_retention;
+pub use hot_retention::PostgresHotRetention;

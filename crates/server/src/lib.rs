@@ -343,3 +343,6 @@ mod restore_once;
 pub use restore_once::restore_once;
 
 mod retention_preview;
+
+mod reclaim_once;
+pub use reclaim_once::reclaim_once;

@@ -204,3 +204,5 @@ introducing a new record.
 | [0146](0146-query-restored-history-with-explicit-coverage.md) | Opt-in bounded restored-history union with explicit selected-manifest coverage and scoped continuation |
 
 | [0147](0147-preview-retention-eligibility.md) | Bounded read-only retention assessment with conservative age/consumer protections and expiring context |
+
+| [0148](0148-reclaim-verified-hot-payloads.md) | Explicit verified hot reclamation, retained anchors and atomic consumer/audit protections |

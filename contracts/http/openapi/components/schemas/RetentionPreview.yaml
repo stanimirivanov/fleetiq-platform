@@ -38,7 +38,7 @@ properties:
       type: string
       enum: [lineage, idempotency]
   reclamation_supported:
-    const: false
+    const: true
   candidates:
     type: array
     maxItems: 100
@@ -57,5 +57,5 @@ example:
   estimated_reclaimable_bytes: '0'
   physical_reclaimable_bytes: not_measured
   retained_anchors: [lineage, idempotency]
-  reclamation_supported: false
+  reclamation_supported: true
   candidates: []

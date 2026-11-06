@@ -123,9 +123,9 @@ impl AssetPropertyChangeView for PostgresAssetPropertyChangeView {
 
 /// History-owned fields and the exact immutable binding target.
 struct StoredChangeRow {
-    event_at_ms: i64,
-    resolution_effective_at_ms: i64,
-    resolution_known_at_ms: i64,
+    event_at_ms: Option<i64>,
+    resolution_effective_at_ms: Option<i64>,
+    resolution_known_at_ms: Option<i64>,
     target_asset_id: String,
     target_property_id: String,
     target_property_version: i64,
@@ -155,10 +155,19 @@ impl StoredChangeRow {
             id.clone(),
             observation,
             target,
-            UnixTimeMillis::new(self.event_at_ms),
+            UnixTimeMillis::new(
+                self.event_at_ms
+                    .ok_or(PostgresRepositoryError::ArchivedPayload)?,
+            ),
             ResolutionContext::new(
-                UnixTimeMillis::new(self.resolution_effective_at_ms),
-                UnixTimeMillis::new(self.resolution_known_at_ms),
+                UnixTimeMillis::new(
+                    self.resolution_effective_at_ms
+                        .ok_or(PostgresRepositoryError::ArchivedPayload)?,
+                ),
+                UnixTimeMillis::new(
+                    self.resolution_known_at_ms
+                        .ok_or(PostgresRepositoryError::ArchivedPayload)?,
+                ),
             ),
         )
         .map_err(|error| corrupt("history.asset_property_changes", error))

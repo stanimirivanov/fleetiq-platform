@@ -4,7 +4,7 @@
 
 - GET /api/v1/tenants/{tenant_id}/retention-preview requires current operations.read.
 - The report is a read-only sample of at most 100 interpretations, not deletion authority.
-- Identity/lineage anchors are always retained. Reclamation is unsupported in this slice.
+- Identity/lineage anchors are always retained. Explicit trusted reclamation is separately approved; this route authorizes nothing.
 - Context lasts sixty seconds; a recheck always reads fresh state.
 
 ## Scope and protection
@@ -30,7 +30,7 @@ The method three_bigint_projection_fields_v1 counts 24 potential logical bytes
 per eligible interpretation: three projection timestamp fields. Anchors remain,
 and physical disk/index/TOAST usage and net storage savings are not measured.
 Source wire and decoded values are outside this reclamation scope. Existing
-immutable rows cannot be deleted through this endpoint.
+identity/anchor rows cannot be deleted through this endpoint.
 
 Pass the returned preview_token in the optional preview query parameter to recheck.
 The server authenticates and authorizes again and recomputes a consistent snapshot.
@@ -40,11 +40,13 @@ The public token is context, not a credential/signature or execution permit.
 
 ## Rollout and qualification
 
-Baseline.32 is additive; regenerate clients before consuming it. No schema,
-worker, scheduling or destructive behavior is added. Snapshot/statement failure
+Baseline.33 adds archived/current-projection protections and a trusted reclamation
+capability indicator; regenerate clients before consuming it. This route adds no
+worker, scheduling or destructive behavior. Snapshot/statement failure
 returns an error rather than an empty successful report.
 
-A future executor must reverify archive bytes, preserve anchors and atomically
-recheck current references and policy. Nothing in this report authorizes that
+The separately approved executor reverifies archive bytes, preserves anchors and
+atomically rechecks current references and policy. Nothing in this report authorizes that
 action. See [ADR 0147](../adr/0147-preview-retention-eligibility.md) for the design
-and the remaining retained-volume/provider/installed qualification boundaries.
+and the retained-volume/provider/installed qualification boundaries. See also
+[verified hot reclamation](hot-retention.md).

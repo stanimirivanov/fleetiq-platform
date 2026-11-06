@@ -53,7 +53,7 @@ async fn preview_requires_independent_authority_and_rechecks_context(pool: PgPoo
     let (status, initial) = read(&app, "", true).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(initial["policy_revision"], "0");
-    assert_eq!(initial["reclamation_supported"], false);
+    assert_eq!(initial["reclamation_supported"], true);
     assert_eq!(initial["estimated_reclaimable_bytes"], "0");
     assert_eq!(initial["candidates"].as_array().unwrap().len(), 2);
     let token = initial["preview_token"].as_str().unwrap();

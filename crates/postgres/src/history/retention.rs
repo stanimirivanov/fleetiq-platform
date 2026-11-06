@@ -50,6 +50,7 @@ impl PostgresRetentionPreview {
             (meta.semantic, RetentionConsumer::Semantic),
             (meta.calculator, RetentionConsumer::Calculator),
             (meta.restore, RetentionConsumer::Restore),
+            (meta.projection, RetentionConsumer::Projection),
         ]
         .into_iter()
         .filter_map(|(held, consumer)| held.then_some(consumer))
@@ -57,14 +58,33 @@ impl PostgresRetentionPreview {
         let candidates = rows
             .into_iter()
             .map(|row| {
-                RetentionCandidate::assess(
+                let mut candidate = RetentionCandidate::assess(
                     row.id,
                     row.age_floor,
                     meta.observed,
                     meta.hot_days,
                     row.verified,
                     consumers.clone(),
-                )
+                );
+                for (protected, reason) in [
+                    (
+                        !row.payload_present,
+                        fleetiq_history::lifecycle::EvidenceProtection::ArchivedPayload,
+                    ),
+                    (
+                        row.current_projection,
+                        fleetiq_history::lifecycle::EvidenceProtection::CurrentProjection,
+                    ),
+                    (
+                        row.pinned_analytics,
+                        fleetiq_history::lifecycle::EvidenceProtection::PinnedAnalytics,
+                    ),
+                ] {
+                    if protected {
+                        candidate.protections.push(reason);
+                    }
+                }
+                candidate
             })
             .collect();
         Ok(RetentionPreview {

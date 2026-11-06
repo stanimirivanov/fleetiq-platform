@@ -24,6 +24,10 @@ impl PostgresHistoryBudgets {
             return Err(sqlx::Error::Protocol("invalid work byte allowance".into()));
         }
         let mut tx = self.0.begin().await?;
+        // Waiting for the tenant lock must not preserve a pre-winner reservation snapshot.
+        sqlx::query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
+            .execute(&mut *tx)
+            .await?;
         sqlx::query("SET LOCAL statement_timeout = '2s'")
             .execute(&mut *tx)
             .await?;

@@ -41,6 +41,9 @@ impl From<&RetentionCandidate> for CandidateBody {
                 .protections
                 .iter()
                 .map(|p| match p {
+                    EvidenceProtection::ArchivedPayload => "archived_payload",
+                    EvidenceProtection::CurrentProjection => "current_projection",
+                    EvidenceProtection::PinnedAnalytics => "pinned_analytics",
                     EvidenceProtection::PolicyDisabled => "policy_disabled",
                     EvidenceProtection::WithinHotRetention => "hot_retention",
                     EvidenceProtection::UnverifiedArchive => "unverified_archive",

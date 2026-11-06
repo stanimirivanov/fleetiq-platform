@@ -150,3 +150,5 @@ pub use history::PostgresArchiveWork;
 pub use history::PostgresRestore;
 
 pub use history::PostgresRetentionPreview;
+
+pub use history::PostgresHotRetention;

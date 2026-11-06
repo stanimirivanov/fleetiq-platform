@@ -17,11 +17,11 @@ properties:
   active_consumers:
     description: Conservative dependency holds, including unfinished discovery and recoverable work; not worker liveness.
     type: array
-    maxItems: 4
+    maxItems: 5
     uniqueItems: true
     items:
       type: string
-      enum: [replay, semantic, calculator, restore]
+      enum: [replay, semantic, calculator, restore, projection]
   payload_eligible:
     type: boolean
     description: Future projection-payload candidate only; anchors and original immutable rows are not deletion targets.
@@ -31,8 +31,8 @@ properties:
     description: Potential logical bytes of three BIGINT projection fields, excluding anchors and physical allocation.
   protections:
     type: array
-    maxItems: 4
+    maxItems: 7
     uniqueItems: true
     items:
       type: string
-      enum: [policy_disabled, hot_retention, unverified_archive, active_consumer]
+      enum: [policy_disabled, hot_retention, unverified_archive, active_consumer, archived_payload, current_projection, pinned_analytics]

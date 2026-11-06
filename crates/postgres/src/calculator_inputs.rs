@@ -49,6 +49,13 @@ impl CalculatorPreparation for PostgresCalculatorPreparation {
             }
             return decode(request, &selection);
         }
+        let mut tx = self.0.begin().await.map_err(|_| PreparationError)?;
+        sqlx::raw_sql(
+            "SET TRANSACTION ISOLATION LEVEL READ COMMITTED; SET LOCAL statement_timeout='5s';",
+        )
+        .execute(&mut *tx)
+        .await
+        .map_err(|_| PreparationError)?;
         sqlx::query!(r#"
             WITH candidate AS (
               SELECT jsonb_build_object('implementation',d.implementation,'output',jsonb_build_object('id',p.property_id,'version',p.version,'name',p.display_name,'unit',p.canonical_unit),
@@ -72,11 +79,16 @@ impl CalculatorPreparation for PostgresCalculatorPreparation {
               JOIN metadata.asset_type_properties ap ON ap.tenant_id=a.tenant_id AND ap.type_id=a.type_id AND ap.type_version=a.type_version AND ap.property_id=p.property_id AND ap.property_version=p.version
               WHERE d.tenant_id=$1 AND d.calculator_id=($3::jsonb)->>'calculator' AND d.calculator_version=($3::jsonb)->>'version' AND d.implementation IN ('window-mean-v1','window-mad-v1')
                 AND EXISTS(SELECT 1 FROM metadata.assets scope WHERE scope.tenant_id=$1 AND scope.asset_id=($3::jsonb)->>'scope')
+                AND NOT EXISTS(SELECT 1 FROM history.asset_property_changes missing
+                  JOIN metadata.signal_binding_revisions b ON b.tenant_id=missing.tenant_id AND b.binding_id=missing.binding_id AND b.revision=missing.binding_revision
+                  WHERE missing.tenant_id=$1 AND b.target_asset_id=($3::jsonb)->>'scope' AND b.target_property_id=d.input_id AND b.target_property_version=d.input_version AND missing.event_at_ms IS NULL)
+
             )
             INSERT INTO analytics.prepared_evaluations(tenant_id,evaluation_id,request,selection)
             SELECT $1,$2,$3,selection FROM candidate WHERE jsonb_array_length(selection->'samples')<=1024
             ON CONFLICT DO NOTHING
-        "#,tenant,id,encoded).execute(&self.0).await.map_err(|_|PreparationError)?;
+        "#,tenant,id,encoded).execute(&mut *tx).await.map_err(|_|PreparationError)?;
+        tx.commit().await.map_err(|_| PreparationError)?;
         let (original, selection) = self.saved(tenant, id).await?.ok_or(PreparationError)?;
         if original != encoded {
             return Err(PreparationError);

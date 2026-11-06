@@ -3,6 +3,8 @@ use std::{error::Error, fmt};
 /// Describes a failed PostgreSQL repository operation.
 #[derive(Debug)]
 pub enum PostgresRepositoryError {
+    /// The immutable identity exists but its hot payload was reclaimed; restore is required.
+    ArchivedPayload,
     /// A uniqueness constraint rejected a conflicting value.
     Conflict {
         /// The database constraint that detected the conflict, when available.
@@ -54,6 +56,7 @@ pub enum PostgresRepositoryError {
 impl fmt::Display for PostgresRepositoryError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::ArchivedPayload => formatter.write_str("archived payload requires restore"),
             Self::Conflict { constraint, .. } => {
                 write!(formatter, "database conflict")?;
                 format_constraint(formatter, constraint.as_deref())
@@ -98,7 +101,8 @@ impl Error for PostgresRepositoryError {
             | Self::InvalidReference { source, .. }
             | Self::InvariantViolation { source, .. } => Some(source),
             Self::Database(error) => Some(error),
-            Self::CorruptData { .. }
+            Self::ArchivedPayload
+            | Self::CorruptData { .. }
             | Self::UnexpectedRevision { .. }
             | Self::RevisionExhausted
             | Self::RecordedTimeRegression { .. } => None,

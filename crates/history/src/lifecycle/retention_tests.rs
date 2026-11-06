@@ -28,6 +28,7 @@ fn only_old_verified_unreferenced_payload_is_a_candidate() {
         RetentionConsumer::Semantic,
         RetentionConsumer::Calculator,
         RetentionConsumer::Restore,
+        RetentionConsumer::Projection,
     ] {
         let protected = assess(0, Some(7), true, vec![consumer]);
         assert!(!protected.payload_eligible());
