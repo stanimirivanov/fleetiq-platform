@@ -1,5 +1,5 @@
 //! Bounded source snapshots and immutable serialized numeric publications.
-use super::HistoryRow;
+use super::{HistoryRow, property_change_log::interpretation_key as key};
 use fleetiq_domain::{PropertyValue, PropertyValueKind, UnitId};
 use fleetiq_history::restore::RestoreTicket;
 use fleetiq_history::{
@@ -24,20 +24,6 @@ pub struct NumericSnapshot {
 }
 /// Trusted producer persistence; construction starts no work.
 pub struct PostgresNumericSummaries(PgPool);
-fn key(c: &StoredPropertyChange) -> Value {
-    let id = c.id();
-    let o = id.observation_id();
-    let p = o.decoded_by();
-    json!([
-        o.message_id().as_str(),
-        p.id().as_str(),
-        p.version().as_str(),
-        o.output_index(),
-        id.binding_id().as_str(),
-        id.binding_revision().get().to_string(),
-        super::property_change_log::basis_name(id.event_time_basis())
-    ])
-}
 impl PostgresNumericSummaries {
     /// Uses an already migrated pool, without scheduling or activating policy.
     pub const fn new(pool: PgPool) -> Self {

@@ -325,3 +325,19 @@ impl<'a> From<&'a PropertyValue> for EncodedValue<'a> {
         }
     }
 }
+
+// Complete immutable identity representation shared by derived evidence adapters.
+pub(super) fn interpretation_key(c: &fleetiq_history::StoredPropertyChange) -> serde_json::Value {
+    let id = c.id();
+    let o = id.observation_id();
+    let p = o.decoded_by();
+    serde_json::json!([
+        o.message_id().as_str(),
+        p.id().as_str(),
+        p.version().as_str(),
+        o.output_index(),
+        id.binding_id().as_str(),
+        id.binding_revision().get().to_string(),
+        basis_name(id.event_time_basis())
+    ])
+}

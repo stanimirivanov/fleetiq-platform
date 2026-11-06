@@ -94,3 +94,6 @@ pub mod downsampling;
 
 /// Authorized bounded reads of published numeric snapshots.
 pub mod summary_read;
+
+/// Durable bounded historical export contracts.
+pub mod exports;
