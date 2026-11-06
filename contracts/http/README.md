@@ -46,6 +46,11 @@ Regenerate clients before opting in; selected coverage is not interval completen
 Baseline.32 adds operations.read-protected read-only retention preview/recheck, with
 explicit bounded-sample protections and logical estimates. It grants no deletion authority.
 
+Baseline.34 adds telemetry.read-protected numeric summary pages with exact strings,
+explicit resolution/coverage and immutable revision-bound continuation. Raw history
+is unchanged; reads select existing publications and never trigger production.
+See [numeric downsampling](../../docs/operations/numeric-downsampling.md).
+
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
 live in adjacent domain and component files. The committed

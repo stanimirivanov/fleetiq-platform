@@ -1,0 +1,55 @@
+type: object
+additionalProperties: false
+required:
+- representation
+- algorithm
+- series_id
+- revision
+- observed_at_ms
+- start_at_ms
+- end_at_ms
+- resolution_ms
+- kind
+- unit
+- coverage
+- buckets
+- next_after
+properties:
+  representation:
+    type: string
+    const: numeric_summary
+  algorithm:
+    type: string
+    const: numeric-fixed-v1
+  series_id:
+    $ref: ./HistoryRestoreId.yaml
+  revision:
+    $ref: ./HistoryRestoreId.yaml
+  observed_at_ms:
+    $ref: ./HistoryMillis.yaml
+  start_at_ms:
+    $ref: ./HistoryMillis.yaml
+  end_at_ms:
+    $ref: ./HistoryMillis.yaml
+  resolution_ms:
+    type: string
+    pattern: '^[1-9][0-9]{0,8}$'
+    maxLength: 9
+  kind:
+    type: string
+    enum: [integer, decimal]
+  unit:
+    type: [string, 'null']
+    maxLength: 128
+  coverage:
+    $ref: ./NumericSummaryCoverage.yaml
+  buckets:
+    type: array
+    minItems: 1
+    maxItems: 64
+    items:
+      $ref: ./NumericSummaryBucket.yaml
+  next_after:
+    oneOf:
+    - $ref: ./HistoryToken.yaml
+    - type: 'null'

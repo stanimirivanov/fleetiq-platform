@@ -1,0 +1,6 @@
+name: after
+in: query
+required: false
+description: Opaque continuation binding tenant, exact target/version, window, resolution and manifest/generation to an immutable publication revision. Later head changes and restore expiry do not invalidate this published snapshot; restart without after for the latest revision. A token grants no authority.
+schema:
+  $ref: ../schemas/HistoryToken.yaml

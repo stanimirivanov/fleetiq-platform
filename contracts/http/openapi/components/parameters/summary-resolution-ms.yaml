@@ -1,0 +1,8 @@
+name: resolution_ms
+in: query
+required: true
+description: Positive exact epoch-aligned full bucket width; range must contain at most 64 buckets.
+schema:
+  type: string
+  pattern: '^[1-9][0-9]{0,8}$'
+  maxLength: 9

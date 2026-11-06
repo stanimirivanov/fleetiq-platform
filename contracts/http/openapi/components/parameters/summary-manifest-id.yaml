@@ -1,0 +1,6 @@
+name: manifest_id
+in: query
+required: false
+description: Optional published manifest scope; supply together with restore_generation. Reads captured coverage, without requiring staging to remain live.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml

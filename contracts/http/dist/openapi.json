@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.33",
+    "version": "1.0.0-baseline.34",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,79 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/summaries": {
+      "get": {
+        "operationId": "listNumericSummaries",
+        "summary": "Read bounded published numeric summary buckets",
+        "description": "Requires current telemetry.read on every page. Selects an existing numeric-fixed-v1 publication for the exact property version, aligned half-open window, resolution and optional manifest/generation. At most seven days, 64 full buckets and 64 buckets per page. First page selects the latest revision; opaque continuations bind full scope and pin the original immutable revision across late publications. Missing publications return 404. Invalid, oversized or cross-scope cursors return 400. Exact numeric strings and representation=numeric_summary distinguish derived evidence from raw history. Mean is the exact sum/count pair, undefined when count is zero. Only good quality contributes; total/excluded counts retain other qualities. Coverage describes the captured snapshot, never interval completeness or present staging availability. Reads never trigger production, restore, interpolation, unit conversion or raw fallback. Existing history budget admission applies; denied work returns 429, disabled policy preserves reads. Responses are no-store and bounded to 1 MiB.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/history-asset-id"
+          },
+          {
+            "$ref": "#/components/parameters/property-id"
+          },
+          {
+            "$ref": "#/components/parameters/definition-version"
+          },
+          {
+            "$ref": "#/components/parameters/history-start-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/history-end-at-ms"
+          },
+          {
+            "$ref": "#/components/parameters/summary-resolution-ms"
+          },
+          {
+            "$ref": "#/components/parameters/summary-limit"
+          },
+          {
+            "$ref": "#/components/parameters/summary-after"
+          },
+          {
+            "$ref": "#/components/parameters/summary-manifest-id"
+          },
+          {
+            "$ref": "#/components/parameters/summary-restore-generation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumericSummarySucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/HistoryBudgetExceeded"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/retention-preview": {
       "get": {
         "operationId": "getRetentionPreview",
@@ -4205,6 +4278,182 @@
   },
   "components": {
     "schemas": {
+      "NumericSummaryPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "representation",
+          "algorithm",
+          "series_id",
+          "revision",
+          "observed_at_ms",
+          "start_at_ms",
+          "end_at_ms",
+          "resolution_ms",
+          "kind",
+          "unit",
+          "coverage",
+          "buckets",
+          "next_after"
+        ],
+        "properties": {
+          "representation": {
+            "type": "string",
+            "const": "numeric_summary"
+          },
+          "algorithm": {
+            "type": "string",
+            "const": "numeric-fixed-v1"
+          },
+          "series_id": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          },
+          "observed_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "start_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "end_at_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "resolution_ms": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,8}$",
+            "maxLength": 9
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "integer",
+              "decimal"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/NumericSummaryCoverage"
+          },
+          "buckets": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/components/schemas/NumericSummaryBucket"
+            }
+          },
+          "next_after": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HistoryToken"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "NumericSummaryBucket": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start_ms",
+          "end_ms",
+          "total",
+          "count",
+          "excluded",
+          "min",
+          "max",
+          "sum"
+        ],
+        "properties": {
+          "start_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "end_ms": {
+            "$ref": "#/components/schemas/HistoryMillis"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "excluded": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "min": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2048,
+            "pattern": "^-?(0|[1-9][0-9]*)([.][0-9]*[1-9])?$"
+          },
+          "max": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2048,
+            "pattern": "^-?(0|[1-9][0-9]*)([.][0-9]*[1-9])?$"
+          },
+          "sum": {
+            "type": "string",
+            "maxLength": 2048,
+            "pattern": "^-?(0|[1-9][0-9]*)([.][0-9]*[1-9])?$"
+          }
+        }
+      },
+      "NumericSummaryCoverage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scope",
+          "manifest_id",
+          "restore_generation"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "hot_snapshot",
+              "hot_and_selected_manifest_snapshot"
+            ]
+          },
+          "manifest_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 19
+          },
+          "restore_generation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[1-9][0-9]*$",
+            "maxLength": 19
+          }
+        }
+      },
       "RetentionPreview": {
         "type": "object",
         "additionalProperties": false,
@@ -9240,6 +9489,56 @@
       }
     },
     "parameters": {
+      "summary-after": {
+        "name": "after",
+        "in": "query",
+        "required": false,
+        "description": "Opaque continuation binding tenant, exact target/version, window, resolution and manifest/generation to an immutable publication revision. Later head changes and restore expiry do not invalidate this published snapshot; restart without after for the latest revision. A token grants no authority.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryToken"
+        }
+      },
+      "summary-resolution-ms": {
+        "name": "resolution_ms",
+        "in": "query",
+        "required": true,
+        "description": "Positive exact epoch-aligned full bucket width; range must contain at most 64 buckets.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,8}$",
+          "maxLength": 9
+        }
+      },
+      "summary-limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Maximum buckets per page. Continuations remain on their original immutable revision.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 64
+        }
+      },
+      "summary-manifest-id": {
+        "name": "manifest_id",
+        "in": "query",
+        "required": false,
+        "description": "Optional published manifest scope; supply together with restore_generation. Reads captured coverage, without requiring staging to remain live.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryRestoreId"
+        }
+      },
+      "summary-restore-generation": {
+        "name": "restore_generation",
+        "in": "query",
+        "required": false,
+        "description": "Exact generation used during publication; supply together with manifest_id.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryRestoreId"
+        }
+      },
       "work-kind": {
         "name": "kind",
         "in": "path",
@@ -10169,6 +10468,51 @@
       }
     },
     "responses": {
+      "NumericSummarySucceeded": {
+        "description": "Published numeric summary page. Snapshot coverage is not interval completeness; sum/count is the exact mean, undefined when count is zero.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NumericSummaryPage"
+            },
+            "example": {
+              "representation": "numeric_summary",
+              "algorithm": "numeric-fixed-v1",
+              "series_id": "1",
+              "revision": "1",
+              "observed_at_ms": "3000",
+              "start_at_ms": "0",
+              "end_at_ms": "1000",
+              "resolution_ms": "1000",
+              "kind": "integer",
+              "unit": "volt",
+              "coverage": {
+                "scope": "hot_snapshot",
+                "manifest_id": null,
+                "restore_generation": null
+              },
+              "buckets": [
+                {
+                  "start_ms": "0",
+                  "end_ms": "1000",
+                  "total": 1,
+                  "count": 1,
+                  "excluded": 0,
+                  "min": "9223372036854775807",
+                  "max": "9223372036854775807",
+                  "sum": "9223372036854775807"
+                }
+              ],
+              "next_after": null
+            }
+          }
+        }
+      },
       "ArchivedHistory": {
         "description": "Hot payload has been reclaimed. Use an explicit verified restore selection; no empty complete history is implied.",
         "headers": {

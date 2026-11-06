@@ -91,3 +91,6 @@ pub mod retention_work;
 
 /// Exact versioned numeric downsampling over bounded captured evidence.
 pub mod downsampling;
+
+/// Authorized bounded reads of published numeric snapshots.
+pub mod summary_read;

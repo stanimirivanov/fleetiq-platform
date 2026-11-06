@@ -37,7 +37,7 @@ use std::sync::Arc;
 type ScopePath = (String, String, String, String);
 type InterpretationPath = (String, String, String, String, String);
 
-async fn authorize<A: RequestAuthenticator>(
+pub(super) async fn authorize<A: RequestAuthenticator>(
     ctx: &Context<A>,
     headers: &HeaderMap,
     tenant: &str,
@@ -52,7 +52,7 @@ async fn authorize<A: RequestAuthenticator>(
             TenantAuthorizationError::Policy(_) => ProtectedRequestError::Internal,
         })
 }
-fn target(asset: String, property: String, version: &str) -> Option<SignalTarget> {
+pub(super) fn target(asset: String, property: String, version: &str) -> Option<SignalTarget> {
     if version.is_empty() || !version.bytes().all(|b| b.is_ascii_digit()) {
         return None;
     }
@@ -64,7 +64,7 @@ fn target(asset: String, property: String, version: &str) -> Option<SignalTarget
         ),
     ))
 }
-fn millis(value: &str) -> Option<i64> {
+pub(super) fn millis(value: &str) -> Option<i64> {
     let parsed = value.parse::<i64>().ok()?;
     (parsed.to_string() == value).then_some(parsed)
 }

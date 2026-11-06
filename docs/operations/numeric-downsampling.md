@@ -48,8 +48,7 @@ complete empty interval.
 
 After migration 0057, use the private trusted server composition
 produce_numeric_summary_once with a migrated pool and validated NumericRequest.
-The caller establishes tenant authority. This PR adds no CLI/HTTP command or loop;
-M06-PR12 owns the summary read API.
+The caller establishes tenant authority. Production adds no CLI/HTTP command or loop. Summary reads use the separate read-only endpoint below.
 
 An existing configured tenant policy must admit one slot and 2 MiB in addition to
 live restore storage. The whole turn has twenty seconds; database statements and
@@ -80,3 +79,31 @@ Private SQL writers must retain the initially deferred completion constraint
 through commit; forcing it early and then changing admission is outside the
 supported publication protocol. The producer owns its transaction and never
 forces this constraint early. Database owners and the decoder host remain trusted.
+
+## Bounded summary reads
+
+GET /api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/summaries
+requires current telemetry.read with the existing workload or browser authentication.
+Supply canonical signed start_at_ms/end_at_ms strings, positive resolution_ms,
+and optional limit (1–64, default 64). Bounds match the producer: seven days,
+64 full epoch-aligned buckets. The exact window/resolution must already be published;
+missing publication returns 404. Reads never trigger production or raw fallback.
+
+The response explicitly identifies representation=numeric_summary, algorithm,
+resolution, immutable series/revision and original observed_at_ms. Numeric values,
+IDs, revisions and times are exact strings. Buckets include total/count/excluded,
+min/max/sum. Mean is sum/count; count zero has no mean. Coverage describes that
+captured evidence and never promises interval completeness or current staging.
+Supply manifest_id and restore_generation together to select a published restored
+scope; live staging is unnecessary once the snapshot has been published.
+
+Use next_after as after with the same tenant, target/version, range, resolution
+and restore selection. Continuation pins the original revision even if late inputs
+produce a new head. Restart without after for the latest publication. Tokens are
+bounded opaque positions, not credentials; each page reauthenticates/authorizes.
+Malformed, cross-scope or nonexistent publication positions return 400. The route
+inherits configured history work admission (429 on denial), no-store responses,
+and the SQL two-second timeout; disabled policy preserves existing read behavior.
+
+HTTP baseline.34 is additive. Regenerate clients before consuming summaries.
+Rollback removes this route/callers and leaves all published evidence intact.

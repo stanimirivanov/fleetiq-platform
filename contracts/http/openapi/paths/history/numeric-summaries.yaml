@@ -1,0 +1,34 @@
+get:
+  operationId: listNumericSummaries
+  summary: Read bounded published numeric summary buckets
+  description: 'Requires current telemetry.read on every page. Selects an existing numeric-fixed-v1 publication for the exact property version, aligned half-open window, resolution and optional manifest/generation. At most seven days, 64 full buckets and 64 buckets per page. First page selects the latest revision; opaque continuations bind full scope and pin the original immutable revision across late publications. Missing publications return 404. Invalid, oversized or cross-scope cursors return 400. Exact numeric strings and representation=numeric_summary distinguish derived evidence from raw history. Mean is the exact sum/count pair, undefined when count is zero. Only good quality contributes; total/excluded counts retain other qualities. Coverage describes the captured snapshot, never interval completeness or present staging availability. Reads never trigger production, restore, interpolation, unit conversion or raw fallback. Existing history budget admission applies; denied work returns 429, disabled policy preserves reads. Responses are no-store and bounded to 1 MiB.'
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/history-asset-id.yaml
+  - $ref: ../../components/parameters/property-id.yaml
+  - $ref: ../../components/parameters/definition-version.yaml
+  - $ref: ../../components/parameters/history-start-at-ms.yaml
+  - $ref: ../../components/parameters/history-end-at-ms.yaml
+  - $ref: ../../components/parameters/summary-resolution-ms.yaml
+  - $ref: ../../components/parameters/summary-limit.yaml
+  - $ref: ../../components/parameters/summary-after.yaml
+  - $ref: ../../components/parameters/summary-manifest-id.yaml
+  - $ref: ../../components/parameters/summary-restore-generation.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/NumericSummarySucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '429':
+      $ref: ../../components/responses/HistoryBudgetExceeded.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

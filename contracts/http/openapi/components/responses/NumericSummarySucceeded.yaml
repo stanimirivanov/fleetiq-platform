@@ -1,0 +1,33 @@
+description: Published numeric summary page. Snapshot coverage is not interval completeness; sum/count is the exact mean, undefined when count is zero.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/NumericSummaryPage.yaml
+    example:
+      representation: numeric_summary
+      algorithm: numeric-fixed-v1
+      series_id: '1'
+      revision: '1'
+      observed_at_ms: '3000'
+      start_at_ms: '0'
+      end_at_ms: '1000'
+      resolution_ms: '1000'
+      kind: integer
+      unit: volt
+      coverage:
+        scope: hot_snapshot
+        manifest_id: null
+        restore_generation: null
+      buckets:
+      - start_ms: '0'
+        end_ms: '1000'
+        total: 1
+        count: 1
+        excluded: 0
+        min: '9223372036854775807'
+        max: '9223372036854775807'
+        sum: '9223372036854775807'
+      next_after: null

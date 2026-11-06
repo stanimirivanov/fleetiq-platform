@@ -1,12 +1,14 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.33"
+  version: "1.0.0-baseline.34"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
 servers:
   - url: "/"
 security: []
 paths:
+  /api/v1/tenants/{tenant_id}/assets/{asset_id}/properties/{property_id}/versions/{version}/summaries:
+    $ref: ./paths/history/numeric-summaries.yaml
   /api/v1/tenants/{tenant_id}/retention-preview:
     $ref: ./paths/operations/retention-preview.yaml
   /api/v1/tenants/{tenant_id}/storage-usage:
@@ -139,6 +141,12 @@ paths:
     $ref: ./paths/analytics/alert-acknowledgement.yaml
 components:
   schemas:
+    NumericSummaryPage:
+      $ref: ./components/schemas/NumericSummaryPage.yaml
+    NumericSummaryBucket:
+      $ref: ./components/schemas/NumericSummaryBucket.yaml
+    NumericSummaryCoverage:
+      $ref: ./components/schemas/NumericSummaryCoverage.yaml
     RetentionPreview:
       $ref: ./components/schemas/RetentionPreview.yaml
     RetentionCandidate:
@@ -474,6 +482,16 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    summary-after:
+      $ref: ./components/parameters/summary-after.yaml
+    summary-resolution-ms:
+      $ref: ./components/parameters/summary-resolution-ms.yaml
+    summary-limit:
+      $ref: ./components/parameters/summary-limit.yaml
+    summary-manifest-id:
+      $ref: ./components/parameters/summary-manifest-id.yaml
+    summary-restore-generation:
+      $ref: ./components/parameters/summary-restore-generation.yaml
     work-kind:
       $ref: ./components/parameters/work-kind.yaml
     work-recovery-request-id:
@@ -653,6 +671,8 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    NumericSummarySucceeded:
+      $ref: ./components/responses/NumericSummarySucceeded.yaml
     ArchivedHistory:
       $ref: ./components/responses/ArchivedHistory.yaml
     RetentionPreviewSucceeded:
