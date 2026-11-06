@@ -97,3 +97,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Audited work recovery](work-recovery.md): independent authority, immutable receipts and worker pause/resume.
 
 - [Retention eligibility preview](retention-preview.md): read-only bounded candidates, protections and context rechecks; no deletion authority.
+
+- [Verified hot-payload reclamation](hot-retention.md)

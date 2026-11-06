@@ -6,8 +6,8 @@ use crate::{
 };
 use fleetiq_domain::TenantId;
 use fleetiq_history::{
-    PropertyHistoryCursor, PropertyHistoryPage, PropertyHistoryQuery, PropertyHistoryView,
-    RestoredPropertyHistoryView, StoredPropertyChange,
+    PropertyHistoryCursor, PropertyHistoryPage, PropertyHistoryQuery, RestoredPropertyHistoryView,
+    StoredPropertyChange,
 };
 use fleetiq_semantics::AssetPropertyChangeId;
 use serde_json::{Value, json};
@@ -26,7 +26,7 @@ impl RestoredPropertyHistoryView for PostgresAssetPropertyChangeView {
         if restored.len() > 16 || restored.iter().any(|r| r.tenant_id() != tenant) {
             return Err(corrupt("restored_history", "invalid scope or profile"));
         }
-        let hot = self.list_property(tenant, query).await?;
+        let hot = self.hot_page(tenant, query).await?;
         let mut rows = hot.changes().to_vec();
         for restored in restored.iter().filter(|r| {
             r.target() == query.target()

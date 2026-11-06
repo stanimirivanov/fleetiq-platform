@@ -85,3 +85,6 @@ pub mod archive_work;
 
 /// Explicit bounded staging of verified archived evidence.
 pub mod restore;
+
+/// Explicit bounded verified hot-payload reclamation.
+pub mod retention_work;

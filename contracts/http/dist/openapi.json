@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.32",
+    "version": "1.0.0-baseline.33",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -1164,6 +1164,9 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "409": {
+            "$ref": "#/components/responses/ArchivedHistory"
+          },
           "429": {
             "$ref": "#/components/responses/HistoryBudgetExceeded"
           },
@@ -1218,6 +1221,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/ArchivedHistory"
           },
           "429": {
             "$ref": "#/components/responses/HistoryBudgetExceeded"
@@ -4271,7 +4277,7 @@
             }
           },
           "reclamation_supported": {
-            "const": false
+            "const": true
           },
           "candidates": {
             "type": "array",
@@ -4297,7 +4303,7 @@
             "lineage",
             "idempotency"
           ],
-          "reclamation_supported": false,
+          "reclamation_supported": true,
           "candidates": []
         }
       },
@@ -4337,7 +4343,7 @@
           "active_consumers": {
             "description": "Conservative dependency holds, including unfinished discovery and recoverable work; not worker liveness.",
             "type": "array",
-            "maxItems": 4,
+            "maxItems": 5,
             "uniqueItems": true,
             "items": {
               "type": "string",
@@ -4345,7 +4351,8 @@
                 "replay",
                 "semantic",
                 "calculator",
-                "restore"
+                "restore",
+                "projection"
               ]
             }
           },
@@ -4363,7 +4370,7 @@
           },
           "protections": {
             "type": "array",
-            "maxItems": 4,
+            "maxItems": 7,
             "uniqueItems": true,
             "items": {
               "type": "string",
@@ -4371,7 +4378,10 @@
                 "policy_disabled",
                 "hot_retention",
                 "unverified_archive",
-                "active_consumer"
+                "active_consumer",
+                "archived_payload",
+                "current_projection",
+                "pinned_analytics"
               ]
             }
           }
@@ -10159,6 +10169,26 @@
       }
     },
     "responses": {
+      "ArchivedHistory": {
+        "description": "Hot payload has been reclaimed. Use an explicit verified restore selection; no empty complete history is implied.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:fleetiq:problem:archived-history",
+              "title": "Archived history requires explicit restore",
+              "status": 409
+            }
+          }
+        }
+      },
       "RetentionPreviewSucceeded": {
         "description": "Bounded read-only eligibility sample with conservative protections and logical estimates; no deletion authority.",
         "headers": {
@@ -10187,7 +10217,7 @@
                 "lineage",
                 "idempotency"
               ],
-              "reclamation_supported": false,
+              "reclamation_supported": true,
               "candidates": []
             }
           }

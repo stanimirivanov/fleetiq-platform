@@ -1,0 +1,12 @@
+description: Hot payload has been reclaimed. Use an explicit verified restore selection; no empty complete history is implied.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
+    example:
+      type: urn:fleetiq:problem:archived-history
+      title: Archived history requires explicit restore
+      status: 409

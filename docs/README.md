@@ -105,3 +105,5 @@ For audited alert operator intent and exact-version command retry semantics, use
 For conservative read-only lifecycle eligibility and protected anchors, use the
 [retention preview guide](operations/retention-preview.md) and
 [ADR 0147](adr/0147-preview-retention-eligibility.md).
+
+- [Verified hot-payload reclamation](operations/hot-retention.md) and [ADR 0148](adr/0148-reclaim-verified-hot-payloads.md) describe explicit approval, archived coverage, audit and rollback.

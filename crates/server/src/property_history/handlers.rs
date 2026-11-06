@@ -16,6 +16,23 @@ use fleetiq_domain::{
     TenantId, UnixTimeMillis,
 };
 use fleetiq_history::PropertyHistoryQuery;
+fn history_error(
+    e: &fleetiq_postgres::PostgresRepositoryError,
+) -> Result<Response, ProtectedRequestError> {
+    if matches!(
+        e,
+        fleetiq_postgres::PostgresRepositoryError::ArchivedPayload
+    ) {
+        Ok(protected_request::problem(
+            StatusCode::CONFLICT,
+            "urn:fleetiq:problem:archived-history",
+            "Archived history requires explicit restore",
+        ))
+    } else {
+        Err(ProtectedRequestError::Internal)
+    }
+}
+
 use std::sync::Arc;
 type ScopePath = (String, String, String, String);
 type InterpretationPath = (String, String, String, String, String);
@@ -115,11 +132,10 @@ pub(super) async fn list<A: RequestAuthenticator>(
         .await;
     }
     super::budget::run(&ctx.budgets, &tenant, async {
-        let page = ctx
-            .history
-            .list(grant, &query)
-            .await
-            .map_err(|_| ProtectedRequestError::Internal)?;
+        let page = match ctx.history.list(grant, &query).await {
+            Ok(page) => page,
+            Err(e) => return history_error(&e),
+        };
         let next_after = page
             .next_after()
             .map(|key| cursor::page_token(&tenant, &query, key))
@@ -161,12 +177,10 @@ pub(super) async fn find<A: RequestAuthenticator>(
     };
     let tenant = grant.tenant_id().clone();
     super::budget::run(&ctx.budgets, &tenant, async {
-        match ctx
-            .exact
-            .find_property_bounded(grant, &target, &id)
-            .await
-            .map_err(|_| ProtectedRequestError::Internal)?
-        {
+        match match ctx.exact.find_property_bounded(grant, &target, &id).await {
+            Ok(found) => found,
+            Err(e) => return history_error(&e),
+        } {
             Some(change) => Ok(protected_request::no_store(
                 Json(dto::ChangeBody::new(&change).map_err(|_| ProtectedRequestError::Internal)?)
                     .into_response(),

@@ -9,6 +9,7 @@ SELECT floor(extract(epoch FROM transaction_timestamp())*1000)::bigint AS "obser
    (SELECT 1 FROM analytics.evaluations e WHERE e.tenant_id=p.tenant_id AND e.evaluation_id=p.evaluation_id))) AS "calculator!",
  EXISTS(SELECT 1 FROM history.restore_jobs WHERE tenant_id=$1 AND
   ((status IN ('pending','ready') AND expires_at>transaction_timestamp()) OR lease_until>transaction_timestamp())) AS "restore!"
+ ,EXISTS(SELECT 1 FROM projection.pending_changes WHERE tenant_id=$1) AS "projection!"
 FROM metadata.tenants t
 LEFT JOIN LATERAL (SELECT revision,hot_days FROM history.lifecycle_policies WHERE tenant_id=t.tenant_id ORDER BY revision DESC LIMIT 1) p ON true
 WHERE t.tenant_id=$1 AND t.is_active

@@ -11,6 +11,8 @@ pub enum RetentionConsumer {
     Calculator,
     /// Pending, live or in-flight restore work.
     Restore,
+    /// Unprocessed projection work still needs hot payloads.
+    Projection,
 }
 impl RetentionConsumer {
     /// Stable non-sensitive diagnostic category.
@@ -20,6 +22,7 @@ impl RetentionConsumer {
             Self::Semantic => "semantic",
             Self::Calculator => "calculator",
             Self::Restore => "restore",
+            Self::Projection => "projection",
         }
     }
 }

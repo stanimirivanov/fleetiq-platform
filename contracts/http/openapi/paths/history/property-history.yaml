@@ -22,6 +22,8 @@ get:
   - $ref: ../../components/parameters/history-manifest-id.yaml
   - $ref: ../../components/parameters/history-restore-generation.yaml
   responses:
+    '409':
+      $ref: ../../components/responses/ArchivedHistory.yaml
     '429':
       $ref: ../../components/responses/HistoryBudgetExceeded.yaml
     '200':

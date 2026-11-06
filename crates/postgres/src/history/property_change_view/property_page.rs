@@ -8,11 +8,22 @@ use fleetiq_history::{
 };
 use fleetiq_semantics::AssetPropertyChangeId;
 
-impl PropertyHistoryView for PostgresAssetPropertyChangeView {
-    async fn list_property(
+impl PostgresAssetPropertyChangeView {
+    pub(super) async fn hot_page(
         &self,
         tenant: &TenantId,
         query: &PropertyHistoryQuery,
+    ) -> Result<PropertyHistoryPage, PostgresRepositoryError> {
+        let mut tx = self.pool.begin().await.map_err(classify_database_error)?;
+        let page = self.hot_page_in(tenant, query, &mut tx).await?;
+        tx.commit().await.map_err(classify_database_error)?;
+        Ok(page)
+    }
+    async fn hot_page_in(
+        &self,
+        tenant: &TenantId,
+        query: &PropertyHistoryQuery,
+        tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
     ) -> Result<PropertyHistoryPage, PostgresRepositoryError> {
         let cursor = query.after();
         let id = cursor.map(PropertyHistoryCursor::id);
@@ -20,11 +31,10 @@ impl PropertyHistoryView for PostgresAssetPropertyChangeView {
         // Empty identifiers, output -1 and revision 0 form a private lower key
         // before every valid interpretation at start. This keeps the range
         // predicate indexable without an optional-cursor OR or OFFSET scan.
-        let mut tx = self.pool.begin().await.map_err(classify_database_error)?;
         // One expensive fan-out must not monopolize a pooled database session.
         // SET LOCAL is restored on commit, error, timeout and cancellation.
         sqlx::query("SET LOCAL statement_timeout = '5s'")
-            .execute(&mut *tx)
+            .execute(&mut **tx)
             .await
             .map_err(classify_database_error)?;
         let mut rows = sqlx::query_file_as!(
@@ -49,10 +59,9 @@ impl PropertyHistoryView for PostgresAssetPropertyChangeView {
             id.map_or("", |i| super::basis_name(i.event_time_basis())),
             i64::from(query.limit()) + 1,
         )
-        .fetch_all(&mut *tx)
+        .fetch_all(&mut **tx)
         .await
         .map_err(classify_database_error)?;
-        tx.commit().await.map_err(classify_database_error)?;
         let more = rows.len() > usize::from(query.limit());
         rows.truncate(usize::from(query.limit()));
         let changes = rows
@@ -67,5 +76,32 @@ impl PropertyHistoryView for PostgresAssetPropertyChangeView {
             None
         };
         Ok(PropertyHistoryPage::new(changes, next))
+    }
+}
+
+impl PropertyHistoryView for PostgresAssetPropertyChangeView {
+    async fn list_property(
+        &self,
+        tenant: &TenantId,
+        query: &PropertyHistoryQuery,
+    ) -> Result<PropertyHistoryPage, PostgresRepositoryError> {
+        let mut tx = self.pool.begin().await.map_err(classify_database_error)?;
+        sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+            .execute(&mut *tx)
+            .await
+            .map_err(classify_database_error)?;
+        sqlx::query("SET LOCAL statement_timeout='2s'")
+            .execute(&mut *tx)
+            .await
+            .map_err(classify_database_error)?;
+        let archived:bool=sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM history.asset_property_changes h JOIN metadata.signal_binding_revisions b ON b.tenant_id=h.tenant_id AND b.binding_id=h.binding_id AND b.revision=h.binding_revision WHERE h.tenant_id=$1 AND b.target_asset_id=$2 AND b.target_property_id=$3 AND b.target_property_version=$4 AND h.event_at_ms IS NULL)")
+            .bind(tenant.as_str()).bind(query.target().asset_id().as_str()).bind(query.target().property().id().as_str()).bind(i64::from(query.target().property().version().get())).fetch_one(&mut *tx).await.map_err(classify_database_error)?;
+        if archived {
+            return Err(PostgresRepositoryError::ArchivedPayload);
+        }
+        // Coverage check and page share one snapshot, including concurrent reclamation.
+        let page = self.hot_page_in(tenant, query, &mut tx).await?;
+        tx.commit().await.map_err(classify_database_error)?;
+        Ok(page)
     }
 }

@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Indexed stable identity sample, not a claim to enumerate every eligible tenant row.\nWITH sample AS (\n SELECT * FROM history.asset_property_changes WHERE tenant_id=$1\n ORDER BY message_id,protocol_package_id,protocol_package_version,output_index,binding_id,binding_revision,event_time_basis\n LIMIT 101\n)\nSELECT (h.event_at_ms IS NOT NULL) AS \"payload_present!\",\n EXISTS(SELECT 1 FROM projection.current_properties c LEFT JOIN history.archive_members pin\n USING (tenant_id,message_id,protocol_package_id,protocol_package_version,output_index,binding_id,binding_revision,event_time_basis)\n WHERE c.tenant_id=h.tenant_id AND\n ((c.message_id,c.protocol_package_id,c.protocol_package_version,c.output_index,c.binding_id,c.binding_revision,c.event_time_basis)\n =(h.message_id,h.protocol_package_id,h.protocol_package_version,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis)\n OR pin.job_id=m.job_id)) AS \"current_projection!\",\n EXISTS(SELECT 1 FROM analytics.evaluations e CROSS JOIN LATERAL jsonb_array_elements(e.replay_key->'inputs') input\n LEFT JOIN history.archive_members pin ON pin.tenant_id=e.tenant_id\n AND analytics.semantic_evidence_id(pin.tenant_id,pin.message_id,pin.protocol_package_id,pin.protocol_package_version,pin.output_index,pin.binding_id,pin.binding_revision,pin.event_time_basis)=input->>0\n WHERE e.tenant_id=h.tenant_id AND (pin.job_id=m.job_id\n OR input->>0=analytics.semantic_evidence_id(h.tenant_id,h.message_id,h.protocol_package_id,h.protocol_package_version,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis))) AS \"pinned_analytics!\",\n analytics.semantic_evidence_id(h.tenant_id,h.message_id,h.protocol_package_id,h.protocol_package_version,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis) AS \"id!\",\n CASE WHEN a.object_sha256 IS NOT NULL AND a.generation>0 AND a.lease_until IS NOT NULL\n THEN floor(extract(epoch FROM a.lease_until)*1000)::bigint ELSE NULL END AS age_floor,\n (a.object_sha256 IS NOT NULL AND a.generation>0 AND a.lease_until IS NOT NULL) AS \"verified!\"\nFROM sample h LEFT JOIN history.archive_members m USING (tenant_id,message_id,protocol_package_id,protocol_package_version,output_index,binding_id,binding_revision,event_time_basis)\nLEFT JOIN history.archive_jobs a ON a.tenant_id=m.tenant_id AND a.job_id=m.job_id\nORDER BY h.message_id,h.protocol_package_id,h.protocol_package_version,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "payload_present!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "current_projection!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "pinned_analytics!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "id!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "age_floor",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "verified!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "76f4d025050253fdb64deae614da806f76fe497716d6569a081e192c66334652"
+}

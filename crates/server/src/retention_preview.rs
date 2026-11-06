@@ -140,7 +140,7 @@ async fn find<A: RequestAuthenticator>(
             estimated_reclaimable_bytes: estimated,
             physical_reclaimable_bytes: "not_measured",
             retained_anchors: ["lineage", "idempotency"],
-            reclamation_supported: false,
+            reclamation_supported: true,
             candidates,
         })
         .into_response(),

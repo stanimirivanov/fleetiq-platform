@@ -68,6 +68,12 @@ pub enum LifecycleSettings {
 /// Reasons a future retention selector must distinguish, not deletion authority.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum EvidenceProtection {
+    /// This hot payload has already been reclaimed; its anchors remain.
+    ArchivedPayload,
+    /// Current projection pins this identity or its all-or-none archive manifest.
+    CurrentProjection,
+    /// A terminal calculator evaluation pins this identity or its archive manifest.
+    PinnedAnalytics,
     /// No configured retention policy authorizes even candidate selection.
     PolicyDisabled,
     /// Conservative hot-age floor has not elapsed.

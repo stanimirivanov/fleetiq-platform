@@ -210,7 +210,7 @@ impl PostgresAssetPropertyChangeLog {
         .await
         .map_err(classify_database_error)?
         .ok_or_else(|| corrupt("history.asset_property_changes", "missing conflict winner"))?;
-        if stored_event_at != change.event_at().get() {
+        if stored_event_at.is_some_and(|stored| stored != change.event_at().get()) {
             return Err(PostgresAssetPropertyChangeLogError::IdentityCollision);
         }
         Ok(PropertyChangeAppendOutcome::AlreadyPresent)

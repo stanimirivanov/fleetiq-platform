@@ -675,3 +675,20 @@ context is rechecked against fresh state, never accepted as deletion authority.
 See [the retention guide](../operations/retention-preview.md) and
 [ADR 0147](../adr/0147-preview-retention-eligibility.md). Execution, precise
 reachability and retained-volume/installed qualification remain later work.
+
+## Explicit verified hot reclamation
+
+M06-PR10 adds a private trusted one-manifest retention turn with separate current-
+policy operator approval, complete provider verification, atomically excluded
+consumer writers and immutable completion receipts. Only three hot projection
+timestamps are cleared; identity/source/binding/manifest anchors remain. Current
+projection winners and pending work stay protected. No migration, startup worker,
+preview token or operations.read grant activates it.
+
+Baseline.33 makes reclaimed hot history/provenance explicitly unavailable (409);
+selected verified restore returns original evidence. New incomplete calculator
+preparations fail closed, and current projection rebuild preserves protected winners.
+Removed logical field bytes are not net/physical savings. See
+[the operations guide](../operations/hot-retention.md) and
+[ADR 0148](../adr/0148-reclaim-verified-hot-payloads.md). Installed/provider and
+retained-volume qualification remain pending.

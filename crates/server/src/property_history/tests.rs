@@ -19,6 +19,9 @@ async fn setup(pool: &PgPool) -> Router {
     .execute(pool)
     .await
     .unwrap();
+    app(pool)
+}
+fn app(pool: &PgPool) -> Router {
     let config = crate::ServerConfig::from_values("postgres://localhost/test", "127.0.0.1:0")
         .unwrap()
         .with_bearer_identity(TOKEN, "workload", "operator")
@@ -332,3 +335,5 @@ async fn configured_history_budgets_reject_explicitly_and_release(pool: PgPool) 
 }
 
 mod restored;
+
+mod retention;

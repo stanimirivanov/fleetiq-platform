@@ -278,3 +278,5 @@ No prior grant implies this capability. See [operational diagnostics](../../docs
 Baseline.28 adds operations.manage, bounded dual-authorized recovery preparation and
 request-ID commands for failed work and queue pause/resume. Discovery admits eleven
 actions; regenerate clients before delegation. See [work recovery](../../docs/operations/work-recovery.md).
+
+Baseline.33 adds archived-history 409 responses after explicit hot reclamation, projection/archived preview protections and the trusted retention capability indicator. No HTTP deletion authority is added.
