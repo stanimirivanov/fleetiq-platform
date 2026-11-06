@@ -628,3 +628,15 @@ pause/resume controls, with stable request receipts and monotonic fences.
 [Rollout and recovery limits](../operations/work-recovery.md) require compatible
 post-0051 workers and explicit grants. Pausing controls new claims/scheduling
 while in-flight work retains its existing semantics.
+
+
+## Verified archive publication
+
+M06 archive-only processing now has explicit trusted one-turn composition, frozen
+tenant-owned membership, existing work-budget admission and fenced manifest
+publication after complete-object verification. Upload/commit interruption and
+corruption are exercised against real PostgreSQL and pinned S3 infrastructure.
+See [ADR 0144](../adr/0144-publish-verified-archive-manifests.md) for selection
+bounds, retry semantics, policy fencing and retained-volume limits. No polling
+worker starts automatically; hot evidence is retained. Restore, retention,
+aggregate archive accounting and installed-product qualification remain pending.

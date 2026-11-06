@@ -78,3 +78,6 @@ pub mod lifecycle;
 
 /// Logical tenant storage accounting contracts.
 pub mod storage_usage;
+
+/// Durable verified archive publication contracts.
+pub mod archive_work;

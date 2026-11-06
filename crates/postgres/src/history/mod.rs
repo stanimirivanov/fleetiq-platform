@@ -23,3 +23,6 @@ pub use storage_usage::PostgresStorageUsage;
 
 mod budgets;
 pub use budgets::PostgresHistoryBudgets;
+
+mod archive_work;
+pub use archive_work::PostgresArchiveWork;

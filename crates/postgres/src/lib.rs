@@ -144,3 +144,5 @@ pub use history::PostgresLifecyclePolicyRepository;
 pub use history::PostgresStorageUsage;
 
 pub use history::PostgresHistoryBudgets;
+
+pub use history::PostgresArchiveWork;
