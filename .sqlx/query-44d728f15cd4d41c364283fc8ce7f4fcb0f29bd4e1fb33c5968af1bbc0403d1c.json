@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT payload AS \"payload!\",floor(extract(epoch FROM expires_at)*1000)::bigint AS \"expires!\",manifest_id,restore_generation FROM history.export_jobs j JOIN metadata.tenants t USING(tenant_id) WHERE j.tenant_id=$1 AND job_id=$2 AND t.is_active AND status='ready' AND expires_at>clock_timestamp() AND octet_length(payload)=file_bytes AND sha256(payload)=fingerprint",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "payload!",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "history.export_jobs",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "expires!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "manifest_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.export_jobs",
+            "name": "manifest_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "restore_generation",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "history.export_jobs",
+            "name": "restore_generation"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      true,
+      true
+    ]
+  },
+  "hash": "44d728f15cd4d41c364283fc8ce7f4fcb0f29bd4e1fb33c5968af1bbc0403d1c"
+}

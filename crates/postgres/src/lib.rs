@@ -154,3 +154,6 @@ pub use history::PostgresRetentionPreview;
 pub use history::PostgresHotRetention;
 
 pub use history::{NumericSnapshot, PostgresNumericSummaries};
+
+/// Durable bounded export adapter.
+pub use history::PostgresExports;

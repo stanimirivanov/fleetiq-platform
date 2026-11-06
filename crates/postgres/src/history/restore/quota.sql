@@ -6,5 +6,5 @@ SELECT EXISTS (
  AND p.revision=(SELECT max(revision) FROM history.lifecycle_policies WHERE tenant_id=$1)
  AND p.max_jobs IS NOT NULL
  AND (SELECT COALESCE(sum(reserved_bytes::numeric),0) FROM history.work_reservations WHERE tenant_id=$1 AND expires_at>clock_timestamp())
-   + (SELECT COALESCE(sum(octet_length(payload)::numeric),0) FROM history.restore_jobs WHERE tenant_id=$1 AND status='ready' AND expires_at>clock_timestamp()) <= p.max_bytes::numeric
+   + (SELECT COALESCE(sum(octet_length(payload)::numeric),0) FROM history.restore_jobs WHERE tenant_id=$1 AND status='ready' AND expires_at>clock_timestamp()) + history.export_bytes($1) <= p.max_bytes::numeric
 ) AS "fits!"

@@ -713,3 +713,20 @@ immutable revision and rechecks current grants. Exact strings and numeric_summar
 representation distinguish derived buckets from raw history. Missing publications
 return 404; malformed/cross-scope cursors return 400. No production or raw fallback
 occurs. UI and installed/volume qualification remain later slices.
+
+## Bounded historical exports
+
+M06-PR13 adds explicit trusted request_export/export_once compositions with no
+startup worker or public HTTP/download endpoint. A tenant-scoped idempotency key
+freezes one exact property-version/window/optional restored-generation selection.
+At most sixteen unique interpretations, seven days and one 2 MiB property-history-v1
+file are accepted, without truncation or raw-history replacement. Asynchronous
+workers verify the frozen file rather than re-querying current sources.
+
+Pending/ready exports last at most one hour, consuming one shared slot and a
+conservative 4 MiB allowance. Current policy, tenant, independent attempt and
+commit-time fences protect publication. Cancellation/expiry remove availability;
+uncertain running work retains quota until acknowledgement or lease expiry.
+Exact retries preserve generation, membership and terminal state. See
+[the operations guide](../operations/historical-exports.md) and
+[ADR 0150](../adr/0150-produce-bounded-historical-exports.md).

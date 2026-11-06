@@ -244,3 +244,6 @@ mod restoration;
 
 mod numeric_summary;
 pub use numeric_summary::NumericArchiveDecoder;
+
+mod export_codec;
+pub use export_codec::ExactExportCodec;

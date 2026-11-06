@@ -208,3 +208,5 @@ introducing a new record.
 | [0148](0148-reclaim-verified-hot-payloads.md) | Explicit verified hot reclamation, retained anchors and atomic consumer/audit protections |
 
 | [0149](0149-produce-versioned-numeric-downsampling.md) | Exact bounded numeric snapshots with immutable revisions, quality/coverage lineage and atomic admission |
+
+| [0150](0150-produce-bounded-historical-exports.md) | Produce bounded historical exports | Proposed |

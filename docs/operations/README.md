@@ -101,3 +101,5 @@ Protocol package operators: [storage and isolated admission](protocol-package-ad
 - [Verified hot-payload reclamation](hot-retention.md)
 
 - [Versioned numeric downsampling](numeric-downsampling.md)
+
+- [Bounded historical exports](historical-exports.md) — explicit frozen selections, exact files, shared quotas and temporary artifact lifecycle.
