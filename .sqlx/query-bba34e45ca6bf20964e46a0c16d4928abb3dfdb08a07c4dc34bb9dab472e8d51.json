@@ -1,0 +1,85 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Distinguish disabled tenant, impossible target and failed admission before source reads.\nSELECT t.is_active AS \"active!\",EXISTS(SELECT 1 FROM metadata.asset_type_properties supported WHERE supported.tenant_id=a.tenant_id AND supported.type_id=a.type_id AND supported.type_version=a.type_version AND supported.property_id=$3 AND supported.property_version=$4) AS \"target_present!\",\n d.value_kind,d.canonical_unit,\n floor(extract(epoch FROM clock_timestamp())*1000)::bigint AS \"observed!\",\n EXISTS(SELECT 1 FROM history.work_reservations r JOIN history.lifecycle_policies p\n ON p.tenant_id=r.tenant_id AND p.revision=r.policy_revision\n WHERE r.tenant_id=t.tenant_id AND r.reservation_id=$6 AND r.reserved_bytes>=2097152\n AND r.expires_at>clock_timestamp() AND p.max_jobs IS NOT NULL\n AND p.revision=(SELECT max(revision) FROM history.lifecycle_policies WHERE tenant_id=t.tenant_id)) AS \"admitted!\",\n EXISTS(SELECT 1 FROM history.asset_property_changes h JOIN metadata.signal_binding_revisions b\n ON b.tenant_id=h.tenant_id AND b.binding_id=h.binding_id AND b.revision=h.binding_revision\n WHERE h.tenant_id=$1 AND b.target_asset_id=$2 AND b.target_property_id=$3 AND b.target_property_version=$4\n AND h.event_at_ms IS NULL AND NOT EXISTS(\n SELECT 1 FROM history.archive_members m WHERE (m.tenant_id,m.message_id,m.protocol_package_id,m.protocol_package_version,m.output_index,m.binding_id,m.binding_revision,m.event_time_basis)\n =(h.tenant_id,h.message_id,h.protocol_package_id,h.protocol_package_version,h.output_index,h.binding_id,h.binding_revision,h.event_time_basis) AND m.job_id=$5::bigint)) AS \"missing!\"\nFROM metadata.tenants t\nLEFT JOIN metadata.assets a ON a.tenant_id=t.tenant_id AND a.asset_id=$2\nLEFT JOIN metadata.property_definitions d ON d.tenant_id=t.tenant_id AND d.property_id=$3 AND d.version=$4\nWHERE t.tenant_id=$1\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "active!",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "metadata.tenants",
+            "name": "is_active"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "target_present!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "value_kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.property_definitions",
+            "name": "value_kind"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "canonical_unit",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "metadata.property_definitions",
+            "name": "canonical_unit"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "observed!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "admitted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "missing!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      true,
+      true,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "bba34e45ca6bf20964e46a0c16d4928abb3dfdb08a07c4dc34bb9dab472e8d51"
+}

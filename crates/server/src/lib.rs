@@ -346,3 +346,6 @@ mod retention_preview;
 
 mod reclaim_once;
 pub use reclaim_once::reclaim_once;
+
+mod numeric_summary_once;
+pub use numeric_summary_once::produce_numeric_summary_once;

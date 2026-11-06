@@ -206,3 +206,5 @@ introducing a new record.
 | [0147](0147-preview-retention-eligibility.md) | Bounded read-only retention assessment with conservative age/consumer protections and expiring context |
 
 | [0148](0148-reclaim-verified-hot-payloads.md) | Explicit verified hot reclamation, retained anchors and atomic consumer/audit protections |
+
+| [0149](0149-produce-versioned-numeric-downsampling.md) | Exact bounded numeric snapshots with immutable revisions, quality/coverage lineage and atomic admission |

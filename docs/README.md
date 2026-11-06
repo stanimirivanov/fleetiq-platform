@@ -107,3 +107,5 @@ For conservative read-only lifecycle eligibility and protected anchors, use the
 [ADR 0147](adr/0147-preview-retention-eligibility.md).
 
 - [Verified hot-payload reclamation](operations/hot-retention.md) and [ADR 0148](adr/0148-reclaim-verified-hot-payloads.md) describe explicit approval, archived coverage, audit and rollback.
+
+- [Versioned numeric downsampling](operations/numeric-downsampling.md) and [ADR 0149](adr/0149-produce-versioned-numeric-downsampling.md) cover explicit summary production, exact arithmetic and immutable source coverage.

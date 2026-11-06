@@ -692,3 +692,20 @@ Removed logical field bytes are not net/physical savings. See
 [the operations guide](../operations/hot-retention.md) and
 [ADR 0148](../adr/0148-reclaim-verified-hot-payloads.md). Installed/provider and
 retained-volume qualification remain pending.
+
+## Versioned numeric downsampling
+
+M06-PR11 adds explicit trusted production of numeric-fixed-v1 snapshots over
+epoch-aligned full buckets (seven days, 64 buckets, 100 unique interpretations).
+Good samples contribute exact count/min/max/sum; mean is the exact sum/count pair.
+Invalid/uncertain qualities remain in lineage/excluded counts. Values remain exact
+normalized decimal strings; units/kinds are not coerced.
+
+One repeatable-read capture combines hot evidence and an optional explicit ready
+restore. Unavailable coverage fails rather than becoming empty output. Immutable
+series/revisions preserve original input lineage; unchanged content reuses its
+receipt and late evidence adds a revision without regressing a newer input set.
+Existing budget/current-policy fences apply. No startup worker or public summary
+API is added. See [the operations guide](../operations/numeric-downsampling.md)
+and [ADR 0149](../adr/0149-produce-versioned-numeric-downsampling.md). Read API,
+UI and installed/volume qualification remain later slices.

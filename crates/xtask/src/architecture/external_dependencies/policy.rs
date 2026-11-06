@@ -82,7 +82,7 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
     },
     ExternalPackagePolicy {
         name: "fleetiq-history",
-        normal: NONE,
+        normal: &["bigdecimal"],
         development: &["tokio"],
         build: NONE,
     },

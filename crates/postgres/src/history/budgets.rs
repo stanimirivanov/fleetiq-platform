@@ -31,10 +31,15 @@ impl PostgresHistoryBudgets {
         sqlx::query("SET LOCAL statement_timeout = '2s'")
             .execute(&mut *tx)
             .await?;
-        sqlx::query("SELECT tenant_id FROM metadata.tenants WHERE tenant_id=$1 FOR UPDATE")
-            .bind(tenant.as_str())
-            .fetch_one(&mut *tx)
-            .await?;
+        let active: bool = sqlx::query_scalar(
+            "SELECT is_active FROM metadata.tenants WHERE tenant_id=$1 FOR UPDATE",
+        )
+        .bind(tenant.as_str())
+        .fetch_one(&mut *tx)
+        .await?;
+        if !active {
+            return Ok(BudgetAdmission::Disabled);
+        }
         sqlx::query("DELETE FROM history.work_reservations WHERE tenant_id=$1 AND expires_at<=clock_timestamp()").bind(tenant.as_str()).execute(&mut *tx).await?;
         let policy=sqlx::query("SELECT revision,max_jobs,max_bytes FROM history.lifecycle_policies WHERE tenant_id=$1 ORDER BY revision DESC LIMIT 1").bind(tenant.as_str()).fetch_optional(&mut *tx).await?;
         let outcome = if let Some(policy) = policy {

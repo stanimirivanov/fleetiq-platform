@@ -152,3 +152,5 @@ pub use history::PostgresRestore;
 pub use history::PostgresRetentionPreview;
 
 pub use history::PostgresHotRetention;
+
+pub use history::{NumericSnapshot, PostgresNumericSummaries};
