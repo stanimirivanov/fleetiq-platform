@@ -1,0 +1,8 @@
+name: mode
+in: query
+required: false
+description: Hot is the unchanged default. hot_and_restored requires manifest_id and restore_generation and reports selected-manifest coverage; it never scans object storage. Restore parameters are invalid in hot mode.
+schema:
+  type: string
+  enum: [hot, hot_and_restored]
+  default: hot

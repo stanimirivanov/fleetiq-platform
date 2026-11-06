@@ -127,6 +127,64 @@ fn scope(
 }
 pub(super) use crate::cursor_codec::{decode, encode};
 
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RestoredPageKey {
+    scope: String,
+    manifest: i64,
+    generation: i64,
+    coverage: String,
+    event: i64,
+    interpretation: Interpretation,
+}
+pub(super) fn restored_page_token(
+    tenant: &TenantId,
+    query: &fleetiq_history::PropertyHistoryQuery,
+    key: &PropertyHistoryCursor,
+    ticket: fleetiq_history::restore::RestoreTicket,
+    coverage: &str,
+) -> Option<String> {
+    encode(&RestoredPageKey {
+        scope: scope(
+            tenant,
+            query.target(),
+            query.start().get(),
+            query.end().get(),
+        )
+        .ok()?,
+        manifest: ticket.manifest(),
+        generation: ticket.generation(),
+        coverage: coverage.into(),
+        event: key.event_at().get(),
+        interpretation: Interpretation::from_id(key.id()),
+    })
+    .ok()
+    .filter(|s| s.len() <= 8192)
+}
+pub(super) fn restored_page_key(
+    token: &str,
+    tenant: &TenantId,
+    target: &SignalTarget,
+    start: i64,
+    end: i64,
+    ticket: fleetiq_history::restore::RestoreTicket,
+) -> Option<(PropertyHistoryCursor, String)> {
+    let key: RestoredPageKey = decode(token)?;
+    if key.scope != scope(tenant, target, start, end).ok()?
+        || key.manifest != ticket.manifest()
+        || key.generation != ticket.generation()
+        || !["archived", "restoring", "restored", "unavailable"].contains(&key.coverage.as_str())
+    {
+        return None;
+    }
+    Some((
+        PropertyHistoryCursor::new(
+            fleetiq_domain::UnixTimeMillis::new(key.event),
+            key.interpretation.id()?,
+        ),
+        key.coverage,
+    ))
+}
 #[cfg(test)]
 mod tests {
     use super::*;

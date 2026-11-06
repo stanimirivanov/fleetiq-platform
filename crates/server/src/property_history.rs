@@ -3,6 +3,7 @@ mod budget;
 mod cursor;
 pub(crate) mod dto;
 mod handlers;
+mod restored;
 #[cfg(test)]
 mod tests;
 use crate::protected_request::{RequestAuthenticator, protected_method_not_allowed};
@@ -16,6 +17,7 @@ struct Context<A> {
     authentication: A,
     authorization: TenantAuthorizationService<PostgresTenantAccessPolicy>,
     budgets: fleetiq_postgres::PostgresHistoryBudgets,
+    restores: fleetiq_postgres::PostgresRestore,
     exact: PostgresAssetPropertyChangeView,
     history: PropertyHistoryService<PostgresAssetPropertyChangeView>,
 }
@@ -28,6 +30,7 @@ pub(crate) fn router<A: RequestAuthenticator + 'static>(pool: PgPool, authentica
         .with_state(Arc::new(Context {
             authentication, authorization: TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone())),
             budgets: fleetiq_postgres::PostgresHistoryBudgets::new(pool.clone()),
+            restores: fleetiq_postgres::PostgresRestore::new(pool.clone()),
             exact: PostgresAssetPropertyChangeView::new(pool.clone()),
     history: PropertyHistoryService::new(PostgresAssetPropertyChangeView::new(pool)),
         }))

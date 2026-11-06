@@ -51,7 +51,7 @@ fn millis(value: &str) -> Option<i64> {
     let parsed = value.parse::<i64>().ok()?;
     (parsed.to_string() == value).then_some(parsed)
 }
-fn invalid() -> Response {
+pub(super) fn invalid() -> Response {
     protected_request::problem(
         StatusCode::BAD_REQUEST,
         protected_request::BAD_REQUEST,
@@ -80,12 +80,18 @@ pub(super) async fn list<A: RequestAuthenticator>(
     ) else {
         return Ok(invalid());
     };
-    let after = match parameters.after {
-        None => None,
-        Some(s) => match cursor::page_key(&s, grant.tenant_id(), &target, start, end) {
-            Some(c) => Some(c),
-            None => return Ok(invalid()),
-        },
+    let Ok(selection) = super::restored::selection(&parameters) else {
+        return Ok(invalid());
+    };
+    let Ok((after, coverage_epoch)) = super::restored::page_position(
+        parameters.after.as_deref(),
+        grant.tenant_id(),
+        &target,
+        start,
+        end,
+        selection,
+    ) else {
+        return Ok(invalid());
     };
     let Ok(query) = PropertyHistoryQuery::new(
         target,
@@ -97,6 +103,17 @@ pub(super) async fn list<A: RequestAuthenticator>(
         return Ok(invalid());
     };
     let tenant = grant.tenant_id().clone();
+    if let Some(ticket) = selection {
+        return super::budget::run(&ctx.budgets, &tenant, async {
+            tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                super::restored::list(&ctx, grant, &query, ticket, coverage_epoch.as_deref()),
+            )
+            .await
+            .map_err(|_| ProtectedRequestError::Internal)?
+        })
+        .await;
+    }
     super::budget::run(&ctx.budgets, &tenant, async {
         let page = ctx
             .history
@@ -118,6 +135,7 @@ pub(super) async fn list<A: RequestAuthenticator>(
             Json(dto::HistoryPageBody {
                 changes,
                 next_after,
+                coverage: None,
             })
             .into_response(),
         ))

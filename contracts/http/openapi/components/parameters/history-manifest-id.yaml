@@ -1,0 +1,6 @@
+name: manifest_id
+in: query
+required: false
+description: Exact tenant-owned manifest selected in hot_and_restored mode; required only in that mode. Unknown selections report unavailable coverage.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml

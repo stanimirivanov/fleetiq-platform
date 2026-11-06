@@ -1,0 +1,6 @@
+name: restore_generation
+in: query
+required: false
+description: Explicit restore request generation selected with manifest_id in hot_and_restored mode. No restore is created by a read.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml

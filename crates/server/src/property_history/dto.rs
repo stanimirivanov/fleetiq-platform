@@ -12,11 +12,16 @@ pub(super) struct Parameters {
     pub(super) end_at_ms: String,
     pub(super) limit: Option<u16>,
     pub(super) after: Option<String>,
+    pub(super) mode: Option<String>,
+    pub(super) manifest_id: Option<String>,
+    pub(super) restore_generation: Option<String>,
 }
 #[derive(Serialize)]
 pub(super) struct HistoryPageBody {
     pub(super) changes: Vec<ChangeBody>,
     pub(super) next_after: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) coverage: Option<HistoryCoverageBody>,
 }
 #[derive(Serialize)]
 pub(crate) struct ChangeBody {
@@ -139,4 +144,13 @@ mod tests {
             );
         }
     }
+}
+
+#[derive(Serialize)]
+pub(super) struct HistoryCoverageBody {
+    pub(super) hot: &'static str,
+    pub(super) archive: &'static str,
+    pub(super) scope: &'static str,
+    pub(super) manifest_id: String,
+    pub(super) restore_generation: String,
 }

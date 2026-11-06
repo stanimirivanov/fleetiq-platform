@@ -1,0 +1,4 @@
+type: string
+pattern: '^[1-9][0-9]{0,18}$'
+maxLength: 19
+description: Canonical positive signed-64-bit manifest or restore request generation (at most 9223372036854775807), serialized exactly.

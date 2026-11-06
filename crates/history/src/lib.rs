@@ -15,7 +15,8 @@ mod property_change_view;
 mod property_history;
 pub use property_history::{
     InvalidPropertyHistoryQuery, PropertyHistoryCursor, PropertyHistoryPage, PropertyHistoryQuery,
-    PropertyHistoryService, PropertyHistoryView,
+    PropertyHistoryService, PropertyHistoryView, RestoredHistorySnapshot,
+    RestoredPropertyHistoryView,
 };
 mod stored_processing;
 

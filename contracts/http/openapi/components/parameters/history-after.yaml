@@ -2,6 +2,6 @@ name: after
 in: query
 required: false
 description: Exclusive cursor bound to tenant, asset, exact property version and window. Restart to see
-  late appends behind it.
+  late appends behind it. In hot_and_restored mode it also binds manifest, request generation and coverage state; a changed/expired selection invalidates it.
 schema:
   $ref: ../schemas/HistoryToken.yaml
