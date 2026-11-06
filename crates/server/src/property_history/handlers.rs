@@ -97,29 +97,32 @@ pub(super) async fn list<A: RequestAuthenticator>(
         return Ok(invalid());
     };
     let tenant = grant.tenant_id().clone();
-    let page = ctx
-        .history
-        .list(grant, &query)
-        .await
-        .map_err(|_| ProtectedRequestError::Internal)?;
-    let next_after = page
-        .next_after()
-        .map(|key| cursor::page_token(&tenant, &query, key))
-        .transpose()
-        .map_err(|_| ProtectedRequestError::Internal)?;
-    let changes = page
-        .changes()
-        .iter()
-        .map(dto::ChangeBody::new)
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|_| ProtectedRequestError::Internal)?;
-    Ok(protected_request::no_store(
-        Json(dto::HistoryPageBody {
-            changes,
-            next_after,
-        })
-        .into_response(),
-    ))
+    super::budget::run(&ctx.budgets, &tenant, async {
+        let page = ctx
+            .history
+            .list(grant, &query)
+            .await
+            .map_err(|_| ProtectedRequestError::Internal)?;
+        let next_after = page
+            .next_after()
+            .map(|key| cursor::page_token(&tenant, &query, key))
+            .transpose()
+            .map_err(|_| ProtectedRequestError::Internal)?;
+        let changes = page
+            .changes()
+            .iter()
+            .map(dto::ChangeBody::new)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| ProtectedRequestError::Internal)?;
+        Ok(protected_request::no_store(
+            Json(dto::HistoryPageBody {
+                changes,
+                next_after,
+            })
+            .into_response(),
+        ))
+    })
+    .await
 }
 pub(super) async fn find<A: RequestAuthenticator>(
     State(ctx): State<Arc<Context<A>>>,
@@ -138,20 +141,24 @@ pub(super) async fn find<A: RequestAuthenticator>(
     else {
         return Ok(invalid());
     };
-    match ctx
-        .history
-        .find(grant, &target, &id)
-        .await
-        .map_err(|_| ProtectedRequestError::Internal)?
-    {
-        Some(change) => Ok(protected_request::no_store(
-            Json(dto::ChangeBody::new(&change).map_err(|_| ProtectedRequestError::Internal)?)
-                .into_response(),
-        )),
-        None => Ok(protected_request::problem(
-            StatusCode::NOT_FOUND,
-            protected_request::NOT_FOUND,
-            "Resource not found",
-        )),
-    }
+    let tenant = grant.tenant_id().clone();
+    super::budget::run(&ctx.budgets, &tenant, async {
+        match ctx
+            .exact
+            .find_property_bounded(grant, &target, &id)
+            .await
+            .map_err(|_| ProtectedRequestError::Internal)?
+        {
+            Some(change) => Ok(protected_request::no_store(
+                Json(dto::ChangeBody::new(&change).map_err(|_| ProtectedRequestError::Internal)?)
+                    .into_response(),
+            )),
+            None => Ok(protected_request::problem(
+                StatusCode::NOT_FOUND,
+                protected_request::NOT_FOUND,
+                "Resource not found",
+            )),
+        }
+    })
+    .await
 }

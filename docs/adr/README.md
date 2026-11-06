@@ -190,3 +190,5 @@ introducing a new record.
 | [0139](0139-define-tenant-lifecycle-policies.md) | Explicit disabled-by-default tenant lifecycle policies and retained evidence protection contracts |
 
 | [0140](0140-report-tenant-logical-storage-usage.md) | Tenant-scoped logical storage reconciliation with explicit methods and unmeasured classes |
+
+| [0141](0141-enforce-tenant-history-work-budgets.md) | Transactional tenant history-work reservations, bounded HTTP execution and conservative expiry recovery |

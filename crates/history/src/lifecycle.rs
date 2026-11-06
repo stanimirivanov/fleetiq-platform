@@ -85,3 +85,14 @@ impl EvidenceProtection {
         matches!(self, Self::VerifiedUnreferencedPayload)
     }
 }
+
+/// Outcome of transactional work admission, independent of query results.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BudgetAdmission {
+    /// No configured limits; retain existing behavior.
+    Disabled,
+    /// Current slot or reserved-byte allowance cannot admit this work.
+    Denied,
+    /// Durable reservation identity, scoped to its tenant; not an authorization token.
+    Reserved(i64),
+}

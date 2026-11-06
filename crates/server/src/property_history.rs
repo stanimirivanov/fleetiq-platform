@@ -1,4 +1,5 @@
 //! Thin HTTP adapter for protected immutable history; no semantic resolution.
+mod budget;
 mod cursor;
 pub(crate) mod dto;
 mod handlers;
@@ -14,6 +15,8 @@ use std::sync::Arc;
 struct Context<A> {
     authentication: A,
     authorization: TenantAuthorizationService<PostgresTenantAccessPolicy>,
+    budgets: fleetiq_postgres::PostgresHistoryBudgets,
+    exact: PostgresAssetPropertyChangeView,
     history: PropertyHistoryService<PostgresAssetPropertyChangeView>,
 }
 pub(crate) fn router<A: RequestAuthenticator + 'static>(pool: PgPool, authentication: A) -> Router {
@@ -24,6 +27,8 @@ pub(crate) fn router<A: RequestAuthenticator + 'static>(pool: PgPool, authentica
             get(handlers::find::<A>).fallback(protected_method_not_allowed))
         .with_state(Arc::new(Context {
             authentication, authorization: TenantAuthorizationService::new(PostgresTenantAccessPolicy::new(pool.clone())),
-            history: PropertyHistoryService::new(PostgresAssetPropertyChangeView::new(pool)),
+            budgets: fleetiq_postgres::PostgresHistoryBudgets::new(pool.clone()),
+            exact: PostgresAssetPropertyChangeView::new(pool.clone()),
+    history: PropertyHistoryService::new(PostgresAssetPropertyChangeView::new(pool)),
         }))
 }

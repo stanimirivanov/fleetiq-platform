@@ -262,3 +262,71 @@ async fn suspended_tenant_or_actor_cannot_read_with_an_existing_telemetry_grant(
         .unwrap();
     assert_eq!(response(&app, &url).await.0, StatusCode::UNAUTHORIZED);
 }
+#[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
+async fn configured_history_budgets_reject_explicitly_and_release(pool: PgPool) {
+    use fleetiq_domain::{ActorId, TenantId};
+    use fleetiq_history::lifecycle::{LifecyclePolicy, LifecycleSettings};
+    let app = setup(&pool).await;
+    let tenant = TenantId::new("tenant-a").unwrap();
+    let actor = ActorId::new("operator-a").unwrap();
+    let policies = fleetiq_postgres::PostgresLifecyclePolicyRepository::new(pool.clone());
+    let url = format!("{ROOT}/history?start_at_ms=0&end_at_ms=3000&limit=1");
+    policies
+        .append(
+            &tenant,
+            &actor,
+            0,
+            LifecycleSettings::Configured(LifecyclePolicy::new(7, 30, 1, 1).unwrap()),
+        )
+        .await
+        .unwrap();
+    let (status, body) = response(&app, &url).await;
+    assert_eq!(status, StatusCode::TOO_MANY_REQUESTS);
+    assert_eq!(body["type"], "urn:fleetiq:problem:history-budget-exceeded");
+    assert_eq!(
+        response(
+            &app,
+            &format!("{ROOT}/history?start_at_ms=bad&end_at_ms=3000")
+        )
+        .await
+        .0,
+        StatusCode::BAD_REQUEST
+    );
+    policies
+        .append(
+            &tenant,
+            &actor,
+            1,
+            LifecycleSettings::Configured(LifecyclePolicy::new(7, 30, 1, 1_048_576).unwrap()),
+        )
+        .await
+        .unwrap();
+    let (status, page) = response(&app, &url).await;
+    assert_eq!(status, StatusCode::OK);
+    let token = page["changes"][0]["interpretation"].as_str().unwrap();
+    assert_eq!(
+        response(&app, &format!("{ROOT}/interpretations/{token}"))
+            .await
+            .0,
+        StatusCode::OK
+    );
+    assert_eq!(
+        sqlx::query_scalar::<_, i64>("SELECT count(*) FROM history.work_reservations")
+            .fetch_one(&pool)
+            .await
+            .unwrap(),
+        0
+    );
+    let mut lock = pool.begin().await.unwrap();
+    sqlx::query("LOCK TABLE history.asset_property_changes IN ACCESS EXCLUSIVE MODE")
+        .execute(&mut *lock)
+        .await
+        .unwrap();
+    assert_eq!(
+        response(&app, &format!("{ROOT}/interpretations/{token}"))
+            .await
+            .0,
+        StatusCode::INTERNAL_SERVER_ERROR
+    );
+    lock.rollback().await.unwrap();
+}
