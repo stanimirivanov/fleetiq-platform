@@ -164,7 +164,14 @@ pub(super) const PACKAGE_POLICIES: &[ExternalPackagePolicy] = &[
             "tokio",
             "url",
         ],
-        development: &["jsonschema", "rcgen", "tokio", "tokio-rustls", "tower"],
+        development: &[
+            "jsonschema",
+            "object_store",
+            "rcgen",
+            "tokio",
+            "tokio-rustls",
+            "tower",
+        ],
         build: NONE,
     },
     ExternalPackagePolicy {

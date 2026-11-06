@@ -333,3 +333,6 @@ mod alert_delivery;
 pub use alert_delivery::{AlertmanagerConfig, AlertmanagerConfigError, run_notification_worker};
 
 mod storage_usage;
+
+mod archive_once;
+pub use archive_once::archive_once;

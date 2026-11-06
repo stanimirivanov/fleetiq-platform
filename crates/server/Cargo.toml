@@ -37,6 +37,8 @@ subtle.workspace = true
 tokio = { workspace = true, features = ["process", "io-util", "sync"] }
 
 [dev-dependencies]
+# Signed real S3 fixture qualification only; no new runtime dependency.
+object_store.workspace = true
 jsonschema = { version = "0.60.0", default-features = false }
 tower.workspace = true
 # Real TLS fixtures generate ephemeral keys; neither dependency enters runtime.
@@ -46,3 +48,8 @@ tokio = { workspace = true, features = ["io-util", "sync", "test-util"] }
 
 [lints]
 workspace = true
+
+[package.metadata.cargo-machete]
+# tests/archive_publication.rs includes ../archive/tests/support/provider.rs.
+# Its AwsAuthorizer/HttpRequest usage is real but outside machete's crate scan.
+ignored = ["object_store"]

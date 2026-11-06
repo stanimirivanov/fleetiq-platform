@@ -196,3 +196,5 @@ introducing a new record.
 | [0142](0142-encode-exact-archive-segments.md) | Bounded exact Parquet archive segments with tenant isolation and validated provenance |
 
 | [0143](0143-store-immutable-archive-objects.md) | Create-only verified archive objects with bounded S3 transport and real provider qualification |
+
+| [0144](0144-publish-verified-archive-manifests.md) | Frozen archive membership, durable fenced jobs and verified manifest publication |
