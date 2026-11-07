@@ -1,0 +1,6 @@
+name: manifest_id
+in: path
+required: true
+description: Exact positive tenant-owned archive manifest identity.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml

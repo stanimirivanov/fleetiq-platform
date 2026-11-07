@@ -70,13 +70,22 @@ async fn application_router(pool: PgPool, config: &ServerConfig) -> Result<Route
         let provider = browser_identity::OidcClient::discover(browser.clone())
             .await
             .map_err(|_| ServerError::BrowserIdentityStartup)?;
+        let authentication =
+            browser_identity::BrowserRequestAuthenticator::new(pool.clone(), browser);
+        let mutation = mutation_guard::MutationGuard::Browser {
+            public_origin: browser.public_origin().to_owned(),
+        };
         router = router
+            .merge(restore_routes::router(
+                pool.clone(),
+                authentication.clone(),
+                mutation.clone(),
+                config.archive().cloned(),
+            ))
             .merge(protected_application_router(
                 pool.clone(),
-                browser_identity::BrowserRequestAuthenticator::new(pool.clone(), browser),
-                mutation_guard::MutationGuard::Browser {
-                    public_origin: browser.public_origin().to_owned(),
-                },
+                authentication,
+                mutation,
             ))
             .merge(browser_identity::postgres_browser_router(
                 pool,
@@ -88,11 +97,18 @@ async fn application_router(pool: PgPool, config: &ServerConfig) -> Result<Route
             bearer_authentication::ConfiguredBearerAuthenticator::new(bearer.clone()),
             fleetiq_postgres::PostgresActorIdentityResolver::new(pool.clone()),
         );
-        router = router.merge(protected_application_router(
-            pool,
-            authentication,
-            mutation_guard::MutationGuard::Workload,
-        ));
+        router = router
+            .merge(restore_routes::router(
+                pool.clone(),
+                authentication.clone(),
+                mutation_guard::MutationGuard::Workload,
+                config.archive().cloned(),
+            ))
+            .merge(protected_application_router(
+                pool,
+                authentication,
+                mutation_guard::MutationGuard::Workload,
+            ));
     }
     Ok(router.merge(api_router()))
 }
@@ -342,6 +358,7 @@ mod archive_once;
 pub use archive_once::archive_once;
 
 mod restore_once;
+mod restore_routes;
 pub use restore_once::restore_once;
 
 mod retention_preview;

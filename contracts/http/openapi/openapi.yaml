@@ -1,12 +1,16 @@
 openapi: "3.1.1"
 info:
   title: "FleetIQ HTTP UI baseline"
-  version: "1.0.0-baseline.35"
+  version: "1.0.0-baseline.36"
   description: "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
 servers:
   - url: "/"
 security: []
 paths:
+  /api/v1/tenants/{tenant_id}/restores/manifests/{manifest_id}/requests/{expected_generation}:
+    $ref: ./paths/history/restore-request.yaml
+  /api/v1/tenants/{tenant_id}/restores/manifests/{manifest_id}/generations/{restore_generation}:
+    $ref: ./paths/history/restore-status.yaml
   /api/v1/tenants/{tenant_id}/exports/requests/{request_key}:
     $ref: ./paths/history/export-create.yaml
   /api/v1/tenants/{tenant_id}/exports/jobs/{export_id}:
@@ -153,6 +157,8 @@ components:
       $ref: ./components/schemas/ExportCreateRequest.yaml
     ExportCoverage:
       $ref: ./components/schemas/ExportCoverage.yaml
+    RestoreJob:
+      $ref: ./components/schemas/RestoreJob.yaml
     ExportJob:
       $ref: ./components/schemas/ExportJob.yaml
     NumericSummaryPage:
@@ -496,6 +502,12 @@ components:
     OperatorSession:
       $ref: "./components/schemas/OperatorSession.yaml"
   parameters:
+    restore-manifest-id:
+      $ref: ./components/parameters/restore-manifest-id.yaml
+    restore-expected-generation:
+      $ref: ./components/parameters/restore-expected-generation.yaml
+    restore-generation:
+      $ref: ./components/parameters/restore-generation.yaml
     export-id:
       $ref: ./components/parameters/export-id.yaml
     export-request-key:
@@ -689,6 +701,16 @@ components:
     browser-csrf:
       $ref: "./components/parameters/browser-csrf.yaml"
   responses:
+    RestoreAccepted:
+      $ref: ./components/responses/RestoreAccepted.yaml
+    RestoreStatusSucceeded:
+      $ref: ./components/responses/RestoreStatusSucceeded.yaml
+    RestoreConflict:
+      $ref: ./components/responses/RestoreConflict.yaml
+    RestoreBusy:
+      $ref: ./components/responses/RestoreBusy.yaml
+    RestoreStorageUnavailable:
+      $ref: ./components/responses/RestoreStorageUnavailable.yaml
     ExportAccepted:
       $ref: ./components/responses/ExportAccepted.yaml
     ExportStatusSucceeded:

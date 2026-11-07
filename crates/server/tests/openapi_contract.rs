@@ -190,6 +190,14 @@ const OPERATIONS: &[PublishedOperation] = &[
 // or duplicate operation IDs from slipping past the global inventory guard.
 const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
     (
+        "/api/v1/tenants/{tenant_id}/restores/manifests/{manifest_id}/requests/{expected_generation}",
+        &[("put", "requestArchiveRestore")],
+    ),
+    (
+        "/api/v1/tenants/{tenant_id}/restores/manifests/{manifest_id}/generations/{restore_generation}",
+        &[("get", "getArchiveRestoreStatus")],
+    ),
+    (
         "/api/v1/tenants/{tenant_id}/exports/requests/{request_key}",
         &[("put", "createHistoricalExport")],
     ),

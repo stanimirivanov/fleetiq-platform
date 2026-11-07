@@ -1,0 +1,8 @@
+description: Archive storage is not configured for restore requests.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml

@@ -1,9 +1,21 @@
 //! Temporary verified-file staging, independently expiring from immutable archive evidence.
+use fleetiq_access::{AuthorizedTenant, ManageOperations, ReadTelemetry};
 use fleetiq_domain::TenantId;
 use fleetiq_history::restore::{RestoreFailure, RestoreStatus, RestoreTicket};
 use sqlx::{PgPool, Postgres, Transaction};
 mod history_snapshot;
 mod work;
+/// Safe admission outcomes for an authorized restore request.
+#[derive(Debug)]
+pub enum RestoreRequestError {
+    /// The expected generation is stale or the current restore is still active.
+    Conflict,
+    /// The manifest or lifecycle policy does not permit this request.
+    Unavailable,
+    /// The durable request could not be confirmed.
+    Storage,
+}
+
 /// Trusted restore request/staging adapter; construction starts no work.
 pub struct PostgresRestore(pub(super) PgPool);
 impl PostgresRestore {
@@ -28,29 +40,65 @@ impl PostgresRestore {
         manifest: i64,
         expected: i64,
     ) -> Result<RestoreTicket, RestoreFailure> {
+        self.request_outcome(tenant, manifest, expected)
+            .await
+            .map_err(|_| RestoreFailure)
+    }
+
+    /// Requests a manifest within independent grants held by one actor.
+    /// # Errors
+    /// Rejects mismatched authority, unavailable manifests and stale generations.
+    pub async fn request_authorized(
+        &self,
+        read: AuthorizedTenant<ReadTelemetry>,
+        manage: AuthorizedTenant<ManageOperations>,
+        manifest: i64,
+        expected: i64,
+    ) -> Result<RestoreTicket, RestoreRequestError> {
+        if read.tenant_id() != manage.tenant_id() || read.actor_id() != manage.actor_id() {
+            return Err(RestoreRequestError::Unavailable);
+        }
+        self.request_outcome(read.tenant_id(), manifest, expected)
+            .await
+    }
+
+    async fn request_outcome(
+        &self,
+        tenant: &TenantId,
+        manifest: i64,
+        expected: i64,
+    ) -> Result<RestoreTicket, RestoreRequestError> {
         if manifest <= 0 || expected < 0 || expected == i64::MAX {
-            return Err(RestoreFailure);
+            return Err(RestoreRequestError::Conflict);
         }
-        let mut tx = self.transaction().await.map_err(|_| RestoreFailure)?;
-        if !lock(&mut tx, tenant).await.map_err(|_| RestoreFailure)? {
-            return Err(RestoreFailure);
+        let mut tx = self
+            .transaction()
+            .await
+            .map_err(|_| RestoreRequestError::Storage)?;
+        if !lock(&mut tx, tenant)
+            .await
+            .map_err(|_| RestoreRequestError::Storage)?
+        {
+            return Err(RestoreRequestError::Unavailable);
         }
-        let valid:bool=sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM history.archive_jobs WHERE tenant_id=$1 AND job_id=$2 AND object_sha256 IS NOT NULL) AND COALESCE((SELECT max_jobs IS NOT NULL FROM history.lifecycle_policies WHERE tenant_id=$1 ORDER BY revision DESC LIMIT 1),false)").bind(tenant.as_str()).bind(manifest).fetch_one(&mut *tx).await.map_err(|_|RestoreFailure)?;
+        let valid:bool=sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM history.archive_jobs WHERE tenant_id=$1 AND job_id=$2 AND object_sha256 IS NOT NULL) AND COALESCE((SELECT max_jobs IS NOT NULL FROM history.lifecycle_policies WHERE tenant_id=$1 ORDER BY revision DESC LIMIT 1),false)").bind(tenant.as_str()).bind(manifest).fetch_one(&mut *tx).await.map_err(|_|RestoreRequestError::Storage)?;
         if !valid {
-            return Err(RestoreFailure);
+            return Err(RestoreRequestError::Unavailable);
         }
         let next:Option<i64>=if expected==0 {
             sqlx::query_scalar("INSERT INTO history.restore_jobs (tenant_id,manifest_id,request_generation) VALUES ($1,$2,1) ON CONFLICT DO NOTHING RETURNING request_generation").bind(tenant.as_str()).bind(manifest).fetch_optional(&mut *tx).await
         } else {
             sqlx::query_scalar("UPDATE history.restore_jobs SET request_generation=request_generation+1,status='pending',payload=NULL,lease_until=NULL,reservation_id=NULL,expires_at=clock_timestamp()+interval '1 hour' WHERE tenant_id=$1 AND manifest_id=$2 AND request_generation=$3 AND (status IN ('cancelled','expired') OR expires_at<=clock_timestamp()) RETURNING request_generation").bind(tenant.as_str()).bind(manifest).bind(expected).fetch_optional(&mut *tx).await
-        }.map_err(|_|RestoreFailure)?;
+        }.map_err(|_|RestoreRequestError::Storage)?;
         let generation = if let Some(next) = next {
             next
         } else {
-            sqlx::query_scalar("SELECT request_generation FROM history.restore_jobs WHERE tenant_id=$1 AND manifest_id=$2 AND request_generation=$3").bind(tenant.as_str()).bind(manifest).bind(expected+1).fetch_one(&mut *tx).await.map_err(|_|RestoreFailure)?
+            sqlx::query_scalar("SELECT request_generation FROM history.restore_jobs WHERE tenant_id=$1 AND manifest_id=$2 AND request_generation=$3").bind(tenant.as_str()).bind(manifest).bind(expected+1).fetch_optional(&mut *tx).await.map_err(|_|RestoreRequestError::Storage)?.ok_or(RestoreRequestError::Conflict)?
         };
-        tx.commit().await.map_err(|_| RestoreFailure)?;
-        RestoreTicket::new(manifest, generation)
+        tx.commit()
+            .await
+            .map_err(|_| RestoreRequestError::Storage)?;
+        RestoreTicket::new(manifest, generation).map_err(|_| RestoreRequestError::Storage)
     }
     /// Reports current generation-bound availability using the database clock.
     /// # Errors

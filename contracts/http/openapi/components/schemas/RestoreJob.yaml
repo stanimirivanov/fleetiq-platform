@@ -1,0 +1,11 @@
+type: object
+additionalProperties: false
+required: [manifest_id, restore_generation, state]
+properties:
+  manifest_id:
+    $ref: ./HistoryRestoreId.yaml
+  restore_generation:
+    $ref: ./HistoryRestoreId.yaml
+  state:
+    type: string
+    enum: [pending, ready, cancelled, expired]

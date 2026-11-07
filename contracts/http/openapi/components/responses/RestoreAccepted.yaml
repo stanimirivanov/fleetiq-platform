@@ -1,0 +1,12 @@
+description: Exact request accepted or replayed. Pending work can be retried with the same expected generation.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/json:
+    schema:
+      $ref: ../schemas/RestoreJob.yaml
+    example:
+      manifest_id: '1'
+      restore_generation: '1'
+      state: pending

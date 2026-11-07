@@ -1,4 +1,4 @@
-//! Explicit bounded restore composition; no automatic worker, replay or HTTP route.
+//! Explicit bounded restore attempt for trusted callers and the protected HTTP command.
 use fleetiq_archive::objects::{ImmutableArchiveObjects, S3ArchiveConfig};
 use fleetiq_domain::TenantId;
 use fleetiq_history::restore::{RestoreFailure, RestoreTick, RestoreTicket};

@@ -1,0 +1,26 @@
+get:
+  operationId: getArchiveRestoreStatus
+  summary: Read exact temporary restore status
+  description: 'Requires current telemetry.read. Send no query parameters. Reads the exact tenant-owned
+    manifest and request generation. Expired staging is unavailable even before physical cleanup.
+    Missing or superseded generations return 404. Ready describes the selected manifest only.'
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/restore-manifest-id.yaml
+  - $ref: ../../components/parameters/restore-generation.yaml
+  responses:
+    '200':
+      $ref: ../../components/responses/RestoreStatusSucceeded.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
