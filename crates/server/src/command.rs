@@ -33,6 +33,8 @@ pub enum ProcessCommand {
     CalculateOnce,
     /// Run explicit durable fixed-window calculator work without HTTP or DDL.
     AnalyticsWorker,
+    /// Publish verified archive selections for one explicitly configured tenant.
+    ArchiveWorker,
     /// Deliver retained alerts to the configured trusted notification router.
     NotificationWorker,
     /// Print command usage without reading runtime configuration.
@@ -67,6 +69,7 @@ impl ProcessCommand {
             "calculate-once" => Self::CalculateOnce,
             "notification-worker" => Self::NotificationWorker,
             "analytics-worker" => Self::AnalyticsWorker,
+            "archive-worker" => Self::ArchiveWorker,
             "register-calculator" => Self::RegisterCalculator,
             "replay-worker" => Self::ReplayWorker,
             "semantic-worker" => Self::SemanticWorker,
@@ -97,7 +100,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [notification-worker|analytics-worker|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
+        "Usage: fleetiq-server [notification-worker|analytics-worker|archive-worker|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -178,6 +181,7 @@ mod tests {
             ),
             (vec!["calculate-once"], ProcessCommand::CalculateOnce),
             (vec!["analytics-worker"], ProcessCommand::AnalyticsWorker),
+            (vec!["archive-worker"], ProcessCommand::ArchiveWorker),
             (
                 vec!["notification-worker"],
                 ProcessCommand::NotificationWorker,

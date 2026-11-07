@@ -746,3 +746,8 @@ Baseline.36 exposes protected archive restore requests and exact-generation
 status. Pending requests start a bounded one-turn attempt against configured
 private archive storage. Exact retries preserve the original generation and
 lifetime. See [ADR 0152](../adr/0152-expose-authorized-archive-restore.md).
+
+The explicit `archive-worker` server command publishes verified archive
+manifests for one configured tenant using existing storage inputs and lifecycle
+admission. It checks the migrated schema before work and retains frozen
+selections through shutdown. See [ADR 0153](../adr/0153-expose-executable-archive-worker.md).

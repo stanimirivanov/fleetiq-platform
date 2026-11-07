@@ -56,6 +56,17 @@ pub struct ServerConfig {
     archive: Option<fleetiq_archive::objects::S3ArchiveConfig>,
 }
 
+pub(crate) fn archive_from_env()
+-> Result<Option<fleetiq_archive::objects::S3ArchiveConfig>, ServerConfigError> {
+    archive::read([
+        optional_environment("FLEETIQ_ARCHIVE_ENDPOINT")?,
+        optional_environment("FLEETIQ_ARCHIVE_BUCKET")?,
+        optional_environment("FLEETIQ_ARCHIVE_REGION")?,
+        optional_environment("FLEETIQ_ARCHIVE_ACCESS_KEY")?,
+        optional_environment("FLEETIQ_ARCHIVE_SECRET_KEY")?,
+    ])
+}
+
 impl ServerConfig {
     /// Validated optional archive inputs; configuring them starts no worker or network call.
     pub const fn archive(&self) -> Option<&fleetiq_archive::objects::S3ArchiveConfig> {
@@ -132,13 +143,7 @@ impl ServerConfig {
                     .map_err(ServerConfigError::BrowserIdentity)?,
             );
         }
-        config.archive = archive::read([
-            optional_environment("FLEETIQ_ARCHIVE_ENDPOINT")?,
-            optional_environment("FLEETIQ_ARCHIVE_BUCKET")?,
-            optional_environment("FLEETIQ_ARCHIVE_REGION")?,
-            optional_environment("FLEETIQ_ARCHIVE_ACCESS_KEY")?,
-            optional_environment("FLEETIQ_ARCHIVE_SECRET_KEY")?,
-        ])?;
+        config.archive = archive_from_env()?;
         Ok(config)
     }
 
