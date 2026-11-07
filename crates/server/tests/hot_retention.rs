@@ -6,20 +6,52 @@ use fleetiq_history::{
     AssetPropertyChangeLog, AssetPropertyChangeView, PropertyChangeAppendOutcome,
     archive_work::{ArchiveObject, ArchiveSegmentStore},
     restore::RestoredSegment,
-    retention_work::{RetentionCheck, RetentionRepository, RetentionTick},
+    retention_work::{RetentionCheck, RetentionRepository, RetentionTarget, RetentionTick},
 };
 use fleetiq_postgres::{
     PostgresAssetPropertyChangeLog, PostgresAssetPropertyChangeView, PostgresHotRetention,
 };
 use fleetiq_projection::ProjectionMaintenance;
 use sha2::{Digest, Sha256};
-use sqlx::PgPool;
+use sqlx::{ConnectOptions, PgPool};
 #[path = "hot_retention/support.rs"]
 mod support;
 use support::{quiesce, selection};
 #[path = "../../postgres/tests/support/mod.rs"]
 mod access_support;
 type Error = Box<dyn std::error::Error>;
+async fn reclaim_command(
+    pool: &PgPool,
+    fixture: &provider::Provider,
+    target: &RetentionTarget,
+    expected: &str,
+) -> Result<(), Error> {
+    let output = tokio::process::Command::new(env!("CARGO_BIN_EXE_fleetiq-server"))
+        .arg("reclaim-once")
+        .env_clear()
+        .env(
+            "DATABASE_URL",
+            pool.connect_options().to_url_lossy().as_str(),
+        )
+        .env("FLEETIQ_RECLAIM_TENANT_ID", target.tenant().as_str())
+        .env("FLEETIQ_RECLAIM_MANIFEST_ID", target.manifest().to_string())
+        .env(
+            "FLEETIQ_RECLAIM_POLICY_REVISION",
+            target.revision().to_string(),
+        )
+        .env("FLEETIQ_ARCHIVE_ENDPOINT", &fixture.endpoint)
+        .env("FLEETIQ_ARCHIVE_BUCKET", "archive-test")
+        .env("FLEETIQ_ARCHIVE_REGION", "us-east-1")
+        .env("FLEETIQ_ARCHIVE_ACCESS_KEY", "archive-fixture-access")
+        .env("FLEETIQ_ARCHIVE_SECRET_KEY", "fixture-secret")
+        .kill_on_drop(true)
+        .output()
+        .await?;
+    assert!(output.status.success());
+    assert_eq!(output.stderr.len(), 0);
+    assert_eq!(String::from_utf8(output.stdout)?.trim(), expected);
+    Ok(())
+}
 #[sqlx::test(migrator = "fleetiq_postgres::MIGRATOR")]
 async fn verified_reclamation_preserves_retry_anchors_current_state_and_restore(
     pool: PgPool,
@@ -33,6 +65,7 @@ async fn verified_reclamation_preserves_retry_anchors_current_state_and_restore(
         repo.inspect(&target).await?,
         RetentionCheck::Finished(RetentionTick::Disabled)
     ));
+    reclaim_command(&pool, &fixture, &target, "disabled").await?;
     repo.approve(target.tenant(), 1, "operator-a").await?;
     assert_eq!(
         fleetiq_server::reclaim_once(pool.clone(), fixture.config(), &target).await?,
@@ -94,10 +127,7 @@ async fn verified_reclamation_preserves_retry_anchors_current_state_and_restore(
             .status()
             .is_success()
     );
-    assert_eq!(
-        fleetiq_server::reclaim_once(pool.clone(), fixture.config(), &target).await?,
-        RetentionTick::Reclaimed(2)
-    );
+    reclaim_command(&pool, &fixture, &target, "reclaimed 2").await?;
     assert_eq!(
         sqlx::query_scalar::<_, i64>(
             "SELECT count(*) FROM history.asset_property_changes WHERE event_at_ms IS NULL"
@@ -174,10 +204,7 @@ async fn verified_reclamation_preserves_retry_anchors_current_state_and_restore(
             .status()
             .is_success()
     );
-    assert_eq!(
-        fleetiq_server::reclaim_once(pool.clone(), fixture.config(), &target).await?,
-        RetentionTick::AlreadyReclaimed(2)
-    );
+    reclaim_command(&pool, &fixture, &target, "already-reclaimed 2").await?;
     fixture
         .raw(
             reqwest::Method::PUT,

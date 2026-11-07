@@ -366,7 +366,7 @@ pub use restore_once::restore_once;
 mod retention_preview;
 
 mod reclaim_once;
-pub use reclaim_once::reclaim_once;
+pub use reclaim_once::{reclaim_once, run_reclaim_once};
 
 mod numeric_summary_once;
 pub use numeric_summary_once::produce_numeric_summary_once;

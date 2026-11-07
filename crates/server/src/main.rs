@@ -4,6 +4,7 @@ mod health_probe;
 
 use std::{env, error::Error, process::ExitCode};
 
+use fleetiq_history::retention_work::RetentionTick;
 use fleetiq_identity::PlatformBootstrapOutcome;
 use fleetiq_server::{
     MigrationConfig, PlatformBootstrapConfig, ProcessCommand, SchemaMode, ServerConfig,
@@ -78,6 +79,13 @@ async fn execute() -> Result<(), Box<dyn Error>> {
         ProcessCommand::NotificationWorker => fleetiq_server::run_notification_worker().await?,
         ProcessCommand::AnalyticsWorker => fleetiq_server::run_analytics_worker().await?,
         ProcessCommand::ArchiveWorker => fleetiq_server::run_archive_worker().await?,
+        ProcessCommand::ReclaimOnce => match fleetiq_server::run_reclaim_once().await? {
+            RetentionTick::Disabled => println!("disabled"),
+            RetentionTick::Protected => println!("protected"),
+            RetentionTick::Denied => println!("denied"),
+            RetentionTick::Reclaimed(count) => println!("reclaimed {count}"),
+            RetentionTick::AlreadyReclaimed(count) => println!("already-reclaimed {count}"),
+        },
         ProcessCommand::CalculateOnce => {
             fleetiq_server::calculate_once().await?;
             println!("calculator evaluation persisted");
