@@ -77,6 +77,7 @@ async fn execute() -> Result<(), Box<dyn Error>> {
         }
         ProcessCommand::NotificationWorker => fleetiq_server::run_notification_worker().await?,
         ProcessCommand::AnalyticsWorker => fleetiq_server::run_analytics_worker().await?,
+        ProcessCommand::ArchiveWorker => fleetiq_server::run_archive_worker().await?,
         ProcessCommand::CalculateOnce => {
             fleetiq_server::calculate_once().await?;
             println!("calculator evaluation persisted");

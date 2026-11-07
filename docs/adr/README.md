@@ -213,3 +213,4 @@ introducing a new record.
 
 | [0151](0151-deliver-authorized-export-downloads.md) | Deliver authorized export downloads | Proposed |
 | [0152](0152-expose-authorized-archive-restore.md) | Expose authorized archive restore | Proposed |
+| [0153](0153-expose-executable-archive-worker.md) | Expose the executable archive worker | Proposed |

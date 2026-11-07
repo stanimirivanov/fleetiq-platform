@@ -356,6 +356,8 @@ mod storage_usage;
 
 mod archive_once;
 pub use archive_once::archive_once;
+mod archive_worker;
+pub use archive_worker::run_archive_worker;
 
 mod restore_once;
 mod restore_routes;
