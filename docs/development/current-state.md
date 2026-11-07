@@ -751,3 +751,7 @@ The explicit `archive-worker` server command publishes verified archive
 manifests for one configured tenant using existing storage inputs and lifecycle
 admission. It checks the migrated schema before work and retains frozen
 selections through shutdown. See [ADR 0153](../adr/0153-expose-executable-archive-worker.md).
+
+The explicit `reclaim-once` server command exposes one verified manifest turn
+for an existing approval. It checks the installed schema and reports a closed
+outcome. See [ADR 0154](../adr/0154-expose-bounded-hot-reclamation-command.md).

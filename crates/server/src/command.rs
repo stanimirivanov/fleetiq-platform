@@ -35,6 +35,8 @@ pub enum ProcessCommand {
     AnalyticsWorker,
     /// Publish verified archive selections for one explicitly configured tenant.
     ArchiveWorker,
+    /// Reclaim one explicitly selected and approved archive manifest.
+    ReclaimOnce,
     /// Deliver retained alerts to the configured trusted notification router.
     NotificationWorker,
     /// Print command usage without reading runtime configuration.
@@ -70,6 +72,7 @@ impl ProcessCommand {
             "notification-worker" => Self::NotificationWorker,
             "analytics-worker" => Self::AnalyticsWorker,
             "archive-worker" => Self::ArchiveWorker,
+            "reclaim-once" => Self::ReclaimOnce,
             "register-calculator" => Self::RegisterCalculator,
             "replay-worker" => Self::ReplayWorker,
             "semantic-worker" => Self::SemanticWorker,
@@ -100,7 +103,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [notification-worker|analytics-worker|archive-worker|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
+        "Usage: fleetiq-server [notification-worker|analytics-worker|archive-worker|reclaim-once|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -182,6 +185,7 @@ mod tests {
             (vec!["calculate-once"], ProcessCommand::CalculateOnce),
             (vec!["analytics-worker"], ProcessCommand::AnalyticsWorker),
             (vec!["archive-worker"], ProcessCommand::ArchiveWorker),
+            (vec!["reclaim-once"], ProcessCommand::ReclaimOnce),
             (
                 vec!["notification-worker"],
                 ProcessCommand::NotificationWorker,
@@ -212,6 +216,8 @@ mod tests {
             vec!["notification-worker", "--check-schema"],
             vec!["notification-worker", "inline-url"],
             vec!["calculate-once", "--check-schema"],
+            vec!["reclaim-once", "--check-schema"],
+            vec!["reclaim-once", "inline-target"],
             vec!["migrate", "--check-schema"],
             vec!["healthcheck", "--check-schema"],
             vec!["replay-worker", "--check-schema"],

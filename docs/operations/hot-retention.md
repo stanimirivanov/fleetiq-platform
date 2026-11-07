@@ -42,6 +42,19 @@ operator-owned S3 configuration. It starts no automatic loop. Keep original targ
 parameters for exact retry reconciliation. Use PostgresHotRetention::revoke to
 prevent subsequent mutation; policy changes require a new explicit approval.
 
+Run `fleetiq-server reclaim-once` from a trusted operator job against an already
+migrated database. Set `FLEETIQ_RECLAIM_TENANT_ID`,
+`FLEETIQ_RECLAIM_MANIFEST_ID` and `FLEETIQ_RECLAIM_POLICY_REVISION` to the
+exact target. Supply `DATABASE_URL` and the same private archive storage
+inputs as [the archive worker](../adr/0153-expose-executable-archive-worker.md).
+The command checks the installed schema before running one bounded turn.
+
+Exit zero emits one line containing `disabled`, `protected`, `denied`,
+`reclaimed <count>` or `already-reclaimed <count>`. The first three
+outcomes mean no reclamation committed. A nonzero exit emits a redacted error
+to stderr. After an uncertain failure, retry the original target to reconcile
+the receipt. The command neither grants approval nor starts a recurring job.
+
 ## Safety, concurrency and interruption
 
 One turn reserves 2 MiB through the existing tenant budget, verifies complete file
