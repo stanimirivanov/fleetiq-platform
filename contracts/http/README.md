@@ -291,3 +291,10 @@ request-ID commands for failed work and queue pause/resume. Discovery admits ele
 actions; regenerate clients before delegation. See [work recovery](../../docs/operations/work-recovery.md).
 
 Baseline.33 adds archived-history 409 responses after explicit hot reclamation, projection/archived preview protections and the trusted retention capability indicator. No HTTP deletion authority is added.
+
+
+Baseline.36 publishes exact manifest restore requests and generation status.
+Requests need current telemetry.read and operations.manage with the listener's
+browser mutation guard. Status needs telemetry.read. Configured archive storage
+and tenant lifecycle policy enable the bounded attempt. See
+[ADR 0152](../../docs/adr/0152-expose-authorized-archive-restore.md).

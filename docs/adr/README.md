@@ -212,3 +212,4 @@ introducing a new record.
 | [0150](0150-produce-bounded-historical-exports.md) | Produce bounded historical exports | Proposed |
 
 | [0151](0151-deliver-authorized-export-downloads.md) | Deliver authorized export downloads | Proposed |
+| [0152](0152-expose-authorized-archive-restore.md) | Expose authorized archive restore | Proposed |

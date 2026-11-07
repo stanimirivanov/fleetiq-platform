@@ -740,3 +740,9 @@ one of eight global transfer slots, with five-second/expiry deadlines, 2 MiB fil
 HEAD reads metadata only. No public object URL, credential, new action vocabulary,
 startup polling scheduler or UI is added. See
 [ADR 0151](../adr/0151-deliver-authorized-export-downloads.md).
+
+
+Baseline.36 exposes protected archive restore requests and exact-generation
+status. Pending requests start a bounded one-turn attempt against configured
+private archive storage. Exact retries preserve the original generation and
+lifetime. See [ADR 0152](../adr/0152-expose-authorized-archive-restore.md).

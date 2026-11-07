@@ -1,0 +1,8 @@
+description: Expected restore generation conflicts with current state.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml

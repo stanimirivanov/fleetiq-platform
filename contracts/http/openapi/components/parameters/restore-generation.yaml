@@ -1,0 +1,6 @@
+name: restore_generation
+in: path
+required: true
+description: Exact positive request generation.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml

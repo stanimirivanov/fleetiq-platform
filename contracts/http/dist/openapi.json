@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "FleetIQ HTTP UI baseline",
-    "version": "1.0.0-baseline.35",
+    "version": "1.0.0-baseline.36",
     "description": "Backend-owned, versioned subset of the /api/v1 HTTP surface for asset identity, semantic metadata reads, and actor administration. Other implemented routes are intentionally not yet described here. Protected routes use configured workload bearer or provider-neutral OIDC browser sessions. Modes are mutually exclusive; metadata reads check current identity and tenant metadata.read policy. Operator tenant discovery returns advisory current grants without authorizing operations. Actor administration requires exact platform identity.manage and browser mutation protection. Platform-grant administration requires exact platform.access.manage authority. Tenant grant administration requires exact tenant access.manage authority. Semantic definition publication requires exact metadata.manage; bounded catalogues require metadata.read. Asset and communication-device registration require exact metadata.manage and atomically record original actor/time evidence. Relationship and signal-binding revision commands preserve immutable temporal lineage with original actor attribution and exact retry resolution. Protocol artifact registration and isolated policy-versioned admission require separate exact protocol.manage; neither activates a device. Property history and exact interpretation provenance require separately delegated telemetry.read; baseline.16 expands the closed action vocabulary without upgrading grants. Calculator configuration reads require metadata.read and revision/activation writes require separate analytics.manage; baseline.22 expands discovery to six actions without implicit grants."
   },
   "servers": [
@@ -12,6 +12,107 @@
   ],
   "security": [],
   "paths": {
+    "/api/v1/tenants/{tenant_id}/restores/manifests/{manifest_id}/requests/{expected_generation}": {
+      "put": {
+        "operationId": "requestArchiveRestore",
+        "summary": "Request or retry temporary archive staging",
+        "description": "Requires current telemetry.read and independent operations.manage for the same actor. Browser mutations require exact same-origin Origin and X-FleetIQ-CSRF: 1. Send an empty body and no query parameters. Select one published tenant manifest. Exact retries preserve generation and lifetime, including terminal results. An enabled lifecycle policy and configured archive storage are required. A pending request schedules at most one twenty-second attempt per submission, subject to eight concurrent attempts per listener and existing tenant reservations and leases. A failed attempt remains pending for exact retry.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/restore-manifest-id"
+          },
+          {
+            "$ref": "#/components/parameters/restore-expected-generation"
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/RestoreAccepted"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/RestoreConflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/RestoreBusy"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/RestoreStorageUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenant_id}/restores/manifests/{manifest_id}/generations/{restore_generation}": {
+      "get": {
+        "operationId": "getArchiveRestoreStatus",
+        "summary": "Read exact temporary restore status",
+        "description": "Requires current telemetry.read. Send no query parameters. Reads the exact tenant-owned manifest and request generation. Expired staging is unavailable even before physical cleanup. Missing or superseded generations return 404. Ready describes the selected manifest only.",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/telemetry-tenant-id"
+          },
+          {
+            "$ref": "#/components/parameters/restore-manifest-id"
+          },
+          {
+            "$ref": "#/components/parameters/restore-generation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/RestoreStatusSucceeded"
+          },
+          "400": {
+            "$ref": "#/components/responses/InvalidRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/tenants/{tenant_id}/exports/requests/{request_key}": {
       "put": {
         "operationId": "createHistoricalExport",
@@ -4606,6 +4707,32 @@
             ],
             "pattern": "^[1-9][0-9]*$",
             "maxLength": 19
+          }
+        }
+      },
+      "RestoreJob": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "manifest_id",
+          "restore_generation",
+          "state"
+        ],
+        "properties": {
+          "manifest_id": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          },
+          "restore_generation": {
+            "$ref": "#/components/schemas/HistoryRestoreId"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ready",
+              "cancelled",
+              "expired"
+            ]
           }
         }
       },
@@ -9877,6 +10004,35 @@
       }
     },
     "parameters": {
+      "restore-manifest-id": {
+        "name": "manifest_id",
+        "in": "path",
+        "required": true,
+        "description": "Exact positive tenant-owned archive manifest identity.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryRestoreId"
+        }
+      },
+      "restore-expected-generation": {
+        "name": "expected_generation",
+        "in": "path",
+        "required": true,
+        "description": "Zero for an initial request. Otherwise the prior generation of an expired or cancelled restore. Maximum 9223372036854775806.",
+        "schema": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 19
+        }
+      },
+      "restore-generation": {
+        "name": "restore_generation",
+        "in": "path",
+        "required": true,
+        "description": "Exact positive request generation.",
+        "schema": {
+          "$ref": "#/components/schemas/HistoryRestoreId"
+        }
+      },
       "export-id": {
         "name": "export_id",
         "in": "path",
@@ -10877,6 +11033,91 @@
       }
     },
     "responses": {
+      "RestoreAccepted": {
+        "description": "Exact request accepted or replayed. Pending work can be retried with the same expected generation.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RestoreJob"
+            },
+            "example": {
+              "manifest_id": "1",
+              "restore_generation": "1",
+              "state": "pending"
+            }
+          }
+        }
+      },
+      "RestoreStatusSucceeded": {
+        "description": "Effective state of the exact restore generation at the database clock.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RestoreJob"
+            },
+            "example": {
+              "manifest_id": "1",
+              "restore_generation": "1",
+              "state": "ready"
+            }
+          }
+        }
+      },
+      "RestoreConflict": {
+        "description": "Expected restore generation conflicts with current state.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "RestoreBusy": {
+        "description": "The bounded restore attempt limit is occupied. Retry the exact request.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "RestoreStorageUnavailable": {
+        "description": "Archive storage is not configured for restore requests.",
+        "headers": {
+          "Cache-Control": {
+            "$ref": "#/components/headers/cache-control"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
       "ExportAccepted": {
         "description": "Durable explicit selection accepted. Pending requests schedule at most one bounded production attempt when this call owns worker capacity. Retry the same key to resume pending work; no startup polling loop.",
         "headers": {

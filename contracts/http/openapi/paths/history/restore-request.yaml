@@ -1,0 +1,36 @@
+put:
+  operationId: requestArchiveRestore
+  summary: Request or retry temporary archive staging
+  description: 'Requires current telemetry.read and independent operations.manage for the same actor.
+    Browser mutations require exact same-origin Origin and X-FleetIQ-CSRF: 1. Send an empty body
+    and no query parameters. Select one published tenant manifest. Exact retries preserve
+    generation and lifetime, including terminal results. An enabled lifecycle policy and
+    configured archive storage are required. A pending request schedules at most one
+    twenty-second attempt per submission, subject to eight concurrent attempts per listener
+    and existing tenant reservations and leases. A failed attempt remains pending for exact retry.'
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/telemetry-tenant-id.yaml
+  - $ref: ../../components/parameters/restore-manifest-id.yaml
+  - $ref: ../../components/parameters/restore-expected-generation.yaml
+  responses:
+    '202':
+      $ref: ../../components/responses/RestoreAccepted.yaml
+    '400':
+      $ref: ../../components/responses/InvalidRequest.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '404':
+      $ref: ../../components/responses/NotFound.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml
+    '409':
+      $ref: ../../components/responses/RestoreConflict.yaml
+    '429':
+      $ref: ../../components/responses/RestoreBusy.yaml
+    '503':
+      $ref: ../../components/responses/RestoreStorageUnavailable.yaml

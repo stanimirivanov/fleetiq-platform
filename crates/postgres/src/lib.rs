@@ -147,7 +147,7 @@ pub use history::PostgresHistoryBudgets;
 
 pub use history::PostgresArchiveWork;
 
-pub use history::PostgresRestore;
+pub use history::{PostgresRestore, RestoreRequestError};
 
 pub use history::PostgresRetentionPreview;
 

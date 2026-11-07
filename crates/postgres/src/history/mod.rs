@@ -28,7 +28,7 @@ mod archive_work;
 pub use archive_work::PostgresArchiveWork;
 
 mod restore;
-pub use restore::PostgresRestore;
+pub use restore::{PostgresRestore, RestoreRequestError};
 
 mod retention;
 pub use retention::PostgresRetentionPreview;

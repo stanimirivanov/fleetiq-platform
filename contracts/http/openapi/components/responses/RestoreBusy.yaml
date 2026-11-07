@@ -1,0 +1,8 @@
+description: The bounded restore attempt limit is occupied. Retry the exact request.
+headers:
+  Cache-Control:
+    $ref: ../headers/cache-control.yaml
+content:
+  application/problem+json:
+    schema:
+      $ref: ../schemas/Problem.yaml
