@@ -38,6 +38,10 @@ async fn reclaimed_history_requires_explicit_restore_and_preserves_provenance(
         "{root}&mode=hot_and_restored&manifest_id={}&restore_generation=1",
         target.manifest()
     );
+    let exact = format!("{ROOT}/interpretations/{token}");
+    let query = format!("manifest_id={}&restore_generation=1", target.manifest());
+    let lookup = format!("{exact}?{query}");
+    assert_eq!(response(&app, &lookup).await.0, StatusCode::NOT_FOUND);
     let (status, archived) = response(&app, &selected).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(archived["coverage"]["archive"], "archived");
@@ -49,6 +53,36 @@ async fn reclaimed_history_requires_explicit_restore_and_preserves_provenance(
         panic!("restore lease");
     };
     assert!(restores.complete(&lease, &segment).await?);
+    let (status, exact_restored) = response(&app, &lookup).await;
+    assert_eq!(status, StatusCode::OK);
+    assert!(
+        before["changes"]
+            .as_array()
+            .unwrap()
+            .contains(&exact_restored)
+    );
+    assert_eq!(exact_restored["interpretation"], token);
+    for bad in [
+        format!("{exact}?manifest_id=1"),
+        format!("{exact}?restore_generation=1"),
+        format!("{exact}?{query}&restore_generation=1"),
+        format!("{exact}?manifest_id=01&restore_generation=1"),
+        format!("{exact}?manifest_id=1&restore_generation=0"),
+    ] {
+        assert_eq!(response(&app, &bad).await.0, StatusCode::BAD_REQUEST);
+    }
+    for absent in [
+        lookup.replace("restore_generation=1", "restore_generation=2"),
+        lookup.replace("/assets/asset-a/", "/assets/asset-b/"),
+        lookup.replace("manifest_id=1", "manifest_id=2"),
+    ] {
+        assert_eq!(response(&app, &absent).await.0, StatusCode::NOT_FOUND);
+    }
+    let cross_tenant = lookup.replace("/tenants/tenant-a/", "/tenants/tenant-b/");
+    assert_eq!(response(&app, &cross_tenant).await.0, StatusCode::FORBIDDEN);
+    sqlx::query("INSERT INTO identity.tenant_action_grants VALUES('tenant-b','operator-a','telemetry.read')").execute(&pool).await?;
+    assert_eq!(response(&app, &cross_tenant).await.0, StatusCode::NOT_FOUND);
+
     let (status, restored) = response(&app, &selected).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(restored["coverage"]["archive"], "restored");
@@ -68,9 +102,29 @@ async fn reclaimed_history_requires_explicit_restore_and_preserves_provenance(
     for expected in before["changes"].as_array().unwrap() {
         assert!(changes.contains(expected));
     }
+    let hot = changes
+        .iter()
+        .find(|change| !before["changes"].as_array().unwrap().contains(change))
+        .unwrap();
+    let hot_lookup = format!(
+        "{ROOT}/interpretations/{}",
+        hot["interpretation"].as_str().unwrap()
+    );
+    assert_eq!(response(&app, &hot_lookup).await.0, StatusCode::OK);
+    assert_eq!(
+        response(&app, &format!("{hot_lookup}?{query}")).await.0,
+        StatusCode::NOT_FOUND
+    );
+    sqlx::query(
+        "UPDATE history.restore_jobs SET expires_at=clock_timestamp() WHERE tenant_id='tenant-a'",
+    )
+    .execute(&pool)
+    .await?;
+    assert_eq!(response(&app, &lookup).await.0, StatusCode::NOT_FOUND);
     sqlx::query("DELETE FROM identity.tenant_action_grants WHERE action='telemetry.read'")
         .execute(&pool)
         .await?;
     assert_eq!(response(&app, &root).await.0, StatusCode::FORBIDDEN);
+    assert_eq!(response(&app, &lookup).await.0, StatusCode::FORBIDDEN);
     Ok(())
 }

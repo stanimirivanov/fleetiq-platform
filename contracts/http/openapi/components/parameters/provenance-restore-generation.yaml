@@ -1,0 +1,6 @@
+name: restore_generation
+in: query
+required: false
+description: Exact ready restore generation for provenance. Supply together with manifest_id. This read does not create a restore.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml

@@ -16,6 +16,12 @@ pub(super) struct Parameters {
     pub(super) manifest_id: Option<String>,
     pub(super) restore_generation: Option<String>,
 }
+// Preserve legacy behavior for unrelated query parameters.
+#[derive(Deserialize)]
+pub(super) struct ProvenanceParameters {
+    pub(super) manifest_id: Option<String>,
+    pub(super) restore_generation: Option<String>,
+}
 #[derive(Serialize)]
 pub(super) struct HistoryPageBody {
     pub(super) changes: Vec<ChangeBody>,

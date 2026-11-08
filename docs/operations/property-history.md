@@ -85,6 +85,18 @@ flowchart LR
     Page --> Evidence[Exact original provenance]
 ```
 
+## Inspect a restored interpretation
+
+Use the existing interpretation URL with both `manifest_id` and
+`restore_generation` as canonical positive integers. Use the interpretation
+token returned by the selected history page. The exact read requires current
+`telemetry.read` and returns the original provenance only if the interpretation
+belongs to the selected, ready, unexpired restore and matches the requested
+property target. Missing or unavailable selections return 404. A partial or
+invalid pair returns 400. A selected read never falls back to hot history.
+Omit both parameters for the existing hot-only lookup. Reclaimed evidence
+still returns 409 in hot-only mode.
+
 ## Failure and recovery
 
 All responses use `Cache-Control: no-store`. Authentication failures are 401;
