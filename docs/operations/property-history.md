@@ -138,3 +138,11 @@ Configured budgets need headroom for live staging bytes plus the existing 1 MiB
 query allowance; 429 is explicit admission/output rejection. See
 [ADR 0146](../adr/0146-query-restored-history-with-explicit-coverage.md) for merge
 ordering, limits and compatibility.
+
+Combined-history clients can send `include_restore_membership=true` with the
+selected manifest and generation. The response adds `restored_row_indices`,
+a sorted list of zero-based positions in that page's `changes`. A row present
+in both hot history and the verified restore appears once and is marked as a
+member. An empty list means no displayed row belongs to a verified selection.
+The list describes the page snapshot. A subsequent provenance request still
+checks current authority and restore availability.

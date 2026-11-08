@@ -69,6 +69,7 @@ pub(super) async fn list<A: RequestAuthenticator>(
     query: &PropertyHistoryQuery,
     ticket: RestoreTicket,
     epoch: Option<&str>,
+    include_membership: bool,
 ) -> Result<Response, ProtectedRequestError> {
     let tenant = grant.tenant_id().clone();
     let snapshot = ctx
@@ -103,6 +104,18 @@ pub(super) async fn list<A: RequestAuthenticator>(
             })
             .transpose()?
     };
+    let restored_row_indices = include_membership.then(|| {
+        page.changes()
+            .iter()
+            .enumerate()
+            .filter(|(_, change)| {
+                restored
+                    .iter()
+                    .any(|member| member.id() == change.id() && member.target() == change.target())
+            })
+            .map(|(index, _)| index)
+            .collect()
+    });
     let changes = page
         .changes()
         .iter()
@@ -112,6 +125,7 @@ pub(super) async fn list<A: RequestAuthenticator>(
     let bytes = serde_json::to_vec(&dto::HistoryPageBody {
         changes,
         next_after,
+        restored_row_indices,
         coverage: Some(dto::HistoryCoverageBody {
             hot: "queried",
             archive: coverage,

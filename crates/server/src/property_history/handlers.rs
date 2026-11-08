@@ -100,6 +100,9 @@ pub(super) async fn list<A: RequestAuthenticator>(
     let Ok(selection) = super::restored::selection(&parameters) else {
         return Ok(invalid());
     };
+    if parameters.include_restore_membership && selection.is_none() {
+        return Ok(invalid());
+    }
     let Ok((after, coverage_epoch)) = super::restored::page_position(
         parameters.after.as_deref(),
         grant.tenant_id(),
@@ -124,7 +127,14 @@ pub(super) async fn list<A: RequestAuthenticator>(
         return super::budget::run(&ctx.budgets, &tenant, async {
             tokio::time::timeout(
                 std::time::Duration::from_secs(5),
-                super::restored::list(&ctx, grant, &query, ticket, coverage_epoch.as_deref()),
+                super::restored::list(
+                    &ctx,
+                    grant,
+                    &query,
+                    ticket,
+                    coverage_epoch.as_deref(),
+                    parameters.include_restore_membership,
+                ),
             )
             .await
             .map_err(|_| ProtectedRequestError::Internal)?
@@ -152,6 +162,7 @@ pub(super) async fn list<A: RequestAuthenticator>(
                 changes,
                 next_after,
                 coverage: None,
+                restored_row_indices: None,
             })
             .into_response(),
         ))

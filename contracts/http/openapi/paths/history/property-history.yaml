@@ -21,6 +21,7 @@ get:
   - $ref: ../../components/parameters/history-mode.yaml
   - $ref: ../../components/parameters/history-manifest-id.yaml
   - $ref: ../../components/parameters/history-restore-generation.yaml
+  - $ref: ../../components/parameters/history-restore-membership.yaml
   responses:
     '409':
       $ref: ../../components/responses/ArchivedHistory.yaml
