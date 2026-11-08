@@ -162,6 +162,7 @@ pub(super) async fn find<A: RequestAuthenticator>(
     State(ctx): State<Arc<Context<A>>>,
     headers: HeaderMap,
     path: Result<Path<InterpretationPath>, PathRejection>,
+    parameters: Result<Query<dto::ProvenanceParameters>, QueryRejection>,
 ) -> Result<Response, ProtectedRequestError> {
     let grant = authorize(&ctx, &headers, path.as_ref().map_or("", |p| p.0.0.as_str())).await?;
     let Ok(Path((_, asset, property, version, token))) = path else {
@@ -175,12 +176,35 @@ pub(super) async fn find<A: RequestAuthenticator>(
     else {
         return Ok(invalid());
     };
+    let Ok(Query(parameters)) = parameters else {
+        return Ok(invalid());
+    };
+    let selection = match (parameters.manifest_id, parameters.restore_generation) {
+        (None, None) => None,
+        (Some(manifest), Some(generation)) => {
+            let Ok(ticket) = super::restored::ticket(&manifest, &generation) else {
+                return Ok(invalid());
+            };
+            Some(ticket)
+        }
+        _ => return Ok(invalid()),
+    };
     let tenant = grant.tenant_id().clone();
     super::budget::run(&ctx.budgets, &tenant, async {
-        match match ctx.exact.find_property_bounded(grant, &target, &id).await {
-            Ok(found) => found,
-            Err(e) => return history_error(&e),
-        } {
+        let found = if let Some(ticket) = selection {
+            tokio::time::timeout(
+                std::time::Duration::from_secs(5),
+                super::restored::find(&ctx, &tenant, &target, &id, ticket),
+            )
+            .await
+            .map_err(|_| ProtectedRequestError::Internal)??
+        } else {
+            match ctx.exact.find_property_bounded(grant, &target, &id).await {
+                Ok(found) => found,
+                Err(e) => return history_error(&e),
+            }
+        };
+        match found {
             Some(change) => Ok(protected_request::no_store(
                 Json(dto::ChangeBody::new(&change).map_err(|_| ProtectedRequestError::Internal)?)
                     .into_response(),

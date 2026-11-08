@@ -4,6 +4,10 @@ get:
   description: Requires exact telemetry.read. Reads original source, binding revision, exact property
     version and first-append resolution cutoffs. Corrections do not rewrite this fact. Another tenant/target
     or absent interpretation yields no provenance; no fallback to current metadata.
+    Supply manifest_id and restore_generation together to read only from that exact ready verified
+    restore. An unavailable selection or a nonmember interpretation returns 404 without consulting
+    hot history. Without either parameter, the legacy hot-only read returns 409 for reclaimed
+    evidence. An incomplete or invalid selection returns 400.
     Configured lifecycle budgets reserve one slot and 1048576 response bytes before lookup. Budget rejection is distinct from missing evidence. Disabled policies preserve prior behavior.
   security:
   - bearerAuth: []
@@ -14,6 +18,8 @@ get:
   - $ref: ../../components/parameters/property-id.yaml
   - $ref: ../../components/parameters/definition-version.yaml
   - $ref: ../../components/parameters/history-interpretation.yaml
+  - $ref: ../../components/parameters/provenance-manifest-id.yaml
+  - $ref: ../../components/parameters/provenance-restore-generation.yaml
   responses:
     '409':
       $ref: ../../components/responses/ArchivedHistory.yaml

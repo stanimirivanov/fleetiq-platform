@@ -6,7 +6,50 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use fleetiq_access::{AuthorizedTenant, ReadTelemetry};
-use fleetiq_history::{PropertyHistoryQuery, RestoredHistorySnapshot, restore::RestoreTicket};
+use fleetiq_domain::{SignalTarget, TenantId};
+use fleetiq_history::{
+    PropertyHistoryQuery, RestoredHistorySnapshot, StoredPropertyChange, restore::RestoreTicket,
+};
+use fleetiq_semantics::AssetPropertyChangeId;
+
+pub(super) fn ticket(manifest: &str, generation: &str) -> Result<RestoreTicket, ()> {
+    let canonical = |s: &str| s.parse::<i64>().ok().filter(|n| n.to_string() == s);
+    RestoreTicket::new(
+        canonical(manifest).ok_or(())?,
+        canonical(generation).ok_or(())?,
+    )
+    .map_err(|_| ())
+}
+
+pub(super) async fn find<A: RequestAuthenticator>(
+    ctx: &Context<A>,
+    tenant: &TenantId,
+    target: &SignalTarget,
+    id: &AssetPropertyChangeId,
+    ticket: RestoreTicket,
+) -> Result<Option<StoredPropertyChange>, ProtectedRequestError> {
+    let snapshot = ctx
+        .restores
+        .history_snapshot(tenant, ticket)
+        .await
+        .map_err(|_| ProtectedRequestError::Internal)?;
+    let RestoredHistorySnapshot::Ready(bytes) = snapshot else {
+        return Ok(None);
+    };
+    let Some(rows) = decode_selection(tenant, &bytes) else {
+        return Ok(None);
+    };
+    Ok(rows
+        .into_iter()
+        .find(|row| row.target() == target && row.id() == id))
+}
+
+fn decode_selection(tenant: &TenantId, bytes: &[u8]) -> Option<Vec<StoredPropertyChange>> {
+    fleetiq_archive::decode(tenant, bytes)
+        .ok()
+        .filter(|rows| rows.len() <= 16)
+}
+
 pub(super) fn selection(parameters: &dto::Parameters) -> Result<Option<RestoreTicket>, ()> {
     match (
         parameters.mode.as_deref(),
@@ -15,13 +58,7 @@ pub(super) fn selection(parameters: &dto::Parameters) -> Result<Option<RestoreTi
     ) {
         (None | Some("hot"), None, None) => Ok(None),
         (Some("hot_and_restored"), Some(manifest), Some(generation)) => {
-            let canonical = |s: &str| s.parse::<i64>().ok().filter(|n| n.to_string() == s);
-            RestoreTicket::new(
-                canonical(manifest).ok_or(())?,
-                canonical(generation).ok_or(())?,
-            )
-            .map(Some)
-            .map_err(|_| ())
+            ticket(manifest, generation).map(Some)
         }
         _ => Err(()),
     }
@@ -43,9 +80,9 @@ pub(super) async fn list<A: RequestAuthenticator>(
         RestoredHistorySnapshot::Archived => ("archived", Vec::new()),
         RestoredHistorySnapshot::Restoring => ("restoring", Vec::new()),
         RestoredHistorySnapshot::Unavailable => ("unavailable", Vec::new()),
-        RestoredHistorySnapshot::Ready(bytes) => match fleetiq_archive::decode(&tenant, &bytes) {
-            Ok(rows) if rows.len() <= 16 => ("restored", rows),
-            _ => ("unavailable", Vec::new()),
+        RestoredHistorySnapshot::Ready(bytes) => match decode_selection(&tenant, &bytes) {
+            Some(rows) => ("restored", rows),
+            None => ("unavailable", Vec::new()),
         },
     };
     if epoch.is_some_and(|e| e != coverage || coverage == "unavailable") {

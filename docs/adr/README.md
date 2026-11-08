@@ -216,3 +216,4 @@ introducing a new record.
 | [0153](0153-expose-executable-archive-worker.md) | Expose the executable archive worker | Proposed |
 | [0154](0154-expose-bounded-hot-reclamation-command.md) | Expose a bounded hot-reclamation command | Proposed |
 | [0155](0155-expose-one-shot-numeric-summary-command.md) | Expose a one-shot numeric summary command | Proposed |
+| [0156](0156-read-provenance-from-selected-restore.md) | Read provenance from a selected restore | Proposed |

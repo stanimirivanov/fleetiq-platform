@@ -1,0 +1,6 @@
+name: manifest_id
+in: query
+required: false
+description: Exact tenant-owned manifest for a selected provenance read. Supply together with restore_generation.
+schema:
+  $ref: ../schemas/HistoryRestoreId.yaml
