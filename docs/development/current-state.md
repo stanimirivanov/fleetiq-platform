@@ -755,3 +755,7 @@ selections through shutdown. See [ADR 0153](../adr/0153-expose-executable-archiv
 The explicit `reclaim-once` server command exposes one verified manifest turn
 for an existing approval. It checks the installed schema and reports a closed
 outcome. See [ADR 0154](../adr/0154-expose-bounded-hot-reclamation-command.md).
+
+The explicit `summarize-once` server command produces one versioned numeric
+summary for a trusted operator target and reports the series and revision.
+See [ADR 0155](../adr/0155-expose-one-shot-numeric-summary-command.md).

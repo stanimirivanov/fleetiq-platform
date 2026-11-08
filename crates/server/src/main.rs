@@ -86,6 +86,13 @@ async fn execute() -> Result<(), Box<dyn Error>> {
             RetentionTick::Reclaimed(count) => println!("reclaimed {count}"),
             RetentionTick::AlreadyReclaimed(count) => println!("already-reclaimed {count}"),
         },
+        ProcessCommand::SummarizeOnce => {
+            let receipt = fleetiq_server::run_summarize_once().await?;
+            println!(
+                "summary series={} revision={}",
+                receipt.series, receipt.revision
+            );
+        }
         ProcessCommand::CalculateOnce => {
             fleetiq_server::calculate_once().await?;
             println!("calculator evaluation persisted");
