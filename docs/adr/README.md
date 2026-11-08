@@ -218,3 +218,4 @@ introducing a new record.
 | [0155](0155-expose-one-shot-numeric-summary-command.md) | Expose a one-shot numeric summary command | Proposed |
 | [0156](0156-read-provenance-from-selected-restore.md) | Read provenance from a selected restore | Proposed |
 | [0157](0157-report-lifecycle-storage-usage.md) | Report lifecycle storage usage | Proposed |
+| [0158](0158-expose-bounded-history-expiry-command.md) | Expose bounded history expiry cleanup | Proposed |

@@ -209,12 +209,21 @@ impl PostgresExports {
     /// # Errors
     /// Returns redacted storage failures; unreconciled expired copies are already unreadable.
     pub async fn expire(&self, tenant: &TenantId) -> Result<(), ExportFailure> {
+        self.expire_counted(tenant).await.map(|_| ())
+    }
+
+    /// Reports committed counts of expired export jobs and cleared stale leases.
+    /// Each count is bounded to sixteen. Live attempts retain their fences.
+    /// # Errors
+    /// Returns redacted storage failures.
+    pub async fn expire_counted(&self, tenant: &TenantId) -> Result<(u64, u64), ExportFailure> {
         let mut tx = self
             .transaction(tenant)
             .await
             .map_err(|_| ExportFailure::Storage)?;
-        sqlx::query("UPDATE history.export_jobs SET status='expired',payload=NULL WHERE tenant_id=$1 AND job_id IN (SELECT job_id FROM history.export_jobs WHERE tenant_id=$1 AND expires_at<=statement_timestamp() AND status IN ('pending','ready') ORDER BY expires_at,job_id LIMIT 16)").bind(tenant.as_str()).execute(&mut *tx).await.map_err(|_|ExportFailure::Storage)?;
-        sqlx::query("UPDATE history.export_jobs SET lease_until=NULL WHERE tenant_id=$1 AND job_id IN (SELECT job_id FROM history.export_jobs WHERE tenant_id=$1 AND lease_until<=statement_timestamp() ORDER BY lease_until,job_id LIMIT 16)").bind(tenant.as_str()).execute(&mut *tx).await.map_err(|_|ExportFailure::Storage)?;
-        tx.commit().await.map_err(|_| ExportFailure::Storage)
+        let expired = sqlx::query("UPDATE history.export_jobs SET status='expired',payload=NULL WHERE tenant_id=$1 AND job_id IN (SELECT job_id FROM history.export_jobs WHERE tenant_id=$1 AND expires_at<=statement_timestamp() AND status IN ('pending','ready') ORDER BY expires_at,job_id LIMIT 16)").bind(tenant.as_str()).execute(&mut *tx).await.map_err(|_|ExportFailure::Storage)?;
+        let leases = sqlx::query("UPDATE history.export_jobs SET lease_until=NULL WHERE tenant_id=$1 AND job_id IN (SELECT job_id FROM history.export_jobs WHERE tenant_id=$1 AND lease_until<=statement_timestamp() ORDER BY lease_until,job_id LIMIT 16)").bind(tenant.as_str()).execute(&mut *tx).await.map_err(|_|ExportFailure::Storage)?;
+        tx.commit().await.map_err(|_| ExportFailure::Storage)?;
+        Ok((expired.rows_affected(), leases.rows_affected()))
     }
 }
