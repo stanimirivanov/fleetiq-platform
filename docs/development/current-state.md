@@ -639,7 +639,7 @@ corruption are exercised against real PostgreSQL and pinned S3 infrastructure.
 See [ADR 0144](../adr/0144-publish-verified-archive-manifests.md) for selection
 bounds, retry semantics, policy fencing and retained-volume limits. No polling
 worker starts automatically; hot evidence is retained. Restore, retention,
-aggregate archive accounting and installed-product qualification remain pending.
+and installed-product qualification were separate slices.
 
 
 ## Bounded archived-evidence restore
@@ -759,3 +759,7 @@ outcome. See [ADR 0154](../adr/0154-expose-bounded-hot-reclamation-command.md).
 The explicit `summarize-once` server command produces one versioned numeric
 summary for a trusted operator target and reports the series and revision.
 See [ADR 0155](../adr/0155-expose-one-shot-numeric-summary-command.md).
+
+Baseline.38 adds a companion tenant operations.read endpoint for committed
+manifest lengths and retained export bytes, with separate downloadable, pending
+and expired classes. See [lifecycle storage usage](../operations/lifecycle-storage-usage.md).

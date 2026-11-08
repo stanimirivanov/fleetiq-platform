@@ -46,6 +46,21 @@ pub struct StorageUsage {
     /// UTF-8 JSON serialization of semantic interpretation rows (not copied values).
     pub interpretations: StorageMeasure,
 }
+/// Logical archive and export totals observed at one database statement.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LifecycleStorageUsage {
+    /// Database observation time, in Unix milliseconds.
+    pub observed_at_ms: i64,
+    /// Committed manifest count and sum of recorded object lengths.
+    pub archive: StorageMeasure,
+    /// Ready, unexpired export payloads.
+    pub downloadable: StorageMeasure,
+    /// Pending, unexpired export payloads.
+    pub pending: StorageMeasure,
+    /// Expired export payloads still retained pending cleanup.
+    pub expired_retained: StorageMeasure,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -61,6 +61,11 @@ Baseline.37 adds paired manifest and restore generation parameters to exact
 property provenance reads. Existing hot-only callers keep their response
 semantics. Clients using restored inspection must regenerate from this baseline.
 
+Baseline.38 adds a companion operations.read endpoint for logical committed
+archive and retained export totals. The original storage-usage response keeps
+its existing measurement classes. See
+[storage accounting](../../docs/operations/lifecycle-storage-usage.md).
+
 [The modular UI baseline](openapi/openapi.yaml) is the committed source of
 truth, not output copied from a running instance. Paths and reusable components
 live in adjacent domain and component files. The committed
