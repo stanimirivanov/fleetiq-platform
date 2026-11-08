@@ -39,6 +39,8 @@ pub enum ProcessCommand {
     ReclaimOnce,
     /// Produce one explicitly selected numeric history summary.
     SummarizeOnce,
+    /// Reconcile one bounded expiry batch for an explicit tenant.
+    ExpireHistoryOnce,
     /// Deliver retained alerts to the configured trusted notification router.
     NotificationWorker,
     /// Print command usage without reading runtime configuration.
@@ -76,6 +78,7 @@ impl ProcessCommand {
             "archive-worker" => Self::ArchiveWorker,
             "reclaim-once" => Self::ReclaimOnce,
             "summarize-once" => Self::SummarizeOnce,
+            "expire-history-once" => Self::ExpireHistoryOnce,
             "register-calculator" => Self::RegisterCalculator,
             "replay-worker" => Self::ReplayWorker,
             "semantic-worker" => Self::SemanticWorker,
@@ -106,7 +109,7 @@ impl ProcessCommand {
 
     /// Returns bounded command usage containing no environment values.
     pub const fn usage() -> &'static str {
-        "Usage: fleetiq-server [notification-worker|analytics-worker|archive-worker|reclaim-once|summarize-once|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
+        "Usage: fleetiq-server [notification-worker|analytics-worker|archive-worker|reclaim-once|summarize-once|expire-history-once|calculate-once|register-calculator|serve [--check-schema]|migrate|migration-inventory|replay-worker|semantic-worker|project-current|rebuild-current|ingest-tcp|healthcheck|bootstrap-platform-operator [--check-schema]|help]\n\
          bootstrap-platform-operator requires DATABASE_URL, \
          FLEETIQ_BOOTSTRAP_ACTOR_ID, FLEETIQ_BOOTSTRAP_AUTHORITY_ID, and \
          FLEETIQ_BOOTSTRAP_EXTERNAL_SUBJECT"
@@ -191,6 +194,10 @@ mod tests {
             (vec!["reclaim-once"], ProcessCommand::ReclaimOnce),
             (vec!["summarize-once"], ProcessCommand::SummarizeOnce),
             (
+                vec!["expire-history-once"],
+                ProcessCommand::ExpireHistoryOnce,
+            ),
+            (
                 vec!["notification-worker"],
                 ProcessCommand::NotificationWorker,
             ),
@@ -222,6 +229,8 @@ mod tests {
             vec!["calculate-once", "--check-schema"],
             vec!["reclaim-once", "--check-schema"],
             vec!["summarize-once", "--check-schema"],
+            vec!["expire-history-once", "--check-schema"],
+            vec!["expire-history-once", "inline-tenant"],
             vec!["reclaim-once", "inline-target"],
             vec!["migrate", "--check-schema"],
             vec!["healthcheck", "--check-schema"],

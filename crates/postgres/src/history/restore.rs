@@ -149,10 +149,18 @@ impl PostgresRestore {
     /// # Errors
     /// Returns redacted storage failures. Uncollected expired copies are already unreadable.
     pub async fn expire(&self, tenant: &TenantId) -> Result<(), RestoreFailure> {
+        self.expire_counted(tenant).await.map(|_| ())
+    }
+
+    /// Reports the number of restore requests expired by one committed cleanup batch.
+    /// # Errors
+    /// Returns redacted storage failures.
+    pub async fn expire_counted(&self, tenant: &TenantId) -> Result<u64, RestoreFailure> {
         let mut tx = self.transaction().await.map_err(|_| RestoreFailure)?;
         lock(&mut tx, tenant).await.map_err(|_| RestoreFailure)?;
-        cleanup(&mut tx, tenant).await.map_err(|_| RestoreFailure)?;
-        tx.commit().await.map_err(|_| RestoreFailure)
+        let expired = cleanup(&mut tx, tenant).await.map_err(|_| RestoreFailure)?;
+        tx.commit().await.map_err(|_| RestoreFailure)?;
+        Ok(expired)
     }
 }
 async fn lock(tx: &mut Transaction<'_, Postgres>, tenant: &TenantId) -> Result<bool, sqlx::Error> {
@@ -161,7 +169,10 @@ async fn lock(tx: &mut Transaction<'_, Postgres>, tenant: &TenantId) -> Result<b
         .fetch_one(&mut **tx)
         .await
 }
-async fn cleanup(tx: &mut Transaction<'_, Postgres>, tenant: &TenantId) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE history.restore_jobs SET status='expired',payload=NULL WHERE tenant_id=$1 AND manifest_id IN (SELECT manifest_id FROM history.restore_jobs WHERE tenant_id=$1 AND expires_at<=clock_timestamp() AND status IN ('pending','ready') ORDER BY (payload IS NULL),expires_at,manifest_id FOR UPDATE SKIP LOCKED LIMIT 16)").bind(tenant.as_str()).execute(&mut **tx).await?;
-    Ok(())
+async fn cleanup(
+    tx: &mut Transaction<'_, Postgres>,
+    tenant: &TenantId,
+) -> Result<u64, sqlx::Error> {
+    let expired = sqlx::query("UPDATE history.restore_jobs SET status='expired',payload=NULL WHERE tenant_id=$1 AND manifest_id IN (SELECT manifest_id FROM history.restore_jobs WHERE tenant_id=$1 AND expires_at<=clock_timestamp() AND status IN ('pending','ready') ORDER BY (payload IS NULL),expires_at,manifest_id FOR UPDATE SKIP LOCKED LIMIT 16)").bind(tenant.as_str()).execute(&mut **tx).await?;
+    Ok(expired.rows_affected())
 }

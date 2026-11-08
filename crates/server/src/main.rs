@@ -93,6 +93,13 @@ async fn execute() -> Result<(), Box<dyn Error>> {
                 receipt.series, receipt.revision
             );
         }
+        ProcessCommand::ExpireHistoryOnce => {
+            let counts = fleetiq_server::run_expire_history_once().await?;
+            println!(
+                "history cleanup restores={} exports={} export_leases={}",
+                counts.restores, counts.exports, counts.export_leases
+            );
+        }
         ProcessCommand::CalculateOnce => {
             fleetiq_server::calculate_once().await?;
             println!("calculator evaluation persisted");
