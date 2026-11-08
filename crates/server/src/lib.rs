@@ -369,7 +369,7 @@ mod reclaim_once;
 pub use reclaim_once::{reclaim_once, run_reclaim_once};
 
 mod numeric_summary_once;
-pub use numeric_summary_once::produce_numeric_summary_once;
+pub use numeric_summary_once::{produce_numeric_summary_once, run_summarize_once};
 
 mod export_once;
 pub use export_once::{export_once, request_export};

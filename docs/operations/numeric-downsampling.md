@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-- Production is an explicit trusted call; migration/startup schedule nothing.
+- Production uses an explicit trusted command. Migration and startup schedule nothing.
 - Select an exact tenant, installed property version, aligned window and bucket width.
 - Configure enough existing lifecycle allowance for a 2 MiB turn plus live staging.
 - Summaries are immutable derived snapshots, with raw interpretation lineage.
@@ -46,9 +46,29 @@ complete empty interval.
 
 ## Explicit production and retries
 
-After migration 0057, use the private trusted server composition
-produce_numeric_summary_once with a migrated pool and validated NumericRequest.
-The caller establishes tenant authority. Production adds no CLI/HTTP command or loop. Summary reads use the separate read-only endpoint below.
+Run `fleetiq-server summarize-once` from a trusted operator job after applying
+the current migrations. The caller establishes tenant authority. The binary
+validates the selection before connecting and checks the installed schema in
+read-only mode. Set `DATABASE_URL` through private configuration and set the
+following target inputs.
+
+| Environment input | Value |
+| --- | --- |
+| `FLEETIQ_SUMMARY_TENANT_ID` | Exact tenant |
+| `FLEETIQ_SUMMARY_ASSET_ID` | Exact asset |
+| `FLEETIQ_SUMMARY_PROPERTY_ID` | Exact property identifier |
+| `FLEETIQ_SUMMARY_PROPERTY_VERSION` | Positive property definition version |
+| `FLEETIQ_SUMMARY_START_MS` | Inclusive signed Unix millisecond boundary |
+| `FLEETIQ_SUMMARY_END_MS` | Exclusive signed Unix millisecond boundary |
+| `FLEETIQ_SUMMARY_RESOLUTION_MS` | Positive bucket width in milliseconds |
+| `FLEETIQ_SUMMARY_MANIFEST_ID`, `FLEETIQ_SUMMARY_RESTORE_GENERATION` | Both unset for hot history, or both positive for one exact restore |
+
+Exit zero prints `summary series=<id> revision=<number>`. Exit one prints a
+redacted error, such as `invalid numeric summary target`,
+`numeric summary rejected: BudgetDenied` or
+`numeric summary rejected: CoverageUnavailable`. Keep the original inputs
+for an exact retry. The command has no inline arguments or recurring mode.
+See [ADR 0155](../adr/0155-expose-one-shot-numeric-summary-command.md).
 
 An existing configured tenant policy must admit one slot and 2 MiB in addition to
 live restore storage. The whole turn has twenty seconds; database statements and
