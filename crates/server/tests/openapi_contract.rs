@@ -220,6 +220,10 @@ const ADDITIONAL_PATHS: &[(&str, &[(&str, &str)])] = &[
         &[("get", "getStorageUsage")],
     ),
     (
+        "/api/v1/tenants/{tenant_id}/storage-usage/lifecycle",
+        &[("get", "getLifecycleStorageUsage")],
+    ),
+    (
         "/api/v1/tenants/{tenant_id}/work-recovery/{kind}",
         &[("get", "getWorkRecoveryTargets")],
     ),

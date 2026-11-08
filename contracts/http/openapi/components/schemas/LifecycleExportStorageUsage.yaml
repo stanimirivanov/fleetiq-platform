@@ -1,0 +1,13 @@
+type: object
+additionalProperties: false
+required: [downloadable, pending, expired_retained]
+properties:
+  downloadable:
+    description: Ready export payloads whose lifetime has not expired.
+    $ref: ./LogicalStorageTotals.yaml
+  pending:
+    description: Pending export payloads whose lifetime has not expired.
+    $ref: ./LogicalStorageTotals.yaml
+  expired_retained:
+    description: Export payloads past their lifetime that still occupy logical storage.
+    $ref: ./LogicalStorageTotals.yaml

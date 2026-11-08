@@ -1,0 +1,33 @@
+get:
+  operationId: getLifecycleStorageUsage
+  summary: Read tenant archive and export storage totals
+  description: Requires independent current operations.read. Reads committed archive manifest lengths
+    and retained export payload lengths in one tenant-scoped database snapshot with a two-second
+    statement deadline. The export classes are disjoint at the observation time. Counts and bytes
+    are exact decimal strings. The result measures logical evidence only. Archive lengths come from
+    committed manifests rather than a provider inventory. Export lengths exclude cleared payloads.
+    A scan failure or timeout returns an error. Payload contents and physical allocation are outside
+    this report.
+  security:
+  - bearerAuth: []
+  - cookieAuth: []
+  parameters:
+  - $ref: ../../components/parameters/admin-tenant-id.yaml
+  responses:
+    '200':
+      description: Logical archive and export totals at the database observation time.
+      headers:
+        Cache-Control:
+          $ref: ../../components/headers/cache-control.yaml
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/LifecycleStorageUsage.yaml
+    '401':
+      $ref: ../../components/responses/Unauthenticated.yaml
+    '403':
+      $ref: ../../components/responses/Forbidden.yaml
+    '405':
+      $ref: ../../components/responses/CalculatorEvidenceMethodNotAllowed.yaml
+    '500':
+      $ref: ../../components/responses/InternalError.yaml

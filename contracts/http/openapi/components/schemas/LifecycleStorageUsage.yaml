@@ -1,0 +1,11 @@
+type: object
+additionalProperties: false
+required: [observed_at_ms, archive, exports]
+properties:
+  observed_at_ms:
+    $ref: ./HistoryMillis.yaml
+  archive:
+    description: One record per committed manifest and the sum of recorded object lengths.
+    $ref: ./LogicalStorageTotals.yaml
+  exports:
+    $ref: ./LifecycleExportStorageUsage.yaml
