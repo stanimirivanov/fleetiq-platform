@@ -15,3 +15,14 @@ properties:
     - type: 'null'
   coverage:
     $ref: ./PropertyHistoryCoverage.yaml
+  restored_row_indices:
+    type: array
+    maxItems: 16
+    uniqueItems: true
+    description: Sorted zero-based indices into this page's changes that belong to the verified
+      selected restore. Present only when requested. Empty when no displayed row belongs to a
+      verified selection. A row present in both stores is included once.
+    items:
+      type: integer
+      minimum: 0
+      maximum: 99

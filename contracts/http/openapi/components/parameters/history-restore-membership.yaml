@@ -1,0 +1,6 @@
+name: include_restore_membership
+in: query
+description: Set true with an explicit hot_and_restored selection to include page-local
+  restored_row_indices. Omission or false keeps the original response shape.
+schema:
+  type: boolean

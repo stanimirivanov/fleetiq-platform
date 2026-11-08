@@ -68,6 +68,16 @@ async fn coverage_and_restore_scoped_pages_remain_explicit(pool: PgPool) {
         first["changes"][0]["value"],
         json!({"kind":"integer","value":"9223372036854775807"})
     );
+    let (status, annotated) = response(
+        &app,
+        &format!("{first_url}&include_restore_membership=true"),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(annotated["changes"], first["changes"]);
+    assert_eq!(annotated["next_after"], first["next_after"]);
+    assert_eq!(annotated["restored_row_indices"], json!([0]));
+    assert_contract(&annotated);
     let after = first["next_after"].as_str().unwrap();
     let (_, second) = response(&app, &format!("{first_url}&after={after}")).await;
     assert_eq!(second["changes"].as_array().unwrap().len(), 1);

@@ -38,6 +38,19 @@ async fn reclaimed_history_requires_explicit_restore_and_preserves_provenance(
         "{root}&mode=hot_and_restored&manifest_id={}&restore_generation=1",
         target.manifest()
     );
+    let opted = format!("{selected}&include_restore_membership=true");
+    assert_eq!(
+        response(&app, &format!("{root}&include_restore_membership=true"))
+            .await
+            .0,
+        StatusCode::BAD_REQUEST
+    );
+    let (status, archived_membership) = response(&app, &opted).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+        archived_membership["restored_row_indices"],
+        serde_json::json!([])
+    );
     let exact = format!("{ROOT}/interpretations/{token}");
     let query = format!("manifest_id={}&restore_generation=1", target.manifest());
     let lookup = format!("{exact}?{query}");
@@ -102,6 +115,51 @@ async fn reclaimed_history_requires_explicit_restore_and_preserves_provenance(
     for expected in before["changes"].as_array().unwrap() {
         assert!(changes.contains(expected));
     }
+    assert!(restored.get("restored_row_indices").is_none());
+    let (status, mixed) = response(&app, &opted).await;
+    assert_eq!(status, StatusCode::OK);
+    let members = before["changes"].as_array().unwrap();
+    let expected_indices: Vec<_> = mixed["changes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+        .filter_map(|(index, row)| members.contains(row).then_some(index))
+        .collect();
+    assert_eq!(mixed["changes"], restored["changes"]);
+    assert_eq!(mixed["next_after"], restored["next_after"]);
+    assert_eq!(
+        mixed["restored_row_indices"],
+        serde_json::json!(expected_indices)
+    );
+    assert_eq!(
+        response(
+            &app,
+            &format!("{selected}&include_restore_membership=false")
+        )
+        .await
+        .1,
+        restored
+    );
+    let paged = opted.replace("limit=100", "limit=1");
+    let mut url = paged.clone();
+    for (index, expected) in changes.iter().enumerate() {
+        let (status, page) = response(&app, &url).await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(page["changes"], serde_json::json!([expected]));
+        let indices = if members.contains(expected) {
+            serde_json::json!([0])
+        } else {
+            serde_json::json!([])
+        };
+        assert_eq!(page["restored_row_indices"], indices);
+        if let Some(after) = page["next_after"].as_str() {
+            assert!(index + 1 < changes.len());
+            url = format!("{paged}&after={after}");
+        } else {
+            assert_eq!(index + 1, changes.len());
+        }
+    }
     let hot = changes
         .iter()
         .find(|change| !before["changes"].as_array().unwrap().contains(change))
@@ -121,6 +179,9 @@ async fn reclaimed_history_requires_explicit_restore_and_preserves_provenance(
     .execute(&pool)
     .await?;
     assert_eq!(response(&app, &lookup).await.0, StatusCode::NOT_FOUND);
+    let (status, expired) = response(&app, &opted).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(expired["restored_row_indices"], serde_json::json!([]));
     sqlx::query("DELETE FROM identity.tenant_action_grants WHERE action='telemetry.read'")
         .execute(&pool)
         .await?;
