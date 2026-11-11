@@ -39,7 +39,7 @@ tokio = { workspace = true, features = ["process", "io-util", "sync"] }
 [dev-dependencies]
 # Signed real S3 fixture qualification only; no new runtime dependency.
 object_store.workspace = true
-jsonschema = { version = "0.60.0", default-features = false }
+jsonschema = { version = "0.61.0", default-features = false }
 tower.workspace = true
 # Real TLS fixtures generate ephemeral keys; neither dependency enters runtime.
 rcgen = { version = "=0.14.10", default-features = false, features = ["crypto", "ring", "pem"] }
