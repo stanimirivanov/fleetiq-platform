@@ -29,7 +29,7 @@ RUN /tmp/fleetiq-server migration-inventory > /tmp/migrations.json
 
 # The Rust executable needs glibc and libgcc, not a package manager, shell or curl.
 FROM gcr.io/distroless/cc-debian13:nonroot@sha256:08476c244888bfb425bae1ae4dd7c17f093e972aab8426883d97f3c6f280f7c1 AS runtime-libraries
-FROM gcr.io/distroless/base-nossl-debian13:nonroot@sha256:e6b0f82595aa1edde72c8054de7a9dca30f0f8f54820c37a167c0ddfc21c5c67 AS runtime
+FROM gcr.io/distroless/base-nossl-debian13:nonroot@sha256:89815d620ac01d8de13cdaf04d19ed874447ca2296d4985b14b818f6e5e47854 AS runtime
 
 # Rust uses rustls and needs glibc/libgcc, so keep unused OpenSSL/compression out.
 # Carry the complete libgcc package evidence and license alongside its library.
