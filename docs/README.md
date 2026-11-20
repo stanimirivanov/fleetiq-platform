@@ -15,9 +15,10 @@
 
 This page is the progressive-disclosure entry point for contributors and
 coding agents. It routes readers to canonical sources rather than repeating
-their policy. [CONTRIBUTING.md](../CONTRIBUTING.md) owns workflow, issue shape,
-verification, and completion reporting. [AGENTS.md](../AGENTS.md) is the
-concise tool-facing entry point.
+their policy. [AGENTS.md](../AGENTS.md) routes installed Matt Pocock workflows;
+[CONTRIBUTING.md](../CONTRIBUTING.md) owns technical verification and safety.
+See [issue tracker](agents/issue-tracker.md), [triage labels](agents/triage-labels.md)
+and [domain docs](agents/domain.md) for skill configuration.
 
 Read the rows that match the work. Do not bulk-read every guide or ADR. When a
 change affects product behavior or a dependency boundary, always consult the
@@ -41,7 +42,7 @@ product scope and relevant architecture page.
 | Recurring repository sensor or modular HTTP contract work | [xtask scoped agreement](../crates/xtask/AGENTS.md), [HTTP scoped agreement](../contracts/http/AGENTS.md); load only the owning scope | [Scoped guidance policy](development/harness.md#scoped-guidance), repository and relevant sensor fixtures |
 | Build, CI, repository policy, agent guidance, or developer experience | [Coding harness](development/harness.md), [harness protection](development/harness-protection.md), [verification inventory and evidence](development/verification.md), [development guide](development/README.md) | Structural, history, secret, bypass, and reviewed CI wiring checks; complete applicable gate |
 | Dependency additions, advisories, licenses, sources, or update proposals | [Dependency rules](architecture/dependency-rules.md), [dependency management](development/dependency-management.md) | `cargo xtask architecture`, `cargo deny check`, `cargo machete --with-metadata --skip-target-dir` |
-| Milestone or issue planning | [Milestones](roadmap/milestones.md), [CONTRIBUTING.md](../CONTRIBUTING.md) | Relevant product and architecture sources |
+| Milestone or issue planning | [Milestones](roadmap/milestones.md), [issue tracker](agents/issue-tracker.md) | Relevant product and architecture sources |
 | Vulnerability reporting or security-sensitive behavior | [Security policy](../SECURITY.md) | Relevant architecture and ADRs |
 
 ## Canonical collections

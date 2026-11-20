@@ -1,34 +1,16 @@
-## Issue and milestone
+## Summary
 
-- Closes #
-- Milestone: MNN - Outcome
+Describe the problem and resulting behavior using the smallest useful diagram,
+diff sketch or tree. Link the owning issue and relevant milestone.
 
-## Problem and resulting behavior
+Owning capability and dependency direction; tenant isolation, persisted/public contract compatibility, migration, rollout and rollback. For dependency changes, record capability, alternatives, features/MSRV, license/source, maintenance/security, dependency-tree change and exit path.
 
-## Scope and exclusions
+## Evidence
 
-## Design and compatibility decisions
+- **Before:** Reproduction, output or previous behavior.
+- **After:** Verified result and exact commands.
 
-- ADRs:
-- Assumptions:
-- Known limitations:
-- Dependency review (when dependencies change):
-  - Required capability and owning layer:
-  - Alternatives considered:
-  - Enabled features and MSRV:
-  - License, source, maintenance, and security status:
-  - Dependency-tree change and exit path:
-
-## Architecture
-
-- Owning capability:
-- Inbound adapter or caller:
-- Consumed ports:
-- Outbound adapters:
-- Dependency edges added, removed, or excepted:
-- Runnable end-to-end behavior:
-
-## Verification
+Run the applicable acceptance gate and additional contract/image checks in CONTRIBUTING.md.
 
 | Command or check | Result | Evidence or reason not run |
 |:--|:--|:--|
@@ -48,18 +30,12 @@
 
 Checks not run, blocking conditions, and residual risk:
 
-## Migration, rollout, and rollback
+## Merge Danger
 
-## Security and operations
+**Door:** one-way or two-way
 
-## Review checklist
+**Blast Radius:** affected scope
 
-- [ ] One coherent capability; unrelated changes are excluded.
-- [ ] Repository policy and architecture checks pass.
-- [ ] Capability ownership and dependency changes are explicit and inward.
-- [ ] Public and persisted contracts have a compatibility plan.
-- [ ] Success and relevant invalid and failure paths are verified.
-- [ ] Tenant, concurrency, idempotency, retry, and resource risks are covered.
-- [ ] Documentation and ADRs are current.
-- [ ] Migrations pass empty-database and supported-upgrade checks when relevant.
-- [ ] No secrets, customer data, generated noise, or hidden skipped checks.
+Describe material compatibility, security and operational risks, limitations and
+rollback. Evidence and checked boxes do not grant publication, merge or live
+infrastructure authority.

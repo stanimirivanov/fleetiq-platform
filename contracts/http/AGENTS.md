@@ -1,5 +1,7 @@
 # Backend-owned HTTP contract work
 
+Technical constraints for this scope; the repository root `AGENTS.md` owns workflow routing.
+
 ## TL;DR
 
 The modular YAML is authoritative. Keep it aligned with server behavior and
@@ -11,9 +13,9 @@ the committed generated bundle; begin with these task-specific routes.
 - [OpenAPI maintenance skill](../../.agents/skills/openapi/SKILL.md)
 - [Versioned HTTP boundary](../../docs/adr/0048-establish-versioned-http-api-boundary.md)
 - [Verification groups and evidence](../../docs/development/verification.md)
-- [Contributor workflow and acceptance](../../CONTRIBUTING.md)
+- [Verification and acceptance](../../CONTRIBUTING.md)
 
-## Local workflow
+## Module constraints
 
 Follow the skill's placement, relative-reference, registration, and schema
 extraction rules. Update owning paths, components, examples, and relevant

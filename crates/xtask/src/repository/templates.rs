@@ -25,6 +25,7 @@ pub(super) fn check(repository: &Repository) -> Vec<Violation> {
     violations
 }
 
+#[cfg(test)]
 pub(super) fn fenced_block_after_heading(
     document: &crate::repository::markdown::Document,
     heading: &str,
@@ -109,32 +110,6 @@ pub(super) fn first_second_level(body: &str) -> usize {
         .map_or(1, |index| index + 1)
 }
 
-pub(super) fn count_visible_prefixed_lines(
-    document: &crate::repository::markdown::Document,
-    prefix: &str,
-) -> usize {
-    document
-        .body()
-        .lines()
-        .enumerate()
-        .filter(|(index, _)| {
-            document
-                .visible_line_text(index + 1)
-                .is_some_and(|line| line.trim().starts_with(prefix))
-        })
-        .count()
-}
-
-pub(super) fn has_canonical_milestone_field(
-    document: &crate::repository::markdown::Document,
-) -> bool {
-    document.body().lines().enumerate().any(|(index, _)| {
-        document
-            .visible_line_text(index + 1)
-            .is_some_and(|line| line.trim() == "Milestone: MNN - Outcome")
-    })
-}
-
 #[cfg(test)]
 pub(super) fn visible_body_contains(
     document: &crate::repository::markdown::Document,
@@ -216,6 +191,7 @@ pub(super) fn visible_section_body_lines(
         .collect()
 }
 
+#[cfg(test)]
 pub(super) fn visible_section_checkbox_lines(
     document: &crate::repository::markdown::Document,
     heading: &str,
@@ -226,6 +202,7 @@ pub(super) fn visible_section_checkbox_lines(
         .collect()
 }
 
+#[cfg(test)]
 pub(super) fn template_body(body: &str) -> &str {
     let Some(after_opening) = body.strip_prefix("---") else {
         return body;
@@ -236,6 +213,7 @@ pub(super) fn template_body(body: &str) -> &str {
     template.trim_start_matches(['\r', '\n'])
 }
 
+#[cfg(test)]
 pub(super) fn normalize_markdown(body: &str) -> String {
     body.lines()
         .map(str::trim_end)

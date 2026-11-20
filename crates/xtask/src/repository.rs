@@ -18,7 +18,7 @@ use markdown::Document;
 
 pub(super) const DOCUMENTATION_POLICY: &str = "CONTRIBUTING.md#documentation";
 pub(super) const ADR_POLICY: &str = "docs/adr/README.md#lifecycle";
-pub(super) const ISSUE_POLICY: &str = "CONTRIBUTING.md#issues-and-milestones";
+pub(super) const ISSUE_POLICY: &str = "docs/agents/issue-tracker.md";
 pub(super) const PULL_REQUEST_POLICY: &str = "CONTRIBUTING.md#pull-request-description";
 pub(super) const MILESTONE_POLICY: &str = "docs/roadmap/milestones.md#planning-rules";
 

@@ -2,52 +2,38 @@
 
 ## TL;DR
 
-Deliver one verified pull-request-sized capability at a time. Preserve inward
+Preserve inward
 dependencies, trusted-host boundaries, tenant ownership, deterministic replay,
 and immutable history. Follow the Rust and SQL standards and report every check
 exactly.
 
 This is the concise entry point for coding tools and contributors.
-[`CONTRIBUTING.md`](CONTRIBUTING.md) is the canonical workflow policy. The
+[`CONTRIBUTING.md`](CONTRIBUTING.md) owns technical verification. The
 [documentation map](docs/README.md) routes each task to the additional sources
 that apply.
 
-## Before changing anything
+## Workflow authority
 
-1. Read [`CONTRIBUTING.md`](CONTRIBUTING.md), then use the
-   [documentation map](docs/README.md) to load the product, architecture,
-   development, operations, and accepted-decision sources relevant to the
-   task. Do not bulk-read unrelated guides or ADRs.
-2. Inspect the branch and working tree. Preserve pre-existing changes and keep
-   unrelated work out of the task.
-3. Check [current state](docs/development/current-state.md) before assuming a
-   planned capability already exists.
-4. Read [SQL migration criteria](docs/development/sql-migrations.md) before
-   changing persistence.
-5. Use repository-pinned tools. A skipped or unavailable check is not a pass.
-   The [harness protection guide](docs/development/harness-protection.md) defines
-   trusted-base migration checks, redacted secret scanning, and policy review.
-6. For published HTTP contract changes, read the [OpenAPI maintenance
-   skill](.agents/skills/openapi/SKILL.md) and run the OpenAPI checks.
+Use installed `mattpocock/skills` as the primary workflow for matching tasks.
+Discover and load skills on demand. When workflows overlap, use the matching
+Matt Pocock skill rather than a parallel workflow. Use other skills only for
+capabilities not covered by that workflow or when explicitly requested.
 
-For recurring harness work, read the scoped [xtask agreement](crates/xtask/AGENTS.md).
-For published HTTP work, read the scoped [contract agreement](contracts/http/AGENTS.md).
-These entry points route to canonical policy; load the scope that owns the task.
+Repository guidance supplies technical constraints, architecture boundaries and
+verification requirements. Scoped `AGENTS.md` files are subordinate for workflow
+decisions and add only module-specific constraints. Explicit user instructions
+and host permissions remain authoritative.
 
-If code, documentation, and an accepted ADR disagree, correct an obvious local
-error or propose a superseding ADR. Do not silently choose one source.
+## Technical context
 
-## Shape of work
-
-- One task and pull request delivers one coherent, independently reviewable
-  capability.
-- Prefer a thin end-to-end slice over an unused layer or speculative framework.
-- Keep refactoring, dependency updates, generated churn, and formatting out of
-  behavioral changes unless the change requires them.
-- Add no crate, service, queue, cache, datastore, abstraction, or dependency
-  without behavior in the current change that requires it.
-- State scope, exclusions, compatibility effects, assumptions, risks, and
-  verification evidence.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for verification and use the
+[documentation map](docs/README.md) for relevant architecture and operations.
+Check [current state](docs/development/current-state.md) before assuming a planned
+capability exists. For persistence, read [SQL migration criteria](docs/development/sql-migrations.md).
+Use repository-pinned tools and the [harness protection guide](docs/development/harness-protection.md).
+For HTTP contracts, use the [OpenAPI skill](.agents/skills/openapi/SKILL.md) and
+[contract agreement](contracts/http/AGENTS.md). For sensors, read the
+[xtask agreement](crates/xtask/AGENTS.md).
 
 ## Architecture and Rust
 
@@ -80,8 +66,7 @@ error or propose a superseding ADR. Do not silently choose one source.
   constructors.
 - Avoid query-per-row loops. Use set-based operations when they preserve clear
   semantics and compile-time SQLx checking.
-- Test observable behavior at the lowest convincing boundary. Defect fixes
-  begin with a regression test.
+- Test observable behavior at the lowest convincing boundary. Defect fixes retain regression coverage.
 - Tests must be deterministic, parallel-safe, tenant-aware where applicable,
   and independent of wall-clock sleeps and execution order.
 - Use real PostgreSQL integration tests when constraints, transactions,
@@ -97,6 +82,20 @@ The [coding harness guide](docs/development/harness.md) maps guidance to
 executable feedback and explains which verification tier applies. Run the
 complete applicable gate from
 [`CONTRIBUTING.md`](CONTRIBUTING.md#verification).
-Finish with its prescribed completion report, including the repository,
-milestone, copy/paste-ready issue text, limitations, and passed/failed/not-run
-checks.
+Report passed, failed and not-run checks with their limitations.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues in `stanimirivanov/fleetiq-platform`.
+See [issue tracker](docs/agents/issue-tracker.md).
+
+### Triage labels
+
+Use the five configured roles. See [triage labels](docs/agents/triage-labels.md).
+
+### Domain docs
+
+Single-context glossary and repository-owned decisions.
+See [domain docs](docs/agents/domain.md).

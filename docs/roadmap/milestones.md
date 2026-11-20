@@ -3,8 +3,8 @@
 ## TL;DR
 
 - Milestones are outcome-oriented and use `MNN - Outcome`.
-- Each issue belongs to exactly one milestone and should fit one independently
-  reviewable pull request.
+- Apply the relevant published milestone to implementation work; the selected
+  Matt Pocock skill defines issue decomposition.
 - M01 records contracts; M02 and M03 establish product and ingestion
   foundations; M04 through M06 deliver semantic product value and data
   lifecycle; M07 through M09 qualify and release the system.
@@ -87,7 +87,8 @@ The [approved M02–M04 PR sequence](../development/plans/m02-m04-delivery.md) r
 
 - GitHub owns live issue state, labels, assignees, and milestone assignment.
 - This file owns intended sequence until an issue is created.
-- Every issue names exactly one milestone using its exact title.
+- Apply relevant milestones using their published titles; exploratory and
+  coordinating issues follow the selected skill's format.
 - Published milestone numbers are never reused or renumbered.
 - When publishing the next milestone, add both its index row and boundary
   section, then advance `LATEST_PUBLISHED_MILESTONE` in
