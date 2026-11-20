@@ -138,3 +138,46 @@ impl Drop for Fixture {
         fs::remove_dir_all(&self.root).expect("fixture should be removed");
     }
 }
+
+#[test]
+fn skill_templates_preserve_evidence_and_reject_hidden_requirements() {
+    let fixture = Fixture::new();
+    let policy = include_str!("../../../../CONTRIBUTING.md");
+    let issue = include_str!("../../../../.github/ISSUE_TEMPLATE/implementation.md");
+    let pr = include_str!("../../../../.github/PULL_REQUEST_TEMPLATE.md");
+    fixture.write("CONTRIBUTING.md", policy);
+    fixture.write(".github/ISSUE_TEMPLATE/implementation.md", issue);
+    fixture.write(".github/PULL_REQUEST_TEMPLATE.md", pr);
+    let check = || templates::check(&markdown::load(&fixture.root).expect("fixture loads"));
+    assert_eq!(check(), []);
+    fixture.write(
+        ".github/ISSUE_TEMPLATE/implementation.md",
+        &issue.replace("## Dependencies", "<!-- ## Dependencies -->"),
+    );
+    assert!(check().iter().any(|item| item.rule == "template.issue"));
+    fixture.write(".github/ISSUE_TEMPLATE/implementation.md", issue);
+    fixture.write(
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        &pr.replace(
+            "`cargo xtask secrets --base origin/main`",
+            "`cargo xtask secrets`",
+        ),
+    );
+    assert!(
+        check()
+            .iter()
+            .any(|item| item.message.contains("verification table"))
+    );
+    fixture.write(
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        &pr.replace(
+            "**Blast Radius:** affected scope",
+            "<!-- Blast Radius: hidden -->",
+        ),
+    );
+    assert!(
+        check()
+            .iter()
+            .any(|item| item.message.contains("Blast Radius"))
+    );
+}

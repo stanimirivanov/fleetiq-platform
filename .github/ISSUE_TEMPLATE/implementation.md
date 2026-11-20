@@ -6,7 +6,9 @@ labels: ""
 assignees: ""
 ---
 
-**Milestone:** MNN - Outcome
+**Repository:** fleetiq-platform
+
+Milestone (when applicable):
 
 ## Goal
 
@@ -14,18 +16,18 @@ Describe the problem and observable result.
 
 ## Scope
 
-- Included behavior and boundaries.
+Bounded behavior, owning modules and explicit exclusions.
 
-## Design decisions
+## Dependencies
 
-- Important choices, assumptions, compatibility effects, and ADR links.
+Link blockers and parent work. Include cross-repository compatibility and rollout order.
 
 ## Acceptance criteria
 
-- [ ] Observable behavior and verification evidence.
-- [ ] Relevant negative and failure behavior.
-- [ ] Documentation and operational effects.
+- [ ] Observable behavior and relevant rejection/failure paths.
+- [ ] Contract, security and operational effects are addressed.
 
-## Out of scope
+## Verification
 
-- Explicit exclusions and deferred work.
+Required checks, prerequisites and evidence. Distinguish offline checks from
+explicitly authorized live operations.

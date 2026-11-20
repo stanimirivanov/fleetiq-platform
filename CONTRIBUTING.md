@@ -8,8 +8,16 @@
 - Preserve unrelated work and make only reversible local assumptions.
 - Keep dependencies pointing inward and untrusted input behind adapters.
 - Run the applicable harness tier and report checks exactly as run.
-- Use milestone titles `MNN - Outcome` and include one milestone in each issue.
+- Preserve published milestone identities and apply relevant milestones.
 - Update code, tests, contracts, documentation, and operations together.
+
+## Workflow authority
+
+The root [AGENTS.md](AGENTS.md) routes work through installed `mattpocock/skills`.
+This guide owns technical verification and safety constraints, not a parallel
+planning, ticketing, implementation or review process. Read
+[issue tracker](docs/agents/issue-tracker.md), [triage labels](docs/agents/triage-labels.md)
+and [domain docs](docs/agents/domain.md) for the selected skill's configuration.
 
 ## Policy language and sources of truth
 
@@ -19,7 +27,7 @@ optional choice.
 
 | Concern | Canonical source |
 |:--|:--|
-| Workflow, issue shape, review, and completion | This document |
+| Workflow, issue shape, review, and completion | Installed `mattpocock/skills`, configured in [AGENTS.md](AGENTS.md) |
 | Concise tool-facing working agreement | [AGENTS.md](AGENTS.md) |
 | Progressive task-to-document routing | [documentation map](docs/README.md) |
 | Harness tiers and executable feedback | [coding harness](docs/development/harness.md) |
@@ -31,123 +39,14 @@ optional choice.
 | Durable architecture choices | [ADRs](docs/adr/README.md) |
 | Intended delivery sequence | [milestones](docs/roadmap/milestones.md) |
 
-The narrower source governs its concern. An accepted ADR governs the decision
+Technical sources govern their stated constraints; the root AGENTS.md routes workflows. An accepted ADR governs the decision
 it records until superseded. Surface a conflict instead of quietly choosing the
 convenient rule.
 
-## Before starting
-
-A contributor must:
-
-- inspect the branch and working tree and preserve unrelated changes;
-- use the [documentation map](docs/README.md) to read the relevant product,
-  architecture, development, operations, and accepted-decision documents;
-- define the smallest independently reviewable outcome;
-- identify affected contracts, migrations, security boundaries, documentation,
-  and operational behavior; and
-- select one milestone from the roadmap.
-
-Use an ADR when a choice affects compatibility, persisted meaning, security,
-deployment topology, foundational technology, ownership, or several crates.
-Local implementation choices do not need an ADR.
-
-## Ambiguity and assumptions
-
-Inspect code, tests, documentation, ADRs, fixtures, and history before asking
-for a decision. A documented assumption is acceptable when it is local,
-reversible, inexpensive, and does not alter a public contract, persisted
-meaning, security boundary, external state, or acceptance criterion.
-
-Request a decision when missing information could materially change behavior,
-scope, compatibility, data meaning, security, an irreversible action, external
-state, cost, or deployment topology. State the decision, evidence, options, and
-consequences.
-
-## Issues and milestones
-
-Issue-first work is preferred. When implementation starts without an issue,
-finish the smallest coherent scope and provide proposed issue text afterward.
-Creating an issue, milestone, or pull request is an external action and is done
-only when authorized.
-
-Milestones use `MNN - Short outcome`, beginning at `M01`. Published numbers are
-not reused or renumbered. Every implementation issue names exactly one
-milestone from [the roadmap](docs/roadmap/milestones.md).
-
-Use an imperative title and this body:
-
-```markdown
-**Milestone:** MNN - Outcome
-
-## Goal
-
-Describe the problem and observable result.
-
-## Scope
-
-- Included behavior and boundaries.
-
-## Design decisions
-
-- Important choices, assumptions, compatibility effects, and ADR links.
-
-## Acceptance criteria
-
-- [ ] Observable behavior and verification evidence.
-- [ ] Relevant negative and failure behavior.
-- [ ] Documentation and operational effects.
-
-## Out of scope
-
-- Explicit exclusions and deferred work.
-```
-
-Acceptance criteria describe observable behavior or verifiable invariants.
-Record known limitations explicitly.
-
-The checked-in implementation issue template also owns its canonical GitHub
-front matter: `Implementation task`, its reviewable-capability description, and
-empty default title, labels, and assignees. Change that metadata and the
-repository checker together when the project intentionally changes issue
-routing.
-
-## Pull-request-sized work
-
-A pull request must solve one problem or deliver one coherent vertical
-capability. It includes the code, tests, documentation, contract changes, and
-migration required to prove that capability while keeping the repository
-buildable.
-
-Split independent behavior, broad cleanup, dependency upgrades, schema
-redesign, unrelated formatting, and separate architecture decisions. Do not
-add placeholder abstractions, empty modules, or speculative dependencies.
-
-## Development workflow
-
-1. Select or define the issue and milestone.
-2. Create a short issue-oriented branch.
-3. Add or update tests with observable behavior.
-4. Implement the smallest coherent solution.
-5. Format and run the exact quality gate.
-6. Review the complete diff for secrets, generated churn, accidental contract
-   changes, assumptions, and unrelated edits.
-7. Update documentation, ADRs, migrations, and operational guidance.
-8. Before opening a linked pull request, run the supply-chain gate on the final
-   commit. A failed check or missing prerequisite blocks PR creation. With
-   GitHub CLI, make the gate a condition of the create command:
-
-   ```bash
-   cargo xtask verify --group supply-chain && gh pr create
-   ```
-
-   Also run this focused gate before database-backed validation for fast
-   feedback. Repeat it before creating the PR if the candidate has changed.
-
-Commit subjects should be imperative and describe the resulting behavior.
-Generated output is committed only when consumers require it and regeneration
-is deterministic.
-
 ## Verification
+
+Before creating a PR, run `cargo xtask verify --group supply-chain` on the final
+candidate. Failed checks or missing prerequisites leave dependency review incomplete.
 
 Run the fast, database-independent structural checks during editing:
 
@@ -243,6 +142,8 @@ own tooling isolation, cache inputs, and dependency-versus-policy review.
 
 ## Documentation
 
+Commit generated output only when consumers require it and regeneration is deterministic.
+
 Code and documentation change together when behavior, contracts,
 configuration, migrations, or operations change. Long documents include a
 `## TL;DR` immediately after their title and any status metadata. A document is
@@ -256,7 +157,8 @@ fenced, image-only, and unused reference-definition links do not supply routes.
 This narrow routing rule is checked by `cargo xtask repository`; it does not
 replace review of guidance meaning or ADR approval evidence.
 
-Mechanically checked issue and pull-request prompts, required ADR headings,
+Checked-in issue and PR templates expose the configured skill and technical evidence
+requirements. Required ADR headings,
 lifecycle metadata and index entries, and milestone indexes and boundaries use
 plain Markdown. Raw HTML comments may provide author guidance, but raw HTML
 elements must not carry required policy fields.
@@ -272,27 +174,10 @@ repository map provides navigation.
 
 ## Pull request description
 
-A pull request description must state the linked issue and exact milestone;
-the problem and resulting behavior; scope and deliberate exclusions;
-assumptions, limitations, and unresolved questions; design, architecture, and
-compatibility effects; migration, rollout, rollback, security, and operational
-effects; and verification evidence. Every applicable check must be shown as
-passed, failed, or not run. A not-run check includes the blocking condition and
-residual risk.
-
-Use [the repository template](.github/PULL_REQUEST_TEMPLATE.md). The template
-collects this evidence but does not replace the policies in this document.
-The checked-in template owns its exact level-two section order and required
-prompt vocabulary. Change that contract and the repository checker together
-when the project intentionally changes review routing. Keep every verification
-command as one exact inline-code value in the first table column, and retain the
-ordered unchecked review checklist; these shapes make drift mechanically
-detectable.
-
-When a dependency changes, explain the required capability and owning layer,
-alternatives, enabled features, MSRV, license and source, maintenance and
-security status, dependency-tree change, and exit path in the template's
-dependency-review prompt.
+Use the `mattpocock/skills` PR workflow and the repository template: Summary,
+Evidence and Merge Danger. Include issue links, relevant milestone, compatibility,
+security, operational and rollback effects where applicable. Keep unavailable
+verification and residual risk explicit.
 
 ## Improving the harness
 
@@ -319,28 +204,7 @@ depend on undeclared ambient tools, weaken invariants, or treat an unavailable
 check as passing. See the [coding harness](docs/development/harness.md) for the
 feedback inventory and extension criteria.
 
-## Review checklist
-
-- [ ] The issue names one milestone and one coherent capability.
-- [ ] Repository policy and architecture checks pass.
-- [ ] Dependencies point inward and infrastructure stays outside domain policy.
-- [ ] Public and persisted contracts are compatible or have an evolution plan.
-- [ ] Tests cover success and relevant invalid, failure, and concurrency paths.
-- [ ] Tenant isolation, idempotency, retries, and resource bounds are explicit.
-- [ ] Rust, SQL, documentation, and operational guidance are current.
-- [ ] Required checks passed or unavailable checks are reported honestly.
-- [ ] No secrets, customer data, generated noise, or unrelated changes exist.
-- [ ] An ADR is present when the choice meets the ADR threshold.
-
 ## Completion report
 
-After a completed coding task, report:
-
-1. the repository and exact milestone;
-2. a proposed GitHub issue title;
-3. a copy/paste-ready issue body using the required structure;
-4. assumptions, limitations, and unresolved questions; and
-5. verification commands and outcomes under **passed**, **failed**, and
-   **not run**.
-
-This report does not imply that an external issue or pull request was created.
+Use the selected skill's delivery format. Report changed behavior, verification
+outcomes and material limitations; distinguish passed, failed and not-run checks.

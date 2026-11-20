@@ -94,7 +94,7 @@ configuration, startup, readiness, or container changes still require the
 existing Compose smoke checks. The runner does not absorb those operational
 checks or claim that a thirteen-command acceptance run proves production
 readiness. Use the [harness tiers](harness.md#cost-and-timing-tiers) and the
-canonical workflow to determine the complete applicable gate.
+technical verification policy to determine the complete applicable gate.
 
 ## Prepare prerequisites
 

@@ -26,8 +26,9 @@ and constraints before editing. Feedback sensors detect structural violations
 and behavioral regressions after each change. The shortest useful loop runs
 cheap checks first while preserving one documented acceptance gate.
 
-This guide inventories the harness. It does not replace the canonical workflow
-in [CONTRIBUTING.md](../../CONTRIBUTING.md), the engineering rules in
+This guide inventories the harness. Workflow authority belongs to installed `mattpocock/skills` via
+[AGENTS.md](../../AGENTS.md). Technical requirements remain in
+[CONTRIBUTING.md](../../CONTRIBUTING.md), the engineering rules in
 [engineering standards](engineering-standards.md), or the exact CI workflow in
 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml).
 
@@ -50,7 +51,7 @@ cannot run.
 | Guide | What it supplies | Load when |
 |:--|:--|:--|
 | [AGENTS.md](../../AGENTS.md) | Concise tool-facing agreement and canonical links | Every task |
-| [CONTRIBUTING.md](../../CONTRIBUTING.md) | Workflow, issue shape, verification, review, and completion policy | Every task |
+| [CONTRIBUTING.md](../../CONTRIBUTING.md) | Technical verification and safety constraints | Every task |
 | [Documentation map](../README.md) | Progressive task-to-source routing | Every task |
 | [Product scope](../product/README.md) | Users, vocabulary, outcomes, and non-goals | Product behavior or terminology changes |
 | [Architecture overview](../architecture/README.md) | System boundaries, information flow, trust, and ownership | Code or boundary changes |
@@ -150,9 +151,9 @@ checks these mechanical rules without network access:
   use valid lifecycle declarations when present;
 - milestone index entries use contiguous `MNN - Outcome` identifiers and match
   their boundary headings and published high-water mark; and
-- the issue and pull request templates retain the milestone field, sections,
-  exact first-column verification commands, and ordered review checklist
-  required by [CONTRIBUTING.md](../../CONTRIBUTING.md).
+- the issue template exposes scope, dependencies, acceptance and verification;
+  the PR template follows Summary, Evidence and Merge Danger while retaining
+  exact first-column acceptance commands from [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 Mechanically checked template prompts, required ADR headings, lifecycle
 metadata and index entries, and milestone indexes and boundaries use plain
@@ -194,17 +195,11 @@ actionable, and owned.
 
 ## Multi-PR execution plans
 
-Use a versioned execution plan when one approved outcome needs several
-dependent pull requests, especially for migrations, compatibility transitions,
-or architectural refactoring. Add the plan under `docs/development/plans/`
-with the first implementation slice; do not create an empty plans directory.
-
-The plan should record the outcome, invariants, exclusions, relevant ADRs,
-ordered slices, compatibility, rollout and rollback, verification, and any
-discovery that changes the sequence. Each slice remains independently
-reviewable and leaves the repository buildable. GitHub issues and milestones
-remain authoritative for delivery state, and ADRs remain authoritative for
-durable decisions.
+Existing versioned plans preserve historical scope, sequencing and evidence.
+New work follows the selected Matt Pocock skill and
+[issue tracker configuration](../agents/issue-tracker.md). A separate repository
+execution plan is optional; GitHub owns live delivery state and ADRs own durable
+decisions.
 
 The approved [harness hardening plan](plans/harness-hardening.md) records the
 remaining gaps and delivery order. Implemented dependency ownership and lint

@@ -1,5 +1,7 @@
 # Repository sensor work
 
+Technical constraints for this scope; the repository root `AGENTS.md` owns workflow routing.
+
 ## TL;DR
 
 This crate owns development sensors and verification coordination. Start with
@@ -7,14 +9,14 @@ the routes below, then read only the module and policy that the task changes.
 
 ## Read before editing
 
-- [Contributor workflow and acceptance](../../CONTRIBUTING.md)
+- [Verification and acceptance](../../CONTRIBUTING.md)
 - [Engineering standards](../../docs/development/engineering-standards.md)
 - [Harness tiers and sensor criteria](../../docs/development/harness.md)
 - [Dependency ownership](../../docs/architecture/dependency-rules.md)
 - [History, secrets, and policy review](../../docs/development/harness-protection.md)
 - [Command inventory, CI, and evidence](../../docs/development/verification.md)
 
-## Local workflow
+## Module constraints
 
 Choose the existing owning module: architecture, repository, migrations,
 secrets, or verification. Keep policy, parsing, process execution, and evidence
