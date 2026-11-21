@@ -126,7 +126,7 @@ also retains the earlier 49.0.4 fixes for RUSTSEC-2026-0378/0379. The owner rema
 `fleetiq-protocol-wasm`; alternatives are affected 49.0.4 or a broader major-version
 migration, so this is the narrow compatible patch. Features remain `anyhow`,
 `component-model`, `cranelift`, `runtime` and `std`, with defaults disabled. Upstream
-MSRV is 1.96.0, within the pinned project compiler 1.99.1; license remains
+MSRV is 1.96.0, within the pinned project compiler 1.100.0; license remains
 `Apache-2.0 WITH LLVM-exception` from crates.io. The maintained upstream patch
 updates 27 existing package versions, adding/removing no package names.
 

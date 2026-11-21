@@ -268,7 +268,7 @@ or suppress a condition. The opt-in [notification worker](../operations/alert-no
 
 ## Runtime and data
 
-The workspace is Rust 2024 on Rust 1.99.1. PostgreSQL adapters are organized
+The workspace is Rust 2024 on Rust 1.100.0. PostgreSQL adapters are organized
 by access, identity, metadata, ingestion, history and projection capability inside one crate. A
 private codec keeps persisted platform and tenant action names consistent
 across policy, administration, catalogue, and audit paths. PostgreSQL 18.6
