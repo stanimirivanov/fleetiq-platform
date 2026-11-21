@@ -120,7 +120,7 @@ impl Tool {
     /// Exact pins except Node's reviewed major and Git's installed-tool policy.
     pub(crate) const fn expected(self) -> &'static str {
         match self {
-            Self::Rust => "1.99.1",
+            Self::Rust => "1.100.0",
             Self::Git => "installed",
             Self::Gitleaks => crate::secrets::VERSION,
             Self::Deny => "0.20.2",
@@ -471,7 +471,7 @@ mod tests {
 
     #[test]
     fn tool_policies_keep_exact_pins_and_explicit_exceptions() {
-        assert_eq!(Tool::Rust.expected(), "1.99.1");
+        assert_eq!(Tool::Rust.expected(), "1.100.0");
         assert_eq!(Tool::Gitleaks.expected(), crate::secrets::VERSION);
         assert_eq!(Tool::Deny.expected(), "0.20.2");
         assert_eq!(Tool::Machete.expected(), "0.9.2");

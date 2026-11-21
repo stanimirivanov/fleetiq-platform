@@ -23,3 +23,6 @@ checkout works independently of sibling directories.
 
 Record a durable decision when changing compatibility, persisted meaning, security,
 deployment topology, foundational technology or ownership. Cross-crate architectural choices also need a decision record.
+
+For terminology, read the [canonical glossary](../../GLOSSARY.md). For module
+ownership, contract boundaries and open decisions, read the [domain map](../architecture/domain-model.md).

@@ -328,7 +328,7 @@ The server directly owns reqwest 0.12.28 (Rustls TLS only) and time 0.3.55 (std 
 formatting only) for the fixed outbound Alertmanager adapter and UTC RFC3339
 conversion. Both were already locked/transitively present; no resolver versions
 or new packages are added. Licenses are MIT OR Apache-2.0; their declared MSRVs
-1.64 and 1.88 fit the pinned 1.99.1 compiler. Native delivery snapshots stay in
+1.64 and 1.88 fit the pinned 1.100.0 compiler. Native delivery snapshots stay in
 analytics and fencing stays in PostgreSQL; neither depends on HTTP or the router.
 See [ADR 0134](../adr/0134-deliver-durable-alert-notifications.md). New direct
 ownership does not waive current advisory or license verification.

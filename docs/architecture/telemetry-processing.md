@@ -6,8 +6,8 @@ Decoded observations preserve protocol facts and provenance. Semantic
 resolution converts compatible observations into asset property changes.
 The application can append resolved changes to immutable PostgreSQL history.
 The durable semantic worker is composed separately from ingestion.
-Versioned calculators and revisioned live projections have contracts; their
-production workers remain planned.
+Versioned calculator and current-property projection workers are implemented.
+The [domain map](domain-model.md) separates their evidence and ownership boundaries.
 
 ## Decoded observations
 
@@ -65,9 +65,11 @@ telemetry-authorized exact provenance and bounded asset/property-version pages.
 
 Calculator evaluations have versioned calculator provenance, separate event
 and evaluation times, and deterministic output identity. Calculators operate on
-semantic properties rather than vendor parameter numbers. Stateful windows,
-change-point detection, anomaly models, scheduling, persistence, and failure
-isolation are planned around this contract.
+semantic properties rather than vendor parameter numbers. Bounded window means, median/MAD anomaly evaluation, durable scheduling and
+persisted evaluation evidence are implemented; see
+[calculator execution](../operations/calculator-once.md) and
+[evidence](../operations/calculator-evidence.md). Additional models require
+their own explicit contracts.
 
 ## Live projection
 
@@ -88,8 +90,9 @@ stateDiagram-v2
 Projection consumers import these types from `fleetiq-live`. See
 [ADR 0076](../adr/0076-extract-live-projection-contracts.md).
 
-Transport choice, subscription authorization, fan-out, backpressure, and
-offline recovery remain adapter and product decisions.
+The browser property-state adapter uses authorized SSE with bounded recovery;
+see [ADR 0122](../adr/0122-deliver-authorized-property-state-over-sse.md).
+The generic live contract does not imply lossless historical delivery.
 
 ## Storage path
 
@@ -107,8 +110,10 @@ interpretation identities with tenant-safe decoded-observation and binding
 references. The [durable worker](../operations/semantic-worker.md) owns fenced
 claims, saved interpretation choices and atomic history completion. The bounded
 asset/property history API reads original evidence without reinterpretation. The
-initial design favors PostgreSQL for transactional history and a separate
-object archive only when volume and retention economics justify it. Query
+current implementation uses PostgreSQL for transactional history and explicit
+archive publication with bounded restores; see
+[ADR 0144](../adr/0144-publish-verified-archive-manifests.md) and
+[ADR 0146](../adr/0146-query-restored-history-with-explicit-coverage.md). Query
 stores and caches are derived and rebuildable. The source facts and pinned
 versions needed for replay remain durable.
 
