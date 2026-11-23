@@ -38,17 +38,19 @@ Unknown commands, flags and extra arguments fail rather than guessing a mode.
    Grant SELECT on `public._sqlx_migrations`. Do not grant CREATE, ownership,
    TRUNCATE, ledger mutation or migration-owner role membership.
 5. Explicitly authorize first-operator bootstrap. Its temporary non-DDL role
-   needs USAGE on identity, SELECT on the ledger, and SELECT/INSERT on
+   needs USAGE on identity, SELECT on the ledger and INSERT on
    `identity.platform_bootstrap`, `identity.actors`,
    `identity.external_actor_identities` and `identity.platform_action_grants`.
+   It reads bootstrap and external identity rows for exact retry and validation.
    Run checked bootstrap, then withdraw that credential.
 6. Start checked serve with its runtime credential and complete identity config.
    Release tooling verifies health/product behavior before declaring acceptance.
 
 Privileges are provisioning policy, not SQL embedded in this binary. Default
 privileges for future tables must be reviewed with their new runtime capability.
-Separate processes with the same password or schema ownership are not separate
-authorities. Revoke CREATE on public for ordinary roles where necessary; never
+The [runtime grant contract](postgres-runtime-grants.md) provides the object-level
+PostgreSQL privileges for the minimal-demo commands. Separate processes with
+the same password or schema ownership are not separate authorities. Revoke CREATE on public for ordinary roles where necessary; never
 make the application role an owner. The local development superuser is not a
 production privilege model.
 

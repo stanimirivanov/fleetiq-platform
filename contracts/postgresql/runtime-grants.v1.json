@@ -1,0 +1,629 @@
+{
+  "format": "fleetiq-postgresql-runtime-grants.v1",
+  "postgresMajor": 18,
+  "migrationHead": {
+    "version": 59,
+    "sha384": "5a15322f1602ef8795034e781a638a33d96d855234757318f613c6d409ea3e86853ebf49cf081e78d6cf135c23135ae1"
+  },
+  "common": {
+    "database": [
+      "CONNECT"
+    ],
+    "select": [
+      "public._sqlx_migrations"
+    ]
+  },
+  "commands": {
+    "analytics-worker": {
+      "select": [
+        "analytics.alert_evaluation_receipts",
+        "analytics.alert_lifecycles",
+        "analytics.alert_notification_intents",
+        "analytics.alert_rule_activation_changes",
+        "analytics.alert_rule_revisions",
+        "analytics.alert_rules",
+        "analytics.alert_transitions",
+        "analytics.calculator_configuration_revisions",
+        "analytics.calculator_configurations",
+        "analytics.calculator_definitions",
+        "analytics.calculator_schedules",
+        "analytics.calculator_work",
+        "analytics.evaluation_configurations",
+        "analytics.evaluation_targets",
+        "analytics.evaluations",
+        "analytics.prepared_evaluations",
+        "analytics.work_controls",
+        "analytics.work_recovery_audit",
+        "history.asset_property_changes",
+        "ingestion.decoded_observations",
+        "metadata.asset_type_properties",
+        "metadata.assets",
+        "metadata.property_definitions",
+        "metadata.signal_binding_revisions",
+        "metadata.tenants"
+      ],
+      "insert": [
+        "analytics.alert_evaluation_receipts",
+        "analytics.alert_notification_intents",
+        "analytics.alert_transitions",
+        "analytics.calculator_work",
+        "analytics.evaluation_configurations",
+        "analytics.evaluation_targets",
+        "analytics.evaluations",
+        "analytics.prepared_evaluations"
+      ],
+      "execute": [
+        "analytics.has_work_recovery(text,text,text,bigint,bigint)",
+        "analytics.next_alert_evidence(text,text,bigint)",
+        "analytics.semantic_evidence_id(text,text,text,text,bigint,text,numeric,text)",
+        "metadata.is_valid_identifier(text)"
+      ],
+      "updateColumns": {
+        "analytics.alert_lifecycles": [
+          "activation_generation",
+          "candidate_since_ms",
+          "last_event_at_ms",
+          "last_turn_at",
+          "phase",
+          "version"
+        ],
+        "analytics.alert_rules": [
+          "runtime_lock_guard"
+        ],
+        "analytics.calculator_configurations": [
+          "runtime_lock_guard"
+        ],
+        "analytics.calculator_schedules": [
+          "next_start_ms"
+        ],
+        "analytics.calculator_work": [
+          "attempts",
+          "generation",
+          "lease_until_ms",
+          "status"
+        ],
+        "history.asset_property_changes": [
+          "tenant_id"
+        ],
+        "metadata.tenants": [
+          "runtime_lock_guard"
+        ]
+      },
+      "schemas": [
+        "analytics",
+        "history",
+        "ingestion",
+        "metadata",
+        "public"
+      ]
+    },
+    "archive-worker": {
+      "select": [
+        "history.archive_jobs",
+        "history.archive_members",
+        "history.asset_property_changes",
+        "history.export_jobs",
+        "history.lifecycle_policies",
+        "history.restore_jobs",
+        "history.work_reservations",
+        "ingestion.accepted_messages",
+        "ingestion.decoded_observations",
+        "metadata.signal_binding_revisions",
+        "metadata.tenants"
+      ],
+      "insert": [
+        "history.archive_jobs",
+        "history.archive_members",
+        "history.work_reservations"
+      ],
+      "delete": [
+        "history.work_reservations"
+      ],
+      "execute": [
+        "history.export_bytes(text)",
+        "history.export_slots(text)"
+      ],
+      "updateColumns": {
+        "history.archive_jobs": [
+          "generation",
+          "lease_until",
+          "object_bytes",
+          "object_sha256",
+          "reservation_id"
+        ],
+        "metadata.tenants": [
+          "runtime_lock_guard"
+        ]
+      },
+      "schemas": [
+        "history",
+        "ingestion",
+        "metadata",
+        "public"
+      ]
+    },
+    "bootstrap-platform-operator --check-schema": {
+      "select": [
+        "identity.external_actor_identities",
+        "identity.platform_bootstrap"
+      ],
+      "insert": [
+        "identity.actors",
+        "identity.external_actor_identities",
+        "identity.platform_action_grants",
+        "identity.platform_bootstrap"
+      ],
+      "execute": [
+        "metadata.is_valid_identifier(text)"
+      ],
+      "schemas": [
+        "identity",
+        "metadata",
+        "public"
+      ]
+    },
+    "ingest-tcp": {
+      "select": [
+        "ingestion.accepted_messages",
+        "ingestion.protocol_admissions",
+        "ingestion.protocol_artifacts",
+        "ingestion.protocol_route_heads",
+        "ingestion.protocol_route_revisions",
+        "ingestion.replay_sessions",
+        "ingestion.replay_work",
+        "metadata.asset_external_identifiers",
+        "metadata.protocol_package_releases",
+        "metadata.tenants"
+      ],
+      "insert": [
+        "ingestion.accepted_messages",
+        "ingestion.replay_sessions",
+        "ingestion.replay_work"
+      ],
+      "execute": [
+        "metadata.is_valid_identifier(text)"
+      ],
+      "updateColumns": {
+        "ingestion.replay_sessions": [
+          "runtime_lock_guard"
+        ],
+        "metadata.tenants": [
+          "runtime_lock_guard"
+        ]
+      },
+      "schemas": [
+        "ingestion",
+        "metadata",
+        "public"
+      ]
+    },
+    "notification-worker": {
+      "select": [
+        "analytics.alert_notification_delivery",
+        "analytics.alert_notification_intents",
+        "analytics.alert_rule_revisions",
+        "analytics.alert_transitions",
+        "analytics.work_controls",
+        "metadata.tenants"
+      ],
+      "insert": [
+        "analytics.alert_notification_delivery"
+      ],
+      "updateColumns": {
+        "analytics.alert_notification_delivery": [
+          "accepted_version",
+          "attempts",
+          "generation",
+          "last_failure",
+          "lease_until",
+          "next_attempt_at",
+          "resolved_until",
+          "target_version"
+        ],
+        "metadata.tenants": [
+          "runtime_lock_guard"
+        ]
+      },
+      "schemas": [
+        "analytics",
+        "metadata",
+        "public"
+      ]
+    },
+    "project-current": {
+      "select": [
+        "history.asset_property_changes",
+        "metadata.signal_binding_revisions",
+        "metadata.tenants",
+        "projection.current_properties",
+        "projection.pending_changes",
+        "projection.tenant_heads"
+      ],
+      "insert": [
+        "projection.current_properties"
+      ],
+      "delete": [
+        "projection.pending_changes"
+      ],
+      "execute": [
+        "projection.project_next()"
+      ],
+      "updateColumns": {
+        "history.asset_property_changes": [
+          "tenant_id"
+        ],
+        "metadata.tenants": [
+          "runtime_lock_guard"
+        ],
+        "projection.current_properties": [
+          "binding_id",
+          "binding_revision",
+          "event_at_ms",
+          "event_time_basis",
+          "message_id",
+          "output_index",
+          "protocol_package_id",
+          "protocol_package_version"
+        ],
+        "projection.tenant_heads": [
+          "last_served_at",
+          "processed_count",
+          "revision"
+        ]
+      },
+      "schemas": [
+        "history",
+        "metadata",
+        "projection",
+        "public"
+      ]
+    },
+    "replay-worker": {
+      "select": [
+        "analytics.work_controls",
+        "analytics.work_recovery_audit",
+        "ingestion.accepted_messages",
+        "ingestion.decoded_message_results",
+        "ingestion.decoded_observations",
+        "ingestion.protocol_admissions",
+        "ingestion.protocol_artifacts",
+        "ingestion.replay_sessions",
+        "ingestion.replay_work",
+        "metadata.protocol_package_releases",
+        "metadata.tenants"
+      ],
+      "insert": [
+        "history.semantic_work",
+        "ingestion.decoded_message_results",
+        "ingestion.decoded_observations"
+      ],
+      "execute": [
+        "analytics.has_work_recovery(text,text,text,bigint,bigint)",
+        "metadata.is_valid_identifier(text)"
+      ],
+      "updateColumns": {
+        "ingestion.replay_sessions": [
+          "current_sequence",
+          "state"
+        ],
+        "ingestion.replay_work": [
+          "attempts",
+          "generation",
+          "lease_until_ms",
+          "next_state",
+          "status"
+        ]
+      },
+      "schemas": [
+        "analytics",
+        "history",
+        "ingestion",
+        "metadata",
+        "public"
+      ]
+    },
+    "semantic-worker": {
+      "select": [
+        "history.asset_property_changes",
+        "history.semantic_backfill",
+        "history.semantic_work",
+        "ingestion.accepted_messages",
+        "ingestion.decoded_message_results",
+        "ingestion.decoded_observations",
+        "metadata.asset_type_definitions",
+        "metadata.asset_type_properties",
+        "metadata.assets",
+        "metadata.property_definitions",
+        "metadata.relationship_type_definitions",
+        "metadata.signal_binding_revisions",
+        "metadata.tenants",
+        "projection.tenant_heads"
+      ],
+      "insert": [
+        "history.asset_property_changes",
+        "history.semantic_work",
+        "projection.pending_changes",
+        "projection.tenant_heads"
+      ],
+      "execute": [
+        "analytics.semantic_evidence_id(text,text,text,text,bigint,text,numeric,text)",
+        "metadata.is_valid_identifier(text)"
+      ],
+      "updateColumns": {
+        "history.asset_property_changes": [
+          "tenant_id"
+        ],
+        "history.semantic_backfill": [
+          "completed",
+          "message_id",
+          "output_index",
+          "protocol_package_id",
+          "protocol_package_version",
+          "tenant_id"
+        ],
+        "history.semantic_work": [
+          "binding_id",
+          "binding_revision",
+          "generation",
+          "lease_until_ms",
+          "reason",
+          "status"
+        ],
+        "metadata.tenants": [
+          "runtime_lock_guard"
+        ]
+      },
+      "schemas": [
+        "analytics",
+        "history",
+        "ingestion",
+        "metadata",
+        "projection",
+        "public"
+      ]
+    },
+    "serve --check-schema": {
+      "select": [
+        "analytics.alert_acknowledgements",
+        "analytics.alert_evaluation_receipts",
+        "analytics.alert_lifecycles",
+        "analytics.alert_notification_delivery",
+        "analytics.alert_notification_intents",
+        "analytics.alert_rule_activation_changes",
+        "analytics.alert_rule_revisions",
+        "analytics.alert_rules",
+        "analytics.alert_transitions",
+        "analytics.calculator_activation_changes",
+        "analytics.calculator_configuration_revisions",
+        "analytics.calculator_configurations",
+        "analytics.calculator_definitions",
+        "analytics.calculator_schedules",
+        "analytics.calculator_work",
+        "analytics.evaluation_targets",
+        "analytics.evaluations",
+        "analytics.prepared_evaluations",
+        "analytics.work_controls",
+        "analytics.work_recovery_audit",
+        "history.archive_jobs",
+        "history.archive_members",
+        "history.asset_property_changes",
+        "history.export_jobs",
+        "history.lifecycle_policies",
+        "history.numeric_summaries",
+        "history.numeric_summary_series",
+        "history.restore_jobs",
+        "history.semantic_backfill",
+        "history.semantic_work",
+        "history.work_reservations",
+        "identity.actor_lifecycle_changes",
+        "identity.actor_provisionings",
+        "identity.actors",
+        "identity.browser_login_attempts",
+        "identity.browser_sessions",
+        "identity.external_actor_identities",
+        "identity.external_identity_changes",
+        "identity.platform_access_changes",
+        "identity.platform_action_grants",
+        "identity.platform_bootstrap",
+        "identity.tenant_access_changes",
+        "identity.tenant_action_grants",
+        "identity.tenant_lifecycle_changes",
+        "identity.tenant_provisionings",
+        "ingestion.accepted_messages",
+        "ingestion.decoded_message_results",
+        "ingestion.decoded_observations",
+        "ingestion.protocol_admissions",
+        "ingestion.protocol_artifacts",
+        "ingestion.protocol_route_heads",
+        "ingestion.protocol_route_revisions",
+        "ingestion.replay_sessions",
+        "ingestion.replay_work",
+        "metadata.asset_external_identifiers",
+        "metadata.asset_relationship_revisions",
+        "metadata.asset_relationships",
+        "metadata.asset_type_definitions",
+        "metadata.asset_type_properties",
+        "metadata.assets",
+        "metadata.communication_devices",
+        "metadata.device_endpoints",
+        "metadata.property_definitions",
+        "metadata.protocol_package_releases",
+        "metadata.registration_records",
+        "metadata.relationship_revision_records",
+        "metadata.relationship_type_definitions",
+        "metadata.signal_binding_revision_records",
+        "metadata.signal_binding_revisions",
+        "metadata.signal_bindings",
+        "metadata.tenants",
+        "projection.current_properties",
+        "projection.pending_changes",
+        "projection.tenant_heads"
+      ],
+      "insert": [
+        "analytics.alert_acknowledgements",
+        "analytics.alert_lifecycles",
+        "analytics.alert_rule_activation_changes",
+        "analytics.alert_rule_revisions",
+        "analytics.alert_rules",
+        "analytics.calculator_activation_changes",
+        "analytics.calculator_configuration_revisions",
+        "analytics.calculator_configurations",
+        "analytics.calculator_schedules",
+        "analytics.work_controls",
+        "analytics.work_recovery_audit",
+        "history.export_jobs",
+        "history.restore_jobs",
+        "history.work_reservations",
+        "identity.actor_lifecycle_changes",
+        "identity.actor_provisionings",
+        "identity.actors",
+        "identity.browser_login_attempts",
+        "identity.browser_sessions",
+        "identity.external_actor_identities",
+        "identity.external_identity_changes",
+        "identity.platform_access_changes",
+        "identity.platform_action_grants",
+        "identity.tenant_access_changes",
+        "identity.tenant_action_grants",
+        "identity.tenant_lifecycle_changes",
+        "identity.tenant_provisionings",
+        "ingestion.protocol_admissions",
+        "ingestion.protocol_artifacts",
+        "ingestion.protocol_route_heads",
+        "ingestion.protocol_route_revisions",
+        "metadata.asset_external_identifiers",
+        "metadata.asset_relationship_revisions",
+        "metadata.asset_relationships",
+        "metadata.asset_type_definitions",
+        "metadata.asset_type_properties",
+        "metadata.assets",
+        "metadata.communication_devices",
+        "metadata.device_endpoints",
+        "metadata.property_definitions",
+        "metadata.protocol_package_releases",
+        "metadata.registration_records",
+        "metadata.relationship_revision_records",
+        "metadata.relationship_type_definitions",
+        "metadata.signal_binding_revision_records",
+        "metadata.signal_binding_revisions",
+        "metadata.signal_bindings",
+        "metadata.tenants"
+      ],
+      "delete": [
+        "history.work_reservations",
+        "identity.browser_login_attempts",
+        "identity.browser_sessions",
+        "identity.external_actor_identities",
+        "identity.platform_action_grants",
+        "identity.tenant_action_grants"
+      ],
+      "execute": [
+        "analytics.acknowledge_alert(text,text,bigint,bigint,text)",
+        "analytics.change_alert_rule_activation(text,text,bigint,bigint,text)",
+        "analytics.change_configuration_activation(text,text,bigint,bigint,text)",
+        "analytics.create_alert_rule_revision(text,text,bigint,text,jsonb)",
+        "analytics.create_configuration_revision(text,text,bigint,text,jsonb)",
+        "analytics.has_work_recovery(text,text,text,bigint,bigint)",
+        "analytics.lock_alert_rule_authority(text,text)",
+        "analytics.lock_configuration_authority(text,text)",
+        "analytics.recover_work(text,text,text,text,text,jsonb,bigint,bytea)",
+        "analytics.semantic_evidence_id(text,text,text,text,bigint,text,numeric,text)",
+        "history.export_admitted(text)",
+        "history.export_bytes(text)",
+        "history.export_slots(text)",
+        "metadata.is_valid_identifier(text)"
+      ],
+      "updateColumns": {
+        "analytics.alert_lifecycles": [
+          "tenant_id"
+        ],
+        "analytics.alert_notification_delivery": [
+          "attempts",
+          "generation",
+          "lease_until",
+          "next_attempt_at"
+        ],
+        "analytics.alert_rules": [
+          "active_revision",
+          "generation",
+          "latest_revision"
+        ],
+        "analytics.calculator_configurations": [
+          "active_revision",
+          "generation",
+          "latest_revision"
+        ],
+        "analytics.calculator_work": [
+          "attempts",
+          "generation",
+          "lease_until_ms",
+          "status"
+        ],
+        "analytics.work_controls": [
+          "generation",
+          "paused"
+        ],
+        "history.export_jobs": [
+          "attempt",
+          "lease_until",
+          "payload",
+          "status"
+        ],
+        "history.restore_jobs": [
+          "attempt",
+          "expires_at",
+          "lease_until",
+          "payload",
+          "request_generation",
+          "reservation_id",
+          "status"
+        ],
+        "history.work_reservations": [
+          "runtime_lock_guard"
+        ],
+        "identity.actors": [
+          "is_active"
+        ],
+        "identity.platform_action_grants": [
+          "actor_id"
+        ],
+        "identity.platform_bootstrap": [
+          "actor_id"
+        ],
+        "identity.tenant_action_grants": [
+          "actor_id"
+        ],
+        "ingestion.protocol_route_heads": [
+          "revision"
+        ],
+        "ingestion.replay_sessions": [
+          "runtime_lock_guard"
+        ],
+        "ingestion.replay_work": [
+          "attempts",
+          "generation",
+          "lease_until_ms",
+          "status"
+        ],
+        "metadata.asset_relationships": [
+          "latest_revision"
+        ],
+        "metadata.signal_bindings": [
+          "latest_revision"
+        ],
+        "metadata.tenants": [
+          "is_active"
+        ]
+      },
+      "schemas": [
+        "analytics",
+        "history",
+        "identity",
+        "ingestion",
+        "metadata",
+        "projection",
+        "public"
+      ]
+    }
+  }
+}

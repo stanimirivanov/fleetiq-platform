@@ -11,6 +11,7 @@ restore, and incident runbooks will be added when those capabilities exist.
 - [Backend image publication](image-publication.md) — qualify immutable production bytes, review provenance/inventory and manually publish by digest.
 
 - [Runtime and migrations](runtime-and-migrations.md) — explicit migration, checked production serving/bootstrap, role privileges, readiness, OIDC CA trust and shutdown.
+- [PostgreSQL runtime grants](postgres-runtime-grants.md) — versioned command privileges, owners, invoker handoffs and isolated qualification.
 
 - [Browser operator identity](browser-identity.md) — configure provider-neutral
   OIDC, same-origin HTTPS, operator mapping, sessions, and logout.
