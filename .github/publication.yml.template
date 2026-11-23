@@ -85,8 +85,13 @@ jobs:
         uses: actions/upload-artifact@@action:upload-artifact@
         with:
           name: backend-publication-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            target/images/*/reports/*.json
-            target/images/*/reports/runtime-grants.sql
+          path: target/images/*/reports/*.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Retain native PostgreSQL grant SQL for the published image
+        uses: actions/upload-artifact@@action:upload-artifact@
+        with:
+          name: backend-runtime-grants-${{ github.run_id }}-${{ github.run_attempt }}
+          path: target/images/*/reports/runtime-grants.sql
           if-no-files-found: error
           retention-days: 90
