@@ -29,7 +29,9 @@ INSERT INTO metadata.signal_binding_revisions
      target_asset_id, target_property_id, target_property_version, effective_start_ms)
 VALUES ('grant-contract', 'voltage', 1, 100, 'gateway-1', 'can', 'bus.voltage',
         'system-1', 'electrical.voltage', 1, 0);
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_bootstrap_platform_operator;
 INSERT INTO identity.platform_bootstrap (singleton, actor_id, authority_id, subject, recorded_at_ms)
@@ -40,7 +42,32 @@ VALUES ('qualification', 'synthetic', 'grant-operator');
 INSERT INTO identity.platform_action_grants (actor_id, action)
 VALUES ('grant-operator', 'platform.access.manage'), ('grant-operator', 'identity.manage'),
        ('grant-operator', 'tenant.provision'), ('grant-operator', 'tenant.lifecycle.manage');
+INSERT INTO identity.platform_bootstrap (singleton, actor_id, authority_id, subject, recorded_at_ms)
+VALUES (true, 'grant-operator', 'qualification', 'synthetic', 2) ON CONFLICT DO NOTHING;
+DO $$ BEGIN
+    IF (SELECT recorded_at_ms FROM identity.platform_bootstrap) IS DISTINCT FROM 1::bigint THEN
+        RAISE EXCEPTION 'Bootstrap retry lost original evidence';
+    END IF;
+    BEGIN PERFORM actor_id FROM identity.actors;
+        RAISE EXCEPTION 'Bootstrap can read unrelated actors';
+    EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
+
+SET LOCAL ROLE grant_test_serve;
+INSERT INTO metadata.protocol_package_releases
+    (tenant_id, protocol_package_id, protocol_package_version, artifact_sha256, artifact_size_bytes)
+VALUES ('grant-contract', 'vendor.protocol', '1', sha256('\x01'), 1);
+INSERT INTO ingestion.protocol_artifacts (tenant_id, artifact_sha256, artifact_bytes)
+VALUES ('grant-contract', sha256('\x01'), '\x01');
+INSERT INTO ingestion.protocol_admissions
+    (tenant_id, protocol_package_id, protocol_package_version, artifact_sha256, wit_world, policy_version, actor_id, admitted_at_ms)
+VALUES ('grant-contract', 'vendor.protocol', '1', sha256('\x01'), 'identity-v1', 1, 'grant-operator', 1);
+SET CONSTRAINTS ALL IMMEDIATE;
+RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_ingest_tcp;
 DO $$ BEGIN
@@ -56,6 +83,9 @@ DO $$ BEGIN
     BEGIN UPDATE metadata.tenants SET tenant_id = 'renamed' WHERE tenant_id = 'grant-contract';
         RAISE EXCEPTION 'Ingestion may rename tenant';
     EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+    BEGIN PERFORM message_id FROM ingestion.decoded_message_results;
+        RAISE EXCEPTION 'Ingestion can read decoded results';
+    EXCEPTION WHEN insufficient_privilege THEN NULL; END;
     BEGIN SELECT projection.project_next();
         RAISE EXCEPTION 'Ingestion may run projection';
     EXCEPTION WHEN insufficient_privilege THEN NULL; END;
@@ -63,9 +93,23 @@ END $$;
 INSERT INTO ingestion.accepted_messages
     (tenant_id, message_id, device_asset_id, protocol_package_id, protocol_package_version, received_at_ms, payload)
 VALUES ('grant-contract', 'message-1', 'gateway-1', 'vendor.protocol', '1', 1100, '\x01');
+INSERT INTO ingestion.replay_sessions
+    (tenant_id, session_id, device_asset_id, protocol_package_id, protocol_package_version,
+     artifact_sha256, wit_world, admission_policy, execution_policy, execution_sha256)
+VALUES ('grant-contract', 'session-1', 'gateway-1', 'vendor.protocol', '1',
+        sha256('\x01'), 'identity-v1', 1, 1, sha256('\x02'));
+SELECT current_sequence FROM ingestion.replay_sessions
+WHERE tenant_id = 'grant-contract' AND session_id = 'session-1' FOR UPDATE \gset
+INSERT INTO ingestion.replay_work (tenant_id, message_id, session_id, sequence, pre_state)
+VALUES ('grant-contract', 'message-1', 'session-1', 1, '');
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_replay_worker;
+UPDATE ingestion.replay_work SET generation = 1, attempts = 1,
+    lease_until_ms = floor(extract(epoch FROM clock_timestamp()) * 1000)::bigint + 30000
+WHERE tenant_id = 'grant-contract' AND message_id = 'message-1';
 INSERT INTO ingestion.decoded_message_results
     (tenant_id, message_id, protocol_package_id, protocol_package_version, observation_count)
 VALUES ('grant-contract', 'message-1', 'vendor.protocol', '1', 1);
@@ -73,7 +117,13 @@ INSERT INTO ingestion.decoded_observations
     (tenant_id, message_id, protocol_package_id, protocol_package_version,
      output_index, endpoint_id, signal_id, device_recorded_at_ms, value_kind, value_integer, source_unit, quality)
 VALUES ('grant-contract', 'message-1', 'vendor.protocol', '1', 0, 'can', 'bus.voltage', 1000, 'integer', 48, 'volt', 'good');
+UPDATE ingestion.replay_work SET status = 'completed', next_state = '\x01'
+WHERE tenant_id = 'grant-contract' AND message_id = 'message-1';
+UPDATE ingestion.replay_sessions SET current_sequence = 1, state = '\x01'
+WHERE tenant_id = 'grant-contract' AND session_id = 'session-1';
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_semantic_worker;
 DO $$ BEGIN
@@ -81,7 +131,9 @@ DO $$ BEGIN
         RAISE EXCEPTION 'Replay did not hand off to semantic work';
     END IF;
 END $$;
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_semantic_worker;
 INSERT INTO history.asset_property_changes
@@ -90,7 +142,9 @@ INSERT INTO history.asset_property_changes
      resolution_effective_at_ms, resolution_known_at_ms)
 VALUES ('grant-contract', 'message-1', 'vendor.protocol', '1', 0, 'voltage', 1,
         'device_recorded', 1000, 1000, 1200);
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_project_current;
 DO $$ BEGIN
@@ -102,13 +156,16 @@ DO $$ BEGIN
         RAISE EXCEPTION 'Current projection did not advance';
     END IF;
 END $$;
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 -- Use a synthetic policy and calculator definition owned by the fixture. The
 -- archive and analytics workers still exercise their own narrower grants.
 INSERT INTO history.lifecycle_policies (tenant_id, revision, actor_id, hot_days, archive_days, max_jobs, max_bytes)
 VALUES ('grant-contract', 1, 'grant-operator', 1, 2, 4, 8388608);
-INSERT INTO identity.tenant_action_grants VALUES ('grant-contract', 'grant-operator', 'alerts.manage');
+INSERT INTO identity.tenant_action_grants VALUES ('grant-contract', 'grant-operator', 'alerts.manage'),
+       ('grant-contract', 'grant-operator', 'analytics.manage');
 INSERT INTO metadata.property_definitions
     (tenant_id, property_id, version, display_name, value_kind, canonical_unit)
 VALUES ('grant-contract', 'mean.voltage', 1, 'Mean', 'decimal', 'volt');
@@ -124,10 +181,25 @@ INSERT INTO analytics.calculator_definitions
 VALUES ('grant-contract', 'mean', '1', 'window-mean-v1', 'electrical.voltage', 1, 'mean.voltage', 1);
 
 SET LOCAL ROLE grant_test_serve;
+SELECT analytics.create_configuration_revision('grant-contract', 'voltage', 1, 'grant-operator',
+    '{"calculator":"mean","version":"1","scope":"system-1","target":"result","first_start":0,"window_ms":1000,"lateness_ms":0,"minimum_samples":1}') AS synthetic_calculator \gset
+SELECT analytics.change_configuration_activation('grant-contract', 'voltage', 0, 1, 'grant-operator') AS synthetic_calculator_generation \gset
 SELECT analytics.create_alert_rule_revision('grant-contract','high',1,'grant-operator',
     '{"kind":"numeric-threshold-v1","calculator":"mean","version":"1","scope":"system-1","target":"result","output_property":"mean.voltage","output_version":1,"output_index":0,"comparison":"gt","threshold":"50","threshold_unit":"volt","hold_ms":0,"resolution":"resolve_on_false","resolve_after_ms":0}') AS synthetic_rule \gset
 SELECT analytics.change_alert_rule_activation('grant-contract','high',0,1,'grant-operator') AS synthetic_generation \gset
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
+
+SET LOCAL ROLE grant_test_serve;
+DO $$ BEGIN
+    BEGIN UPDATE history.export_jobs SET expires_at = statement_timestamp() WHERE false;
+        RAISE EXCEPTION 'Serving can arbitrarily rewrite export expiry';
+    EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SET CONSTRAINTS ALL IMMEDIATE;
+RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_archive_worker;
 SELECT tenant_id FROM metadata.tenants WHERE tenant_id = 'grant-contract' FOR UPDATE \gset
@@ -146,7 +218,9 @@ UPDATE history.archive_jobs SET generation = 1, lease_until = clock_timestamp() 
 UPDATE history.archive_jobs SET object_bytes = 1, object_sha256 = sha256('\x01')
     WHERE tenant_id = 'grant-contract' AND job_id = :job_id;
 DELETE FROM history.work_reservations WHERE tenant_id = 'grant-contract' AND reservation_id = :reservation_id;
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_analytics_worker;
 WITH evidence AS (
@@ -169,7 +243,9 @@ INSERT INTO analytics.alert_transitions (tenant_id, rule_id, revision, version, 
 VALUES ('grant-contract', 'high', 1, 1, 'evaluation', 'firing', 1001);
 INSERT INTO analytics.alert_notification_intents (tenant_id, rule_id, revision, transition_version)
 VALUES ('grant-contract', 'high', 1, 1);
+SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;
 
 SET LOCAL ROLE grant_test_notification_worker;
 INSERT INTO analytics.alert_notification_delivery (destination, tenant_id, rule_id, revision, firing_version, target_version)
@@ -188,6 +264,6 @@ DO $$ BEGIN
         RAISE EXCEPTION 'Notification worker can rewrite alert phases';
     EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $$;
-RESET ROLE;
-
 SET CONSTRAINTS ALL IMMEDIATE;
+RESET ROLE;
+SET CONSTRAINTS ALL DEFERRED;

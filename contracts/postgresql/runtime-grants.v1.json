@@ -144,9 +144,7 @@
     },
     "bootstrap-platform-operator --check-schema": {
       "select": [
-        "identity.actors",
         "identity.external_actor_identities",
-        "identity.platform_action_grants",
         "identity.platform_bootstrap"
       ],
       "insert": [
@@ -470,6 +468,7 @@
         "analytics.calculator_activation_changes",
         "analytics.calculator_configuration_revisions",
         "analytics.calculator_configurations",
+        "analytics.calculator_schedules",
         "analytics.work_controls",
         "analytics.work_recovery_audit",
         "history.export_jobs",
@@ -510,16 +509,6 @@
         "metadata.signal_bindings",
         "metadata.tenants"
       ],
-      "update": [
-        "analytics.alert_rules",
-        "analytics.calculator_configurations",
-        "analytics.work_controls",
-        "history.export_jobs",
-        "history.restore_jobs",
-        "ingestion.protocol_route_heads",
-        "metadata.asset_relationships",
-        "metadata.signal_bindings"
-      ],
       "delete": [
         "history.work_reservations",
         "identity.browser_login_attempts",
@@ -538,10 +527,10 @@
         "analytics.lock_alert_rule_authority(text,text)",
         "analytics.lock_configuration_authority(text,text)",
         "analytics.recover_work(text,text,text,text,text,jsonb,bigint,bytea)",
+        "analytics.semantic_evidence_id(text,text,text,text,bigint,text,numeric,text)",
         "history.export_admitted(text)",
         "history.export_bytes(text)",
         "history.export_slots(text)",
-        "history.retention_blocked(text,bigint,bigint)",
         "metadata.is_valid_identifier(text)"
       ],
       "updateColumns": {
@@ -554,10 +543,39 @@
           "lease_until",
           "next_attempt_at"
         ],
+        "analytics.alert_rules": [
+          "active_revision",
+          "generation",
+          "latest_revision"
+        ],
+        "analytics.calculator_configurations": [
+          "active_revision",
+          "generation",
+          "latest_revision"
+        ],
         "analytics.calculator_work": [
           "attempts",
           "generation",
           "lease_until_ms",
+          "status"
+        ],
+        "analytics.work_controls": [
+          "generation",
+          "paused"
+        ],
+        "history.export_jobs": [
+          "attempt",
+          "lease_until",
+          "payload",
+          "status"
+        ],
+        "history.restore_jobs": [
+          "attempt",
+          "expires_at",
+          "lease_until",
+          "payload",
+          "request_generation",
+          "reservation_id",
           "status"
         ],
         "history.work_reservations": [
@@ -575,6 +593,9 @@
         "identity.tenant_action_grants": [
           "actor_id"
         ],
+        "ingestion.protocol_route_heads": [
+          "revision"
+        ],
         "ingestion.replay_sessions": [
           "runtime_lock_guard"
         ],
@@ -583,6 +604,12 @@
           "generation",
           "lease_until_ms",
           "status"
+        ],
+        "metadata.asset_relationships": [
+          "latest_revision"
+        ],
+        "metadata.signal_bindings": [
+          "latest_revision"
         ],
         "metadata.tenants": [
           "is_active"

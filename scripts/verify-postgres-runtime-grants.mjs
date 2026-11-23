@@ -91,4 +91,20 @@ END $$;
 RESET ROLE;`);
 }
 write(readFileSync(new URL('runtime-grants-check.sql', directory), 'utf8'));
+const retention = new URL('../crates/postgres/src/history/retention/', import.meta.url);
+const candidates = readFileSync(new URL('candidates.sql', retention), 'utf8');
+const context = readFileSync(new URL('context.sql', retention), 'utf8');
+write(`SET LOCAL ROLE grant_test_serve;
+DO $$ DECLARE candidate jsonb; context jsonb;
+BEGIN
+    EXECUTE $grant_query$SELECT to_jsonb(result) FROM (${context}) result$grant_query$
+        INTO STRICT context USING 'grant-contract';
+    EXECUTE $grant_query$SELECT to_jsonb(result) FROM (${candidates}) result$grant_query$
+        INTO STRICT candidate USING 'grant-contract';
+    IF context->>'revision!' IS DISTINCT FROM '1'
+       OR candidate->>'id!' IS NULL THEN
+        RAISE EXCEPTION 'Restricted serving failed to collect retention preview';
+    END IF;
+END $$;
+RESET ROLE;`);
 write(`ROLLBACK;\n\\echo 'PostgreSQL runtime grant fixture passed'`);
