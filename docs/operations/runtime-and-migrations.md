@@ -47,8 +47,9 @@ Unknown commands, flags and extra arguments fail rather than guessing a mode.
 
 Privileges are provisioning policy, not SQL embedded in this binary. Default
 privileges for future tables must be reviewed with their new runtime capability.
-Separate processes with the same password or schema ownership are not separate
-authorities. Revoke CREATE on public for ordinary roles where necessary; never
+The [runtime grant contract](postgres-runtime-grants.md) provides the object-level
+PostgreSQL privileges for the minimal-demo commands. Separate processes with
+the same password or schema ownership are not separate authorities. Revoke CREATE on public for ordinary roles where necessary; never
 make the application role an owner. The local development superuser is not a
 production privilege model.
 
