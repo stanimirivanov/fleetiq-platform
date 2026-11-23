@@ -50,7 +50,7 @@ percent-encoding = "2.3.2"
 pulldown-cmark = { version = "0.13.6", default-features = false }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.151", default-features = false, features = ["std"] }
-sqlx = { version = "0.9.0", default-features = false, features = ["bigdecimal", "macros", "migrate", "postgres", "runtime-tokio"] }
+sqlx = { version = "0.9.0", default-features = false, features = ["bigdecimal", "macros", "migrate", "postgres", "runtime-tokio", "tls-rustls-ring-webpki"] }
 sha2 = { version = "0.11.0", default-features = false }
 syn = { version = "3.0.5", default-features = false, features = ["full", "parsing", "visit", "printing", "clone-impls"] }
 subtle = { version = "2.6.1", default-features = false }

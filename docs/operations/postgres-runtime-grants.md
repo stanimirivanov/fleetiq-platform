@@ -15,6 +15,12 @@ Call them with the intended login roles from a maintenance transaction on the
 drained primary. The consumer owns admission, operator monitoring access, and
 credential retirement.
 
+For CloudNativePG, set `sslmode=verify-full` and point `sslrootcert` at the
+mounted database CA. Use the service DNS name covered by the server certificate.
+Protected publication tests the migration and checked serving commands over
+that connection. It also checks that migration rejects a missing CA file, an
+unrelated CA, and an alias that reaches the server under the wrong hostname.
+
 ## Scope and authority
 
 The contract covers checked serving, checked first-operator bootstrap, TCP

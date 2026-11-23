@@ -5,6 +5,7 @@ import { until } from "./resources.mjs";
 import { ensure, CHECKS, readJson } from "./policy.mjs";
 import { validateLoadedIdentity } from "./transport.mjs";
 import { validateInventory } from "./inventory.mjs";
+import { configurePostgresTls, wrongDatabaseHostname } from "./postgres-tls.mjs";
 export async function qualifyRuntime(
   image,
   tools,
@@ -16,6 +17,7 @@ export async function qualifyRuntime(
   const [loaded] = await jsonDocker(["image", "inspect", image]);
   validateLoadedIdentity(loaded, loadedId);
   const pg = await resources.container("postgres", [
+    "--network-alias", wrongDatabaseHostname,
     "--tmpfs",
     "/var/lib/postgresql:rw,nosuid,size=256m",
     "-e",
@@ -76,6 +78,29 @@ export async function qualifyRuntime(
     (await docker(["wait", empty], { timeout: 20_000 })).trim() === "1",
     "Checked image accepted an unmigrated database.",
   );
+  const trust = await configurePostgresTls(directory, pg);
+  const verifyFull = (url, ca = "/etc/fleetiq-tls/ca.crt") =>
+    url + "?sslmode=verify-full&sslrootcert=" + ca;
+  for (const [reason, url] of [
+    ["missing-ca", verifyFull(ownerUrl, "/etc/fleetiq-tls/nonexistent-ca.crt")],
+    ["wrong-ca", verifyFull(ownerUrl, "/etc/fleetiq-tls/unrelated-ca.crt")],
+    ["wrong-hostname", verifyFull(ownerUrl.replace("@" + pg + ":", "@" + wrongDatabaseHostname + ":"))],
+  ]) {
+    const rejected = await resources.container("tls-" + reason, [
+      "--tty", // Merge the process stderr into Docker’s bounded stdout capture.
+      ...restrictions,
+      ...trust,
+      "-e",
+      "DATABASE_URL=" + url,
+      image,
+      "migrate",
+    ]);
+    ensure(
+      (await docker(["wait", rejected], { timeout: 20_000 })).trim() === "1" &&
+        (await docker(["logs", rejected])).trim() === "migration database connection failed",
+      "Migration accepted invalid TLS identity or emitted an unexpected diagnostic.",
+    );
+  }
   const migrated = await docker(
     [
       "run",
@@ -84,7 +109,8 @@ export async function qualifyRuntime(
       resources.network,
       ...restrictions,
       "-e",
-      "DATABASE_URL=" + ownerUrl,
+      "DATABASE_URL=" + verifyFull(ownerUrl),
+      ...trust,
       "-e",
       "FLEETIQ_BIND_ADDRESS=invalid",
       image,
@@ -128,7 +154,8 @@ export async function qualifyRuntime(
     "--publish",
     "127.0.0.1::8080",
     "-e",
-    "DATABASE_URL=" + runtimeUrl,
+    "DATABASE_URL=" + verifyFull(runtimeUrl),
+    ...trust,
     image,
   ]);
   const [metadata] = await jsonDocker(["inspect", server]);
