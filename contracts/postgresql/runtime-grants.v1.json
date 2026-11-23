@@ -164,7 +164,10 @@
     },
     "ingest-tcp": {
       "select": [
+        "analytics.work_controls",
         "ingestion.accepted_messages",
+        "ingestion.decoded_message_results",
+        "ingestion.decoded_observations",
         "ingestion.protocol_admissions",
         "ingestion.protocol_artifacts",
         "ingestion.protocol_route_heads",
@@ -176,7 +179,10 @@
         "metadata.tenants"
       ],
       "insert": [
+        "history.semantic_work",
         "ingestion.accepted_messages",
+        "ingestion.decoded_message_results",
+        "ingestion.decoded_observations",
         "ingestion.replay_sessions",
         "ingestion.replay_work"
       ],
@@ -185,13 +191,24 @@
       ],
       "updateColumns": {
         "ingestion.replay_sessions": [
-          "runtime_lock_guard"
+          "current_sequence",
+          "runtime_lock_guard",
+          "state"
         ],
         "metadata.tenants": [
           "runtime_lock_guard"
+        ],
+        "ingestion.replay_work": [
+          "attempts",
+          "generation",
+          "lease_until_ms",
+          "next_state",
+          "status"
         ]
       },
       "schemas": [
+        "analytics",
+        "history",
         "ingestion",
         "metadata",
         "public"

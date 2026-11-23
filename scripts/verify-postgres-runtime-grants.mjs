@@ -1,19 +1,11 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
+import { grantStatements } from './images/runtime-grants.mjs';
 
 const directory = new URL('../contracts/postgresql/', import.meta.url);
 const migrationsDirectory = new URL('../migrations/', import.meta.url);
 const contract = JSON.parse(readFileSync(new URL('runtime-grants.v1.json', directory)));
-const identifier = '[a-z_][a-z_0-9]*';
-const qualified = `${identifier}\\.${identifier}`;
-const relation = new RegExp(`^${qualified}$`, 'u');
-const signature = new RegExp(`^${qualified}\\((?:[a-z]+(?:,[a-z]+)*)?\\)$`, 'u');
-const check = (name, pattern) => {
-  assert.match(name, pattern);
-  return name;
-};
-const names = (items, pattern) => items.map((item) => check(item, pattern)).join(', ');
 const sha384 = (bytes) => createHash('sha384').update(bytes).digest('hex');
 const migrations = readdirSync(migrationsDirectory)
   .filter((name) => /^\d{4,}_[a-z0-9_]+\.sql$/u.test(name))
@@ -55,20 +47,11 @@ REVOKE CONNECT, TEMPORARY ON DATABASE fleetiq_grant_contract_test FROM PUBLIC;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA analytics, history, identity, ingestion, metadata, projection FROM PUBLIC;`);
 for (const [command, grants] of Object.entries(contract.commands)) {
-  const role = check(`grant_test_${command.split(' ')[0].replaceAll('-', '_')}`, /^grant_test_[a-z_]+$/u);
-  const schemaNames = names(grants.schemas, new RegExp(`^${identifier}$`, 'u'));
+  const role = `grant_test_${command.split(' ')[0].replaceAll('-', '_')}`;
+  assert.match(role, /^grant_test_[a-z_]+$/u);
   write(`CREATE ROLE ${role} NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;`);
-  write(`GRANT CONNECT ON DATABASE fleetiq_grant_contract_test TO ${role};`);
-  write(`GRANT USAGE ON SCHEMA ${schemaNames} TO ${role};`);
-  write(`GRANT SELECT ON TABLE public._sqlx_migrations TO ${role};`);
-  for (const action of ['select', 'insert', 'update', 'delete']) {
-    if (grants[action]?.length)
-      write(`GRANT ${action.toUpperCase()} ON TABLE ${names(grants[action], relation)} TO ${role};`);
-  }
-  for (const [table, columns] of Object.entries(grants.updateColumns ?? {}))
-    write(`GRANT UPDATE (${names(columns, new RegExp(`^${identifier}$`, 'u'))}) ON TABLE ${check(table, relation)} TO ${role};`);
-  if (grants.execute?.length)
-    write(`GRANT EXECUTE ON FUNCTION ${names(grants.execute, signature)} TO ${role};`);
+  for (const statement of grantStatements('fleetiq_grant_contract_test', role, grants))
+    write(statement);
   write(`SET LOCAL ROLE ${role};
 DO $$ BEGIN
   IF (SELECT count(*) FROM public._sqlx_migrations WHERE success) <> ${migrations.length} THEN

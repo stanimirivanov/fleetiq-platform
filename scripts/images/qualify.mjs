@@ -29,6 +29,7 @@ import {
   validateLoadedIdentity,
 } from "./transport.mjs";
 import { qualifyCompose } from "./compose.mjs";
+import { runtimeGrantSql } from "./runtime-grants.mjs";
 import { qualifyRuntime } from "./runtime.mjs";
 import { scanRuntime } from "./scan.mjs";
 import { failureDetails } from "./failure.mjs";
@@ -170,6 +171,10 @@ export async function qualify() {
     );
     const inventory = JSON.stringify(runtime.inventory, null, 2) + "\n";
     writeFileSync(join(reports, "migrations.json"), inventory);
+    writeFileSync(
+      join(reports, "runtime-grants.sql"),
+      runtimeGrantSql(runtime.inventory),
+    );
     record.inventory = {
       digest: "sha256:" + hash(inventory),
       count: runtime.inventory.migrations.length,

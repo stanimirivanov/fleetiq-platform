@@ -7,6 +7,13 @@ from the exact platform source revision recorded for the backend image. It defin
 object privileges for distinct database identities. The database owner applies
 and verifies the grants before enabling the corresponding processes.
 
+A successful protected backend publication includes `runtime-grants.sql` in
+its publication evidence. Select the artifact and image together using the
+publication run and immutable digests. The SQL defines session-local functions.
+Call them with the intended login roles from a maintenance transaction on the
+drained primary. The consumer owns admission, operator monitoring access, and
+credential retirement.
+
 ## Scope and authority
 
 The contract covers checked serving, checked first-operator bootstrap, TCP

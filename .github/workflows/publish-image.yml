@@ -85,6 +85,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: backend-publication-${{ github.run_id }}-${{ github.run_attempt }}
-          path: target/images/*/reports/*.json
+          path: |
+            target/images/*/reports/*.json
+            target/images/*/reports/runtime-grants.sql
           if-no-files-found: error
           retention-days: 90
