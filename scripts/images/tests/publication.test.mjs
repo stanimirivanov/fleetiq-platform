@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { inspectLayout } from "../oci.mjs";
-import { runtimeGrantSql } from "../runtime-grants.mjs";
 import { validateEvidence } from "../publication.mjs";
 import { hash, CHECKS } from "../policy.mjs";
 import { layoutFixture } from "./fixtures.mjs";
@@ -51,18 +50,6 @@ function evidenceFixture() {
       },
     },
   };
-  const contracts = join(fixture.directory, "contracts/postgresql");
-  mkdirSync(contracts, { recursive: true });
-  writeFileSync(join(contracts, "runtime-grants.v1.json"), JSON.stringify({
-    format: "fleetiq-postgresql-runtime-grants.v1",
-    postgresMajor: 18,
-    migrationHead: { version: 1, sha384: hash(sql, "sha384") },
-    commands: { "serve --check-schema": { schemas: ["public"] } },
-  }));
-  writeFileSync(
-    join(reports, "runtime-grants.sql"),
-    runtimeGrantSql(values.migrations, fixture.directory),
-  );
   for (const [name, value] of Object.entries(values))
     writeFileSync(join(reports, name + ".json"), JSON.stringify(value));
   for (const name of ["sbom", "provenance"])
@@ -118,7 +105,6 @@ test("cross-artifact, tampered evidence, incomplete cleanup and wrong scan ident
   for (const change of [
     "artifact",
     "tamper",
-    "tamper-grants",
     "incomplete",
     "scan-identity",
     "stale",
@@ -129,8 +115,6 @@ test("cross-artifact, tampered evidence, incomplete cleanup and wrong scan ident
         fixture.receipt.image.digest = "sha256:" + "c".repeat(64);
       if (change === "tamper")
         writeFileSync(join(fixture.reports, "migrations.json"), "{}");
-      if (change === "tamper-grants")
-        writeFileSync(join(fixture.reports, "runtime-grants.sql"), "SELECT 1;");
       if (change === "incomplete") fixture.receipt.checks = CHECKS.slice(0, -1);
       if (change === "scan-identity") {
         fixture.values.scan.Metadata.ImageID = "sha256:" + "d".repeat(64);

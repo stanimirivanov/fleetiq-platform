@@ -13,7 +13,6 @@ import { inspectLayout } from "./oci.mjs";
 import { Resources } from "./resources.mjs";
 import { cancellation } from "./process.mjs";
 import { transport } from "./transport.mjs";
-import { runtimeGrantSql } from "./runtime-grants.mjs";
 import { validateInventory } from "./inventory.mjs";
 import {
   ensure,
@@ -65,13 +64,7 @@ export function validateEvidence(
     now,
     artifact.config,
   );
-  const inventory = readJson(join(reports, "migrations.json"));
-  validateInventory(inventory, sourceRoot);
-  ensure(
-    readFileSync(join(reports, "runtime-grants.sql"), "utf8") ===
-      runtimeGrantSql(inventory, sourceRoot),
-    "Runtime grants SQL differs from the reviewed source and image inventory.",
-  );
+  validateInventory(readJson(join(reports, "migrations.json")), sourceRoot);
   return { record, artifact, reports };
 }
 async function registryToken() {

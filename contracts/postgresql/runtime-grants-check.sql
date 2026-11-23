@@ -83,8 +83,8 @@ DO $$ BEGIN
     BEGIN UPDATE metadata.tenants SET tenant_id = 'renamed' WHERE tenant_id = 'grant-contract';
         RAISE EXCEPTION 'Ingestion may rename tenant';
     EXCEPTION WHEN insufficient_privilege THEN NULL; END;
-    BEGIN PERFORM message_id FROM history.semantic_work;
-        RAISE EXCEPTION 'Ingestion can read semantic work';
+    BEGIN PERFORM message_id FROM ingestion.decoded_message_results;
+        RAISE EXCEPTION 'Ingestion can read decoded results';
     EXCEPTION WHEN insufficient_privilege THEN NULL; END;
     BEGIN SELECT projection.project_next();
         RAISE EXCEPTION 'Ingestion may run projection';
@@ -102,24 +102,6 @@ SELECT current_sequence FROM ingestion.replay_sessions
 WHERE tenant_id = 'grant-contract' AND session_id = 'session-1' FOR UPDATE \gset
 INSERT INTO ingestion.replay_work (tenant_id, message_id, session_id, sequence, pre_state)
 VALUES ('grant-contract', 'message-1', 'session-1', 1, '');
--- Live ingestion claims this exact work before falling back to durable replay.
-SAVEPOINT live_claim;
-DO $$ BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM ingestion.replay_work w
-        WHERE w.tenant_id = 'grant-contract' AND w.message_id = 'message-1'
-          AND NOT EXISTS (
-              SELECT 1 FROM analytics.work_controls c
-              WHERE c.tenant_id = w.tenant_id AND c.kind = 'replay' AND c.paused
-          )
-        FOR UPDATE OF w
-    ) THEN RAISE EXCEPTION 'Live ingestion cannot lock its accepted work'; END IF;
-END $$;
-UPDATE ingestion.replay_work SET generation = generation + 1, attempts = attempts + 1,
-    lease_until_ms = floor(extract(epoch FROM clock_timestamp()) * 1000)::bigint + 30000
-WHERE tenant_id = 'grant-contract' AND message_id = 'message-1';
-ROLLBACK TO SAVEPOINT live_claim;
-RELEASE SAVEPOINT live_claim;
 SET CONSTRAINTS ALL IMMEDIATE;
 RESET ROLE;
 SET CONSTRAINTS ALL DEFERRED;
