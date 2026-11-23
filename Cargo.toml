@@ -33,14 +33,14 @@ async-trait = { version = "=0.1.92", default-features = false }
 http-body-util = { version = "=0.1.5", default-features = false }
 object_store = { version = "=0.14.2", default-features = false, features = ["aws-base", "ring"] }
 bytes = { version = "=1.12.1", default-features = false, features = ["std"] }
-parquet = { version = "=60.1.0", default-features = false }
+parquet = { version = "=60.2.0", default-features = false }
 reqwest = { version = "=0.12.28", default-features = false, features = ["rustls-tls"] }
 time = { version = "=0.3.55", default-features = false, features = ["std", "formatting"] }
 wit-bindgen = { version = "=0.63.0", default-features = false, features = ["macros", "realloc"] }
 rlimit = { version = "=0.11.0", default-features = false }
 axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"] }
 bigdecimal = { version = "0.4.0", default-features = false }
-cookie = { version = "0.18.1", default-features = false }
+cookie = { version = "0.18.3", default-features = false }
 futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
 getrandom = "0.4.3"
 openidconnect = { version = "4.0.1", default-features = false, features = ["reqwest", "rustls-tls"] }
