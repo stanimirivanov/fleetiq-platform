@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "owner": "fleetiq-platform",
+  "guides": [
+    {"id": "repository-policy", "documentation": "docs/development/harness.md#repository-policy"},
+    {"id": "crate-boundaries", "documentation": "docs/architecture/dependency-rules.md#enforced-policy"},
+    {"id": "published-migrations", "documentation": "docs/development/sql-migrations.md#published-history-gate"},
+    {"id": "secret-protection", "documentation": "docs/development/harness-protection.md#secret-scanning"},
+    {"id": "dependency-policy", "documentation": "docs/development/dependency-management.md#policy-and-exceptions"},
+    {"id": "rust-acceptance", "documentation": "CONTRIBUTING.md#verification"},
+    {"id": "sensor-development", "documentation": "docs/development/harness.md#extending-the-harness"},
+    {"id": "http-contract", "documentation": "contracts/http/README.md#maintaining-modular-ownership"}
+  ],
+  "sensors": [
+    {"id": "repository", "paired_guide": "repository-policy", "remediation": "docs/development/harness.md#repository-policy", "blocking": true},
+    {"id": "architecture", "paired_guide": "crate-boundaries", "remediation": "docs/architecture/dependency-rules.md#changing-dependencies", "blocking": true},
+    {"id": "migrations", "paired_guide": "published-migrations", "remediation": "docs/development/sql-migrations.md#published-history-gate", "blocking": true},
+    {"id": "secrets", "paired_guide": "secret-protection", "remediation": "docs/development/harness-protection.md#secret-scanning", "blocking": true},
+    {"id": "secret-fixtures", "paired_guide": "secret-protection", "remediation": "docs/development/harness-protection.md#secret-scanning", "blocking": true},
+    {"id": "deny", "paired_guide": "dependency-policy", "remediation": "docs/development/dependency-management.md#policy-and-exceptions", "blocking": true},
+    {"id": "machete", "paired_guide": "dependency-policy", "remediation": "docs/development/dependency-management.md#run-the-checks", "blocking": true},
+    {"id": "fmt", "paired_guide": "rust-acceptance", "remediation": "CONTRIBUTING.md#verification", "blocking": true},
+    {"id": "sqlx", "paired_guide": "rust-acceptance", "remediation": "docs/development/sql-migrations.md#safety-and-verification", "blocking": true},
+    {"id": "clippy", "paired_guide": "rust-acceptance", "remediation": "docs/development/engineering-standards.md#rust", "blocking": true},
+    {"id": "tests", "paired_guide": "rust-acceptance", "remediation": "docs/development/verification.md#parallel-test-execution-and-coverage", "blocking": true},
+    {"id": "doctests", "paired_guide": "rust-acceptance", "remediation": "docs/development/verification.md#parallel-test-execution-and-coverage", "blocking": true},
+    {"id": "docs", "paired_guide": "rust-acceptance", "remediation": "docs/development/engineering-standards.md#documentation-and-modules", "blocking": true},
+    {"id": "sensor-tests", "paired_guide": "sensor-development", "remediation": "docs/development/harness.md#extending-the-harness", "blocking": true},
+    {"id": "openapi", "paired_guide": "http-contract", "remediation": "contracts/http/README.md#sensor-regression-tests", "blocking": true}
+  ]
+}
