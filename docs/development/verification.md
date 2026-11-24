@@ -80,7 +80,7 @@ inspection; it is not a result report. Run a group from the repository root:
 
 | Group | Command | Selected checks |
 |:--|:--|:--|
-| Architecture | `cargo xtask verify --group architecture --base origin/main` | Repository policy, architecture policy, migration immutability, current/index/incoming secret scan, real scanner fixtures, and xtask sensor tests |
+| Architecture | `cargo xtask verify --group architecture --base origin/main` | Repository policy, architecture policy, migration immutability, current/index/incoming secret scan, real scanner fixtures, [executable registration](../../harness/README.md#executable-registration), and xtask sensor tests |
 | Supply chain | `cargo xtask verify --group supply-chain` | cargo-deny and cargo-machete |
 | Rust | `cargo xtask verify --group rust` | Formatting, SQLx metadata, workspace Clippy, bounded workspace tests, separate doctests, and rustdoc |
 | OpenAPI | `cargo xtask verify --group openapi` | Modular contract linting, reference and extraction rules, and committed bundle freshness |

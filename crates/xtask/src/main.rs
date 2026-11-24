@@ -2,6 +2,7 @@
 
 mod architecture;
 mod cli;
+mod executables;
 mod migrations;
 mod repository;
 mod secrets;
@@ -13,6 +14,10 @@ fn main() -> ExitCode {
     match cli::parse(env::args().skip(1)) {
         Ok(cli::Command::Architecture) => run_architecture_check(),
         Ok(cli::Command::Repository) => run_repository_check(),
+        Ok(cli::Command::Executables { base }) => {
+            let root = std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."));
+            verification_result(executables::check(root, &base))
+        }
         Ok(cli::Command::Migrations { base }) => run_migration_check(&base),
         Ok(cli::Command::Secrets { base }) => run_secrets_check(base.as_deref()),
         Ok(cli::Command::SecretFixtures) => run_secret_fixtures(),
@@ -142,6 +147,7 @@ fn print_usage() {
          Usage:\n\
            cargo xtask architecture           Verify dependency ownership and inherited lints\n\
            cargo xtask repository             Verify documentation and repository policy\n\
+           cargo xtask executables --base REV  Verify executable registrations\n\
            cargo xtask migrations --base REV  Protect published migrations\n\
            cargo xtask secrets [--base REV]   Scan files, index, and optional incoming history\n\
            cargo xtask secrets --fixtures     Verify the pinned detector against bypasses\n\

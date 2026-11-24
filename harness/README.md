@@ -26,3 +26,39 @@ parser. The platform owns all entries in this manifest.
 Run `cargo xtask repository` after changing an ID, a guide, or its heading.
 Release operations are tracked separately in
 [platform issue #464](https://github.com/stanimirivanov/fleetiq-platform/issues/464).
+
+## Executable registration
+
+Run `cargo xtask executables --base origin/main` for focused feedback. The
+Architecture policy group runs the same guard with its required trusted base.
+It inventories committed, staged, and reviewable working-tree files. Reports
+include paths and target identities, with fingerprints for inline code bodies.
+
+The [executable registry](executables.json) has two collections. The
+`baseline` records legacy surfaces by exact path, kind and target. It is
+frozen against the trusted base. Use `registrations` for additions, including
+renames and previously plain files that gain a shebang or executable bit.
+Stage a new registration with its corresponding surface.
+For each entry record an owner, a concrete purpose, a class and a disposition.
+Use the `fleetiq-platform` owner and one of `application`, `operation`, or
+`harness`. Keep `unclassified` with `review` for legacy entries whose owners
+must resolve mixed responsibilities. Other dispositions are `retain` and
+`consolidate`. Classify new harness surfaces against the executable catalogue
+by including its ID in `sensor` and pairing that check in the harness manifest.
+
+| Kind | Path and target |
+|---|---|
+| `script` | Exact path with an empty target. Includes recognized script extensions, interpreter shebangs, Git or filesystem execute bits, symlinks and Git links. |
+| `task` | Exact package script or repository Cargo alias name. A new Make, Just or Taskfile configuration is registered as `definition:<sha256>` of the file bytes until the platform adopts target-level discovery for that runner. |
+| `ci` | Exact workflow or action path and `<job>:<kind>:<sha256>:<occurrence>`. Inline `run` and GitHub Script bodies use SHA-256 of the trimmed parsed YAML string. Occurrences count identical bodies within a job. Composite actions use `composite` as the job. |
+
+Use the exact target from a guard failure when registering a new surface.
+Changing the content of a registered script at the same path keeps its identity.
+A changed inline command has a new identity and needs review. Workflow templates
+are covered by the existing generated-workflow parity checks. Shell code embedded
+in arbitrary application files and external workflows are outside this inventory.
+
+Prefer an existing command before registering another. Keep protected publish
+commands classified as operations. Their redesign remains in #464. The
+`/harness/` CODEOWNERS rule routes registry changes for review. Required
+independent approval and status checks depend on GitHub repository settings.
