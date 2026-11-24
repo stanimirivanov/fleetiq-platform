@@ -37,7 +37,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FLEETIQ_SOURCE_REVISION: ${{ inputs.source_revision }}
-        run: node scripts/images/preflight.mjs
+        run: bash scripts/images/preflight.sh
   publish:
     name: Qualify and publish immutable backend
     needs: authorize
@@ -64,7 +64,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           FLEETIQ_SOURCE_REVISION: ${{ inputs.source_revision }}
-        run: node scripts/images/preflight.mjs
+        run: bash scripts/images/preflight.sh
       - name: Qualify the single OCI artifact
         id: qualify
         run: node scripts/images/qualify.mjs
