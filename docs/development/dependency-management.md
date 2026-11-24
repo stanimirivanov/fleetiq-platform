@@ -207,7 +207,7 @@ trust store to work around provider certificate problems.
 
 ## M06 archive dependency review
 
-Archive maintainers own exact parquet 60.1.0 (Apache-2.0, MSRV 1.88), with default
+Archive maintainers own exact parquet 60.2.0 (Apache-2.0, MSRV 1.88), with default
 features disabled. It supplies interoperable bounded segment writing and metadata
 reading; no Arrow engine, cloud transport or compression backend is enabled.
 Bytes 1.12.1 and the existing SHA-256 primitive retain their existing license choices.

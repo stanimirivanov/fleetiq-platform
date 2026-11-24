@@ -2,10 +2,23 @@
 
 ## TL;DR
 
-Select the [versioned grant manifest](../../contracts/postgresql/runtime-grants.v1.json)
-from the exact platform source revision recorded for the backend image. It defines
-object privileges for distinct database identities. The database owner applies
-and verifies the grants before enabling the corresponding processes.
+FleetIQ deployment owns the executable PostgreSQL grants and installation
+workflow. Select and qualify the deployment SQL revision with the exact
+published backend image digest. Platform owns schema migrations, verified TLS,
+and command compatibility with the documented privilege boundary. Coordinate
+any new privilege requirement with deployment and verify the scoped commands
+before the new pair is selected.
+
+The versioned platform JSON and SQL fixture below describe the earlier
+producer contract and support its existing consumers. Use the deployment
+policy for the new workload-selected upgrade.
+[Deployment provisioning](https://github.com/stanimirivanov/fleetiq-deploy/issues/120)
+
+For CloudNativePG, set `sslmode=verify-full` and point `sslrootcert` at the
+mounted database CA. Use the service DNS name covered by the server certificate.
+Protected publication tests the migration and checked serving commands over
+that connection. It also checks that migration rejects a missing CA file, an
+unrelated CA, and an alias that reaches the server under the wrong hostname.
 
 ## Scope and authority
 
