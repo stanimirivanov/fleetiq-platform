@@ -181,3 +181,67 @@ fn skill_templates_preserve_evidence_and_reject_hidden_requirements() {
             .any(|item| item.message.contains("Blast Radius"))
     );
 }
+
+#[test]
+fn repository_policy_requires_the_harness_registry() {
+    let fixture = Fixture::new();
+    assert!(has_registry_violation(&fixture, "harness.manifest"));
+}
+
+#[test]
+fn repository_policy_rejects_registry_drift() {
+    let fixture = Fixture::new();
+    fixture.write("guide.md", "# Guide\n\n## Fix the check\n");
+    let mut manifest = serde_json::json!({
+        "schema_version": 1,
+        "owner": "fleetiq-platform",
+        "guides": [{"id": "guide", "documentation": "guide.md#fix-the-check"}],
+        "sensors": crate::verification::catalogue::CHECKS.iter().map(|check| {
+            serde_json::json!({
+                "id": check.id,
+                "paired_guide": "guide",
+                "remediation": "guide.md#fix-the-check",
+                "blocking": true
+            })
+        }).collect::<Vec<_>>()
+    });
+    fixture.write("harness/manifest.yaml", &manifest.to_string());
+    assert!(!has_registry_violation(&fixture, "harness.registry"));
+
+    let sensors = manifest["sensors"].as_array_mut().unwrap();
+    sensors[0]["remediation"] = serde_json::Value::Null;
+    sensors[1]["paired_guide"] = "absent".into();
+    sensors[2]["id"] = "unregistered".into();
+    sensors[3]["remediation"] = "guide.md#nonexistent".into();
+    sensors[4]["blocking"] = false.into();
+    sensors.push(sensors[0].clone());
+    fixture.write("harness/manifest.yaml", &manifest.to_string());
+
+    let Err(RepositoryCheckError::Policy(violations)) = check_at(&fixture.root) else {
+        panic!("invalid manifest must fail repository policy");
+    };
+    for expected in [
+        "remediation must name an existing Markdown heading",
+        "unknown paired guide",
+        "unknown sensor ID",
+        "duplicate sensor ID",
+        "missing sensor",
+        "must be marked blocking",
+    ] {
+        assert!(
+            violations
+                .iter()
+                .any(|violation| violation.rule == "harness.registry"
+                    && violation.message.contains(expected)),
+            "missing diagnostic: {expected}; got {violations:?}"
+        );
+    }
+}
+
+fn has_registry_violation(fixture: &Fixture, rule: &str) -> bool {
+    matches!(
+        check_at(&fixture.root),
+        Err(RepositoryCheckError::Policy(violations))
+            if violations.iter().any(|violation| violation.rule == rule)
+    )
+}

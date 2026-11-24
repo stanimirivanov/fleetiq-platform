@@ -29,6 +29,10 @@ metadata, validated and substituted into fixed template slots. Accidental
 omissions, disabled checks, or conditional
 changes cannot silently create a different local or CI gate.
 
+The [harness registry](../../harness/README.md#registry) pairs each catalogue
+ID with a guide and a remediation heading. The existing repository policy
+check validates coverage, uniqueness, and guidance links.
+
 The runner coordinates the inventoried tools, including Nextest for runtime
 test scheduling; it adds no independent test implementation or business policy. Each check remains individually runnable for investigation.
 Execution uses fixed program and argument vectors. Repository-owned xtask checks
