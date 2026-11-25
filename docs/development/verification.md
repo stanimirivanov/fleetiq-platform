@@ -468,27 +468,39 @@ conditions when comparing runs. The pilot applies no coverage threshold.
 
 ### Domain mutation pilot
 
-Dispatch **CI** for a branch or tag with the `mutation` choice, or run
-`gh workflow run ci.yml --ref <branch-or-tag> -f pilot=mutation`. This runs the
-mutation pilot by itself. To reproduce locally, install cargo-mutants 27.1.0 and
-GNU timeout, then run `cargo xtask verify --group mutation` from a clean
-checkout. The pilot mutates only the relationship module in `fleetiq-domain`
+Dispatch **CI** for a branch or tag with the `mutation` choice for
+`crates/domain/src/relationship.rs` or `mutation-identifier` for
+`crates/domain/src/identifier.rs`. For example, use
+`gh workflow run ci.yml --ref <branch-or-tag> -f pilot=mutation-identifier`.
+The default `coverage` choice still runs the coverage comparison.
+
+To reproduce locally, install cargo-mutants 27.1.0 and GNU timeout, then run
+`cargo xtask verify --group mutation` for relationships or
+`cargo xtask verify --group mutation-identifier` for identifiers from a clean
+checkout. Each target mutates only its selected module in `fleetiq-domain`
 and runs that crate's full locked test suite against a passing unmodified
 baseline. PostgreSQL and Docker are unnecessary.
 
-The hosted job has 15 minutes. The mutation command has 12 minutes, including
-its baseline, with limits of 120 seconds per mutant build and 30 seconds per
-mutant test. The command deadline leaves time to publish the receipt. The
-`harness-mutation` artifact records the tested revision, elapsed time and
-counts for caught, missed, unviable and timed-out mutants, plus the names of
-missed mutations. The interval control changes the exclusive end comparison
-to inclusive. The receipt records whether the existing tests caught it.
+The hosted job has 15 minutes. Each target uses two workers and the same
+12-minute command budget, including the baseline, with limits of 120 seconds
+per mutant build and 30 seconds per mutant test. The command deadline leaves
+time to publish the receipt. The `harness-mutation` artifact records the tested
+revision, elapsed time, target, names of all selected and missed mutations,
+and counts for caught, missed, unviable and timed-out mutants.
+
+The relationship control changes the exclusive interval end comparison to
+inclusive. The identifier control rejects identifiers exactly at the
+128-Unicode-scalar limit. Each receipt records whether the existing tests caught
+the selected target's control. The identifier target measures mutations in
+shared validation and error display. The tool does not enumerate cases in
+macro-generated identifier methods.
 
 Missed mutants and individual timeouts are advisory findings. If the clean
 baseline fails, the run exceeds its overall deadline, or the evidence is
 incomplete, the group exits unsuccessfully and publishes no complete mutation
-results. Review survivors before filing test follow-ups. The pilot applies no
-score threshold and adds no required PR check.
+results. Group survivors by the documented behavior a concrete test could
+distinguish before counting gaps or filing test follow-ups. The pilot applies
+no score threshold and adds no required PR check.
 
 ## Ingestion measurement artifacts
 

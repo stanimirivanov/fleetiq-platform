@@ -24,7 +24,7 @@ fn checked_in_workflow_matches_authoritative_inventory() {
 }
 
 #[test]
-fn coverage_dispatch_is_separate_from_pull_request_verification() {
+fn advisory_dispatch_choices_are_separate_from_pull_request_verification() {
     let expected = generated();
     let yaml = yaml_rust2::YamlLoader::load_from_str(&expected).unwrap();
     let workflow = &yaml[0];
@@ -40,7 +40,7 @@ fn coverage_dispatch_is_separate_from_pull_request_verification() {
         .iter()
         .filter_map(yaml_rust2::Yaml::as_str)
         .collect();
-    assert_eq!(choices, ["coverage", "mutation"]);
+    assert_eq!(choices, ["coverage", "mutation", "mutation-identifier"]);
     assert!(
         workflow["concurrency"]["group"]
             .as_str()
@@ -54,12 +54,27 @@ fn coverage_dispatch_is_separate_from_pull_request_verification() {
     );
     assert_eq!(
         jobs["mutation"]["if"].as_str(),
-        Some("github.event_name == 'workflow_dispatch' && inputs.pilot == 'mutation'")
+        Some(
+            "github.event_name == 'workflow_dispatch' && (inputs.pilot == 'mutation' || inputs.pilot == 'mutation-identifier')"
+        )
     );
     assert!(jobs["coverage"]["needs"].is_badvalue());
     assert!(jobs["mutation"]["needs"].is_badvalue());
     assert!(jobs["mutation"]["services"].is_badvalue());
     assert_eq!(jobs["mutation"]["timeout-minutes"].as_i64(), Some(15));
+    let mutation_steps = jobs["mutation"]["steps"].as_vec().unwrap();
+    for choice in ["mutation", "mutation-identifier"] {
+        let command = format!("cargo xtask verify --group {choice}");
+        let condition = format!("inputs.pilot == '{choice}'");
+        assert_eq!(
+            mutation_steps
+                .iter()
+                .filter(|step| step["run"].as_str() == Some(command.as_str()))
+                .map(|step| step["if"].as_str())
+                .collect::<Vec<_>>(),
+            [Some(condition.as_str())]
+        );
+    }
     assert_eq!(
         jobs["rust-tests"]["if"].as_str(),
         Some(

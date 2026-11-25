@@ -162,7 +162,7 @@ fn print_usage() {
            cargo xtask verify --group GROUP [--base REV]  Run a group and record evidence\n\
            cargo xtask verify --check-ci      Check generated CI wiring\n\
            cargo xtask verify --write-ci      Regenerate CI from reviewed template\n\n\
-         Groups: architecture, supply-chain, rust, rust-static, rust-tests, rust-isolation, coverage, mutation, openapi, acceptance"
+         Groups: architecture, supply-chain, rust, rust-static, rust-tests, rust-isolation, coverage, mutation, mutation-identifier, openapi, acceptance"
     );
 }
 

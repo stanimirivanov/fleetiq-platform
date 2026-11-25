@@ -112,7 +112,7 @@ impl Executor for System<'_> {
     fn prerequisite(&mut self, check: &Check) -> Result<(), String> {
         self.wiring.as_ref().map_err(Clone::clone)?;
         let context = self.context.as_ref().map_err(Clone::clone)?;
-        if check.id == "mutation" && context.dirty {
+        if check.group.mutation_target().is_some() && context.dirty {
             return Err(
                 "mutation pilot requires a clean checkout of the revision being measured".into(),
             );
@@ -225,11 +225,11 @@ impl Executor for System<'_> {
                     reason: "could not start pinned cargo-llvm-cov".into(),
                 },
             }
-        } else if check.id == "mutation" {
+        } else if let Some(target) = check.group.mutation_target() {
             let mut command = Command::new(check.program);
             command.current_dir(self.root).args(&args);
             isolate_cargo_context(&mut command);
-            match super::mutation::run(&mut command) {
+            match super::mutation::run(&mut command, target) {
                 Ok(mutation) => {
                     self.mutation = Some(mutation);
                     Outcome::Passed
