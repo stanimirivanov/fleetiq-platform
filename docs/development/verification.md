@@ -87,6 +87,30 @@ and executable policy in Architecture, alongside Rust formatting in the
 independent Rust static job. CI keeps those parallel jobs and executes each
 gate through its existing entrypoint.
 
+### Enable the Codex post-edit hook
+
+In a trusted local FleetIQ checkout, review the
+[Codex hook example](../../harness/hooks/codex.example.json) and copy it
+to the ignored project hook path:
+
+```bash
+mkdir -p .codex
+test ! -e .codex/hooks.json && cp harness/hooks/codex.example.json .codex/hooks.json
+```
+
+If the project already defines hooks in that file or in its Codex configuration,
+add the example's single `PostToolUse` entry to the existing configuration.
+Open `/hooks` in the Codex CLI and review and trust the hook there.
+See the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks#review-and-trust-hooks).
+
+The hook runs the edit stage from the repository root after a native
+`apply_patch` call. Edits made through shell commands need a manual edit-stage
+run. Fetch trusted `main` before using the hook. If a check fails or cannot run,
+Codex receives its diagnostics after the patch has been applied. The ordinary
+`edit-*.json` receipt records the results.
+
+Disable the hook through `/hooks`, or remove the entry from the local configuration.
+
 ## Commit stage
 
 From the repository root, run `cargo xtask verify --stage commit --base origin/main`

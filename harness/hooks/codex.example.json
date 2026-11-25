@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^apply_patch$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" && cargo xtask verify --stage edit --base origin/main >&2 || exit 2",
+            "statusMessage": "Running FleetIQ edit checks",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

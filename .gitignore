@@ -1,5 +1,6 @@
 /target/
 /harness/target/
+/.codex/hooks.json
 /node_modules/
 *.profraw
 .env
