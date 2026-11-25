@@ -443,8 +443,8 @@ Hosted cold and warm cache runs remain the authority for CI performance. See
 
 ### Application coverage pilot
 
-Dispatch **CI** for a branch or tag from GitHub Actions or run
-`gh workflow run ci.yml --ref <branch-or-tag>`. The dispatch runs ordinary Rust
+Dispatch **CI** for a branch or tag with the default `coverage` choice, or run
+`gh workflow run ci.yml --ref <branch-or-tag>`. This choice runs ordinary Rust
 application tests alongside advisory application coverage on the same revision,
 with separate runners and PostgreSQL services. Pull requests continue to run
 their usual checks.
@@ -465,6 +465,30 @@ Open the `harness-coverage` artifact and check `complete_pass` before using
 milliseconds for each check. Compare the sum of check durations against the
 paired `harness-rust` receipt for the same revision. Record runner and cache
 conditions when comparing runs. The pilot applies no coverage threshold.
+
+### Domain mutation pilot
+
+Dispatch **CI** for a branch or tag with the `mutation` choice, or run
+`gh workflow run ci.yml --ref <branch-or-tag> -f pilot=mutation`. This runs the
+mutation pilot by itself. To reproduce locally, install cargo-mutants 27.1.0 and
+GNU timeout, then run `cargo xtask verify --group mutation` from a clean
+checkout. The pilot mutates only the relationship module in `fleetiq-domain`
+and runs that crate's full locked test suite against a passing unmodified
+baseline. PostgreSQL and Docker are unnecessary.
+
+The hosted job has 15 minutes. The mutation command has 12 minutes, including
+its baseline, with limits of 120 seconds per mutant build and 30 seconds per
+mutant test. The command deadline leaves time to publish the receipt. The
+`harness-mutation` artifact records the tested revision, elapsed time and
+counts for caught, missed, unviable and timed-out mutants, plus the names of
+missed mutations. The interval control changes the exclusive end comparison
+to inclusive. The receipt records whether the existing tests caught it.
+
+Missed mutants and individual timeouts are advisory findings. If the clean
+baseline fails, the run exceeds its overall deadline, or the evidence is
+incomplete, the group exits unsuccessfully and publishes no complete mutation
+results. Review survivors before filing test follow-ups. The pilot applies no
+score threshold and adds no required PR check.
 
 ## Ingestion measurement artifacts
 

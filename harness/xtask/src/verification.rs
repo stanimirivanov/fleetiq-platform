@@ -8,6 +8,7 @@ pub(crate) mod ci;
 mod coverage;
 mod evidence;
 mod isolation;
+mod mutation;
 mod nextest;
 mod process;
 mod runner;

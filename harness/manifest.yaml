@@ -31,6 +31,7 @@
     {"id": "sqlx", "paired_guide": "rust-acceptance", "remediation": "docs/development/sql-migrations.md#safety-and-verification", "blocking": true},
     {"id": "clippy", "paired_guide": "rust-acceptance", "remediation": "docs/development/engineering-standards.md#rust", "blocking": true},
     {"id": "tests", "paired_guide": "rust-acceptance", "remediation": "docs/development/verification.md#parallel-test-execution-and-coverage", "blocking": true},
+    {"id": "mutation", "paired_guide": "rust-acceptance", "remediation": "docs/development/verification.md#domain-mutation-pilot", "blocking": true},
     {"id": "coverage", "paired_guide": "rust-acceptance", "remediation": "docs/development/verification.md#application-coverage-pilot", "blocking": true},
     {"id": "doctests", "paired_guide": "rust-acceptance", "remediation": "docs/development/verification.md#parallel-test-execution-and-coverage", "blocking": true},
     {"id": "docs", "paired_guide": "rust-acceptance", "remediation": "docs/development/engineering-standards.md#documentation-and-modules", "blocking": true},

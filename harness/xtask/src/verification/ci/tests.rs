@@ -26,22 +26,46 @@ fn checked_in_workflow_matches_authoritative_inventory() {
 #[test]
 fn coverage_dispatch_is_separate_from_pull_request_verification() {
     let expected = generated();
-    let events = expected
-        .split_once("\non:\n")
-        .unwrap()
-        .1
-        .split_once("\npermissions:\n")
-        .unwrap()
-        .0;
-    assert_eq!(events, "  pull_request:\n  workflow_dispatch:\n");
     let yaml = yaml_rust2::YamlLoader::load_from_str(&expected).unwrap();
-    let jobs = &yaml[0]["jobs"];
+    let workflow = &yaml[0];
+    let events = &workflow["on"];
+    assert_eq!(events.as_hash().unwrap().len(), 2);
+    assert!(!events["pull_request"].is_badvalue());
+    let pilot = &events["workflow_dispatch"]["inputs"]["pilot"];
+    assert_eq!(pilot["type"].as_str(), Some("choice"));
+    assert_eq!(pilot["default"].as_str(), Some("coverage"));
+    let choices: Vec<_> = pilot["options"]
+        .as_vec()
+        .unwrap()
+        .iter()
+        .filter_map(yaml_rust2::Yaml::as_str)
+        .collect();
+    assert_eq!(choices, ["coverage", "mutation"]);
+    assert!(
+        workflow["concurrency"]["group"]
+            .as_str()
+            .unwrap()
+            .contains("inputs.pilot")
+    );
+    let jobs = &workflow["jobs"];
     assert_eq!(
         jobs["coverage"]["if"].as_str(),
-        Some("github.event_name == 'workflow_dispatch'")
+        Some("github.event_name == 'workflow_dispatch' && inputs.pilot == 'coverage'")
+    );
+    assert_eq!(
+        jobs["mutation"]["if"].as_str(),
+        Some("github.event_name == 'workflow_dispatch' && inputs.pilot == 'mutation'")
     );
     assert!(jobs["coverage"]["needs"].is_badvalue());
-    assert!(jobs["rust-tests"]["if"].is_badvalue());
+    assert!(jobs["mutation"]["needs"].is_badvalue());
+    assert!(jobs["mutation"]["services"].is_badvalue());
+    assert_eq!(jobs["mutation"]["timeout-minutes"].as_i64(), Some(15));
+    assert_eq!(
+        jobs["rust-tests"]["if"].as_str(),
+        Some(
+            "github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.pilot == 'coverage')"
+        )
+    );
     assert_eq!(jobs["coverage"]["services"], jobs["rust-tests"]["services"]);
     assert_eq!(jobs["coverage"]["runs-on"], jobs["rust-tests"]["runs-on"]);
     assert!(expected.contains("HARNESS_BASE: ${{ github.event.pull_request.base.sha }}"));
