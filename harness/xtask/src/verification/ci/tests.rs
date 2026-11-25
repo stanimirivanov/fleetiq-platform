@@ -24,7 +24,7 @@ fn checked_in_workflow_matches_authoritative_inventory() {
 }
 
 #[test]
-fn pull_requests_are_the_only_ci_event_and_supply_the_trusted_base() {
+fn coverage_dispatch_is_separate_from_pull_request_verification() {
     let expected = generated();
     let events = expected
         .split_once("\non:\n")
@@ -33,7 +33,17 @@ fn pull_requests_are_the_only_ci_event_and_supply_the_trusted_base() {
         .split_once("\npermissions:\n")
         .unwrap()
         .0;
-    assert_eq!(events, "  pull_request:\n");
+    assert_eq!(events, "  pull_request:\n  workflow_dispatch:\n");
+    let yaml = yaml_rust2::YamlLoader::load_from_str(&expected).unwrap();
+    let jobs = &yaml[0]["jobs"];
+    assert_eq!(
+        jobs["coverage"]["if"].as_str(),
+        Some("github.event_name == 'workflow_dispatch'")
+    );
+    assert!(jobs["coverage"]["needs"].is_badvalue());
+    assert!(jobs["rust-tests"]["if"].is_badvalue());
+    assert_eq!(jobs["coverage"]["services"], jobs["rust-tests"]["services"]);
+    assert_eq!(jobs["coverage"]["runs-on"], jobs["rust-tests"]["runs-on"]);
     assert!(expected.contains("HARNESS_BASE: ${{ github.event.pull_request.base.sha }}"));
     assert!(!expected.contains("github.event.before"));
 }
@@ -50,7 +60,7 @@ fn trigger_and_trusted_base_drift_are_rejected() {
             "on:\n  pull_request:\n  push:\n    branches: [main]\n",
             1,
         ),
-        original.replacen(trigger, "on:\n  pull_request:\n  workflow_dispatch:\n", 1),
+        original.replacen("  workflow_dispatch:\n", "", 1),
         original.replacen(
             trigger,
             "on:\n  pull_request:\n  schedule:\n    - cron: '0 0 * * *'\n",
@@ -647,7 +657,10 @@ fn rust_rollup_waits_for_each_shard_and_rejects_non_success() {
         .collect();
     assert_eq!(dependencies, shards);
     assert_eq!(rollup["name"].as_str(), Some("Rust quality gate"));
-    assert_eq!(rollup["if"].as_str(), Some("${{ always() }}"));
+    assert_eq!(
+        rollup["if"].as_str(),
+        Some("${{ always() && github.event_name == 'pull_request' }}")
+    );
     let reject = &rollup["steps"][0];
     assert_eq!(reject["run"].as_str(), Some("exit 1"));
     for shard in shards {

@@ -74,6 +74,7 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
         Group::SupplyChain,
         Group::RustStatic,
         Group::RustTests,
+        Group::Coverage,
         Group::RustIsolation,
         Group::Openapi,
     ] {
@@ -101,6 +102,7 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
         ("pnpm", Tool::Pnpm, 1),
         ("node", Tool::Node, 3),
         ("nextest", Tool::Nextest, 1),
+        ("llvm-cov", Tool::LlvmCov, 1),
     ] {
         replace_token(
             &mut result,
