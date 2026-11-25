@@ -157,6 +157,7 @@ fn print_usage() {
            cargo xtask secrets --fixtures     Verify the pinned detector against bypasses\n\
            cargo xtask app-isolation          Build and test the application without harness/\n\
            cargo xtask verify --list          List commands, prerequisites, and tool pins\n\
+           cargo xtask verify --stage edit --base REV  Run fast local verification\n\
            cargo xtask verify --group GROUP [--base REV]  Run a group and record evidence\n\
            cargo xtask verify --check-ci      Check generated CI wiring\n\
            cargo xtask verify --write-ci      Regenerate CI from reviewed template\n\n\
