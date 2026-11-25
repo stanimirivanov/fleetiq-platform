@@ -7,12 +7,20 @@ run-name: FleetIQ PR ${{ github.event.pull_request.number }} from ${{ github.eve
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      pilot:
+        description: Advisory verification to run
+        type: choice
+        default: coverage
+        options:
+          - coverage
+          - mutation
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}${{ github.event_name == 'workflow_dispatch' && format('-{0}', inputs.pilot) || '' }}
   cancel-in-progress: true
 
 env:
@@ -217,6 +225,7 @@ jobs:
           retention-days: 14
 
   rust-tests:
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.pilot == 'coverage')
     name: Rust application tests
     runs-on: ubuntu-26.04
     timeout-minutes: 25
@@ -256,7 +265,7 @@ jobs:
 
   coverage:
     name: Rust application coverage
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.pilot == 'coverage'
     runs-on: ubuntu-26.04
     timeout-minutes: 45
     env: *rust-env
@@ -288,6 +297,34 @@ jobs:
         with:
           name: harness-coverage
           path: target/verification/coverage-*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  mutation:
+    name: Rust domain mutation pilot
+    if: github.event_name == 'workflow_dispatch' && inputs.pilot == 'mutation'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+
+    steps:
+      - *rust-checkout
+      - name: Install pinned cargo-mutants
+        uses: taiki-e/install-action@@action:nextest-install@
+        with:
+          tool: cargo-mutants@@tool:mutants@
+          checksum: true
+          fallback: none
+
+      - name: Measure domain mutation results
+        id: verify
+        run: @verify:mutation@
+
+      - name: Publish domain mutation evidence
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@@action:upload-artifact@
+        with:
+          name: harness-mutation
+          path: target/verification/mutation-*.json
           if-no-files-found: error
           retention-days: 14
 

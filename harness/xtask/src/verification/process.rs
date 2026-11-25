@@ -25,6 +25,7 @@ pub(super) struct System<'a> {
     tools: BTreeMap<&'static str, Result<String, String>>,
     wiring: Result<(), String>,
     coverage: Option<Value>,
+    mutation: Option<Value>,
 }
 
 struct Context {
@@ -56,6 +57,7 @@ impl<'a> System<'a> {
             tools,
             wiring,
             coverage: None,
+            mutation: None,
         }
     }
 
@@ -99,6 +101,9 @@ impl<'a> System<'a> {
         if let Some(coverage) = self.coverage.as_ref().filter(|_| passed) {
             report["application_coverage"] = coverage.clone();
         }
+        if let Some(mutation) = self.mutation.as_ref().filter(|_| passed) {
+            report["domain_mutation"] = mutation.clone();
+        }
         report
     }
 }
@@ -106,7 +111,12 @@ impl<'a> System<'a> {
 impl Executor for System<'_> {
     fn prerequisite(&mut self, check: &Check) -> Result<(), String> {
         self.wiring.as_ref().map_err(Clone::clone)?;
-        self.context.as_ref().map_err(Clone::clone)?;
+        let context = self.context.as_ref().map_err(Clone::clone)?;
+        if check.id == "mutation" && context.dirty {
+            return Err(
+                "mutation pilot requires a clean checkout of the revision being measured".into(),
+            );
+        }
         for tool in check.tools {
             self.tools[tool.name()].as_ref().map_err(Clone::clone)?;
         }
@@ -214,6 +224,17 @@ impl Executor for System<'_> {
                 Err(_) => Outcome::NotRun {
                     reason: "could not start pinned cargo-llvm-cov".into(),
                 },
+            }
+        } else if check.id == "mutation" {
+            let mut command = Command::new(check.program);
+            command.current_dir(self.root).args(&args);
+            isolate_cargo_context(&mut command);
+            match super::mutation::run(&mut command) {
+                Ok(mutation) => {
+                    self.mutation = Some(mutation);
+                    Outcome::Passed
+                }
+                Err(outcome) => outcome,
             }
         } else if check.id == "tests" {
             let mut command = Command::new(check.program);

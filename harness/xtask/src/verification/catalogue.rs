@@ -15,6 +15,7 @@ pub(crate) enum Group {
     RustStatic,
     RustTests,
     Coverage,
+    Mutation,
     RustIsolation,
     Openapi,
     Acceptance,
@@ -29,6 +30,7 @@ impl Group {
             "rust-static" => Some(Self::RustStatic),
             "rust-tests" => Some(Self::RustTests),
             "coverage" => Some(Self::Coverage),
+            "mutation" => Some(Self::Mutation),
             "rust-isolation" => Some(Self::RustIsolation),
             "openapi" => Some(Self::Openapi),
             "acceptance" => Some(Self::Acceptance),
@@ -54,6 +56,7 @@ impl Group {
             Self::RustStatic => "rust-static",
             Self::RustTests => "rust-tests",
             Self::Coverage => "coverage",
+            Self::Mutation => "mutation",
             Self::RustIsolation => "rust-isolation",
             Self::Openapi => "openapi",
             Self::Acceptance => "acceptance",
@@ -137,6 +140,7 @@ pub(crate) enum Tool {
     Sqlx,
     Nextest,
     LlvmCov,
+    Mutants,
     Node,
     Pnpm,
 }
@@ -152,6 +156,7 @@ impl Tool {
             Self::Sqlx => "sqlx",
             Self::Nextest => "cargo-nextest",
             Self::LlvmCov => "cargo-llvm-cov",
+            Self::Mutants => "cargo-mutants",
             Self::Node => "node",
             Self::Pnpm => "pnpm",
         }
@@ -165,6 +170,7 @@ impl Tool {
             Self::Gitleaks => crate::secrets::VERSION,
             Self::Deny => "0.20.2",
             Self::Machete | Self::LlvmCov => "0.9.2",
+            Self::Mutants => "27.1.0",
             Self::Sqlx => "0.9.0",
             Self::Nextest => "0.9.145",
             Self::Node => "24",
@@ -397,6 +403,37 @@ pub(crate) static CHECKS: &[Check] = &[
         acceptance: false,
     },
     Check {
+        id: "mutation",
+        group: Group::Mutation,
+        program: "timeout",
+        args: &[
+            "--kill-after=5s",
+            "12m",
+            "cargo",
+            "mutants",
+            "--no-config",
+            "--package",
+            "fleetiq-domain",
+            "--file",
+            super::mutation::FILE,
+            "--cargo-arg=--locked",
+            "--all-features",
+            "--baseline",
+            "run",
+            "--build-timeout",
+            "120",
+            "--timeout",
+            "30",
+            "--jobs",
+            "2",
+        ],
+        command: "timeout --kill-after=5s 12m cargo mutants --no-config --package fleetiq-domain --file crates/domain/src/relationship.rs --cargo-arg=--locked --all-features --baseline run --build-timeout 120 --timeout 30 --jobs 2",
+        outcome: "Advisory relationship and effective interval mutation results with a passing crate baseline",
+        prerequisites: &[],
+        tools: &[Tool::Rust, Tool::Git, Tool::Mutants],
+        acceptance: false,
+    },
+    Check {
         id: "doctests",
         group: Group::RustTests,
         program: "cargo",
@@ -568,7 +605,7 @@ mod tests {
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 23);
+        assert_eq!(CHECKS.len(), 24);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [
@@ -578,6 +615,7 @@ mod tests {
             Group::RustStatic,
             Group::RustTests,
             Group::Coverage,
+            Group::Mutation,
             Group::RustIsolation,
             Group::Openapi,
         ] {
