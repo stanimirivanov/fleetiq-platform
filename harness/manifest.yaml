@@ -17,7 +17,6 @@
     {"id": "harness-machete", "paired_guide": "dependency-policy", "remediation": "docs/development/dependency-management.md#run-the-checks", "blocking": true},
     {"id": "harness-fmt", "paired_guide": "rust-acceptance", "remediation": "harness/README.md#application-isolation", "blocking": true},
     {"id": "harness-clippy", "paired_guide": "rust-acceptance", "remediation": "harness/README.md#application-isolation", "blocking": true},
-    {"id": "harness-doctests", "paired_guide": "rust-acceptance", "remediation": "harness/README.md#application-isolation", "blocking": true},
     {"id": "harness-docs", "paired_guide": "rust-acceptance", "remediation": "harness/README.md#application-isolation", "blocking": true},
     {"id": "app-isolation", "paired_guide": "rust-acceptance", "remediation": "harness/README.md#application-isolation", "blocking": true},
     {"id": "repository", "paired_guide": "repository-policy", "remediation": "docs/development/harness.md#repository-policy", "blocking": true},

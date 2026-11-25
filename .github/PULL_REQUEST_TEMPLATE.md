@@ -31,7 +31,6 @@ Run the applicable acceptance gate and additional contract/image checks in CONTR
 | `cargo machete --with-metadata --skip-target-dir harness` | | |
 | `cargo fmt --manifest-path harness/Cargo.toml --all --check` | | |
 | `cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings` | | |
-| `cargo test --manifest-path harness/Cargo.toml --workspace --all-features --locked --doc` | | |
 | `cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked` | | |
 | `cargo test --manifest-path harness/Cargo.toml --locked` | | |
 

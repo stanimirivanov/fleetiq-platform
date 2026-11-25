@@ -5,7 +5,7 @@
 - `cargo xtask verify --list` prints the authoritative check inventory; it runs
   no acceptance checks.
 - `cargo xtask verify --group acceptance --base origin/main` coordinates the
-  twenty-command Rust acceptance gate.
+  nineteen-command Rust acceptance gate.
 - Focused groups support fast feedback. Passing a focused group is not a
   complete acceptance result, and contract or Compose checks may also apply.
 - Missing prerequisites produce **not run** and a nonzero group exit. A started
@@ -84,7 +84,7 @@ inspection; it is not a result report. Run a group from the repository root:
 | Supply chain | `cargo xtask verify --group supply-chain` | cargo-deny and cargo-machete for both locked workspaces |
 | Rust | `cargo xtask verify --group rust` | Formatting, SQLx metadata, workspace Clippy, bounded workspace tests, separate doctests, rustdoc, and [application-only isolation](../../harness/README.md#application-isolation) |
 | OpenAPI | `cargo xtask verify --group openapi` | Modular contract linting, reference and extraction rules, and committed bundle freshness |
-| Acceptance | `cargo xtask verify --group acceptance --base origin/main` | Exactly the twenty canonical application and harness acceptance checks in contributor-policy order |
+| Acceptance | `cargo xtask verify --group acceptance --base origin/main` | Exactly the nineteen canonical application and harness acceptance checks in contributor-policy order |
 
 Scope is explicit; the runner does not guess from changed files. Acceptance
 includes scanner fixtures and the independently built harness sensor tests.
@@ -96,7 +96,7 @@ A selected group's success says only that all selected checks passed. When the
 published HTTP contract changes, the OpenAPI group is also required. Deployment,
 configuration, startup, readiness, or container changes still require the
 existing Compose smoke checks. The runner does not absorb those operational
-checks or claim that a twenty-command acceptance run proves production
+checks or claim that a nineteen-command acceptance run proves production
 readiness. Use the [harness tiers](harness.md#cost-and-timing-tiers) and the
 technical verification policy to determine the complete applicable gate.
 
@@ -325,7 +325,7 @@ or protected-branch settings passed.
 
 The canonical runtime check is `cargo nextest run --workspace --all-features --locked --profile ci`.
 Cargo doctests remain a separate required check: `cargo test --workspace --all-features --locked --doc`.
-Rustdoc generation still runs afterward. The application and harness acceptance gate has twenty checks;
+Rustdoc generation still runs afterward. The application and harness acceptance gate has nineteen checks;
 no existing acceptance behavior is dropped. Supplemental architecture
 sensor commands continue to use Cargo and do not require Nextest.
 

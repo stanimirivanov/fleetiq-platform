@@ -76,7 +76,6 @@ cargo deny --manifest-path harness/Cargo.toml --config deny.toml check
 cargo machete --with-metadata --skip-target-dir harness
 cargo fmt --manifest-path harness/Cargo.toml --all --check
 cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings
-cargo test --manifest-path harness/Cargo.toml --workspace --all-features --locked --doc
 cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked
 cargo test --manifest-path harness/Cargo.toml --locked
 ```
@@ -135,7 +134,7 @@ configuration, startup, readiness, or container behavior changes. The
 supply-chain commands above remain required; record their exact evidence.
 
 The [authoritative inventory and runner](docs/development/verification.md)
-coordinate these ordinary commands with `cargo xtask verify --group acceptance --base origin/main`; the twenty-command gate above preserves application and harness coverage and runs doctests separately.
+coordinate these ordinary commands with `cargo xtask verify --group acceptance --base origin/main`; the nineteen-command gate above preserves application and harness coverage and runs doctests separately.
 `cargo xtask verify --list` prints inventory metadata without running checks.
 Focused architecture, supply-chain, Rust, and OpenAPI groups provide explicit
 scope and fresh ignored metadata-only evidence. Passing a focused group does

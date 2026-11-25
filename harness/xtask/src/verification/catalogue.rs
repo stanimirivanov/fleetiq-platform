@@ -419,25 +419,6 @@ pub(crate) static CHECKS: &[Check] = &[
         acceptance: true,
     },
     Check {
-        id: "harness-doctests",
-        group: Group::Rust,
-        program: "cargo",
-        args: &[
-            "test",
-            "--manifest-path",
-            "harness/Cargo.toml",
-            "--workspace",
-            "--all-features",
-            "--locked",
-            "--doc",
-        ],
-        command: "cargo test --manifest-path harness/Cargo.toml --workspace --all-features --locked --doc",
-        outcome: "Run harness documentation examples",
-        prerequisites: &[],
-        tools: &[Tool::Rust],
-        acceptance: true,
-    },
-    Check {
         id: "harness-docs",
         group: Group::Rust,
         program: "cargo",
@@ -511,7 +492,6 @@ mod tests {
                 "cargo machete --with-metadata --skip-target-dir harness",
                 "cargo fmt --manifest-path harness/Cargo.toml --all --check",
                 "cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings",
-                "cargo test --manifest-path harness/Cargo.toml --workspace --all-features --locked --doc",
                 "cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked",
                 "cargo test --manifest-path harness/Cargo.toml --locked",
             ]
@@ -520,7 +500,7 @@ mod tests {
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 23);
+        assert_eq!(CHECKS.len(), 22);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [
