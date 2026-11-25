@@ -22,7 +22,7 @@ decision. The architecture pages describe the current system.
    replace the earlier decision's remaining lifecycle.
 5. Use `Rejected` for a proposal retained to prevent repeated investigation.
 6. When publishing the next record, add its index coverage and advance
-   `LATEST_PUBLISHED_ADR` in `crates/xtask/src/repository/adr.rs`. This retained
+   `LATEST_PUBLISHED_ADR` in `harness/xtask/src/repository/adr.rs`. This retained
    high-water mark makes deletion of the newest historical record detectable.
 
 Do not renumber records. Correct spelling or broken links in an accepted ADR,

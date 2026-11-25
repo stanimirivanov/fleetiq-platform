@@ -20,6 +20,7 @@ use cargo_metadata::{DependencyKind, Metadata, MetadataCommand};
 use model::{AppliedException, DependencyClass, DependencyEdge, PackagePolicy, WorkspaceGraph};
 use policy::{PACKAGE_POLICIES, TEMPORARY_EXCEPTIONS};
 
+const HARNESS_MANIFEST: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../Cargo.toml");
 const WORKSPACE_MANIFEST: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../Cargo.toml");
 
 #[derive(Debug)]
@@ -101,9 +102,21 @@ pub(crate) fn check() -> Result<ArchitectureReport, ArchitectureCheckError> {
             .expect("the workspace manifest has a parent directory"),
     )
     .map_err(ArchitectureCheckError::Policy)?;
+    let harness_manifest = PathBuf::from(HARNESS_MANIFEST);
+    source_overrides::check(harness_manifest.parent().expect("harness workspace root"))
+        .map_err(ArchitectureCheckError::Policy)?;
+    lint_inheritance::check_shared(&workspace_manifest, &harness_manifest)
+        .map_err(|violation| ArchitectureCheckError::Policy(vec![violation]))?;
     security_exception::check(&workspace_manifest.with_file_name("Cargo.lock"))
         .map_err(|violation| ArchitectureCheckError::Policy(vec![violation]))?;
 
+    let tooling = workspace_metadata(HARNESS_MANIFEST).map_err(ArchitectureCheckError::Metadata)?;
+    if !matches!(tooling.workspace_packages().as_slice(), [package] if package.name.as_str() == "fleetiq-xtask")
+    {
+        return Err(ArchitectureCheckError::Policy(vec![
+            "the harness workspace must contain only the approved xtask tooling package".to_owned(),
+        ]));
+    }
     let metadata = load_metadata().map_err(ArchitectureCheckError::Metadata)?;
     if let Some(violation) = protocol_fixture_version_violation(&metadata) {
         return Err(ArchitectureCheckError::Policy(vec![violation]));
@@ -171,14 +184,19 @@ fn is_exact_patch_version(requirement: &str) -> bool {
 }
 
 fn load_metadata() -> Result<Metadata, cargo_metadata::Error> {
+    let mut metadata = workspace_metadata(WORKSPACE_MANIFEST)?;
+    let harness = workspace_metadata(HARNESS_MANIFEST)?;
+    metadata.packages.extend(harness.packages);
+    metadata.workspace_members.extend(harness.workspace_members);
+    Ok(metadata)
+}
+
+fn workspace_metadata(manifest: &str) -> Result<Metadata, cargo_metadata::Error> {
+    let path = PathBuf::from(manifest);
     let mut command = MetadataCommand::new();
     command
-        .manifest_path(PathBuf::from(WORKSPACE_MANIFEST))
-        .current_dir(
-            PathBuf::from(WORKSPACE_MANIFEST)
-                .parent()
-                .expect("the workspace manifest has a parent directory"),
-        )
+        .manifest_path(&path)
+        .current_dir(path.parent().expect("workspace manifest has a parent"))
         .no_deps()
         .other_options(vec!["--locked".to_owned()]);
     command.exec()

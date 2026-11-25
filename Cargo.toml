@@ -17,7 +17,6 @@ members = [
     "crates/semantics",
     "crates/server",
     "crates/telemetry",
-    "crates/xtask",
     "examples/custom-protocol",
     "packages/teltonika",
 ]
@@ -45,18 +44,12 @@ futures-util = { version = "0.3.34", default-features = false, features = ["std"
 getrandom = "0.4.3"
 openidconnect = { version = "4.0.1", default-features = false, features = ["reqwest", "rustls-tls"] }
 url = { version = "2.5.9", default-features = false }
-cargo_metadata = { version = "0.23.1", default-features = false }
-percent-encoding = "2.3.2"
-pulldown-cmark = { version = "0.13.6", default-features = false }
 serde = { version = "1.0.228", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.151", default-features = false, features = ["std"] }
 sqlx = { version = "0.9.0", default-features = false, features = ["bigdecimal", "macros", "migrate", "postgres", "runtime-tokio", "tls-rustls-ring-webpki"] }
-yaml-rust2 = { version = "0.13.0", default-features = false }
 sha2 = { version = "0.11.0", default-features = false }
-syn = { version = "3.0.5", default-features = false, features = ["full", "parsing", "visit", "printing", "clone-impls"] }
 subtle = { version = "2.6.1", default-features = false }
 tokio = { version = "~1.54.1", default-features = false, features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
-toml = { version = "1.1.8", default-features = false, features = ["parse", "serde", "std"] }
 tower = { version = "0.5.2", default-features = false, features = ["util"] }
 wasmtime = { version = "50.0.2", default-features = false, features = ["anyhow", "component-model", "cranelift", "runtime", "std"] }
 

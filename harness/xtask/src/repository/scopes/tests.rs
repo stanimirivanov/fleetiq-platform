@@ -6,7 +6,7 @@ use crate::repository::markdown;
 fn valid_repository() -> Repository {
     let documents = [
         (
-            "crates/xtask/AGENTS.md",
+            "harness/xtask/AGENTS.md",
             "# Sensor work\n\n[Workflow](../../CONTRIBUTING.md)\n\
              [Rust](../../docs/development/engineering-standards.md)\n\
              [Harness](../../docs/development/harness.md)\n\
@@ -24,7 +24,7 @@ fn valid_repository() -> Repository {
         ),
         (
             "docs/README.md",
-            "# Documentation map\n\n[Sensor work](../crates/xtask/AGENTS.md)\n\
+            "# Documentation map\n\n[Sensor work](../harness/xtask/AGENTS.md)\n\
              [Contract work](../contracts/http/AGENTS.md)\n",
         ),
     ]
@@ -53,7 +53,7 @@ fn accepts_plain_markdown_routes_with_independent_guide_text() {
     let mut repository = valid_repository();
     replace(
         &mut repository,
-        "crates/xtask/AGENTS.md",
+        "harness/xtask/AGENTS.md",
         "# Sensor work",
         "# A different concise title\n\n<!-- Author-only review notes. -->\n\nAny useful guidance text may change.",
     );
@@ -72,15 +72,15 @@ fn accepts_used_reference_links_and_relative_path_normalization() {
     replace(
         &mut repository,
         "docs/README.md",
-        "../crates/xtask/AGENTS.md",
-        "../crates/xtask/./AGENTS.md",
+        "../harness/xtask/AGENTS.md",
+        "../harness/xtask/./AGENTS.md",
     );
     assert_eq!(check(&repository).len(), 0);
 }
 
 #[test]
 fn rejects_missing_scoped_guides_and_wrong_case() {
-    for path in ["crates/xtask/AGENTS.md", "contracts/http/AGENTS.md"] {
+    for path in ["harness/xtask/AGENTS.md", "contracts/http/AGENTS.md"] {
         let mut repository = valid_repository();
         let guide = repository.documents.remove(path).unwrap();
         repository.documents.insert(path.to_lowercase(), guide);
@@ -151,13 +151,13 @@ fn requires_each_documentation_map_route_to_be_rendered() {
     replace(
         &mut repository,
         MAP,
-        "[Sensor work](../crates/xtask/AGENTS.md)",
-        "<!-- [Sensor work](../crates/xtask/AGENTS.md) -->",
+        "[Sensor work](../harness/xtask/AGENTS.md)",
+        "<!-- [Sensor work](../harness/xtask/AGENTS.md) -->",
     );
     let violations = check(&repository);
     assert_eq!(violations.len(), 1);
     assert_eq!(violations[0].path, MAP);
-    assert!(violations[0].message.contains("crates/xtask/AGENTS.md"));
+    assert!(violations[0].message.contains("harness/xtask/AGENTS.md"));
 }
 
 #[test]
@@ -212,7 +212,7 @@ fn reports_actionable_scope_location_correction_and_policy() {
 
 #[test]
 fn accepts_multiline_author_comments_with_lf_and_crlf_in_every_route_source() {
-    for source in ["crates/xtask/AGENTS.md", "contracts/http/AGENTS.md", MAP] {
+    for source in ["harness/xtask/AGENTS.md", "contracts/http/AGENTS.md", MAP] {
         for newline in ["\n", "\r\n"] {
             let mut repository = valid_repository();
             let body = repository.document(source).unwrap().body().to_owned();

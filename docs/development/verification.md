@@ -5,7 +5,7 @@
 - `cargo xtask verify --list` prints the authoritative check inventory; it runs
   no acceptance checks.
 - `cargo xtask verify --group acceptance --base origin/main` coordinates the
-  thirteen-command Rust acceptance gate.
+  twenty-command Rust acceptance gate.
 - Focused groups support fast feedback. Passing a focused group is not a
   complete acceptance result, and contract or Compose checks may also apply.
 - Missing prerequisites produce **not run** and a nonzero group exit. A started
@@ -19,7 +19,7 @@
 ## Authority and scope
 
 [CONTRIBUTING.md](../../CONTRIBUTING.md#verification) owns which checks are
-required. The executable [catalogue](../../crates/xtask/src/verification/catalogue.rs)
+required. The executable [catalogue](../../harness/xtask/src/verification/catalogue.rs)
 owns command arguments, groups, outcomes, tool versions, prerequisites, and
 acceptance membership. Contributor and PR-template acceptance command lists
 are checked against that catalogue. The runner compares the complete checked-in
@@ -81,14 +81,14 @@ inspection; it is not a result report. Run a group from the repository root:
 | Group | Command | Selected checks |
 |:--|:--|:--|
 | Architecture | `cargo xtask verify --group architecture --base origin/main` | Repository policy, architecture policy, migration immutability, current/index/incoming secret scan, real scanner fixtures, [executable registration](../../harness/README.md#executable-registration), and xtask sensor tests |
-| Supply chain | `cargo xtask verify --group supply-chain` | cargo-deny and cargo-machete |
-| Rust | `cargo xtask verify --group rust` | Formatting, SQLx metadata, workspace Clippy, bounded workspace tests, separate doctests, and rustdoc |
+| Supply chain | `cargo xtask verify --group supply-chain` | cargo-deny and cargo-machete for both locked workspaces |
+| Rust | `cargo xtask verify --group rust` | Formatting, SQLx metadata, workspace Clippy, bounded workspace tests, separate doctests, rustdoc, and [application-only isolation](../../harness/README.md#application-isolation) |
 | OpenAPI | `cargo xtask verify --group openapi` | Modular contract linting, reference and extraction rules, and committed bundle freshness |
-| Acceptance | `cargo xtask verify --group acceptance --base origin/main` | Exactly the thirteen canonical acceptance checks in contributor-policy order |
+| Acceptance | `cargo xtask verify --group acceptance --base origin/main` | Exactly the twenty canonical application and harness acceptance checks in contributor-policy order |
 
 Scope is explicit; the runner does not guess from changed files. Acceptance
-includes scanner fixtures, but focused xtask sensor tests and OpenAPI remain
-separate inventory entries. The CI architecture group runs the sensor tests,
+includes scanner fixtures and the independently built harness sensor tests.
+Application isolation and OpenAPI remain separate inventory entries. The CI architecture group runs the sensor tests,
 and the full workspace Nextest command also includes them. The OpenAPI job runs
 the contract group independently. Neither replaces PostgreSQL-backed or Compose gates.
 
@@ -96,7 +96,7 @@ A selected group's success says only that all selected checks passed. When the
 published HTTP contract changes, the OpenAPI group is also required. Deployment,
 configuration, startup, readiness, or container changes still require the
 existing Compose smoke checks. The runner does not absorb those operational
-checks or claim that a thirteen-command acceptance run proves production
+checks or claim that a twenty-command acceptance run proves production
 readiness. Use the [harness tiers](harness.md#cost-and-timing-tiers) and the
 technical verification policy to determine the complete applicable gate.
 
@@ -325,7 +325,7 @@ or protected-branch settings passed.
 
 The canonical runtime check is `cargo nextest run --workspace --all-features --locked --profile ci`.
 Cargo doctests remain a separate required check: `cargo test --workspace --all-features --locked --doc`.
-Rustdoc generation still runs afterward. The full gate now has thirteen checks;
+Rustdoc generation still runs afterward. The application and harness acceptance gate has twenty checks;
 no existing acceptance behavior is dropped. Supplemental architecture
 sensor commands continue to use Cargo and do not require Nextest.
 

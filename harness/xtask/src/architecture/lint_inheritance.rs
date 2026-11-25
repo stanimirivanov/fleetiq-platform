@@ -69,3 +69,20 @@ fn violation(package: &str, path: &Path, detail: &str) -> String {
         path.display()
     )
 }
+
+/// Both independent workspaces retain the previously shared lint policy.
+pub(super) fn check_shared(app: &Path, harness: &Path) -> Result<(), String> {
+    fn lints(path: &Path) -> Option<toml::Value> {
+        let source = fs::read_to_string(path).ok()?;
+        let document: toml::Table = source.parse().ok()?;
+        document.get("workspace")?.get("lints").cloned()
+    }
+
+    let app_lints = lints(app);
+    if app_lints.is_none() || app_lints != lints(harness) {
+        return Err(format!(
+            "workspace lint policies must match in Cargo.toml and harness/Cargo.toml; see {GUIDE}"
+        ));
+    }
+    Ok(())
+}

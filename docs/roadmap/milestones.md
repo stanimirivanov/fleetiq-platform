@@ -92,7 +92,7 @@ The [approved M02–M04 PR sequence](../development/plans/m02-m04-delivery.md) r
 - Published milestone numbers are never reused or renumbered.
 - When publishing the next milestone, add both its index row and boundary
   section, then advance `LATEST_PUBLISHED_MILESTONE` in
-  `crates/xtask/src/repository/milestones.rs`. This retained high-water mark
+  `harness/xtask/src/repository/milestones.rs`. This retained high-water mark
   makes deletion of the newest published milestone detectable.
 - Move an issue only when its outcome dependency changes; update this roadmap
   when that changes the intended sequence.

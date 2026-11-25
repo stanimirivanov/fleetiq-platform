@@ -18,7 +18,7 @@ const POLICY: &str = "docs/development/harness.md#scoped-guidance";
 const MAP: &str = "docs/README.md";
 const GUIDES: &[Scope] = &[
     Scope {
-        path: "crates/xtask/AGENTS.md",
+        path: "harness/xtask/AGENTS.md",
         routes: &[
             "CONTRIBUTING.md",
             "docs/development/engineering-standards.md",

@@ -35,7 +35,7 @@ integrity. Documentation does not change actual tool permissions.
 
 ## Verify from the repository root
 
-Run `cargo test -p fleetiq-xtask --locked`, `cargo xtask repository`, and
+Run `cargo test --manifest-path harness/Cargo.toml --locked`, `cargo xtask repository`, and
 `cargo xtask architecture`. For CI structure or tool-version changes, explicitly
 regenerate with `cargo xtask verify --write-ci` and check with `--check-ci`.
 Action-only major-tag updates change the workflow alone and require `--check-ci`,

@@ -101,7 +101,7 @@ layouts are ignored local outputs. The fresh vulnerability database uses bounded
 Linux scratch storage (4 GiB ceiling; the measured database required about
 1.5 GiB) and is removed with its owned scanner container; retained
 reports contain its version and freshness metadata. These are not Git artifacts.
-The complete thirteen-command platform gate is also required; this artifact gate
+The complete [platform acceptance gate](../../CONTRIBUTING.md#verification) is also required; this artifact gate
 does not replace Rust/PostgreSQL or cargo-deny checks.
 
 ## Minimal runtime and readiness

@@ -10,7 +10,7 @@ the registry.
 
 ## Registry
 
-The [executable catalogue](../crates/xtask/src/verification/catalogue.rs)
+The [executable catalogue](../harness/xtask/src/verification/catalogue.rs)
 owns commands, prerequisites, and group membership. The registry stores
 metadata in the JSON subset of YAML so xtask can read it with its existing
 parser. The platform owns all entries in this manifest.
@@ -62,3 +62,23 @@ Prefer an existing command before registering another. Keep protected publish
 commands classified as operations. Their redesign remains in #464. The
 `/harness/` CODEOWNERS rule routes registry changes for review. Required
 independent approval and status checks depend on GitHub repository settings.
+
+## Application isolation
+
+The harness has its own [Cargo workspace](Cargo.toml) and lockfile. The
+repository alias still exposes `cargo xtask verify`. The root Cargo workspace
+contains the application, its protocol examples and its application tests.
+
+From a clean committed checkout, with the normal migrated PostgreSQL and
+Docker object-store test prerequisites, run `cargo xtask app-isolation`.
+The Rust verification group runs this proof too. It archives the commit,
+removes `harness/` in a temporary tree, and runs the locked workspace build,
+the complete locked Nextest CI profile, and the locked doctests. Its target
+directory belongs exclusively to the temporary tree. Existing application
+fixtures, committed contracts, Wasm sources, and Nextest scheduling limits
+are included. The regular Rust gate retains its application measurements.
+
+The harness lockfile has independent supply-chain and Rust checks. Local
+harness sensor tests are available through
+`cargo test --manifest-path harness/Cargo.toml --locked`. The root lockfile
+continues to determine [replay execution compatibility](../docs/operations/protocol-replay.md#upgrades-and-compatibility).

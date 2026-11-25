@@ -33,7 +33,7 @@ capability exists. For persistence, read [SQL migration criteria](docs/developme
 Use repository-pinned tools and the [harness protection guide](docs/development/harness-protection.md).
 For HTTP contracts, use the [OpenAPI skill](.agents/skills/openapi/SKILL.md) and
 [contract agreement](contracts/http/AGENTS.md). For sensors, read the
-[xtask agreement](crates/xtask/AGENTS.md).
+[xtask agreement](harness/xtask/AGENTS.md).
 
 ## Architecture and Rust
 

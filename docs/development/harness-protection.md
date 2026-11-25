@@ -31,7 +31,7 @@ cargo xtask secrets --fixtures
 
 For immediate file and index feedback, `cargo xtask secrets` omits incoming
 commit history. That focused command does not replace the base-qualified
-handoff check. `cargo test -p fleetiq-xtask --locked` exercises the structural
+handoff check. `cargo test --manifest-path harness/Cargo.toml --locked` exercises the structural
 and policy parser fixtures; the separate `--fixtures` command exercises the
 actual pinned detector and fails if it is absent or ineffective.
 

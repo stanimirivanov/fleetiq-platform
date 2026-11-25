@@ -6,6 +6,7 @@
 pub(crate) mod catalogue;
 pub(crate) mod ci;
 mod evidence;
+mod isolation;
 mod nextest;
 mod process;
 mod runner;
@@ -33,4 +34,9 @@ pub(crate) fn list() -> Result<(), String> {
 /// an ancestor commit before it can appear in command arguments or evidence.
 pub(crate) fn run(root: &Path, group: Group, base: Option<&str>) -> Result<bool, String> {
     runner::run(root, group, base)
+}
+
+/// Proves application build and tests in a fresh committed tree without the harness.
+pub(crate) fn app_isolation(root: &Path) -> Result<(), String> {
+    isolation::run(root)
 }

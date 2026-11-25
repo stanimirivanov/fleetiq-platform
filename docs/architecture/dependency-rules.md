@@ -41,8 +41,8 @@ contracts and use cases directly while one backend process composes them.
 
 ## Enforced policy
 
-The [internal policy](../../crates/xtask/src/architecture/policy.rs) records exact
-edges between workspace members. The [external policy](../../crates/xtask/src/architecture/external_dependencies/policy.rs)
+The [internal policy](../../harness/xtask/src/architecture/policy.rs) records exact
+edges between workspace members. The [external policy](../../harness/xtask/src/architecture/external_dependencies/policy.rs)
 records every member's approved direct third-party packages by canonical name
 and normal, development, or build kind, including an explicit empty list when
 none are needed. `cargo xtask architecture` reads Cargo's normalized metadata.
@@ -226,7 +226,7 @@ When a task changes a manifest:
 4. record third-party features, license, maintenance and security status,
    alternatives, and exit path when applicable; and
 5. run `cargo xtask architecture` and the complete quality gate; when changing
-   the sensor or its policy model, also run `cargo test -p fleetiq-xtask --locked`.
+   the sensor or its policy model, also run `cargo test --manifest-path harness/Cargo.toml --locked`.
 
 A temporary exception requires an accepted decision, an owner, a reason, a
 concrete removal task and review trigger, and a diagnostic that remains visible

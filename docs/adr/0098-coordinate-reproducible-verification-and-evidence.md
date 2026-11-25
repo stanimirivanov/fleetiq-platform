@@ -64,7 +64,7 @@ reviewed policy; independent required approval and GitHub status enforcement
 remain external settings that a checked-in file cannot establish.
 
 See the [verification guide](../development/verification.md),
-[catalogue](../../crates/xtask/src/verification/catalogue.rs), and
+[catalogue](../../harness/xtask/src/verification/catalogue.rs), and
 [hardening plan](../development/plans/harness-hardening.md).
 
 ## Consequences

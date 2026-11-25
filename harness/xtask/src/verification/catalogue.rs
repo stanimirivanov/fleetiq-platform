@@ -147,7 +147,7 @@ pub(crate) struct Check {
     pub(crate) acceptance: bool,
 }
 
-/// The thirteen acceptance checks plus focused sensor tests and `OpenAPI` checks.
+/// Application and harness acceptance checks, plus focused verification.
 ///
 /// `@base` is an argument placeholder, never accepted as a revision itself.
 /// Supplemental checks remain explicit so focused success cannot imply that
@@ -240,6 +240,21 @@ pub(crate) static CHECKS: &[Check] = &[
         prerequisites: &[],
         tools: &[Tool::Rust, Tool::Machete],
         acceptance: true,
+    },
+    Check {
+        id: "app-isolation",
+        group: Group::Rust,
+        program: "cargo",
+        args: &["xtask", "app-isolation"],
+        command: "cargo xtask app-isolation",
+        outcome: "Locked application build, complete suite and doctests with harness removed",
+        prerequisites: &[
+            Prerequisite::Database,
+            Prerequisite::NextestConfiguration,
+            Prerequisite::ObjectStoreFixture,
+        ],
+        tools: &[Tool::Rust, Tool::Git, Tool::Nextest],
+        acceptance: false,
     },
     Check {
         id: "fmt",
@@ -336,15 +351,120 @@ pub(crate) static CHECKS: &[Check] = &[
         acceptance: true,
     },
     Check {
+        id: "harness-deny",
+        group: Group::SupplyChain,
+        program: "cargo",
+        args: &[
+            "deny",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--config",
+            "deny.toml",
+            "check",
+        ],
+        command: "cargo deny --manifest-path harness/Cargo.toml --config deny.toml check",
+        outcome: "Check the independently locked harness for advisories, sources, and licenses",
+        prerequisites: &[],
+        tools: &[Tool::Rust, Tool::Deny],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-machete",
+        group: Group::SupplyChain,
+        program: "cargo",
+        args: &["machete", "--with-metadata", "--skip-target-dir", "harness"],
+        command: "cargo machete --with-metadata --skip-target-dir harness",
+        outcome: "Check direct harness dependencies for unused declarations",
+        prerequisites: &[],
+        tools: &[Tool::Rust, Tool::Machete],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-fmt",
+        group: Group::Rust,
+        program: "cargo",
+        args: &[
+            "fmt",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--all",
+            "--check",
+        ],
+        command: "cargo fmt --manifest-path harness/Cargo.toml --all --check",
+        outcome: "Check harness Rust formatting",
+        prerequisites: &[],
+        tools: &[Tool::Rust],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-clippy",
+        group: Group::Rust,
+        program: "cargo",
+        args: &[
+            "clippy",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--workspace",
+            "--all-targets",
+            "--all-features",
+            "--locked",
+            "--",
+            "-D",
+            "warnings",
+        ],
+        command: "cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings",
+        outcome: "Check every harness target with denied warnings",
+        prerequisites: &[],
+        tools: &[Tool::Rust],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-doctests",
+        group: Group::Rust,
+        program: "cargo",
+        args: &[
+            "test",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--workspace",
+            "--all-features",
+            "--locked",
+            "--doc",
+        ],
+        command: "cargo test --manifest-path harness/Cargo.toml --workspace --all-features --locked --doc",
+        outcome: "Run harness documentation examples",
+        prerequisites: &[],
+        tools: &[Tool::Rust],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-docs",
+        group: Group::Rust,
+        program: "cargo",
+        args: &[
+            "doc",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--workspace",
+            "--no-deps",
+            "--locked",
+        ],
+        command: "cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked",
+        outcome: "Generate harness rustdoc",
+        prerequisites: &[],
+        tools: &[Tool::Rust],
+        acceptance: true,
+    },
+    Check {
         id: "sensor-tests",
         group: Group::Architecture,
         program: "cargo",
-        args: &["test", "-p", "fleetiq-xtask", "--locked"],
-        command: "cargo test -p fleetiq-xtask --locked",
+        args: &["test", "--manifest-path", "harness/Cargo.toml", "--locked"],
+        command: "cargo test --manifest-path harness/Cargo.toml --locked",
         outcome: "Repository sensor positive, negative, and bypass fixtures",
         prerequisites: &[],
         tools: &[Tool::Rust, Tool::Git],
-        acceptance: false,
+        acceptance: true,
     },
     Check {
         id: "openapi",
@@ -387,13 +507,20 @@ mod tests {
                 "cargo nextest run --workspace --all-features --locked --profile ci",
                 "cargo test --workspace --all-features --locked --doc",
                 "cargo doc --workspace --no-deps --locked",
+                "cargo deny --manifest-path harness/Cargo.toml --config deny.toml check",
+                "cargo machete --with-metadata --skip-target-dir harness",
+                "cargo fmt --manifest-path harness/Cargo.toml --all --check",
+                "cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings",
+                "cargo test --manifest-path harness/Cargo.toml --workspace --all-features --locked --doc",
+                "cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked",
+                "cargo test --manifest-path harness/Cargo.toml --locked",
             ]
         );
     }
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 16);
+        assert_eq!(CHECKS.len(), 23);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [
@@ -441,7 +568,7 @@ mod tests {
     }
 
     #[test]
-    fn focused_sensor_tests_and_openapi_never_claim_acceptance() {
+    fn sensor_tests_remain_required_and_isolation_and_openapi_have_focused_evidence() {
         assert!(
             Group::Architecture
                 .checks()
@@ -457,7 +584,7 @@ mod tests {
         assert!(
             Group::Acceptance
                 .checks()
-                .all(|check| check.id != "sensor-tests" && check.id != "openapi")
+                .all(|check| check.id != "app-isolation" && check.id != "openapi")
         );
     }
 
