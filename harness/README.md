@@ -11,6 +11,9 @@ the registry.
 For fast feedback while editing, use
 [`cargo xtask verify --stage edit --base origin/main`](../docs/development/verification.md#edit-stage).
 
+Before committing, run
+[`cargo xtask verify --stage commit --base origin/main`](../docs/development/verification.md#commit-stage).
+
 ## Registry
 
 The [executable catalogue](../harness/xtask/src/verification/catalogue.rs)
