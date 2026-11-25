@@ -176,6 +176,17 @@ pub(crate) static CHECKS: &[Check] = &[
         acceptance: true,
     },
     Check {
+        id: "executables",
+        group: Group::Architecture,
+        program: "cargo",
+        args: &["xtask", "executables", "--base", "@base"],
+        command: "cargo xtask executables --base origin/main",
+        outcome: "Exact registration of platform scripts, task targets, and inline CI commands",
+        prerequisites: &[Prerequisite::TrustedBase],
+        tools: &[Tool::Rust, Tool::Git],
+        acceptance: false,
+    },
+    Check {
         id: "migrations",
         group: Group::Architecture,
         program: "cargo",
@@ -382,7 +393,7 @@ mod tests {
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 15);
+        assert_eq!(CHECKS.len(), 16);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [

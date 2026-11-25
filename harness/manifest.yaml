@@ -2,6 +2,7 @@
   "schema_version": 1,
   "owner": "fleetiq-platform",
   "guides": [
+    {"id": "executable-registration", "documentation": "harness/README.md#executable-registration"},
     {"id": "repository-policy", "documentation": "docs/development/harness.md#repository-policy"},
     {"id": "crate-boundaries", "documentation": "docs/architecture/dependency-rules.md#enforced-policy"},
     {"id": "published-migrations", "documentation": "docs/development/sql-migrations.md#published-history-gate"},
@@ -13,6 +14,7 @@
   ],
   "sensors": [
     {"id": "repository", "paired_guide": "repository-policy", "remediation": "docs/development/harness.md#repository-policy", "blocking": true},
+    {"id": "executables", "paired_guide": "executable-registration", "remediation": "harness/README.md#executable-registration", "blocking": true},
     {"id": "architecture", "paired_guide": "crate-boundaries", "remediation": "docs/architecture/dependency-rules.md#changing-dependencies", "blocking": true},
     {"id": "migrations", "paired_guide": "published-migrations", "remediation": "docs/development/sql-migrations.md#published-history-gate", "blocking": true},
     {"id": "secrets", "paired_guide": "secret-protection", "remediation": "docs/development/harness-protection.md#secret-scanning", "blocking": true},

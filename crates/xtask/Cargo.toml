@@ -12,6 +12,8 @@ cargo_metadata.workspace = true
 percent-encoding.workspace = true
 pulldown-cmark.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
+yaml-rust2.workspace = true
 toml.workspace = true
 syn.workspace = true
 

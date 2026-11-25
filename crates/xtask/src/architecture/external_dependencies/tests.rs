@@ -6,7 +6,7 @@ use super::*;
 
 // An explicit reviewed baseline, independent of the metadata being mutated.
 // Archive owns bytes/parquet/SHA-256; history owns exact BigDecimal summaries.
-const REVIEWED_EXTERNAL_EDGES: usize = 61;
+const REVIEWED_EXTERNAL_EDGES: usize = 63;
 
 #[test]
 fn current_workspace_matches_exact_external_ownership() {

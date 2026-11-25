@@ -6,6 +6,7 @@ use crate::verification::Group;
 pub(super) enum Command {
     Architecture,
     Repository,
+    Executables { base: String },
     Migrations { base: String },
     Secrets { base: Option<String> },
     SecretFixtures,
@@ -22,6 +23,9 @@ pub(super) fn parse(arguments: impl IntoIterator<Item = String>) -> Result<Comma
         [] | ["help" | "--help" | "-h"] => Ok(Command::Help),
         ["architecture"] => Ok(Command::Architecture),
         ["repository"] => Ok(Command::Repository),
+        ["executables", "--base", base] if valid_base(base) => Ok(Command::Executables {
+            base: (*base).to_owned(),
+        }),
         ["migrations", "--base", base] if valid_base(base) => Ok(Command::Migrations {
             base: (*base).to_owned(),
         }),
@@ -106,6 +110,12 @@ mod tests {
         ] {
             assert_eq!(parse(arguments(&input)), Ok(expected));
         }
+    }
+
+    #[test]
+    fn executable_guard_requires_an_explicit_base() {
+        assert!(parse(arguments(&["executables", "--base", "origin/main"])).is_ok());
+        assert!(parse(arguments(&["executables"])).is_err());
     }
 
     #[test]

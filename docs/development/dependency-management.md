@@ -52,6 +52,14 @@ exception beside the affected manifest with a reason. Do not use `--fix` in CI.
 
 ## Policy and exceptions
 
+The platform executable-registration sensor uses `yaml-rust2` in xtask to
+parse GitHub's inline command definitions, including quoted keys and flow
+mappings. The dependency is version-locked with default encoding support
+disabled and licensed MIT OR Apache-2.0. xtask reuses the workspace's
+`sha2` dependency to identify inline commands without printing their bodies.
+Both dependencies belong to the repository tooling. A future replacement
+needs to preserve exact command identity and the workflow parser fixtures.
+
 `deny.toml` permits only the listed SPDX license choices and the crates.io
 registry. It rejects unknown Git and registry sources. The license check
 includes build and development dependencies because their code runs in build,
