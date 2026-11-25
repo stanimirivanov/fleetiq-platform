@@ -207,7 +207,7 @@ pub(crate) struct Check {
 }
 
 macro_rules! mutation_check {
-    ($group:ident, $target:ident, $command:literal, $outcome:literal $(,)?) => {
+    ($group:ident, $command:literal, $outcome:literal $(,)?) => {
         Check {
             id: Group::$group.name(),
             group: Group::$group,
@@ -221,7 +221,10 @@ macro_rules! mutation_check {
                 "--package",
                 "fleetiq-domain",
                 "--file",
-                Target::$target.file(),
+                Group::$group
+                    .mutation_target()
+                    .expect("mutation check group has a target")
+                    .file(),
                 "--cargo-arg=--locked",
                 "--all-features",
                 "--baseline",
@@ -453,13 +456,11 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     mutation_check!(
         Mutation,
-        Relationship,
         "timeout --kill-after=5s 12m cargo mutants --no-config --package fleetiq-domain --file crates/domain/src/relationship.rs --cargo-arg=--locked --all-features --baseline run --build-timeout 120 --timeout 30 --jobs 2",
         "Advisory relationship and effective interval mutation results with a passing crate baseline",
     ),
     mutation_check!(
         MutationIdentifier,
-        Identifier,
         "timeout --kill-after=5s 12m cargo mutants --no-config --package fleetiq-domain --file crates/domain/src/identifier.rs --cargo-arg=--locked --all-features --baseline run --build-timeout 120 --timeout 30 --jobs 2",
         "Advisory identifier validation mutation results with a passing crate baseline",
     ),
