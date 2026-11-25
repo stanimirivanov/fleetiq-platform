@@ -10,6 +10,9 @@ pub(crate) enum Group {
     Architecture,
     SupplyChain,
     Rust,
+    RustStatic,
+    RustTests,
+    RustIsolation,
     Openapi,
     Acceptance,
 }
@@ -20,6 +23,9 @@ impl Group {
             "architecture" => Some(Self::Architecture),
             "supply-chain" => Some(Self::SupplyChain),
             "rust" => Some(Self::Rust),
+            "rust-static" => Some(Self::RustStatic),
+            "rust-tests" => Some(Self::RustTests),
+            "rust-isolation" => Some(Self::RustIsolation),
             "openapi" => Some(Self::Openapi),
             "acceptance" => Some(Self::Acceptance),
             _ => None,
@@ -31,6 +37,9 @@ impl Group {
             Self::Architecture => "architecture",
             Self::SupplyChain => "supply-chain",
             Self::Rust => "rust",
+            Self::RustStatic => "rust-static",
+            Self::RustTests => "rust-tests",
+            Self::RustIsolation => "rust-isolation",
             Self::Openapi => "openapi",
             Self::Acceptance => "acceptance",
         }
@@ -38,12 +47,13 @@ impl Group {
 
     /// Keeps acceptance in canonical order, including every required check.
     pub(crate) fn checks(self) -> impl Iterator<Item = &'static Check> {
-        CHECKS.iter().filter(move |check| {
-            if self == Self::Acceptance {
-                check.acceptance
-            } else {
-                check.group == self
-            }
+        CHECKS.iter().filter(move |check| match self {
+            Self::Acceptance => check.acceptance,
+            Self::Rust => matches!(
+                check.group,
+                Self::RustStatic | Self::RustTests | Self::RustIsolation
+            ),
+            _ => check.group == self,
         })
     }
 }
@@ -243,7 +253,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "app-isolation",
-        group: Group::Rust,
+        group: Group::RustIsolation,
         program: "cargo",
         args: &["xtask", "app-isolation"],
         command: "cargo xtask app-isolation",
@@ -258,7 +268,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "fmt",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &["fmt", "--all", "--check"],
         command: "cargo fmt --all --check",
@@ -269,7 +279,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "sqlx",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &[
             "sqlx",
@@ -288,7 +298,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "clippy",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &[
             "clippy",
@@ -307,7 +317,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "tests",
-        group: Group::Rust,
+        group: Group::RustTests,
         program: "cargo",
         args: &[
             "nextest",
@@ -330,7 +340,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "doctests",
-        group: Group::Rust,
+        group: Group::RustTests,
         program: "cargo",
         args: &["test", "--workspace", "--all-features", "--locked", "--doc"],
         command: "cargo test --workspace --all-features --locked --doc",
@@ -341,7 +351,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "docs",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &["doc", "--workspace", "--no-deps", "--locked"],
         command: "cargo doc --workspace --no-deps --locked",
@@ -381,7 +391,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "harness-fmt",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &[
             "fmt",
@@ -398,7 +408,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "harness-clippy",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &[
             "clippy",
@@ -420,7 +430,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "harness-docs",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &[
             "doc",
@@ -507,6 +517,9 @@ mod tests {
             Group::Architecture,
             Group::SupplyChain,
             Group::Rust,
+            Group::RustStatic,
+            Group::RustTests,
+            Group::RustIsolation,
             Group::Openapi,
         ] {
             assert!(group.checks().next().is_some());
@@ -599,4 +612,22 @@ mod tests {
         assert_eq!(Tool::Node.expected(), "24");
         assert_eq!(Tool::Git.expected(), "installed");
     }
+}
+
+#[cfg(test)]
+#[test]
+fn rust_shards_partition_the_local_rust_group() {
+    let local: std::collections::BTreeSet<_> = Group::Rust.checks().map(|check| check.id).collect();
+    let mut hosted = std::collections::BTreeSet::new();
+    for group in [Group::RustStatic, Group::RustTests, Group::RustIsolation] {
+        assert_eq!(Group::parse(group.name()), Some(group));
+        for check in group.checks() {
+            assert!(
+                hosted.insert(check.id),
+                "{} appears in multiple shards",
+                check.id
+            );
+        }
+    }
+    assert_eq!(hosted, local);
 }

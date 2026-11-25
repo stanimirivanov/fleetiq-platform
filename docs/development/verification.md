@@ -259,15 +259,21 @@ or rolling a Dependabot proposal back. Ordinary checks never repair policy.
 | Architecture policy | Rust and Git run CI, repository, and architecture policy checks before Node 24 installs checksum-verified Gitleaks |
 | OpenAPI contract | Rust, Git, pinned pnpm, Node 24, and locked local Redocly installation |
 | Supply-chain policy | Rust and the inventoried cargo-deny/cargo-machete versions; no Node or npm setup |
-| Rust quality gate | Repository-selected Rust, exact Nextest, SQLx CLI, Rust dependency caching, and migrated PostgreSQL; DATABASE_URL is scoped to this job |
+| Rust static checks | `cargo xtask verify --group rust-static` runs format, SQLx metadata, Clippy and rustdoc across their existing scopes |
+| Rust application tests | `cargo xtask verify --group rust-tests` runs full Nextest and application doctests and retains the existing measurement artifacts |
+| Rust application isolation | `cargo xtask verify --group rust-isolation` proves the locked build and full suite with the harness removed |
+| Rust quality gate | Reports success only when all three Rust jobs succeed. A failed, canceled, or skipped Rust job cannot provide a passing status |
 | Local Compose smoke test | Docker Compose and the separately declared image build tools |
 
 Rust checks must not read Node action outputs, resolve tools through npm/npx,
 or require a package-manager cache hit. JavaScript action implementations use
 their own declared runtime; that does not install Node tooling for Rust commands.
-Each job owns its setup and runs without a `needs` edge to architecture.
-The Rust job applies migrations with its pinned SQLx CLI, the same tool used in
-local setup, rather than an ambient PostgreSQL client from the runner image.
+Each verification job owns its setup and runs without a `needs` edge to architecture.
+The three Rust jobs run on separate runners with independent PostgreSQL services.
+They share the same pinned SQLx CLI setup and apply migrations before verification.
+The isolation job starts without a compiled artifact cache. The existing
+`cargo xtask verify --group rust` command still runs all three scopes locally.
+The `Rust quality gate` status retains its name for branch protection.
 Jobs select the Ubuntu 26.04 image family explicitly;
 GitHub still updates each hosted image within its family.
 Every applicable job remains a required review gate; dependency qualification

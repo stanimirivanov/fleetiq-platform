@@ -72,7 +72,9 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
     for group in [
         Group::Architecture,
         Group::SupplyChain,
-        Group::Rust,
+        Group::RustStatic,
+        Group::RustTests,
+        Group::RustIsolation,
         Group::Openapi,
     ] {
         let token = format!("@verify:{}@", group.name());

@@ -136,14 +136,14 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  rust:
-    name: Rust quality gate
+  rust-static:
+    name: Rust static checks
     runs-on: ubuntu-26.04
     timeout-minutes: 25
-    env:
+    env: &rust-env
       DATABASE_URL: postgres://fleetiq:fleetiq-ci@localhost:5432/fleetiq
 
-    services:
+    services: &rust-services
       postgres:
         image: postgres:18.6-alpine3.23
         env:
@@ -159,21 +159,24 @@ jobs:
           --health-retries 15
 
     steps:
-      - name: Check out source
+      - &rust-checkout
+        name: Check out source
         uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - name: Show toolchain
+      - &rust-toolchain
+        name: Show toolchain
         run: |
           rustc --version
           cargo --version
 
-      - name: Restore reviewed Rust dependency cache
+      - &rust-cache
+        name: Restore reviewed Rust dependency cache
         uses: Swatinem/rust-cache@v2
         with:
           prefix-key: fleetiq-rust-v1
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock', '.config/nextest.toml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ github.job }}-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock', '.config/nextest.toml') }}
           env-vars: RUSTFLAGS RUSTDOCFLAGS CARGO_BUILD_TARGET
           cache-targets: false
           cache-directories: |
@@ -185,24 +188,54 @@ jobs:
           cache-on-failure: false
           save-if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
-      - name: Install pinned Nextest
+      - &rust-sqlx
+        name: Install pinned SQLx CLI
+        run: >-
+          cargo install sqlx-cli --version 0.9.0 --locked --debug
+          --no-default-features --features rustls,postgres
+
+      - &rust-migrate
+        name: Apply metadata schema for checked queries
+        run: sqlx migrate run --source migrations
+
+      - name: Run authoritative Rust verification
+        id: verify
+        run: cargo xtask verify --group rust-static
+
+      - name: Publish Rust verification evidence
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: harness-rust-static
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  rust-tests:
+    name: Rust application tests
+    runs-on: ubuntu-26.04
+    timeout-minutes: 25
+    env: *rust-env
+    services: *rust-services
+
+    steps:
+      - *rust-checkout
+      - *rust-toolchain
+      - *rust-cache
+      - &rust-nextest
+        name: Install pinned Nextest
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest@0.9.145
           checksum: true
           fallback: none
 
-      - name: Install pinned SQLx CLI
-        run: >-
-          cargo install sqlx-cli --version 0.9.0 --locked --debug
-          --no-default-features --features rustls,postgres
-
-      - name: Apply metadata schema for checked queries
-        run: sqlx migrate run --source migrations
+      - *rust-sqlx
+      - *rust-migrate
 
       - name: Run authoritative Rust verification
         id: verify
-        run: cargo xtask verify --group rust
+        run: cargo xtask verify --group rust-tests
 
       - name: Publish Rust verification evidence
         if: always() && steps.verify.outcome != 'skipped'
@@ -215,6 +248,47 @@ jobs:
             target/alert-selection-measurements/*.json
           if-no-files-found: error
           retention-days: 14
+
+  rust-isolation:
+    name: Rust application isolation
+    runs-on: ubuntu-26.04
+    timeout-minutes: 25
+    env: *rust-env
+    services: *rust-services
+
+    steps:
+      - *rust-checkout
+      - *rust-toolchain
+      - *rust-nextest
+      - *rust-sqlx
+      - *rust-migrate
+
+      - name: Run authoritative Rust verification
+        id: verify
+        run: cargo xtask verify --group rust-isolation
+
+      - name: Publish Rust verification evidence
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: harness-rust-isolation
+          path: target/verification/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  rust:
+    name: Rust quality gate
+    needs: [rust-static, rust-tests, rust-isolation]
+    if: ${{ always() }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 2
+    steps:
+      - name: Require all Rust jobs to succeed
+        if: >-
+          needs.rust-static.result != 'success' ||
+          needs.rust-tests.result != 'success' ||
+          needs.rust-isolation.result != 'success'
+        run: exit 1
 
   local-compose:
     name: Local Compose smoke test
