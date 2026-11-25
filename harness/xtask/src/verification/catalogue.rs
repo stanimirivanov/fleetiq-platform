@@ -10,6 +10,9 @@ pub(crate) enum Group {
     Architecture,
     SupplyChain,
     Rust,
+    RustStatic,
+    RustTests,
+    RustIsolation,
     Openapi,
     Acceptance,
 }
@@ -20,6 +23,9 @@ impl Group {
             "architecture" => Some(Self::Architecture),
             "supply-chain" => Some(Self::SupplyChain),
             "rust" => Some(Self::Rust),
+            "rust-static" => Some(Self::RustStatic),
+            "rust-tests" => Some(Self::RustTests),
+            "rust-isolation" => Some(Self::RustIsolation),
             "openapi" => Some(Self::Openapi),
             "acceptance" => Some(Self::Acceptance),
             _ => None,
@@ -31,6 +37,9 @@ impl Group {
             Self::Architecture => "architecture",
             Self::SupplyChain => "supply-chain",
             Self::Rust => "rust",
+            Self::RustStatic => "rust-static",
+            Self::RustTests => "rust-tests",
+            Self::RustIsolation => "rust-isolation",
             Self::Openapi => "openapi",
             Self::Acceptance => "acceptance",
         }
@@ -38,12 +47,13 @@ impl Group {
 
     /// Keeps acceptance in canonical order, including every required check.
     pub(crate) fn checks(self) -> impl Iterator<Item = &'static Check> {
-        CHECKS.iter().filter(move |check| {
-            if self == Self::Acceptance {
-                check.acceptance
-            } else {
-                check.group == self
-            }
+        CHECKS.iter().filter(move |check| match self {
+            Self::Acceptance => check.acceptance,
+            Self::Rust => matches!(
+                check.group,
+                Self::RustStatic | Self::RustTests | Self::RustIsolation
+            ),
+            _ => check.group == self,
         })
     }
 }
@@ -147,7 +157,7 @@ pub(crate) struct Check {
     pub(crate) acceptance: bool,
 }
 
-/// The thirteen acceptance checks plus focused sensor tests and `OpenAPI` checks.
+/// Application and harness acceptance checks, plus focused verification.
 ///
 /// `@base` is an argument placeholder, never accepted as a revision itself.
 /// Supplemental checks remain explicit so focused success cannot imply that
@@ -242,8 +252,23 @@ pub(crate) static CHECKS: &[Check] = &[
         acceptance: true,
     },
     Check {
+        id: "app-isolation",
+        group: Group::RustIsolation,
+        program: "cargo",
+        args: &["xtask", "app-isolation"],
+        command: "cargo xtask app-isolation",
+        outcome: "Locked application build, complete suite and doctests with harness removed",
+        prerequisites: &[
+            Prerequisite::Database,
+            Prerequisite::NextestConfiguration,
+            Prerequisite::ObjectStoreFixture,
+        ],
+        tools: &[Tool::Rust, Tool::Git, Tool::Nextest],
+        acceptance: false,
+    },
+    Check {
         id: "fmt",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &["fmt", "--all", "--check"],
         command: "cargo fmt --all --check",
@@ -254,7 +279,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "sqlx",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &[
             "sqlx",
@@ -273,7 +298,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "clippy",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &[
             "clippy",
@@ -292,7 +317,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "tests",
-        group: Group::Rust,
+        group: Group::RustTests,
         program: "cargo",
         args: &[
             "nextest",
@@ -315,7 +340,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "doctests",
-        group: Group::Rust,
+        group: Group::RustTests,
         program: "cargo",
         args: &["test", "--workspace", "--all-features", "--locked", "--doc"],
         command: "cargo test --workspace --all-features --locked --doc",
@@ -326,7 +351,7 @@ pub(crate) static CHECKS: &[Check] = &[
     },
     Check {
         id: "docs",
-        group: Group::Rust,
+        group: Group::RustStatic,
         program: "cargo",
         args: &["doc", "--workspace", "--no-deps", "--locked"],
         command: "cargo doc --workspace --no-deps --locked",
@@ -336,15 +361,101 @@ pub(crate) static CHECKS: &[Check] = &[
         acceptance: true,
     },
     Check {
+        id: "harness-deny",
+        group: Group::SupplyChain,
+        program: "cargo",
+        args: &[
+            "deny",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--config",
+            "deny.toml",
+            "check",
+        ],
+        command: "cargo deny --manifest-path harness/Cargo.toml --config deny.toml check",
+        outcome: "Check the independently locked harness for advisories, sources, and licenses",
+        prerequisites: &[],
+        tools: &[Tool::Rust, Tool::Deny],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-machete",
+        group: Group::SupplyChain,
+        program: "cargo",
+        args: &["machete", "--with-metadata", "--skip-target-dir", "harness"],
+        command: "cargo machete --with-metadata --skip-target-dir harness",
+        outcome: "Check direct harness dependencies for unused declarations",
+        prerequisites: &[],
+        tools: &[Tool::Rust, Tool::Machete],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-fmt",
+        group: Group::RustStatic,
+        program: "cargo",
+        args: &[
+            "fmt",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--all",
+            "--check",
+        ],
+        command: "cargo fmt --manifest-path harness/Cargo.toml --all --check",
+        outcome: "Check harness Rust formatting",
+        prerequisites: &[],
+        tools: &[Tool::Rust],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-clippy",
+        group: Group::RustStatic,
+        program: "cargo",
+        args: &[
+            "clippy",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--workspace",
+            "--all-targets",
+            "--all-features",
+            "--locked",
+            "--",
+            "-D",
+            "warnings",
+        ],
+        command: "cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings",
+        outcome: "Check every harness target with denied warnings",
+        prerequisites: &[],
+        tools: &[Tool::Rust],
+        acceptance: true,
+    },
+    Check {
+        id: "harness-docs",
+        group: Group::RustStatic,
+        program: "cargo",
+        args: &[
+            "doc",
+            "--manifest-path",
+            "harness/Cargo.toml",
+            "--workspace",
+            "--no-deps",
+            "--locked",
+        ],
+        command: "cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked",
+        outcome: "Generate harness rustdoc",
+        prerequisites: &[],
+        tools: &[Tool::Rust],
+        acceptance: true,
+    },
+    Check {
         id: "sensor-tests",
         group: Group::Architecture,
         program: "cargo",
-        args: &["test", "-p", "fleetiq-xtask", "--locked"],
-        command: "cargo test -p fleetiq-xtask --locked",
+        args: &["test", "--manifest-path", "harness/Cargo.toml", "--locked"],
+        command: "cargo test --manifest-path harness/Cargo.toml --locked",
         outcome: "Repository sensor positive, negative, and bypass fixtures",
         prerequisites: &[],
         tools: &[Tool::Rust, Tool::Git],
-        acceptance: false,
+        acceptance: true,
     },
     Check {
         id: "openapi",
@@ -387,19 +498,28 @@ mod tests {
                 "cargo nextest run --workspace --all-features --locked --profile ci",
                 "cargo test --workspace --all-features --locked --doc",
                 "cargo doc --workspace --no-deps --locked",
+                "cargo deny --manifest-path harness/Cargo.toml --config deny.toml check",
+                "cargo machete --with-metadata --skip-target-dir harness",
+                "cargo fmt --manifest-path harness/Cargo.toml --all --check",
+                "cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings",
+                "cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked",
+                "cargo test --manifest-path harness/Cargo.toml --locked",
             ]
         );
     }
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 16);
+        assert_eq!(CHECKS.len(), 22);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [
             Group::Architecture,
             Group::SupplyChain,
             Group::Rust,
+            Group::RustStatic,
+            Group::RustTests,
+            Group::RustIsolation,
             Group::Openapi,
         ] {
             assert!(group.checks().next().is_some());
@@ -441,7 +561,7 @@ mod tests {
     }
 
     #[test]
-    fn focused_sensor_tests_and_openapi_never_claim_acceptance() {
+    fn sensor_tests_remain_required_and_isolation_and_openapi_have_focused_evidence() {
         assert!(
             Group::Architecture
                 .checks()
@@ -457,7 +577,7 @@ mod tests {
         assert!(
             Group::Acceptance
                 .checks()
-                .all(|check| check.id != "sensor-tests" && check.id != "openapi")
+                .all(|check| check.id != "app-isolation" && check.id != "openapi")
         );
     }
 
@@ -492,4 +612,22 @@ mod tests {
         assert_eq!(Tool::Node.expected(), "24");
         assert_eq!(Tool::Git.expected(), "installed");
     }
+}
+
+#[cfg(test)]
+#[test]
+fn rust_shards_partition_the_local_rust_group() {
+    let local: std::collections::BTreeSet<_> = Group::Rust.checks().map(|check| check.id).collect();
+    let mut hosted = std::collections::BTreeSet::new();
+    for group in [Group::RustStatic, Group::RustTests, Group::RustIsolation] {
+        assert_eq!(Group::parse(group.name()), Some(group));
+        for check in group.checks() {
+            assert!(
+                hosted.insert(check.id),
+                "{} appears in multiple shards",
+                check.id
+            );
+        }
+    }
+    assert_eq!(hosted, local);
 }

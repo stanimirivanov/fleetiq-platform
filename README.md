@@ -100,7 +100,7 @@ The checked-in database password is for disposable local development only.
 | [`crates/live`](crates/live) | Revisioned live projection contracts |
 | [`crates/postgres`](crates/postgres) | SQLx persistence adapters and private row mappings |
 | [`crates/server`](crates/server) | Backend composition root, health surface, and protected metadata queries |
-| [`crates/xtask`](crates/xtask) | Repository-owned policy checks and development tasks |
+| [`harness/xtask`](harness/xtask) | Repository-owned policy checks and development tasks |
 | [`migrations`](migrations) | Authoritative PostgreSQL schema history |
 | [`deploy/local`](deploy/local) | Disposable local infrastructure |
 | [`Dockerfile`](Dockerfile) | Multi-stage backend container image |

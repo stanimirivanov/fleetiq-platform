@@ -27,6 +27,12 @@ Run the applicable acceptance gate and additional contract/image checks in CONTR
 | `cargo nextest run --workspace --all-features --locked --profile ci` | | |
 | `cargo test --workspace --all-features --locked --doc` | | |
 | `cargo doc --workspace --no-deps --locked` | | |
+| `cargo deny --manifest-path harness/Cargo.toml --config deny.toml check` | | |
+| `cargo machete --with-metadata --skip-target-dir harness` | | |
+| `cargo fmt --manifest-path harness/Cargo.toml --all --check` | | |
+| `cargo clippy --manifest-path harness/Cargo.toml --workspace --all-targets --all-features --locked -- -D warnings` | | |
+| `cargo doc --manifest-path harness/Cargo.toml --workspace --no-deps --locked` | | |
+| `cargo test --manifest-path harness/Cargo.toml --locked` | | |
 
 Checks not run, blocking conditions, and residual risk:
 

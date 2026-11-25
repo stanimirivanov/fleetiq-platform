@@ -1,4 +1,5 @@
 /target/
+/harness/target/
 /node_modules/
 *.profraw
 .env

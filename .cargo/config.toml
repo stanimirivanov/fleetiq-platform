@@ -1,2 +1,2 @@
 [alias]
-xtask = "run --locked --package fleetiq-xtask --"
+xtask = "run --locked --manifest-path harness/Cargo.toml --"

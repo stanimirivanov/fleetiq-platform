@@ -5,7 +5,6 @@
 /.agents/ @stanimirivanov
 /.cargo/ @stanimirivanov
 /.config/ @stanimirivanov
-/crates/xtask/ @stanimirivanov
 /harness/ @stanimirivanov
 /scripts/ @stanimirivanov
 /Cargo.toml @stanimirivanov

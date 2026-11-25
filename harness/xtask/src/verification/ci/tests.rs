@@ -82,7 +82,10 @@ fn generated_document_and_crlf_are_accepted() {
 #[test]
 fn changed_runner_command_is_rejected() {
     let expected = generated();
-    let changed = expected.replace("cargo xtask verify --group rust", "cargo fmt --all --check");
+    let changed = expected.replace(
+        "cargo xtask verify --group rust-tests",
+        "cargo fmt --all --check",
+    );
     assert_ne!(changed, expected);
     assert!(check_document(&changed, &expected).is_err());
 }
@@ -91,8 +94,8 @@ fn changed_runner_command_is_rejected() {
 fn commented_runner_command_is_rejected() {
     let expected = generated();
     let changed = expected.replace(
-        "        run: cargo xtask verify --group rust",
-        "        # run: cargo xtask verify --group rust",
+        "        run: cargo xtask verify --group rust-tests",
+        "        # run: cargo xtask verify --group rust-tests",
     );
     assert_ne!(changed, expected);
     assert!(check_document(&changed, &expected).is_err());
@@ -115,7 +118,7 @@ fn conditional_or_tolerated_failures_are_rejected() {
 fn missing_group_and_modified_database_service_are_rejected() {
     let expected = generated();
     for changed in [
-        expected.replace("        run: cargo xtask verify --group rust\n", ""),
+        expected.replace("        run: cargo xtask verify --group rust-tests\n", ""),
         expected.replace("image: postgres:18.6-alpine3.23", "image: postgres:17"),
     ] {
         assert_ne!(changed, expected);
@@ -145,8 +148,10 @@ fn verification_jobs_are_independent_and_migrations_use_the_pinned_cli() {
     let jobs = [
         ("architecture", "openapi"),
         ("openapi", "supply-chain"),
-        ("supply-chain", "rust"),
-        ("rust", "local-compose"),
+        ("supply-chain", "rust-static"),
+        ("rust-static", "rust-tests"),
+        ("rust-tests", "rust-isolation"),
+        ("rust-isolation", "rust"),
     ];
     for (job, next) in jobs {
         let section = expected
@@ -170,7 +175,7 @@ fn verification_jobs_are_independent_and_migrations_use_the_pinned_cli() {
             .any(|line| line.trim().starts_with("needs:"))
     );
     let rust = expected
-        .split_once("\n  rust:\n")
+        .split_once("\n  rust-static:\n")
         .unwrap()
         .1
         .split_once("\n  local-compose:\n")
@@ -184,8 +189,8 @@ fn verification_jobs_are_independent_and_migrations_use_the_pinned_cli() {
 fn missing_repeated_and_unknown_placeholders_are_rejected() {
     let original = template();
     for changed in [
-        original.replace("@verify:rust@", "cargo fmt --all --check"),
-        format!("{original}\n@verify:rust@\n"),
+        original.replace("@verify:rust-tests@", "cargo fmt --all --check"),
+        format!("{original}\n@verify:rust-tests@\n"),
         format!("{original}\n@tool:unknown@\n"),
     ] {
         assert!(render(&changed, &workflow()).is_err());
@@ -402,7 +407,7 @@ fn dependency_update_cannot_hide_changed_permissions_commands_or_setup() {
             "package-manager-cache: true",
         ),
         candidate.replace("node-version: '24'", "node-version: '25'"),
-        candidate.replace("cargo xtask verify --group rust", "cargo --version"),
+        candidate.replace("cargo xtask verify --group rust-tests", "cargo --version"),
         candidate.replace(
             "      - name: Run authoritative Rust verification",
             "      - name: Run authoritative Rust verification\n        continue-on-error: true",
@@ -495,10 +500,12 @@ fn action_slots_and_crlf_workflow_use_the_same_policy() {
 fn rust_and_supply_chain_tools_do_not_require_node_and_database_env_is_local() {
     use crate::verification::catalogue::{CHECKS, Group, Tool};
 
-    for check in CHECKS
-        .iter()
-        .filter(|check| matches!(check.group, Group::Rust | Group::SupplyChain))
-    {
+    for check in CHECKS.iter().filter(|check| {
+        matches!(
+            check.group,
+            Group::RustStatic | Group::RustTests | Group::RustIsolation | Group::SupplyChain
+        )
+    }) {
         assert!(!check.tools.contains(&Tool::Node));
         assert!(!check.tools.contains(&Tool::Pnpm));
     }
@@ -511,7 +518,7 @@ fn rust_and_supply_chain_tools_do_not_require_node_and_database_env_is_local() {
             .unwrap()
             .contains("DATABASE_URL")
     );
-    for job in ["rust", "supply-chain"] {
+    for job in ["rust-static", "supply-chain"] {
         let marker = format!("  {job}:\n");
         let section = workflow.split(&marker).nth(1).unwrap();
         let body = section.split("\n  local-compose:").next().unwrap();
@@ -580,7 +587,7 @@ fn caching_and_nextest_cannot_bypass_checks_or_change_reviewed_setup() {
         original.replace("github.event_name == 'push' && github.ref == 'refs/heads/main'","true"),
         original.replace("'Cargo.lock', '.config/nextest.toml'","'Cargo.toml'"),
         original.replace("env-vars: RUSTFLAGS RUSTDOCFLAGS CARGO_BUILD_TARGET","env-vars: IGNORED"),
-        original.replace("        id: verify\n        run: cargo xtask verify --group rust","        id: verify\n        if: steps.rust-cache.outputs.cache-hit != 'true'\n        run: cargo xtask verify --group rust"),
+        original.replace("        id: verify\n        run: cargo xtask verify --group rust-tests","        id: verify\n        if: steps.rust-cache.outputs.cache-hit != 'true'\n        run: cargo xtask verify --group rust-tests"),
     ] {
         assert_ne!(changed,original);
         fs::write(fixture.0.join(super::WORKFLOW),changed).unwrap();
@@ -623,4 +630,53 @@ fn rust_evidence_retains_alert_selection_measurements() {
     )
     .unwrap();
     assert!(check(&fixture.0).is_err());
+}
+
+#[test]
+fn rust_rollup_waits_for_each_shard_and_rejects_non_success() {
+    let candidate = generated();
+    let yaml = yaml_rust2::YamlLoader::load_from_str(&candidate).unwrap();
+    let jobs = &yaml[0]["jobs"];
+    let shards = ["rust-static", "rust-tests", "rust-isolation"];
+    let rollup = &jobs["rust"];
+    let dependencies: Vec<_> = rollup["needs"]
+        .as_vec()
+        .unwrap()
+        .iter()
+        .map(|name| name.as_str().unwrap())
+        .collect();
+    assert_eq!(dependencies, shards);
+    assert_eq!(rollup["name"].as_str(), Some("Rust quality gate"));
+    assert_eq!(rollup["if"].as_str(), Some("${{ always() }}"));
+    let reject = &rollup["steps"][0];
+    assert_eq!(reject["run"].as_str(), Some("exit 1"));
+    for shard in shards {
+        let job = &jobs[shard];
+        assert!(job["needs"].is_badvalue());
+        assert_eq!(
+            job["services"]["postgres"]["image"].as_str(),
+            Some("postgres:18.6-alpine3.23")
+        );
+        let steps = job["steps"].as_vec().unwrap();
+        let verification = format!("cargo xtask verify --group {shard}");
+        assert!(
+            steps
+                .iter()
+                .any(|step| step["run"].as_str() == Some(verification.as_str()))
+        );
+        assert!(
+            steps
+                .iter()
+                .any(|step| step["run"].as_str() == Some("sqlx migrate run --source migrations"))
+        );
+        assert!(
+            reject["if"]
+                .as_str()
+                .unwrap()
+                .contains(&format!("needs.{shard}.result != 'success'"))
+        );
+        let altered = candidate.replace(&format!("needs.{shard}.result != 'success'"), "false");
+        assert_ne!(altered, candidate);
+        assert!(check_document(&altered, &candidate).is_err());
+    }
 }

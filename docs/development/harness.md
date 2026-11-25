@@ -73,7 +73,7 @@ entry points.
 ## Scoped guidance
 
 Two directory agreements serve demonstrated recurring tasks:
-[repository sensor work](../../crates/xtask/AGENTS.md), exercised in PRs #263,
+[repository sensor work](../../harness/xtask/AGENTS.md), exercised in PRs #263,
 #265, and #267, and [modular HTTP contract work](../../contracts/http/AGENTS.md).
 They route to existing canonical guidance instead of copying the full working
 agreement into every crate. Root policy still applies. Add another scope only
@@ -95,7 +95,7 @@ cannot grant tools or certify its own correctness.
 
 Contributors may run a focused test while editing, but must run every
 applicable acceptance check before handoff. The following table explains sensor
-purpose; the [executable catalogue](../../crates/xtask/src/verification/catalogue.rs)
+purpose; the [executable catalogue](../../harness/xtask/src/verification/catalogue.rs)
 is authoritative for command arguments, grouping, versions, and prerequisites.
 The [verification guide](verification.md) defines runner scope and honest
 metadata-only evidence.
@@ -107,7 +107,7 @@ metadata-only evidence.
 | `cargo xtask migrations --base origin/main` | Published SQL blobs match the working tree and index; additions have unique forward versions | T1; explicit trusted ancestor base and Git history, no database |
 | `cargo xtask secrets --base origin/main` | Reviewable files, staged content, and incoming commits satisfy current and available published detector policies | T1; Git history and pinned Gitleaks, no database |
 | `cargo xtask secrets --fixtures` | Real pinned detector rejects tested suppression bypasses and detects staged and removed incoming secrets | T1; Git and pinned Gitleaks, runs in early CI |
-| `cargo test -p fleetiq-xtask --locked` | Repository sensors reject tested bypasses and malformed inputs as well as accepting valid policy | T1 when changing sensors; Linux architecture job; no database |
+| `cargo test --manifest-path harness/Cargo.toml --locked` | Repository sensors reject tested bypasses and malformed inputs as well as accepting valid policy | T1 when changing sensors; Linux architecture job; no database |
 | `pnpm check:openapi` | Parsed modular OpenAPI policy, positive and bypass fixtures, and committed bundle freshness | T1 for HTTP contract changes; locked tools; Linux OpenAPI job, no database |
 | `cargo deny check` | Locked dependencies satisfy RustSec advisory, license, source, and ban policy | T2; pinned CLI and network access to the advisory database |
 | `cargo machete --with-metadata --skip-target-dir` | No unused direct dependency remains in a workspace manifest | T2; pinned CLI and Cargo metadata; reported findings require review |
