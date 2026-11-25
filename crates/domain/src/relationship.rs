@@ -290,6 +290,13 @@ mod tests {
     }
 
     #[test]
+    fn unix_time_millis_round_trips_across_the_epoch() {
+        for milliseconds in [-1, 0, 1] {
+            assert_eq!(UnixTimeMillis::new(milliseconds).get(), milliseconds);
+        }
+    }
+
+    #[test]
     fn revisions_start_at_one() {
         assert_eq!(RecordRevision::new(0), Err(RecordRevisionError::Zero));
         assert_eq!(
@@ -315,6 +322,7 @@ mod tests {
         let interval = EffectiveInterval::new(instant(10), Some(instant(20)))
             .expect("valid effective interval");
 
+        assert_eq!(interval.end(), Some(instant(20)));
         assert!(!interval.contains(instant(9)));
         assert!(interval.contains(instant(10)));
         assert!(interval.contains(instant(19)));
@@ -341,6 +349,7 @@ mod tests {
             .expect("valid effective interval");
 
         assert!(!first.overlaps(second));
+        assert!(!second.overlaps(first));
         assert!(first.overlaps(overlapping));
     }
 
