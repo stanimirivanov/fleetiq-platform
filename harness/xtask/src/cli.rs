@@ -39,10 +39,13 @@ pub(super) fn parse(arguments: impl IntoIterator<Item = String>) -> Result<Comma
         ["verify", "--list"] => Ok(Command::VerifyList),
         ["verify", "--check-ci"] => Ok(Command::VerifyCi { write: false }),
         ["verify", "--write-ci"] => Ok(Command::VerifyCi { write: true }),
-        ["verify", "--stage", "edit", "--base", base] if valid_base(base) => Ok(Command::Verify {
-            group: Group::Edit,
-            base: Some((*base).to_owned()),
-        }),
+        ["verify", "--stage", stage, "--base", base] if valid_base(base) => {
+            let group = Group::parse_stage(stage).ok_or(())?;
+            Ok(Command::Verify {
+                group,
+                base: Some((*base).to_owned()),
+            })
+        }
         ["verify", "--group", group] => Group::parse(group)
             .map(|group| Command::Verify { group, base: None })
             .ok_or(()),
@@ -137,8 +140,32 @@ mod tests {
             vec!["verify", "--stage", "edit"],
             vec!["verify", "--stage", "edit", "--base", "--all"],
             vec!["verify", "--stage", "edit", "--base", ""],
-            vec!["verify", "--stage", "commit", "--base", "origin/main"],
+            vec!["verify", "--stage", "pr", "--base", "origin/main"],
             vec!["verify", "--group", "edit"],
+        ] {
+            assert_eq!(parse(arguments(&input)), Err(()));
+        }
+    }
+
+    #[test]
+    fn commit_stage_requires_an_explicit_trusted_base() {
+        assert_eq!(
+            parse(arguments(&[
+                "verify",
+                "--stage",
+                "commit",
+                "--base",
+                "origin/main"
+            ])),
+            Ok(Command::Verify {
+                group: Group::Commit,
+                base: Some("origin/main".to_owned())
+            })
+        );
+        for input in [
+            vec!["verify", "--stage", "commit"],
+            vec!["verify", "--stage", "commit", "--base", "--all"],
+            vec!["verify", "--group", "commit"],
         ] {
             assert_eq!(parse(arguments(&input)), Err(()));
         }

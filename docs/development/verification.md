@@ -87,6 +87,21 @@ and executable policy in Architecture, alongside Rust formatting in the
 independent Rust static job. CI keeps those parallel jobs and executes each
 gate through its existing entrypoint.
 
+## Commit stage
+
+From the repository root, run `cargo xtask verify --stage commit --base origin/main`
+against a freshly fetched trusted base before committing. This selection adds
+architecture policy, migration immutability, secret scanning, and the harness
+test suite to the [edit stage](#edit-stage). It writes a `commit-*.json` receipt
+under `target/verification/`. The secret scanner needs the
+[pinned Gitleaks installation](#prepare-prerequisites). The stage uses the
+existing sensors' scopes, including staged files and incoming history where
+applicable.
+
+The commit stage is opt-in. CI continues to run Architecture with its real
+scanner fixtures and runs the application and isolation suites in its existing
+parallel jobs.
+
 ## Select an explicit group
 
 List all check metadata with `cargo xtask verify --list`. The output is JSON for

@@ -8,6 +8,7 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Group {
     Edit,
+    Commit,
     Architecture,
     SupplyChain,
     Rust,
@@ -33,9 +34,18 @@ impl Group {
         }
     }
 
+    pub(crate) fn parse_stage(value: &str) -> Option<Self> {
+        match value {
+            "edit" => Some(Self::Edit),
+            "commit" => Some(Self::Commit),
+            _ => None,
+        }
+    }
+
     pub(crate) const fn name(self) -> &'static str {
         match self {
             Self::Edit => "edit",
+            Self::Commit => "commit",
             Self::Architecture => "architecture",
             Self::SupplyChain => "supply-chain",
             Self::Rust => "rust",
@@ -51,10 +61,14 @@ impl Group {
     pub(crate) fn checks(self) -> impl Iterator<Item = &'static Check> {
         CHECKS.iter().filter(move |check| match self {
             Self::Acceptance => check.acceptance,
-            Self::Edit => matches!(
-                check.id,
-                "repository" | "executables" | "fmt" | "harness-fmt"
-            ),
+            Self::Edit => edit_check(check.id),
+            Self::Commit => {
+                edit_check(check.id)
+                    || matches!(
+                        check.id,
+                        "architecture" | "migrations" | "secrets" | "sensor-tests"
+                    )
+            }
             Self::Rust => matches!(
                 check.group,
                 Self::RustStatic | Self::RustTests | Self::RustIsolation
@@ -62,6 +76,10 @@ impl Group {
             _ => check.group == self,
         })
     }
+}
+
+fn edit_check(id: &str) -> bool {
+    matches!(id, "repository" | "executables" | "fmt" | "harness-fmt")
 }
 
 /// A condition needed to execute a check, distinct from a passing result.
@@ -655,5 +673,36 @@ fn edit_stage_reuses_only_the_reviewed_fast_checks() {
             .map(|check| (check.id, check.prerequisites))
             .collect::<Vec<_>>(),
         [("executables", &[Prerequisite::TrustedBase][..])]
+    );
+}
+
+#[cfg(test)]
+#[test]
+fn commit_stage_reuses_edit_checks_and_adds_local_pre_commit_gates() {
+    let checks: Vec<_> = Group::Commit.checks().collect();
+    assert_eq!(
+        checks.iter().map(|check| check.id).collect::<Vec<_>>(),
+        [
+            "repository",
+            "architecture",
+            "executables",
+            "migrations",
+            "secrets",
+            "fmt",
+            "harness-fmt",
+            "sensor-tests",
+        ]
+    );
+    assert_eq!(
+        checks
+            .iter()
+            .filter(|check| !check.prerequisites.is_empty())
+            .map(|check| (check.id, check.prerequisites))
+            .collect::<Vec<_>>(),
+        [
+            ("executables", &[Prerequisite::TrustedBase][..]),
+            ("migrations", &[Prerequisite::TrustedBase][..]),
+            ("secrets", &[Prerequisite::TrustedBase][..]),
+        ]
     );
 }
