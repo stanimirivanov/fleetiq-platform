@@ -2,7 +2,7 @@
 
 mod toolchain;
 
-use std::{collections::BTreeMap, env, path::Path, process::Command};
+use std::{collections::BTreeMap, env, ffi::OsStr, path::Path, process::Command};
 
 use serde_json::{Value, json};
 
@@ -178,6 +178,13 @@ impl Executor for System<'_> {
             command.current_dir(self.root).args(&args);
             super::nextest::isolate(&mut command);
             execute_command(&mut command)
+        } else if check.id == "sensor-tests" {
+            let mut command = Command::new(check.program);
+            command.current_dir(self.root).args(&args);
+            // Hooks in linked worktrees export absolute Git paths. Fixture Git
+            // processes must discover their own repositories and indexes.
+            crate::migrations::git::isolate_repository(&mut command);
+            execute_command(&mut command)
         } else {
             run_program(self.root, check.program, &args)
         }
@@ -217,6 +224,30 @@ fn database_prerequisite(url_present: bool, offline_present: bool) -> Result<(),
         return Err("SQLX_OFFLINE is set; unset it for online PostgreSQL acceptance checks".into());
     }
     Ok(())
+}
+
+pub(super) fn require_checkout_index(root: &Path, selected: Option<&OsStr>) -> Result<(), String> {
+    let Some(selected) = selected else {
+        return Ok(());
+    };
+    // The sensors deliberately ignore alternate indexes. A hook must not
+    // report a pass for a different index from the one Git will commit.
+    let index = crate::migrations::git::command(root)
+        .args(["rev-parse", "--git-path", "index"])
+        .output()
+        .map_err(|_| "Git checkout index is unavailable; verification did not run")?;
+    let expected = std::str::from_utf8(&index.stdout)
+        .ok()
+        .and_then(|path| path.strip_suffix('\n'))
+        .filter(|path| index.status.success() && !path.is_empty())
+        .ok_or("Git checkout index is unavailable; verification did not run")?;
+    match (
+        root.join(expected).canonicalize(),
+        root.join(selected).canonicalize(),
+    ) {
+        (Ok(expected), Ok(selected)) if expected == selected => Ok(()),
+        _ => Err("commit stage requires the checkout's regular Git index; stage changes with git add and run git commit without -a or path arguments".into()),
+    }
 }
 
 fn context(root: &Path) -> Result<Context, String> {
@@ -303,6 +334,28 @@ fn isolate_cargo_context(command: &mut Command) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn commit_stage_requires_the_regular_checkout_index() {
+        let root = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."));
+        let git = crate::migrations::git::command(root)
+            .args(["rev-parse", "--git-path", "index"])
+            .output()
+            .unwrap();
+        assert!(git.status.success());
+        let regular = std::str::from_utf8(&git.stdout)
+            .unwrap()
+            .strip_suffix('\n')
+            .unwrap();
+        assert!(require_checkout_index(root, None).is_ok());
+        assert!(require_checkout_index(root, Some(regular.as_ref())).is_ok());
+        let alternate = format!("{regular}.lock");
+        assert!(
+            require_checkout_index(root, Some(alternate.as_ref()))
+                .unwrap_err()
+                .contains("stage changes with git add")
+        );
+    }
 
     #[test]
     fn database_url_presence_is_not_a_database_test_and_offline_cannot_replace_online_checks() {

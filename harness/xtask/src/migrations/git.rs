@@ -172,17 +172,7 @@ pub(crate) fn command(root: &Path) -> Command {
     command.args(["-c", &format!("safe.directory={}", trusted_directory(root))]);
     // Verification concerns this checkout and its real index. An ambient
     // alternate index or Git directory must not conceal staged changes.
-    for name in [
-        "GIT_DIR",
-        "GIT_WORK_TREE",
-        "GIT_INDEX_FILE",
-        "GIT_COMMON_DIR",
-        "GIT_NAMESPACE",
-        "GIT_OBJECT_DIRECTORY",
-        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-    ] {
-        command.env_remove(name);
-    }
+    isolate_repository(&mut command);
     for (name, _) in std::env::vars_os() {
         if name
             .to_string_lossy()
@@ -196,6 +186,20 @@ pub(crate) fn command(root: &Path) -> Command {
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .env("GIT_CONFIG_GLOBAL", "/dev/null");
     command
+}
+
+pub(crate) fn isolate_repository(command: &mut Command) {
+    for name in [
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_INDEX_FILE",
+        "GIT_COMMON_DIR",
+        "GIT_NAMESPACE",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    ] {
+        command.env_remove(name);
+    }
 }
 
 fn trusted_directory(root: &Path) -> String {

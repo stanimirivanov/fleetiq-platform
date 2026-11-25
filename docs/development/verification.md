@@ -102,6 +102,32 @@ The commit stage is opt-in. CI continues to run Architecture with its real
 scanner fixtures and runs the application and isolation suites in its existing
 parallel jobs.
 
+### Enable the Git pre-commit hook
+
+From the repository root, first check whether Git already has a hooks path.
+Keep any existing hook setup and run the commit stage manually if needed.
+
+```bash
+git config --show-origin --get core.hooksPath
+```
+
+If there is no configured path and you do not rely on hooks in Git's default
+hooks directory, opt in for this local repository:
+
+```bash
+git config --local core.hooksPath harness/hooks
+```
+
+The [hook](../../harness/hooks/pre-commit) runs the same commit stage against
+`origin/main`. Fetch trusted `main` before committing. Stage the intended changes
+with `git add` or `git add -p`, then run `git commit`. Git's auto-staging and
+path-limited commit modes use a separate index, which the stage rejects before
+running the checks. The hook does not change the staging area. Verification
+still reads the working tree and incoming history where the checks require them.
+
+The local setting is shared by linked worktrees. If this opt-in added the
+setting, undo it with `git config --local --unset core.hooksPath`.
+
 ## Select an explicit group
 
 List all check metadata with `cargo xtask verify --list`. The output is JSON for
