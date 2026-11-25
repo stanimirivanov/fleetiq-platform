@@ -31,7 +31,7 @@ test("publication permissions, branch, approval, identity, scan and artifact dri
     ["persist-credentials: false", "persist-credentials: true"],
     ["contents: read", "contents: write"],
     ["packages: write", "packages: read"],
-    ["node scripts/images/preflight.mjs", "node --version"],
+    ["bash scripts/images/preflight.sh", "node --version"],
     ["node scripts/images/qualify.mjs", "node --version"],
     ["node scripts/images/publish.mjs", "node --version"],
     ["if-no-files-found: error", "if-no-files-found: ignore"],

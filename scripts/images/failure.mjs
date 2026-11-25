@@ -1,5 +1,10 @@
 /** Classify tool failures without retaining command arguments or child output. */
 const categories = [
+  ["publication-source-stale", /^Publication requires the exact current main revision(?: and Git tree)?\.$/mu],
+  ["publication-actor-refused", /^Only a current repository administrator\/maintainer may publish\.$/mu],
+  ["publication-ci-refused", /^(?:Source must be a merged repository PR targeting main|The latest PR CI run must have passed|Merged source tree differs from the exact passing CI checkout)\.$/mu],
+  ["publication-github-unavailable", /^GitHub prerequisite lookup failed\.$/mu],
+  ["publication-prerequisite", /^(?:GitHub authorization token is unavailable or malformed|Publication authorization requires curl and jq)\.$/mu],
   [
     "storage-exhausted",
     /no space left on device|disk quota exceeded|not enough space on (?:the )?disk/iu,

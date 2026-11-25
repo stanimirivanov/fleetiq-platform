@@ -7,11 +7,10 @@ import {
 } from "node:fs";
 import { resolve, join, relative } from "node:path";
 import { homedir } from "node:os";
-import { authorize } from "./authorization.mjs";
 import { sourceIdentity } from "./source.mjs";
 import { inspectLayout } from "./oci.mjs";
 import { Resources } from "./resources.mjs";
-import { cancellation } from "./process.mjs";
+import { cancellation, run } from "./process.mjs";
 import { transport } from "./transport.mjs";
 import { validateInventory } from "./inventory.mjs";
 import {
@@ -112,7 +111,7 @@ async function manifest(method, reference, token) {
   );
 }
 export async function publish() {
-  const authorization = await authorize();
+  const authorization = JSON.parse(await run("bash", ["scripts/images/authorization.sh"]));
   const directory = resolve(process.env.FLEETIQ_QUALIFICATION_DIR ?? "");
   const child = relative(resolve("target/images"), directory);
   ensure(

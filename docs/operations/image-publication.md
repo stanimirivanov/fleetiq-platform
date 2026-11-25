@@ -21,7 +21,8 @@ own runtime packages and reviewed environment selection. Transitional deployment
 Compose packaging remains a diagnostic until D12 removes competing release paths;
 it must not introduce another backend publisher.
 
-Use Node.js 24, Git, Docker with the Linux daemon, Compose 2.24.4 or newer and
+Use Node.js 24, Git, Bash, curl, jq,
+Docker with the Linux daemon, Compose 2.24.4 or newer and
 Buildx with OCI directory export/attestation support. The actual qualified local
 versions and pinned image tools are recorded with PR evidence. Docker Desktop's
 Linux context is supported; Docker Engine on Linux is used by producer CI.
@@ -148,6 +149,9 @@ build runs makes final authorization stale; request its new exact revision.
 
 The workflow has no push/tag/PR publication trigger. It serializes publication
 runs without cancelling another release and checks authority again before writes.
+The runner uses Bash, curl, jq and the GitHub REST API for the read-only authorization
+checks. Both preflight and the check immediately before publication use the
+same command and produce the existing authorization receipt format.
 The upload job uses packages:write and read-only source/CI/PR access; no contents
 write, environment deployment token, infrastructure permission or cluster access
 is granted. No paid private environment-review feature is required. This does not
@@ -241,6 +245,10 @@ Captured tool failures now retain only `failure.operation`, numeric or null
 Docker, registry authentication, network/timeout, image lookup, invalid mounts,
 missing entrypoints and permission refusal. Unknown diagnostics remain
 `command-failed`; an unknown non-tool error retains only `operation-failed`.
+Final authorization reports fixed categories for stale source, actor refusal,
+CI refusal, unavailable GitHub metadata and missing prerequisites. For stale
+source, dispatch against the new reviewed main revision. For actor and CI
+refusals, check the current maintainer role and exact passing PR checkout.
 Transport failures also record a fixed `failure.prerequisite`: remote manifest
 lookup, manifest validation or sandbox startup. Cleanup failures are recorded
 separately. Raw child output, argv and error stacks are never copied into these fields. The classifier uses a private bounded
