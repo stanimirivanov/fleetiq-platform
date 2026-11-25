@@ -33,6 +33,9 @@ pub(crate) fn list() -> Result<(), String> {
 /// Returns false if any check failed or could not run. The base is resolved to
 /// an ancestor commit before it can appear in command arguments or evidence.
 pub(crate) fn run(root: &Path, group: Group, base: Option<&str>) -> Result<bool, String> {
+    if group == Group::Commit {
+        process::require_checkout_index(root, std::env::var_os("GIT_INDEX_FILE").as_deref())?;
+    }
     runner::run(root, group, base)
 }
 
