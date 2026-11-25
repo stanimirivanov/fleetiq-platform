@@ -76,6 +76,7 @@ fn render(template: &str, workflow: &str) -> Result<String, String> {
         Group::RustTests,
         Group::Coverage,
         Group::Mutation,
+        Group::MutationIdentifier,
         Group::RustIsolation,
         Group::Openapi,
     ] {

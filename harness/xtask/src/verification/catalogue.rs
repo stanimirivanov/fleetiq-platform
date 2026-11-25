@@ -4,6 +4,8 @@
 //! contributor gate, never shell input; only the trusted base placeholder is
 //! substituted by the runner. Focused groups do not replace acceptance.
 
+use super::mutation::Target;
+
 /// Selects an explicit gate without guessing scope from changed files.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Group {
@@ -16,6 +18,7 @@ pub(crate) enum Group {
     RustTests,
     Coverage,
     Mutation,
+    MutationIdentifier,
     RustIsolation,
     Openapi,
     Acceptance,
@@ -31,6 +34,7 @@ impl Group {
             "rust-tests" => Some(Self::RustTests),
             "coverage" => Some(Self::Coverage),
             "mutation" => Some(Self::Mutation),
+            "mutation-identifier" => Some(Self::MutationIdentifier),
             "rust-isolation" => Some(Self::RustIsolation),
             "openapi" => Some(Self::Openapi),
             "acceptance" => Some(Self::Acceptance),
@@ -57,9 +61,18 @@ impl Group {
             Self::RustTests => "rust-tests",
             Self::Coverage => "coverage",
             Self::Mutation => "mutation",
+            Self::MutationIdentifier => "mutation-identifier",
             Self::RustIsolation => "rust-isolation",
             Self::Openapi => "openapi",
             Self::Acceptance => "acceptance",
+        }
+    }
+
+    pub(super) const fn mutation_target(self) -> Option<Target> {
+        match self {
+            Self::Mutation => Some(Target::Relationship),
+            Self::MutationIdentifier => Some(Target::Identifier),
+            _ => None,
         }
     }
 
@@ -191,6 +204,45 @@ pub(crate) struct Check {
     pub(crate) prerequisites: &'static [Prerequisite],
     pub(crate) tools: &'static [Tool],
     pub(crate) acceptance: bool,
+}
+
+macro_rules! mutation_check {
+    ($group:ident, $command:literal, $outcome:literal $(,)?) => {
+        Check {
+            id: Group::$group.name(),
+            group: Group::$group,
+            program: "timeout",
+            args: &[
+                "--kill-after=5s",
+                "12m",
+                "cargo",
+                "mutants",
+                "--no-config",
+                "--package",
+                "fleetiq-domain",
+                "--file",
+                Group::$group
+                    .mutation_target()
+                    .expect("mutation check group has a target")
+                    .file(),
+                "--cargo-arg=--locked",
+                "--all-features",
+                "--baseline",
+                "run",
+                "--build-timeout",
+                "120",
+                "--timeout",
+                "30",
+                "--jobs",
+                "2",
+            ],
+            command: $command,
+            outcome: $outcome,
+            prerequisites: &[],
+            tools: &[Tool::Rust, Tool::Git, Tool::Mutants],
+            acceptance: false,
+        }
+    };
 }
 
 /// Application and harness acceptance checks, plus focused verification.
@@ -402,37 +454,16 @@ pub(crate) static CHECKS: &[Check] = &[
         tools: &[Tool::Rust, Tool::Nextest, Tool::LlvmCov],
         acceptance: false,
     },
-    Check {
-        id: "mutation",
-        group: Group::Mutation,
-        program: "timeout",
-        args: &[
-            "--kill-after=5s",
-            "12m",
-            "cargo",
-            "mutants",
-            "--no-config",
-            "--package",
-            "fleetiq-domain",
-            "--file",
-            super::mutation::FILE,
-            "--cargo-arg=--locked",
-            "--all-features",
-            "--baseline",
-            "run",
-            "--build-timeout",
-            "120",
-            "--timeout",
-            "30",
-            "--jobs",
-            "2",
-        ],
-        command: "timeout --kill-after=5s 12m cargo mutants --no-config --package fleetiq-domain --file crates/domain/src/relationship.rs --cargo-arg=--locked --all-features --baseline run --build-timeout 120 --timeout 30 --jobs 2",
-        outcome: "Advisory relationship and effective interval mutation results with a passing crate baseline",
-        prerequisites: &[],
-        tools: &[Tool::Rust, Tool::Git, Tool::Mutants],
-        acceptance: false,
-    },
+    mutation_check!(
+        Mutation,
+        "timeout --kill-after=5s 12m cargo mutants --no-config --package fleetiq-domain --file crates/domain/src/relationship.rs --cargo-arg=--locked --all-features --baseline run --build-timeout 120 --timeout 30 --jobs 2",
+        "Advisory relationship and effective interval mutation results with a passing crate baseline",
+    ),
+    mutation_check!(
+        MutationIdentifier,
+        "timeout --kill-after=5s 12m cargo mutants --no-config --package fleetiq-domain --file crates/domain/src/identifier.rs --cargo-arg=--locked --all-features --baseline run --build-timeout 120 --timeout 30 --jobs 2",
+        "Advisory identifier validation mutation results with a passing crate baseline",
+    ),
     Check {
         id: "doctests",
         group: Group::RustTests,
@@ -605,7 +636,7 @@ mod tests {
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 24);
+        assert_eq!(CHECKS.len(), 25);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [
@@ -616,6 +647,7 @@ mod tests {
             Group::RustTests,
             Group::Coverage,
             Group::Mutation,
+            Group::MutationIdentifier,
             Group::RustIsolation,
             Group::Openapi,
         ] {

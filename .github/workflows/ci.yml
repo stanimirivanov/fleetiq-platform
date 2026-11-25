@@ -15,6 +15,7 @@ on:
         options:
           - coverage
           - mutation
+          - mutation-identifier
 
 permissions:
   contents: read
@@ -302,7 +303,7 @@ jobs:
 
   mutation:
     name: Rust domain mutation pilot
-    if: github.event_name == 'workflow_dispatch' && inputs.pilot == 'mutation'
+    if: github.event_name == 'workflow_dispatch' && (inputs.pilot == 'mutation' || inputs.pilot == 'mutation-identifier')
     runs-on: ubuntu-26.04
     timeout-minutes: 15
 
@@ -315,12 +316,20 @@ jobs:
           checksum: true
           fallback: none
 
-      - name: Measure domain mutation results
-        id: verify
+      - name: Measure relationship mutation results
+        id: relationship
+        if: inputs.pilot == 'mutation'
         run: cargo xtask verify --group mutation
 
+      - name: Measure identifier mutation results
+        id: identifier
+        if: inputs.pilot == 'mutation-identifier'
+        run: cargo xtask verify --group mutation-identifier
+
       - name: Publish domain mutation evidence
-        if: always() && steps.verify.outcome != 'skipped'
+        if: >-
+          always() && (steps.relationship.outcome == 'success' || steps.relationship.outcome == 'failure'
+          || steps.identifier.outcome == 'success' || steps.identifier.outcome == 'failure')
         uses: actions/upload-artifact@v7
         with:
           name: harness-mutation
