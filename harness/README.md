@@ -8,6 +8,9 @@ The [registry](manifest.yaml) pairs each executable catalogue ID with its
 guidance and remediation. The existing repository policy check validates
 the registry.
 
+For fast feedback while editing, use
+[`cargo xtask verify --stage edit --base origin/main`](../docs/development/verification.md#edit-stage).
+
 ## Registry
 
 The [executable catalogue](../harness/xtask/src/verification/catalogue.rs)

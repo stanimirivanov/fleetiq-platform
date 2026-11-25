@@ -73,6 +73,20 @@ missing Docker, readiness failures or cleanup errors fail the suite. The verifie
 records this as the object-store-fixture prerequisite; no skip or in-memory fallback
 can qualify the provider. Fixture logs and credentials are not evidence artifacts.
 
+## Edit stage
+
+From the repository root, run `cargo xtask verify --stage edit --base origin/main`
+after fetching current `main`. This selection runs repository policy, executable
+registration, and formatting for both Rust workspaces. It uses the ordinary
+catalogue and writes an `edit-*.json` receipt under `target/verification/`.
+The stage requires `--base`. If the ref cannot resolve to a trusted ancestor,
+executable registration is recorded as not run and the stage exits unsuccessfully.
+
+Use this stage for local feedback. Hosted verification already runs repository
+and executable policy in Architecture, alongside Rust formatting in the
+independent Rust static job. CI keeps those parallel jobs and executes each
+gate through its existing entrypoint.
+
 ## Select an explicit group
 
 List all check metadata with `cargo xtask verify --list`. The output is JSON for

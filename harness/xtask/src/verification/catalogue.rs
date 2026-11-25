@@ -7,6 +7,7 @@
 /// Selects an explicit gate without guessing scope from changed files.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Group {
+    Edit,
     Architecture,
     SupplyChain,
     Rust,
@@ -34,6 +35,7 @@ impl Group {
 
     pub(crate) const fn name(self) -> &'static str {
         match self {
+            Self::Edit => "edit",
             Self::Architecture => "architecture",
             Self::SupplyChain => "supply-chain",
             Self::Rust => "rust",
@@ -49,6 +51,10 @@ impl Group {
     pub(crate) fn checks(self) -> impl Iterator<Item = &'static Check> {
         CHECKS.iter().filter(move |check| match self {
             Self::Acceptance => check.acceptance,
+            Self::Edit => matches!(
+                check.id,
+                "repository" | "executables" | "fmt" | "harness-fmt"
+            ),
             Self::Rust => matches!(
                 check.group,
                 Self::RustStatic | Self::RustTests | Self::RustIsolation
@@ -630,4 +636,24 @@ fn rust_shards_partition_the_local_rust_group() {
         }
     }
     assert_eq!(hosted, local);
+}
+
+#[cfg(test)]
+#[test]
+fn edit_stage_reuses_only_the_reviewed_fast_checks() {
+    assert_eq!(
+        Group::Edit
+            .checks()
+            .map(|check| check.id)
+            .collect::<Vec<_>>(),
+        ["repository", "executables", "fmt", "harness-fmt"]
+    );
+    assert_eq!(
+        Group::Edit
+            .checks()
+            .filter(|check| !check.prerequisites.is_empty())
+            .map(|check| (check.id, check.prerequisites))
+            .collect::<Vec<_>>(),
+        [("executables", &[Prerequisite::TrustedBase][..])]
+    );
 }
