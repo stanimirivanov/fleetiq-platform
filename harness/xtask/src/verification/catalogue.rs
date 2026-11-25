@@ -14,6 +14,7 @@ pub(crate) enum Group {
     Rust,
     RustStatic,
     RustTests,
+    Coverage,
     RustIsolation,
     Openapi,
     Acceptance,
@@ -27,6 +28,7 @@ impl Group {
             "rust" => Some(Self::Rust),
             "rust-static" => Some(Self::RustStatic),
             "rust-tests" => Some(Self::RustTests),
+            "coverage" => Some(Self::Coverage),
             "rust-isolation" => Some(Self::RustIsolation),
             "openapi" => Some(Self::Openapi),
             "acceptance" => Some(Self::Acceptance),
@@ -51,6 +53,7 @@ impl Group {
             Self::Rust => "rust",
             Self::RustStatic => "rust-static",
             Self::RustTests => "rust-tests",
+            Self::Coverage => "coverage",
             Self::RustIsolation => "rust-isolation",
             Self::Openapi => "openapi",
             Self::Acceptance => "acceptance",
@@ -69,6 +72,7 @@ impl Group {
                         "architecture" | "migrations" | "secrets" | "sensor-tests"
                     )
             }
+            Self::Coverage => matches!(check.id, "coverage" | "doctests"),
             Self::Rust => matches!(
                 check.group,
                 Self::RustStatic | Self::RustTests | Self::RustIsolation
@@ -132,6 +136,7 @@ pub(crate) enum Tool {
     Machete,
     Sqlx,
     Nextest,
+    LlvmCov,
     Node,
     Pnpm,
 }
@@ -146,6 +151,7 @@ impl Tool {
             Self::Machete => "cargo-machete",
             Self::Sqlx => "sqlx",
             Self::Nextest => "cargo-nextest",
+            Self::LlvmCov => "cargo-llvm-cov",
             Self::Node => "node",
             Self::Pnpm => "pnpm",
         }
@@ -158,7 +164,7 @@ impl Tool {
             Self::Git => "installed",
             Self::Gitleaks => crate::secrets::VERSION,
             Self::Deny => "0.20.2",
-            Self::Machete => "0.9.2",
+            Self::Machete | Self::LlvmCov => "0.9.2",
             Self::Sqlx => "0.9.0",
             Self::Nextest => "0.9.145",
             Self::Node => "24",
@@ -363,6 +369,34 @@ pub(crate) static CHECKS: &[Check] = &[
         acceptance: true,
     },
     Check {
+        id: "coverage",
+        group: Group::Coverage,
+        program: "cargo",
+        args: &[
+            "llvm-cov",
+            "nextest",
+            "--workspace",
+            "--all-features",
+            "--locked",
+            "--profile",
+            "ci",
+            "--coverage-host-only",
+            "--no-rustc-wrapper",
+            "--no-cfg-coverage",
+            "--json",
+            "--summary-only",
+        ],
+        command: "cargo llvm-cov nextest --workspace --all-features --locked --profile ci --coverage-host-only --no-rustc-wrapper --no-cfg-coverage --json --summary-only",
+        outcome: "Advisory host application line coverage from the complete Nextest suite",
+        prerequisites: &[
+            Prerequisite::Database,
+            Prerequisite::NextestConfiguration,
+            Prerequisite::ObjectStoreFixture,
+        ],
+        tools: &[Tool::Rust, Tool::Nextest, Tool::LlvmCov],
+        acceptance: false,
+    },
+    Check {
         id: "doctests",
         group: Group::RustTests,
         program: "cargo",
@@ -534,7 +568,7 @@ mod tests {
 
     #[test]
     fn inventory_ids_are_unique_and_every_explicit_group_has_checks() {
-        assert_eq!(CHECKS.len(), 22);
+        assert_eq!(CHECKS.len(), 23);
         let ids: BTreeSet<_> = CHECKS.iter().map(|check| check.id).collect();
         assert_eq!(ids.len(), CHECKS.len());
         for group in [
@@ -543,6 +577,7 @@ mod tests {
             Group::Rust,
             Group::RustStatic,
             Group::RustTests,
+            Group::Coverage,
             Group::RustIsolation,
             Group::Openapi,
         ] {

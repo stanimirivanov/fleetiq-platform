@@ -25,6 +25,7 @@ pub(super) fn probe(root: &Path, tool: Tool) -> Result<String, String> {
         Tool::Machete => ("cargo", &["machete", "--version"]),
         Tool::Sqlx => ("cargo", &["sqlx", "--version"]),
         Tool::Nextest => ("cargo", &["nextest", "--version"]),
+        Tool::LlvmCov => ("cargo", &["llvm-cov", "--version"]),
         Tool::Node => ("node", &["--version"]),
         Tool::Pnpm => ("pnpm", &["--version"]),
     };

@@ -441,6 +441,31 @@ retries, skip slow tests or increase connection limits to manufacture a speedup.
 Hosted cold and warm cache runs remain the authority for CI performance. See
 [ADR 0104](../adr/0104-bound-parallel-rust-tests-and-cache-dependencies.md).
 
+### Application coverage pilot
+
+Dispatch **CI** for a branch or tag from GitHub Actions or run
+`gh workflow run ci.yml --ref <branch-or-tag>`. The dispatch runs ordinary Rust
+application tests alongside advisory application coverage on the same revision,
+with separate runners and PostgreSQL services. Pull requests continue to run
+their usual checks.
+
+To reproduce coverage on a Linux host, install the pinned Nextest and
+cargo-llvm-cov 0.9.2 and add the pinned toolchain's `llvm-tools-preview`
+component. Prepare the same PostgreSQL and Docker fixtures used by the ordinary
+Rust test group, then run `cargo xtask verify --group coverage`. The group
+instruments the full host Nextest suite and runs the pinned toolchain's ordinary
+doctests separately. Doctests and cross-compiled Wasm guest code contribute no
+instrumentation. The report counts covered and instrumented lines under each
+root Cargo workspace member's `src/`. The separate harness workspace and
+integration-test source are excluded. A crate with zero instrumented lines has
+no measured percentage.
+
+Open the `harness-coverage` artifact and check `complete_pass` before using
+`application_coverage`. The receipt includes the checkout revision and elapsed
+milliseconds for each check. Compare the sum of check durations against the
+paired `harness-rust` receipt for the same revision. Record runner and cache
+conditions when comparing runs. The pilot applies no coverage threshold.
+
 ## Ingestion measurement artifacts
 
 The Rust job retains synthetic aggregate reports from

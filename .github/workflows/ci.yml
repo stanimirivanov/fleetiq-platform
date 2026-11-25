@@ -6,12 +6,13 @@ run-name: FleetIQ PR ${{ github.event.pull_request.number }} from ${{ github.eve
 
 on:
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -21,6 +22,7 @@ env:
 
 jobs:
   architecture:
+    if: github.event_name == 'pull_request'
     name: Architecture policy
     runs-on: ubuntu-26.04
     timeout-minutes: 10
@@ -68,6 +70,7 @@ jobs:
           retention-days: 14
 
   openapi:
+    if: github.event_name == 'pull_request'
     name: OpenAPI contract
     runs-on: ubuntu-26.04
     timeout-minutes: 10
@@ -108,6 +111,7 @@ jobs:
           retention-days: 14
 
   supply-chain:
+    if: github.event_name == 'pull_request'
     name: Supply-chain policy
     runs-on: ubuntu-26.04
     timeout-minutes: 20
@@ -137,6 +141,7 @@ jobs:
           retention-days: 14
 
   rust-static:
+    if: github.event_name == 'pull_request'
     name: Rust static checks
     runs-on: ubuntu-26.04
     timeout-minutes: 25
@@ -249,7 +254,45 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  coverage:
+    name: Rust application coverage
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    env: *rust-env
+    services: *rust-services
+
+    steps:
+      - *rust-checkout
+      - *rust-toolchain
+      - *rust-cache
+      - *rust-nextest
+      - *rust-sqlx
+      - *rust-migrate
+      - name: Install LLVM coverage tools
+        run: rustup component add llvm-tools-preview
+      - name: Install pinned cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov@0.9.2
+          checksum: true
+          fallback: none
+
+      - name: Measure application coverage
+        id: verify
+        run: cargo xtask verify --group coverage
+
+      - name: Publish application coverage evidence
+        if: always() && steps.verify.outcome != 'skipped'
+        uses: actions/upload-artifact@v7
+        with:
+          name: harness-coverage
+          path: target/verification/coverage-*.json
+          if-no-files-found: error
+          retention-days: 14
+
   rust-isolation:
+    if: github.event_name == 'pull_request'
     name: Rust application isolation
     runs-on: ubuntu-26.04
     timeout-minutes: 25
@@ -279,7 +322,7 @@ jobs:
   rust:
     name: Rust quality gate
     needs: [rust-static, rust-tests, rust-isolation]
-    if: ${{ always() }}
+    if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-26.04
     timeout-minutes: 2
     steps:
@@ -291,6 +334,7 @@ jobs:
         run: exit 1
 
   local-compose:
+    if: github.event_name == 'pull_request'
     name: Local Compose smoke test
     runs-on: ubuntu-26.04
     timeout-minutes: 90

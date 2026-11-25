@@ -5,6 +5,7 @@
 
 pub(crate) mod catalogue;
 pub(crate) mod ci;
+mod coverage;
 mod evidence;
 mod isolation;
 mod nextest;

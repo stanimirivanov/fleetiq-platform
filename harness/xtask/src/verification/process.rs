@@ -2,7 +2,13 @@
 
 mod toolchain;
 
-use std::{collections::BTreeMap, env, ffi::OsStr, path::Path, process::Command};
+use std::{
+    collections::BTreeMap,
+    env,
+    ffi::OsStr,
+    path::Path,
+    process::{Command, Stdio},
+};
 
 use serde_json::{Value, json};
 
@@ -18,6 +24,7 @@ pub(super) struct System<'a> {
     base: Result<Option<String>, String>,
     tools: BTreeMap<&'static str, Result<String, String>>,
     wiring: Result<(), String>,
+    coverage: Option<Value>,
 }
 
 struct Context {
@@ -48,6 +55,7 @@ impl<'a> System<'a> {
             base,
             tools,
             wiring,
+            coverage: None,
         }
     }
 
@@ -64,7 +72,7 @@ impl<'a> System<'a> {
 
     pub(super) fn report(&self, group: Group, entries: &[ResultEntry], passed: bool) -> Value {
         let end = context(self.root);
-        json!({
+        let mut report = json!({
             "schema_version": 1,
             "group": group.name(),
             "complete_pass": passed,
@@ -87,7 +95,11 @@ impl<'a> System<'a> {
                 };
                 value
             }).collect::<Vec<_>>(),
-        })
+        });
+        if let Some(coverage) = self.coverage.as_ref().filter(|_| passed) {
+            report["application_coverage"] = coverage.clone();
+        }
+        report
     }
 }
 
@@ -171,6 +183,36 @@ impl Executor for System<'_> {
                 }
                 Err(_) => Outcome::NotRun {
                     reason: "compiled xtask executable is unavailable".into(),
+                },
+            }
+        } else if check.id == "coverage" {
+            let mut command = Command::new(check.program);
+            command.current_dir(self.root).args(&args);
+            super::nextest::isolate(&mut command);
+            isolate_cargo_context(&mut command);
+            match command
+                .env("RUSTFLAGS", "-D warnings")
+                .env("LLVM_PROFILE_FILE_NAME", "fleetiq-%8m.profraw")
+                .stderr(Stdio::inherit())
+                .output()
+            {
+                Ok(output) if output.status.success() => {
+                    match super::coverage::summarize(self.root, &output.stdout) {
+                        Ok(coverage) => {
+                            self.coverage = Some(coverage);
+                            Outcome::Passed
+                        }
+                        Err(reason) => {
+                            eprintln!("coverage baseline unavailable: {reason}");
+                            Outcome::Failed { exit_code: None }
+                        }
+                    }
+                }
+                Ok(output) => Outcome::Failed {
+                    exit_code: output.status.code(),
+                },
+                Err(_) => Outcome::NotRun {
+                    reason: "could not start pinned cargo-llvm-cov".into(),
                 },
             }
         } else if check.id == "tests" {
